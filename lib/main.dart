@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:junghanns/pages/home/home_principal.dart';
 import 'package:junghanns/routes/routes.dart';
 
 void main() {
@@ -15,7 +16,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
       ),
       routes: getApplicationRoutes(),
-      home: const MyHomePage(),
+      home: const HomePrincipal(),
     );
   }
 }

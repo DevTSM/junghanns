@@ -8,6 +8,12 @@ class TextStyles{
     color: ColorsJunghanns.green,
     fontFamily: 'Roboto',
   ); 
+  static const TextStyle green15_4 =TextStyle(
+    fontSize: 15,
+    fontWeight: FontWeight.w400,
+    color: ColorsJunghanns.green,
+    fontFamily: 'Roboto',
+  ); 
   static const TextStyle grey14_4 =TextStyle(
     fontSize: 14,
     fontWeight: FontWeight.w400,
@@ -47,6 +53,30 @@ class TextStyles{
   static const TextStyle blue19_6 =TextStyle(
     fontSize: 19,
     fontWeight: FontWeight.w600,
+    color: ColorsJunghanns.blue,
+    fontFamily: 'Roboto',
+  ); 
+  static const TextStyle blue19_7 =TextStyle(
+    fontSize: 19,
+    fontWeight: FontWeight.w700,
+    color: ColorsJunghanns.blue,
+    fontFamily: 'Roboto',
+  ); 
+  static const TextStyle blue19_4 =TextStyle(
+    fontSize: 19,
+    fontWeight: FontWeight.w400,
+    color: ColorsJunghanns.blue,
+    fontFamily: 'Roboto',
+  ); 
+  static const TextStyle blue16_7 =TextStyle(
+    fontSize: 16,
+    fontWeight: FontWeight.w700,
+    color: ColorsJunghanns.blue,
+    fontFamily: 'Roboto',
+  ); 
+  static const TextStyle blue16_4 =TextStyle(
+    fontSize: 16,
+    fontWeight: FontWeight.w400,
     color: ColorsJunghanns.blue,
     fontFamily: 'Roboto',
   ); 

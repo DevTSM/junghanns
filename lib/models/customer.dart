@@ -45,4 +45,21 @@ class CustomerModel {
         days: "",
         observation: "");
   }
+  factory CustomerModel.fromList(Map<String, dynamic> data, int idRoute) {
+    return CustomerModel(
+        id: data["idCliente"],
+        idRoute: idRoute,
+        lat: 0,
+        lng: 0,
+        priceLiquid: 0,
+        byCollect: 0,
+        purse: 0,
+        name: data["nombre"],
+        address: data["direccion"],
+        nameRoute: "",
+        typeVisit: data["tipoVisita"],
+        category: data["categoria"],
+        days: "",
+        observation: "");
+  }
 }

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:junghanns/components/bottom_bar.dart';
 import 'package:junghanns/pages/home/home.dart';
-const List<Widget> pages=[Home(),Home(),Home(),Home(),Home(),Home()];
+import 'package:junghanns/pages/home/routes.dart';
+const List<Widget> pages=[Home(),Home(),Routes(),Home(),Home(),Home()];
 class HomePrincipal extends StatefulWidget {
   const HomePrincipal({Key? key}) : super(key: key);
 

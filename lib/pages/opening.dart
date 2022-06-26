@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 
-import 'login.dart';
+import 'auth/login.dart';
 
 class Opening extends StatefulWidget {
   const Opening({Key? key}) : super(key: key);
@@ -46,7 +46,7 @@ class _OpeningState extends State<Opening> {
                     begin: FractionalOffset.topCenter,
                     end: FractionalOffset.bottomCenter))),
         Center(
-          child: Image.asset("assets/images/JUNGHANNS_WPA_V1_ele-03.png"),
+          child: Image.asset("assets/images/junghannsLogo.png"),
         ),
       ],
     ));

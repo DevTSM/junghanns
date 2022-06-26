@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:junghanns/opening.dart';
+import 'package:junghanns/pages/opening.dart';
 import 'package:junghanns/routes/routes.dart';
 
 void main() {

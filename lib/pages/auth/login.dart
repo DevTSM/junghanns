@@ -1,7 +1,9 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
-import 'package:junghanns/styles/color_styles.dart';
-import 'package:junghanns/styles/text_styles.dart';
+import 'package:junghanns/pages/home/home_principal.dart';
+import '../../styles/color.dart';
+import '../../styles/decoration.dart';
+import '../../styles/text.dart';
 
 class Login extends StatefulWidget {
   const Login({Key? key}) : super(key: key);
@@ -11,7 +13,7 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> {
-  late double sw, sh;
+  late Size size;
   late TextEditingController userC, passC;
 
   @override
@@ -23,21 +25,20 @@ class _LoginState extends State<Login> {
 
   @override
   Widget build(BuildContext context) {
-    sw = MediaQuery.of(context).size.width;
-    sh = MediaQuery.of(context).size.height;
+    size = MediaQuery.of(context).size;
     return Scaffold(
         body: SingleChildScrollView(
             child: Stack(
-      children: [fondo(), menu(), textB()],
+      children: [background(), menu(), textBottom()],
     )));
   }
 
-  Widget fondo() {
+  Widget background() {
     return SizedBox(
-      width: sw,
-      height: sh,
+      width: size.width,
+      height: size.height,
       child: Image.asset(
-        "assets/images/JUNGHANNS_WPA_V1_ele-01.png",
+        "assets/images/junghannsWater.png",
         fit: BoxFit.cover,
       ),
     );
@@ -45,16 +46,16 @@ class _LoginState extends State<Login> {
 
   Widget menu() {
     return SizedBox(
-      width: sw,
-      height: sh,
+      width: size.width,
+      height: size.height,
       child: Column(
         children: [
           SizedBox(
-            height: sh * 0.15,
+            height: size.height * 0.15,
           ),
           logoJ(),
           SizedBox(
-            height: sh * 0.06,
+            height: size.height * 0.06,
           ),
           cardLogin(),
         ],
@@ -62,48 +63,24 @@ class _LoginState extends State<Login> {
     );
   }
 
-  Widget textB() {
-    return Container(
-      width: sw,
-      height: sh,
-      padding: const EdgeInsets.only(bottom: 24),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [textAP(), textDR()],
-      ),
-    );
-  }
-
   Widget logoJ() {
     return Image.asset(
-      "assets/images/JUNGHANNS_WPA_V1_ele-03.png",
-      width: sw * 0.64,
+      "assets/images/junghannsLogo.png",
+      width: size.width * 0.64,
     );
   }
 
   Widget cardLogin() {
     return Container(
-      width: sw * 0.85,
-      height: sw * 0.75,
-      padding: EdgeInsets.all(sh * 0.03),
-      decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.all(
-            Radius.circular(10),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey,
-              blurRadius: 3.0,
-            )
-          ]),
+      width: size.width * 0.85,
+      height: size.width * 0.75,
+      padding: EdgeInsets.all(size.height * 0.03),
+      decoration: Decorations.whiteCard,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          textField(
-              userC, "Usuario", "assets/icons/JUNGHANNS_WPA_V1_ele-04.png"),
-          textField(
-              passC, "Contraseña", "assets/icons/JUNGHANNS_WPA_V1_ele-05.png"),
+          textField(userC, "Usuario", "assets/icons/user.png"),
+          textField(passC, "Contraseña", "assets/icons/password.png"),
           textOC(),
           buttonLog()
         ],
@@ -114,7 +91,7 @@ class _LoginState extends State<Login> {
   Widget textField(
       TextEditingController controller, String hintText, String iconS) {
     return SizedBox(
-        height: sh * 0.06,
+        height: size.height * 0.06,
         child: TextFormField(
             controller: controller,
             textAlignVertical: TextAlignVertical.center,
@@ -123,7 +100,7 @@ class _LoginState extends State<Login> {
               hintText: hintText,
               hintStyle: TextStyles.blue18SemiBoldIt,
               filled: true,
-              fillColor: ColorStyles.whiteJ,
+              fillColor: ColorsJunghanns.whiteJ,
               contentPadding: EdgeInsets.zero,
               border: InputBorder.none,
               prefixIcon: Padding(
@@ -150,7 +127,7 @@ class _LoginState extends State<Login> {
           width: double.infinity,
           height: 40,
           alignment: Alignment.center,
-          color: ColorStyles.greenJ,
+          color: ColorsJunghanns.greenJ,
           child: Text(
             "Iniciar sesión",
             style: TextStyles.white16SemiBoldIt,
@@ -158,7 +135,23 @@ class _LoginState extends State<Login> {
         ),
         onTap: () {
           print("Inicar sesión");
+          Navigator.pushReplacement(
+              context,
+              MaterialPageRoute<void>(
+                  builder: (BuildContext context) => const HomePrincipal()));
         });
+  }
+
+  Widget textBottom() {
+    return Container(
+      width: size.width,
+      height: size.height,
+      padding: const EdgeInsets.only(bottom: 24),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [textAP(), textDR()],
+      ),
+    );
   }
 
   Widget textAP() {
@@ -173,7 +166,7 @@ class _LoginState extends State<Login> {
 
   Widget textDR() {
     return Container(
-      margin: const EdgeInsets.only(left: 10, right: 10),
+      margin: const EdgeInsets.only(left: 10, right: 10, top: 8),
       child: AutoSizeText(
         "Todos los derechos reservados 2022. MAFIN SA. de CV.",
         maxLines: 1,

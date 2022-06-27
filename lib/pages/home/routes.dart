@@ -74,7 +74,7 @@ class _RoutesState extends State<Routes> {
                                 width: size.width * .14,
                               ),
                               customerCurrent: e,
-                              title: ["${e.id} - ", e.address],
+                              title: ["${e.idClient} - ", e.address],
                               description: e.name),
                           Row(children: [
                             Container(
@@ -163,7 +163,8 @@ class _RoutesState extends State<Routes> {
                         TextSpan(text: "   10", style: TextStyles.white27_7)
                       ])))),
             ],
-          )),
+          )
+          ),
     ]));
   }
 }

@@ -14,4 +14,36 @@ class SaleModel {
     return SaleModel(
         date: DateTime.now(), type: "", description: "", amount: 0.0, count: 0);
   }
+  factory SaleModel.fromService(Map<String, dynamic> data) {
+    return SaleModel(
+        date: DateTime.parse(data["fecha"] ?? DateTime.now().toString()),
+        type: data["tipo"] ?? "VENTA",
+        description: data["descripcion"] ?? "",
+        amount: double.parse(data["importe"] ?? "0"),
+        count: double.parse(data["cantidad"] ?? "0").ceil());
+  }
+}
+String checkDouble(String evalue) {
+  switch (evalue[evalue.length - 2]) {
+    case '.':
+      return "\$ " + evalue + "0";
+    default:
+      return "\$ " + evalue;
+  }
+}
+
+List<String> checkDoubleRich(String evalue) {
+  print(evalue);
+  switch (evalue[evalue.length - 2]) {
+    case '.':
+      return [
+        "\$ " + evalue.substring(0, evalue.indexOf('.')),
+        evalue.substring(evalue.indexOf('.'), evalue.length) + "0"
+      ];
+    default:
+      return [
+        "\$ " + evalue.substring(0, evalue.indexOf('.')),
+        evalue.substring(evalue.indexOf('.'), evalue.length)
+      ];
+  }
 }

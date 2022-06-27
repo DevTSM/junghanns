@@ -13,6 +13,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  auto_size_text: ^3.0.0
   cupertino_icons: ^1.0.2
   http: ^0.13.3
   fluttertoast: ^8.0.9
@@ -26,6 +27,34 @@ flutter:
   uses-material-design: true
 
   assets:
-     - assets/
-     - assets/images/
-     - assets/icons/
+    - assets/
+    - assets/images/
+    - assets/icons/
+  fonts:
+    - family: MyriadPro-Bold
+      fonts:
+        - asset: assets/fonts/MyriadPro-Bold.otf
+    - family: MyriadPro-BoldCond
+      fonts:
+        - asset: assets/fonts/MyriadPro-BoldCond.otf
+    - family: MyriadPro-BoldCondit
+      fonts:
+        - asset: assets/fonts/MyriadPro-BoldCondit.otf
+    - family: MyriadPro-Boldit
+      fonts:
+        - asset: assets/fonts/MyriadPro-Cond.otf
+    - family: MyriadPro-Condit
+      fonts:
+        - asset: assets/fonts/MyriadPro-Condit.otf
+    - family: MyriadPro-it
+      fonts:
+        - asset: assets/fonts/MyriadPro-it.otf
+    - family: MyriadPro-Regular
+      fonts:
+        - asset: assets/fonts/MyriadPro-Regular.otf
+    - family: MyriadPro-SemiBold
+      fonts:
+        - asset: assets/fonts/MyriadPro-SemiBold.otf
+    - family: MyriadPro-SemiBoldit
+      fonts:
+        - asset: assets/fonts/MyriadPro-SemiBoldit.otf

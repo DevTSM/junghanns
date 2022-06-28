@@ -1,5 +1,6 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:junghanns/styles/color.dart';
 import 'package:junghanns/styles/decoration.dart';
 import 'package:junghanns/styles/text.dart';
@@ -18,11 +19,34 @@ class ShoppingCart extends StatefulWidget {
 class _ShoppingCartState extends State<ShoppingCart> {
   late Size size;
   late List<RefillCard> refillList = [];
+  late List<ProductCard> productsList = [];
   late bool isSelect = true;
 
   @override
   void initState() {
     super.initState();
+
+    productsList.add(const ProductCard(
+        image: "assets/images/Ceramica.JPG",
+        productB: "Cerámica ",
+        productN: "M12 Bco",
+        price: "\$360.00"));
+    productsList.add(const ProductCard(
+        image: "assets/images/Garrafon.JPG",
+        productB: "Liquido ",
+        productN: "20L",
+        price: "\$43.00"));
+    productsList.add(const ProductCard(
+        image: "assets/images/Ceramica.JPG",
+        productB: "Cerámica ",
+        productN: "M12 Bco",
+        price: "\$360.00"));
+    productsList.add(const ProductCard(
+        image: "assets/images/Garrafon.JPG",
+        productB: "Garrafón nuevo",
+        productN: "",
+        price: "\$43.00"));
+
     refillList
         .add(const RefillCard(icon: "assets/icons/refill1.png", number: 100));
     refillList
@@ -39,9 +63,27 @@ class _ShoppingCartState extends State<ShoppingCart> {
   Widget build(BuildContext context) {
     size = MediaQuery.of(context).size;
     return Scaffold(
+        appBar: AppBar(
+          backgroundColor: ColorsJunghanns.greenJ,
+          systemOverlayStyle: const SystemUiOverlayStyle(
+              statusBarColor: ColorsJunghanns.greenJ,
+              statusBarIconBrightness: Brightness.light,
+              statusBarBrightness: Brightness.light),
+          leading: GestureDetector(
+            child: Container(
+                padding: const EdgeInsets.only(left: 24),
+                child: Image.asset("assets/icons/menuWhite.png")),
+            onTap: () {},
+          ),
+          elevation: 0,
+        ),
         body: Column(
-      children: [total(), options(), isSelect ? menuProducts() : menuRefill()],
-    ));
+          children: [
+            total(),
+            options(),
+            isSelect ? menuProducts() : menuRefill()
+          ],
+        ));
   }
 
   Widget total() {
@@ -191,15 +233,9 @@ class _ShoppingCartState extends State<ShoppingCart> {
               mainAxisSpacing: 15,
               crossAxisSpacing: 15,
               crossAxisCount: 2,
-              itemCount: 5,
+              itemCount: productsList.length,
               itemBuilder: (context, index) {
-                return ProductCard(
-                    image: index.isEven
-                        ? "assets/images/Ceramica.JPG"
-                        : "assets/images/Garrafon.JPG",
-                    productB: index.isEven ? "Cerámica " : "Liquido ",
-                    productN: index.isEven ? "M12 Bco" : "20L",
-                    price: index.isEven ? "\$360.00" : "\$43.00");
+                return productsList[index];
               },
               staggeredTileBuilder: (int index) =>
                   const StaggeredTile.count(1, 1.3),

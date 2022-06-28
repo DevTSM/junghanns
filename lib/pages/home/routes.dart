@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/services/customer.dart';
@@ -22,13 +23,13 @@ class _RoutesState extends State<Routes> {
   void initState() {
     super.initState();
     customerList = [];
-    imageCount=0;
+    imageCount = 0;
     getDataCustomerList();
   }
 
   getDataCustomerList() async {
     customerList.clear();
-    imageCount=0;
+    imageCount = 0;
     await getListCustomer().then((answer) {
       if (answer.error) {
         Fluttertoast.showToast(
@@ -53,43 +54,59 @@ class _RoutesState extends State<Routes> {
     setState(() {
       size = MediaQuery.of(context).size;
     });
-    return Container(
-        height: double.infinity,
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              header(),
-              const SizedBox(
-                height: 20,
-              ),
-              Column(
-                children: customerList
-                    .map((e){
-                      imageCount==3?imageCount=1:imageCount++;
-                      return Column(children: [
-                          RoutesCard(
-                              icon: Image.asset(
-                                "assets/icons/${imageCount==1?"user1":imageCount==2?"user2":"user3"}.png",
-                                width: size.width * .14,
-                              ),
-                              customerCurrent: e,
-                              title: ["${e.id} - ", e.address],
-                              description: e.name),
-                          Row(children: [
-                            Container(
-                              margin: EdgeInsets.only(left: (size.width * .07)+15),
-                              color: ColorsJunghanns.grey,
-                              width: .5,
-                              height: 15,
-                            )
-                          ])
-                        ]);})
-                    .toList(),
-              )
-            ],
-          ),
-        ));
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: ColorsJunghanns.whiteJ,
+        systemOverlayStyle: const SystemUiOverlayStyle(
+            statusBarColor: ColorsJunghanns.whiteJ,
+            statusBarIconBrightness: Brightness.dark,
+            statusBarBrightness: Brightness.dark),
+        leading: GestureDetector(
+          child: Container(
+              padding: const EdgeInsets.only(left: 24),
+              child: Image.asset("assets/icons/menu.png")),
+          onTap: () {},
+        ),
+        elevation: 0,
+      ),
+      body: SizedBox(
+          height: double.infinity,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                header(),
+                const SizedBox(
+                  height: 20,
+                ),
+                Column(
+                  children: customerList.map((e) {
+                    imageCount == 3 ? imageCount = 1 : imageCount++;
+                    return Column(children: [
+                      RoutesCard(
+                          icon: Image.asset(
+                            "assets/icons/${imageCount == 1 ? "user1" : imageCount == 2 ? "user2" : "user3"}.png",
+                            width: size.width * .14,
+                          ),
+                          customerCurrent: e,
+                          title: ["${e.idClient} - ", e.address],
+                          description: e.name),
+                      Row(children: [
+                        Container(
+                          margin:
+                              EdgeInsets.only(left: (size.width * .07) + 15),
+                          color: ColorsJunghanns.grey,
+                          width: .5,
+                          height: 15,
+                        )
+                      ])
+                    ]);
+                  }).toList(),
+                )
+              ],
+            ),
+          )),
+    );
   }
 
   Widget header() {
@@ -102,7 +119,12 @@ class _RoutesState extends State<Routes> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              IconButton(onPressed: () {}, icon: Icon(Icons.arrow_back_ios)),
+              IconButton(
+                  onPressed: () {},
+                  icon: const Icon(
+                    Icons.arrow_back_ios,
+                    color: ColorsJunghanns.blueJ,
+                  )),
               Expanded(
                   child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

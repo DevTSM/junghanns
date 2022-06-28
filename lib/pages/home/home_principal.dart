@@ -47,10 +47,10 @@ class _HomePrincipalState extends State<HomePrincipal> {
       size = MediaQuery.of(context).size;
     });
     return Scaffold(
-      appBar: AppBar(
+      /*appBar: AppBar(
         backgroundColor: ColorsJunghanns.whiteJ,
         elevation: 0,
-      ),
+      ),*/
       body: pages[indexCurrent],
       bottomNavigationBar: bottomBar(setIndexCurrent, indexCurrent),
     );

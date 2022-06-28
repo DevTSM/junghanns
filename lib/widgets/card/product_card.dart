@@ -72,14 +72,16 @@ class ProductCardState extends State<ProductCard> {
               group: myGroup,
               style: TextStyles.blueJ20BoldIt,
             )),
-            Flexible(
-              child: AutoSizeText(
-                widget.productN,
-                maxLines: 1,
-                group: myGroup,
-                style: TextStyles.blueJ20It,
-              ),
-            )
+            widget.productN.isNotEmpty
+                ? Flexible(
+                    child: AutoSizeText(
+                      widget.productN,
+                      maxLines: 1,
+                      group: myGroup,
+                      style: TextStyles.blueJ20It,
+                    ),
+                  )
+                : Container()
           ],
         ));
   }

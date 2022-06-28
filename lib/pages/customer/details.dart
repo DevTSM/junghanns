@@ -5,6 +5,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:junghanns/components/button.dart';
 import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/models/sale.dart';
+import 'package:junghanns/pages/shop/shopping_cart.dart';
 import 'package:junghanns/services/customer.dart';
 import 'package:junghanns/styles/color.dart';
 import 'package:junghanns/styles/decoration.dart';
@@ -43,7 +44,10 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
       }
     });
   }
-
+  navigatorShopping(){
+    Navigator.push(context, MaterialPageRoute<void>(
+                  builder: (BuildContext context) => const ShoppingCart()));
+  }
   @override
   Widget build(BuildContext context) {
     setState(() {
@@ -269,6 +273,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
                   child: ButtonJunghanns(
                       decoration: Decorations.greenBorder5,
                       style: TextStyles.white17_5,
+                      fun: navigatorShopping,
                       isIcon: true,
                       icon: Image.asset("assets/icons/shoppingCardWhiteIcon.png",height: 30,),
                       label: "Venta")),
@@ -277,6 +282,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
                   child: ButtonJunghanns(
                       decoration: Decorations.whiteBorder5Red,
                       style: TextStyles.red17_6,
+                      fun: navigatorShopping,
                       isIcon: true,
                       icon: Container(width: 0,height: 30,),
                       label: "Parada"))

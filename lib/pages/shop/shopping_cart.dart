@@ -1,6 +1,12 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:http/http.dart';
+import 'package:junghanns/components/button.dart';
+import 'package:junghanns/models/product.dart';
+import 'package:junghanns/models/refill.dart';
+import 'package:junghanns/services/store.dart';
 import 'package:junghanns/styles/color.dart';
 import 'package:junghanns/styles/decoration.dart';
 import 'package:junghanns/styles/text.dart';
@@ -18,51 +24,66 @@ class ShoppingCart extends StatefulWidget {
 
 class _ShoppingCartState extends State<ShoppingCart> {
   late Size size;
-  late List<RefillCard> refillList = [];
-  late List<ProductCard> productsList = [];
+  late List<RefillModel> refillList = [];
+  late List<ProductModel> productsList = [];
   late bool isSelect = true;
+  late bool isProduct;
 
   @override
   void initState() {
     super.initState();
-
-    productsList.add(const ProductCard(
-        image: "assets/images/Ceramica.JPG",
-        productB: "Cerámica ",
-        productN: "M12 Bco",
-        price: "\$360.00"));
-    productsList.add(const ProductCard(
-        image: "assets/images/Garrafon.JPG",
-        productB: "Liquido ",
-        productN: "20L",
-        price: "\$43.00"));
-    productsList.add(const ProductCard(
-        image: "assets/images/Ceramica.JPG",
-        productB: "Cerámica ",
-        productN: "M12 Bco",
-        price: "\$360.00"));
-    productsList.add(const ProductCard(
-        image: "assets/images/Garrafon.JPG",
-        productB: "Garrafón nuevo",
-        productN: "",
-        price: "\$43.00"));
-
-    refillList
-        .add(const RefillCard(icon: "assets/icons/refill1.png", number: 100));
-    refillList
-        .add(const RefillCard(icon: "assets/icons/refill2.png", number: 200));
-    refillList
-        .add(const RefillCard(icon: "assets/icons/refill3.png", number: 300));
-    refillList
-        .add(const RefillCard(icon: "assets/icons/refill4.png", number: 500));
-    refillList
-        .add(const RefillCard(icon: "assets/icons/refill5.png", number: 1000));
+    isProduct = true;
+    getDataProducts();
   }
 
+  getDataProducts() async {
+    await getProductList().then((answer) {
+      getDataRefill();
+      if (answer.error) {
+        Fluttertoast.showToast(
+          msg: answer.message,
+          timeInSecForIosWeb: 2,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+        );
+      } else {}
+    });
+  }
+
+  getDataRefill() async {
+    await getRefillList().then((answer) {
+      if (answer.error) {
+        Fluttertoast.showToast(
+          msg: answer.message,
+          timeInSecForIosWeb: 2,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+        );
+      } else {
+        refillList.clear();
+        setState(() {
+          answer.body.map((e) => refillList.add(RefillModel.fromService(e))).toList();
+        });
+      }
+    });
+  }
+  setitemRefill(){
+    setState(() {
+      isProduct=false;
+    });
+  }
+  setitemProduct(){
+    setState(() {
+      isProduct=true;
+    });
+  }
   @override
   Widget build(BuildContext context) {
     size = MediaQuery.of(context).size;
     return Scaffold(
+      backgroundColor: ColorsJunghanns.white,
         appBar: AppBar(
           backgroundColor: ColorsJunghanns.greenJ,
           systemOverlayStyle: const SystemUiOverlayStyle(
@@ -77,185 +98,132 @@ class _ShoppingCartState extends State<ShoppingCart> {
           ),
           elevation: 0,
         ),
-        body: Column(
-          children: [
-            total(),
-            options(),
-            isSelect ? menuProducts() : menuRefill()
-          ],
-        ));
-  }
-
-  Widget total() {
-    return Container(
-      width: size.width,
-      height: size.height * 0.22,
-      color: ColorsJunghanns.greenJ,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
+        body: Stack(
             children: [
-              Container(
-                padding: const EdgeInsets.only(right: 8, top: 10),
-                child: Text(
-                  "00",
-                  style: TextStyles.white24SemiBoldIt,
-                ),
-              ),
-              Image.asset("assets/icons/shoppingIcon.png")
+              header(),
+              itemList()
             ],
           ),
-          Container(
-            padding: const EdgeInsets.only(top: 10),
-            child: Text(
-              "\$0.00",
-              style: TextStyles.white40Bold,
-            ),
-          )
+        );
+  }
+
+  Widget header() {
+    return Container(
+        color: ColorsJunghanns.green,
+        padding: EdgeInsets.only(
+            right: 15, left: 23, top: 10, bottom: size.height * .08),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: const Icon(
+                    Icons.arrow_back_ios,
+                    color: ColorsJunghanns.white,
+                  )),
+              Expanded(
+                  child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.only(right: 8, top: 10),
+                        child: Text(
+                          "00",
+                          style: TextStyles.white24SemiBoldIt,
+                        ),
+                      ),
+                      Image.asset(
+                        "assets/icons/shoppingIcon.png",
+                        width: 60,
+                      )
+                    ],
+                  ),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  Text(
+                    "\$0.00",
+                    style: TextStyles.white40Bold,
+                  )
+                ],
+              )),
+            ],
+          ),
+        ]));
+  }
+
+  Widget itemList() {
+    return Container(
+      margin: EdgeInsets.only(top: size.height * .18),
+      padding: const EdgeInsets.only(left: 15, right: 15),
+      width: double.infinity,
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                  child: ButtonJunghanns(
+                      isIcon: true,
+                      icon: Image.asset(
+                        isProduct
+                            ? "assets/icons/shopP2.png"
+                            : "assets/icons/shopP1.png",
+                        width: size.width * 0.14,
+                      ),
+                      fun: setitemProduct,
+                      decoration: isProduct?Decorations.blueBorder12:Decorations.whiteBorder12,
+                      style: isProduct?TextStyles.white14_5:TextStyles.blue16_4,
+                      label: "Productos")),
+              const SizedBox(
+                width: 20,
+              ),
+              Expanded(
+                  child: ButtonJunghanns(
+                      isIcon: true,
+                      icon: Image.asset(
+                          !isProduct
+                              ? "assets/icons/shopR2.png"
+                              : "assets/icons/shopR1.png",
+                          width: size.width * 0.14),
+                      fun: setitemRefill,
+                      decoration: isProduct?Decorations.whiteBorder12:Decorations.blueBorder12,
+                      style: isProduct?TextStyles.blue16_4:TextStyles.white14_5,
+                      label: "Recargas"))
+            ],
+          ),
+          const SizedBox(height: 20,),
+          Expanded(child:Container(
+                  width: size.width,
+                  child: GridView.custom(
+                    gridDelegate: SliverWovenGridDelegate.count(
+                      crossAxisCount: 2,
+                      mainAxisSpacing: 30,
+                      crossAxisSpacing: 30,
+                      pattern: [
+                        WovenGridTile(.85),
+                        WovenGridTile(.85),
+                      ],
+                    ),
+                    childrenDelegate: SliverChildBuilderDelegate(
+                        (context, index) => isProduct?ProductCard(
+                        image: productsList[index].img,
+                        productB: productsList[index].name[0],
+                        productN: productsList[index].name[1],
+                        price: productsList[index].price.toString()):RefillCard(refillCurrent: refillList[index],),
+                        childCount: isProduct?productsList.length:refillList.length),
+                  ),
+                ))
         ],
       ),
     );
   }
 
-  Widget options() {
-    return SizedBox(
-        width: size.width,
-        height: size.height * 0.08,
-        child: Stack(
-          children: [
-            optionsBackground(),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                optionProduct(),
-                optionRefill(),
-              ],
-            ),
-          ],
-        ));
-  }
 
-  Widget optionsBackground() {
-    return Column(
-      children: [
-        Container(height: size.height * 0.04, color: ColorsJunghanns.green),
-        Container(height: size.height * 0.04)
-      ],
-    );
-  }
-
-  Widget optionProduct() {
-    return GestureDetector(
-      child: Container(
-        width: size.width * 0.44,
-        height: size.height * 0.08,
-        decoration:
-            isSelect ? Decorations.blueBorder12 : Decorations.whiteS1Card,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(
-              width: size.width * 0.14,
-              child: Image.asset(
-                isSelect
-                    ? "assets/icons/shopP2.png"
-                    : "assets/icons/shopP1.png",
-              ),
-            ),
-            SizedBox(
-              child: AutoSizeText(
-                "Productos",
-                style: isSelect
-                    ? TextStyles.white18SemiBoldIt
-                    : TextStyles.blue18SemiBoldIt,
-              ),
-            )
-          ],
-        ),
-      ),
-      onTap: () {
-        if (!isSelect) {
-          setState(() {
-            isSelect = !isSelect;
-          });
-        }
-      },
-    );
-  }
-
-  Widget optionRefill() {
-    return GestureDetector(
-      child: Container(
-        width: size.width * 0.44,
-        height: size.height * 0.08,
-        decoration:
-            !isSelect ? Decorations.blueBorder12 : Decorations.whiteS1Card,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(
-              width: size.width * 0.15,
-              child: Image.asset(
-                !isSelect
-                    ? "assets/icons/shopR2.png"
-                    : "assets/icons/shopR1.png",
-              ),
-            ),
-            SizedBox(
-              child: AutoSizeText(
-                "Recargas",
-                style: !isSelect
-                    ? TextStyles.white18SemiBoldIt
-                    : TextStyles.blue18SemiBoldIt,
-              ),
-            )
-          ],
-        ),
-      ),
-      onTap: () {
-        if (isSelect) {
-          setState(() {
-            isSelect = !isSelect;
-          });
-        }
-      },
-    );
-  }
-
-  Widget menuProducts() {
-    return Flexible(
-        child: Container(
-            padding: const EdgeInsets.all(15),
-            child: StaggeredGridView.countBuilder(
-              mainAxisSpacing: 15,
-              crossAxisSpacing: 15,
-              crossAxisCount: 2,
-              itemCount: productsList.length,
-              itemBuilder: (context, index) {
-                return productsList[index];
-              },
-              staggeredTileBuilder: (int index) =>
-                  const StaggeredTile.count(1, 1.3),
-            )));
-  }
-
-  Widget menuRefill() {
-    return Flexible(
-        child: Container(
-            padding: const EdgeInsets.all(15),
-            child: StaggeredGridView.countBuilder(
-              mainAxisSpacing: 15,
-              crossAxisSpacing: 15,
-              crossAxisCount: 2,
-              itemCount: refillList.length,
-              itemBuilder: (context, index) {
-                return refillList[index];
-              },
-              staggeredTileBuilder: (int index) =>
-                  const StaggeredTile.count(1, 1),
-            )));
-  }
 }

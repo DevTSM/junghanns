@@ -1,6 +1,10 @@
+import 'dart:developer';
+
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:junghanns/services/customer.dart';
 import 'package:junghanns/styles/color.dart';
 import 'package:junghanns/styles/decoration.dart';
 import 'package:junghanns/styles/text.dart';
@@ -57,6 +61,28 @@ class _ShoppingCartState extends State<ShoppingCart> {
         .add(const RefillCard(icon: "assets/icons/refill4.png", number: 500));
     refillList
         .add(const RefillCard(icon: "assets/icons/refill5.png", number: 1000));
+
+    getDataProductsAndRefillList();
+  }
+
+  getDataProductsAndRefillList() async {
+    await getListProductsAndRefill().then((answer) {
+      if (answer.error) {
+        Fluttertoast.showToast(
+          msg: answer.message,
+          timeInSecForIosWeb: 2,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+        );
+      } else {
+        answer.body.map((e) {
+          setState(() {
+            log(e);
+          });
+        }).toList();
+      }
+    });
   }
 
   @override

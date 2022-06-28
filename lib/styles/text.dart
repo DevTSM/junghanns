@@ -106,11 +106,20 @@ class TextStyles {
       fontFamily: 'MyriadPro-SemiBoldit',
       color: ColorsJunghanns.blueJ2);
 
+  static TextStyle white18SemiBoldIt = const TextStyle(
+      fontSize: 18, fontFamily: 'MyriadPro-SemiBoldit', color: Colors.white);
+
   static TextStyle blue13It = const TextStyle(
       fontSize: 13, fontFamily: 'MyriadPro-it', color: ColorsJunghanns.blueJ2);
 
   static TextStyle white16SemiBoldIt = const TextStyle(
       fontSize: 16, fontFamily: 'MyriadPro-SemiBoldit', color: Colors.white);
+
+  static TextStyle white24SemiBoldIt = const TextStyle(
+      fontSize: 24, fontFamily: 'MyriadPro-SemiBoldit', color: Colors.white);
+
+  static TextStyle white40Bold = const TextStyle(
+      fontSize: 40, fontFamily: 'MyriadPro-Bold', color: Colors.white);
 
   static TextStyle blue17SemiBoldUnderline = const TextStyle(
       fontSize: 17,
@@ -123,4 +132,12 @@ class TextStyles {
       fontSize: 15,
       fontFamily: 'MyriadPro-SemiBold',
       color: ColorsJunghanns.blueJ2);
+
+  static TextStyle blueJ20BoldIt = const TextStyle(
+      fontSize: 20,
+      fontFamily: 'MyriadPro-BoldCondit',
+      color: ColorsJunghanns.blueJ);
+
+  static TextStyle blueJ20It = const TextStyle(
+      fontSize: 20, fontFamily: 'MyriadPro-it', color: ColorsJunghanns.blueJ);
 }

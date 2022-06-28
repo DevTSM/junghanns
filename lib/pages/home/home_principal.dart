@@ -2,44 +2,57 @@ import 'package:flutter/material.dart';
 import 'package:junghanns/components/bottom_bar.dart';
 import 'package:junghanns/pages/home/home.dart';
 import 'package:junghanns/pages/home/routes.dart';
-const List<Widget> pages=[Home(),Home(),Routes(),Home(),Home(),Home()];
+import 'package:junghanns/pages/shop/shopping_cart.dart';
+import 'package:junghanns/styles/color.dart';
+
+const List<Widget> pages = [
+  Home(),
+  Home(),
+  Routes(),
+  Home(),
+  Home(),
+  ShoppingCart()
+];
+
 class HomePrincipal extends StatefulWidget {
   const HomePrincipal({Key? key}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _HomePrincipalState();
-
 }
-class _HomePrincipalState extends State<HomePrincipal>{
+
+class _HomePrincipalState extends State<HomePrincipal> {
   late Size size;
   late int indexCurrent;
   @override
   void initState() {
     super.initState();
-    indexCurrent=0;
+    indexCurrent = 0;
   }
+
   @override
   void dispose() {
     super.dispose();
   }
-  void setIndexCurrent(int current){
+
+  void setIndexCurrent(int current) {
     setState(() {
-      indexCurrent=current;
+      indexCurrent = current;
     });
   }
+
   @override
   Widget build(BuildContext context) {
     setState(() {
-      size=MediaQuery.of(context).size;
+      size = MediaQuery.of(context).size;
     });
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: ColorsJunghanns.whiteJ,
         elevation: 0,
       ),
       body: pages[indexCurrent],
       bottomNavigationBar: bottomBar(setIndexCurrent, indexCurrent),
     );
   }
-
 }

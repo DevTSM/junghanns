@@ -3,8 +3,12 @@ class ProductModel{
   String img;
   double price;
   int id;
-  ProductModel({required this.name,required this.img,required this.price,required this.id});
+  bool isSelect;
+  ProductModel({required this.name,required this.img,required this.price,required this.id,required this.isSelect});
   factory ProductModel.fromState(){
-    return ProductModel(name: ["Cerámica ","M12 Bco"], img: "assets/images/Ceramica.JPG", price: 0,id:0);
+    return ProductModel(name: ["Cerámica ","M12 Bco"], img: "assets/images/Ceramica.JPG", price: 10.1,id:0,isSelect: false);
+  }
+  setSelect(bool isSelect){
+    this.isSelect=isSelect;
   }
 }

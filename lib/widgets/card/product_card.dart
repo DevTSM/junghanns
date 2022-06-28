@@ -1,17 +1,17 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:junghanns/models/product.dart';
+import 'package:junghanns/models/sale.dart';
 
 import '../../styles/decoration.dart';
 import '../../styles/text.dart';
 
 class ProductCard extends StatefulWidget {
-  final String image, productB, productN, price;
-  const ProductCard(
+  ProductModel productCurrent;
+  Function update;
+  ProductCard(
       {Key? key,
-      required this.image,
-      required this.productB,
-      required this.productN,
-      required this.price})
+      required this.productCurrent,required this.update})
       : super(key: key);
 
   @override
@@ -20,7 +20,6 @@ class ProductCard extends StatefulWidget {
 
 class ProductCardState extends State<ProductCard> {
   var myGroup = AutoSizeGroup();
-  bool isSelect = false;
 
   @override
   void initState() {
@@ -33,7 +32,7 @@ class ProductCardState extends State<ProductCard> {
         child: Container(
             padding: const EdgeInsets.all(15),
             decoration:
-                isSelect ? Decorations.blueCard : Decorations.whiteJCard,
+                widget.productCurrent.isSelect ? Decorations.blueCard : Decorations.whiteJCard,
             child: Column(
               children: [
                 Expanded(flex: 6, child: imageProduct()),
@@ -43,8 +42,9 @@ class ProductCardState extends State<ProductCard> {
             )),
         onTap: () {
           setState(() {
-            isSelect = !isSelect;
+            widget.productCurrent.setSelect(!widget.productCurrent.isSelect);
           });
+          widget.update();
         });
   }
 
@@ -54,7 +54,7 @@ class ProductCardState extends State<ProductCard> {
         decoration: Decorations.white2Card,
         padding: const EdgeInsets.all(2),
         child: Image.asset(
-          widget.image,
+          widget.productCurrent.img,
           fit: BoxFit.contain,
         ));
   }
@@ -67,21 +67,19 @@ class ProductCardState extends State<ProductCard> {
           children: [
             Flexible(
                 child: AutoSizeText(
-              widget.productB,
+              widget.productCurrent.name[0],
               maxLines: 1,
               group: myGroup,
               style: TextStyles.blueJ20BoldIt,
             )),
-            widget.productN.isNotEmpty
-                ? Flexible(
+            Flexible(
                     child: AutoSizeText(
-                      widget.productN,
+                      widget.productCurrent.name[1],
                       maxLines: 1,
                       group: myGroup,
                       style: TextStyles.blueJ20It,
                     ),
                   )
-                : Container()
           ],
         ));
   }
@@ -95,7 +93,7 @@ class ProductCardState extends State<ProductCard> {
           Container(
             alignment: Alignment.center,
             child: Text(
-              widget.price,
+              checkDouble(widget.productCurrent.price.toString()),
               style: TextStyles.blueJ20BoldIt,
             ),
           ),

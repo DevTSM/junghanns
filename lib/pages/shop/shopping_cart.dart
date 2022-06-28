@@ -1,11 +1,12 @@
-import 'package:auto_size_text/auto_size_text.dart';
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:http/http.dart';
 import 'package:junghanns/components/button.dart';
 import 'package:junghanns/models/product.dart';
 import 'package:junghanns/models/refill.dart';
+import 'package:junghanns/models/sale.dart';
 import 'package:junghanns/services/store.dart';
 import 'package:junghanns/styles/color.dart';
 import 'package:junghanns/styles/decoration.dart';
@@ -26,12 +27,15 @@ class _ShoppingCartState extends State<ShoppingCart> {
   late Size size;
   late List<RefillModel> refillList = [];
   late List<ProductModel> productsList = [];
-  late bool isSelect = true;
+  late double totalPrice;
+  late int totalItem;
   late bool isProduct;
 
   @override
   void initState() {
     super.initState();
+    totalPrice = 0;
+    totalItem = 0;
     isProduct = true;
     getDataProducts();
   }
@@ -47,7 +51,10 @@ class _ShoppingCartState extends State<ShoppingCart> {
           gravity: ToastGravity.TOP,
           webShowClose: true,
         );
-      } else {}
+      } else {
+        productsList
+            .addAll([ProductModel.fromState(), ProductModel.fromState()]);
+      }
     });
   }
 
@@ -64,47 +71,63 @@ class _ShoppingCartState extends State<ShoppingCart> {
       } else {
         refillList.clear();
         setState(() {
-          answer.body.map((e) => refillList.add(RefillModel.fromService(e))).toList();
+          answer.body
+              .map((e) => refillList.add(RefillModel.fromService(e)))
+              .toList();
         });
       }
     });
   }
-  setitemRefill(){
+
+  setitemRefill() {
     setState(() {
-      isProduct=false;
+      isProduct = false;
     });
   }
-  setitemProduct(){
+
+  setitemProduct() {
     setState(() {
-      isProduct=true;
+      isProduct = true;
     });
   }
+
+  updateTotal() {
+    var data = productsList.where((element) => element.isSelect);
+    setState(() {
+      totalItem = data.length;
+      totalPrice = 0;
+      productsList.map((e) {
+        setState(() {
+          e.isSelect ? totalPrice += e.price : null;
+        });
+      }).toList();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     size = MediaQuery.of(context).size;
     return Scaffold(
       backgroundColor: ColorsJunghanns.white,
-        appBar: AppBar(
-          backgroundColor: ColorsJunghanns.greenJ,
-          systemOverlayStyle: const SystemUiOverlayStyle(
-              statusBarColor: ColorsJunghanns.greenJ,
-              statusBarIconBrightness: Brightness.light,
-              statusBarBrightness: Brightness.light),
-          leading: GestureDetector(
-            child: Container(
-                padding: const EdgeInsets.only(left: 24),
-                child: Image.asset("assets/icons/menuWhite.png")),
-            onTap: () {},
-          ),
-          elevation: 0,
+      appBar: AppBar(
+        backgroundColor: ColorsJunghanns.greenJ,
+        systemOverlayStyle: const SystemUiOverlayStyle(
+            statusBarColor: ColorsJunghanns.greenJ,
+            statusBarIconBrightness: Brightness.light,
+            statusBarBrightness: Brightness.light),
+        leading: GestureDetector(
+          child: Container(
+              padding: const EdgeInsets.only(left: 24),
+              child: Image.asset("assets/icons/menuWhite.png")),
+          onTap: () {},
         ),
-        body: Stack(
-            children: [
-              header(),
-              itemList()
-            ],
-          ),
-        );
+        elevation: 0,
+      ),
+      body: Stack(
+        children: [header(), itemList()],
+      ),
+      
+    );
   }
 
   Widget header() {
@@ -113,50 +136,51 @@ class _ShoppingCartState extends State<ShoppingCart> {
         padding: EdgeInsets.only(
             right: 15, left: 23, top: 10, bottom: size.height * .08),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: const Icon(
-                    Icons.arrow_back_ios,
-                    color: ColorsJunghanns.white,
-                  )),
-              Expanded(
-                  child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: const Icon(
+                        Icons.arrow_back_ios,
+                        color: ColorsJunghanns.white,
+                      )),
+                  Expanded(
+                      child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.only(right: 8, top: 10),
-                        child: Text(
-                          "00",
-                          style: TextStyles.white24SemiBoldIt,
-                        ),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.only(right: 8, top: 10),
+                            child: Text(
+                              totalItem.toString(),
+                              style: TextStyles.white24SemiBoldIt,
+                            ),
+                          ),
+                          Image.asset(
+                            "assets/icons/shoppingIcon.png",
+                            width: 60,
+                          )
+                        ],
                       ),
-                      Image.asset(
-                        "assets/icons/shoppingIcon.png",
-                        width: 60,
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      Text(
+                        checkDouble(totalPrice.toString()),
+                        style: TextStyles.white40Bold,
                       )
                     ],
-                  ),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  Text(
-                    "\$0.00",
-                    style: TextStyles.white40Bold,
-                  )
+                  )),
                 ],
-              )),
-            ],
-          ),
-        ]));
+              ),
+            ]));
   }
 
   Widget itemList() {
@@ -178,8 +202,12 @@ class _ShoppingCartState extends State<ShoppingCart> {
                         width: size.width * 0.14,
                       ),
                       fun: setitemProduct,
-                      decoration: isProduct?Decorations.blueBorder12:Decorations.whiteBorder12,
-                      style: isProduct?TextStyles.white14_5:TextStyles.blue16_4,
+                      decoration: isProduct
+                          ? Decorations.blueBorder12
+                          : Decorations.whiteBorder12,
+                      style: isProduct
+                          ? TextStyles.white14_5
+                          : TextStyles.blue16_4,
                       label: "Productos")),
               const SizedBox(
                 width: 20,
@@ -193,37 +221,59 @@ class _ShoppingCartState extends State<ShoppingCart> {
                               : "assets/icons/shopR1.png",
                           width: size.width * 0.14),
                       fun: setitemRefill,
-                      decoration: isProduct?Decorations.whiteBorder12:Decorations.blueBorder12,
-                      style: isProduct?TextStyles.blue16_4:TextStyles.white14_5,
+                      decoration: isProduct
+                          ? Decorations.whiteBorder12
+                          : Decorations.blueBorder12,
+                      style: isProduct
+                          ? TextStyles.blue16_4
+                          : TextStyles.white14_5,
                       label: "Recargas"))
             ],
           ),
-          const SizedBox(height: 20,),
-          Expanded(child:Container(
-                  width: size.width,
-                  child: GridView.custom(
-                    gridDelegate: SliverWovenGridDelegate.count(
-                      crossAxisCount: 2,
-                      mainAxisSpacing: 30,
-                      crossAxisSpacing: 30,
-                      pattern: [
-                        WovenGridTile(.85),
-                        WovenGridTile(.85),
-                      ],
-                    ),
-                    childrenDelegate: SliverChildBuilderDelegate(
-                        (context, index) => isProduct?ProductCard(
-                        image: productsList[index].img,
-                        productB: productsList[index].name[0],
-                        productN: productsList[index].name[1],
-                        price: productsList[index].price.toString()):RefillCard(refillCurrent: refillList[index],),
-                        childCount: isProduct?productsList.length:refillList.length),
-                  ),
-                ))
+          const SizedBox(
+            height: 20,
+          ),
+          Expanded(
+              child: Container(
+            width: size.width,
+            child: GridView.custom(
+              gridDelegate: SliverWovenGridDelegate.count(
+                crossAxisCount: 2,
+                mainAxisSpacing: 30,
+                crossAxisSpacing: 30,
+                pattern: [
+                  WovenGridTile(.85),
+                  WovenGridTile(.85),
+                ],
+              ),
+              childrenDelegate: SliverChildBuilderDelegate(
+                  (context, index) => isProduct
+                      ? ProductCard(
+                          update: updateTotal,
+                          productCurrent: productsList[index],
+                        )
+                      : RefillCard(
+                          refillCurrent: refillList[index],
+                        ),
+                  childCount:
+                      isProduct ? productsList.length : refillList.length),
+            ),
+          )),
+          Visibility(
+            visible: totalItem>0,
+            child: Container(
+        margin: const EdgeInsets.only(left: 15,right: 15,bottom: 30,top: 30),
+          width: double.infinity,
+          height: 40,
+          alignment: Alignment.center,
+          child: ButtonJunghanns(
+            decoration: Decorations.blueBorder12,
+            fun: print,
+            label: "Terminar venta",
+            style: TextStyles.white17_5,
+          )))
         ],
       ),
     );
   }
-
-
 }

@@ -16,7 +16,6 @@ class RefillCard extends StatefulWidget {
 }
 
 class RefillCardState extends State<RefillCard> {
-  bool isSelect = false;
 
   @override
   void initState() {
@@ -29,7 +28,7 @@ class RefillCardState extends State<RefillCard> {
         child: Container(
             padding: const EdgeInsets.all(15),
             decoration:
-                isSelect ? Decorations.blueCard : Decorations.whiteJCard,
+                widget.refillCurrent.isSelect ? Decorations.blueCard : Decorations.whiteJCard,
             child: Column(
               children: [
                 Expanded(flex: 4, child: imageRefill()),
@@ -39,7 +38,7 @@ class RefillCardState extends State<RefillCard> {
             )),
         onTap: () {
           setState(() {
-            isSelect = !isSelect;
+            widget.refillCurrent.setSelect(!widget.refillCurrent.isSelect);
           });
         });
   }

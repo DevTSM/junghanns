@@ -352,6 +352,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
     return GestureDetector(
       onTap: () {
         Navigator.pop(context);
+        showConfirmSale(text1, 500);
       },
       child: Container(
         padding: const EdgeInsets.only(left: 35, top: 8, bottom: 8),
@@ -385,6 +386,93 @@ class _ShoppingCartState extends State<ShoppingCart> {
           ],
         ),
       ),
+    );
+  }
+
+  showConfirmSale(String wayToPay, double amount) {
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return Center(
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              width: size.width * .75,
+              height: size.height * .25,
+              decoration: Decorations.whiteS1Card,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  Expanded(flex: 2, child: textWayToPay(wayToPay)),
+                  Expanded(flex: 2, child: textAmount(amount)),
+                  Expanded(flex: 3, child: buttomsSale())
+                ],
+              ),
+            ),
+          );
+        });
+  }
+
+  Widget textWayToPay(String wayToPay) {
+    return Container(
+        alignment: Alignment.center,
+        child: DefaultTextStyle(
+            style: TextStyles.blueJ22Bold,
+            child: Text("¿Pago de $wayToPay ?")));
+  }
+
+  Widget textAmount(double amount) {
+    return Column(
+      children: [
+        DefaultTextStyle(
+            style: TextStyles.blueJ215R,
+            child: const Text(
+              "Deseas registrar la venta de:",
+            )),
+        DefaultTextStyle(
+            style: TextStyles.greenJ24Bold,
+            child: Text(
+              "\$ $amount",
+            )),
+      ],
+    );
+  }
+
+  Widget buttomsSale() {
+    return Container(
+      alignment: Alignment.center,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          buttomSale(
+              "Si",
+              () => () {
+                    Navigator.pop(context);
+                  },
+              Decorations.blueBorder12),
+          buttomSale(
+              "No",
+              () => () {
+                    Navigator.pop(context);
+                  },
+              Decorations.redCard),
+        ],
+      ),
+    );
+  }
+
+  Widget buttomSale(String op, Function fun, BoxDecoration deco) {
+    return GestureDetector(
+      onTap: fun(),
+      child: Container(
+          alignment: Alignment.center,
+          width: size.width * 0.22,
+          height: size.width * 0.11,
+          decoration: deco,
+          child: DefaultTextStyle(
+              style: TextStyles.white18SemiBoldIt,
+              child: Text(
+                op,
+              ))),
     );
   }
 }

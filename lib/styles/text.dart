@@ -189,4 +189,9 @@ class TextStyles {
     fontFamily: 'MyriadPro-Regular',
     color: ColorsJunghanns.red,
   );
+
+  static TextStyle greenJ24Bold = const TextStyle(
+      fontSize: 24,
+      fontFamily: 'MyriadPro-Bold',
+      color: ColorsJunghanns.greenJ);
 }

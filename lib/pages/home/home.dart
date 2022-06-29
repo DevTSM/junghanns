@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:junghanns/styles/color.dart';
 import 'package:junghanns/styles/decoration.dart';
 import 'package:junghanns/styles/text.dart';
@@ -15,6 +16,14 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   late Size size;
+  @override
+  void initState(){
+    super.initState();
+    getPermission();
+  }
+  getPermission() async {
+    await Geolocator.requestPermission();
+  }
   @override
   Widget build(BuildContext context) {
     setState(() {

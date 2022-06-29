@@ -1,8 +1,11 @@
 // ignore_for_file: sized_box_for_whitespace, avoid_unnecessary_containers
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:junghanns/components/button.dart';
 import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/models/sale.dart';
@@ -21,10 +24,15 @@ class DetailsCustomer extends StatefulWidget {
 }
 
 class _DetailsCustomerState extends State<DetailsCustomer> {
+  late dynamic pickedImageFile;
   late Size size;
+  late bool isRange;
   @override
   void initState() {
     super.initState();
+    isRange = false;
+    pickedImageFile = null;
+    setCurrentLocation();
     getDataDetails();
   }
 
@@ -52,6 +60,46 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
         context,
         MaterialPageRoute<void>(
             builder: (BuildContext context) => const ShoppingCart()));
+  }
+
+  setCurrentLocation() async {
+    LocationPermission permission = await Geolocator.requestPermission();
+    if (permission == LocationPermission.whileInUse ||
+        permission == LocationPermission.always) {
+      Position _currentLocation = await Geolocator.getCurrentPosition();
+      if (Geolocator.distanceBetween(
+              _currentLocation.latitude,
+              _currentLocation.longitude,
+              widget.customerCurrent.lat,
+              widget.customerCurrent.lng) <
+          3000000) {
+        setState(() {
+          isRange = true;
+        });
+      }
+    } else {
+      print({"permission": permission.toString()});
+    }
+  }
+
+  void _pickImage(int type) async {
+    try {
+      final picker = ImagePicker();
+      final pickedImage = await picker.getImage(
+          source: type == 1 ? ImageSource.camera : ImageSource.gallery,
+          imageQuality: 80);
+      pickedImageFile = File(pickedImage!.path);
+    } catch (e) {
+      Fluttertoast.showToast(
+        msg:
+            "No fue posible ${type == 1 ? "abrir la camara" : "abrir la galeria"},por favor revisa los permisos e intentelo mas tarde.",
+        timeInSecForIosWeb: 2,
+        toastLength: Toast.LENGTH_LONG,
+        backgroundColor: ColorsJunghanns.red,
+        gravity: ToastGravity.TOP,
+        webShowClose: true,
+      );
+    }
   }
 
   @override
@@ -121,10 +169,12 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
               const SizedBox(
                 width: 10,
               ),
-              Image.asset(
-                "assets/icons/photo.png",
-                width: size.width * .13,
-              )
+              GestureDetector(
+                  onTap: () => _pickImage(1),
+                  child: Image.asset(
+                    "assets/icons/photo.png",
+                    width: size.width * .13,
+                  ))
             ],
           ),
           Row(
@@ -162,6 +212,17 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
               child: Stack(
                 alignment: Alignment.bottomRight,
                 children: [
+                  pickedImageFile != null
+                      ? Container(
+                          width: double.infinity,
+                          height: size.width * .50,
+                          child: Card(
+                            child: Image.file(
+                              pickedImageFile,
+                              fit: BoxFit.cover,
+                            ),
+                          ))
+                      : Container(),
                   Container(
                     padding: const EdgeInsets.only(
                         left: 15, right: 15, top: 10, bottom: 10),
@@ -281,36 +342,42 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
           ),
           Container(
               padding: const EdgeInsets.only(left: 10, right: 10),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  Expanded(
-                      child: ButtonJunghanns(
-                          decoration: Decorations.greenBorder5,
-                          style: TextStyles.white17_5,
-                          fun: navigatorShopping,
-                          isIcon: true,
-                          icon: Image.asset(
-                            "assets/icons/shoppingCardWhiteIcon.png",
-                            height: 30,
-                          ),
-                          label: "Venta")),
-                  const SizedBox(
-                    width: 10,
-                  ),
-                  Expanded(
-                      child: ButtonJunghanns(
-                          decoration: Decorations.whiteBorder5Red,
-                          style: TextStyles.red17_6,
-                          fun: navigatorShopping,
-                          isIcon: true,
-                          icon: Container(
-                            width: 0,
-                            height: 30,
-                          ),
-                          label: "Parada"))
-                ],
-              )),
+              child: isRange
+                  ? Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        Expanded(
+                            child: ButtonJunghanns(
+                                decoration: Decorations.greenBorder5,
+                                style: TextStyles.white17_5,
+                                fun: navigatorShopping,
+                                isIcon: true,
+                                icon: Image.asset(
+                                  "assets/icons/shoppingCardWhiteIcon.png",
+                                  height: 30,
+                                ),
+                                label: "Venta")),
+                        const SizedBox(
+                          width: 10,
+                        ),
+                        Expanded(
+                            child: ButtonJunghanns(
+                                decoration: Decorations.whiteBorder5Red,
+                                style: TextStyles.red17_6,
+                                fun: navigatorShopping,
+                                isIcon: true,
+                                icon: Container(
+                                  width: 0,
+                                  height: 30,
+                                ),
+                                label: "Parada"))
+                      ],
+                    )
+                  : ButtonJunghanns(
+                      fun: () {},
+                      decoration: Decorations.whiteBorder5Red,
+                      style: TextStyles.red17_6,
+                      label: "ESTÁS MUY LEJOS DEL CLIENTE !!")),
           const SizedBox(
             height: 20,
           ),

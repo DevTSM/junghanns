@@ -1,6 +1,3 @@
-import 'dart:developer';
-
-import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,7 +5,6 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:junghanns/components/button.dart';
 import 'package:junghanns/models/product.dart';
-import 'package:junghanns/models/refill.dart';
 import 'package:junghanns/models/sale.dart';
 import 'package:junghanns/services/store.dart';
 import 'package:junghanns/styles/color.dart';
@@ -18,7 +14,6 @@ import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:junghanns/widgets/card/product_card.dart';
 
 import '../../models/method_payment.dart';
-import '../../widgets/card/refill_card.dart';
 
 class ShoppingCart extends StatefulWidget {
   const ShoppingCart({Key? key}) : super(key: key);
@@ -29,18 +24,18 @@ class ShoppingCart extends StatefulWidget {
 
 class _ShoppingCartState extends State<ShoppingCart> {
   late Size size;
-  late List<RefillModel> refillList = [];
+  late List<ProductModel> refillList = [];
   late List<ProductModel> productsList = [];
   late List<MethodPayment> paymentsList = [];
+  late List shoppingBasket;
   late double totalPrice;
-  late int totalItem;
   late bool isProduct;
 
   @override
   void initState() {
     super.initState();
+    shoppingBasket=[];
     totalPrice = 0;
-    totalItem = 0;
     isProduct = true;
     getDataProducts();
     getDataPayment();
@@ -59,7 +54,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
         );
       } else {
         productsList
-            .addAll([ProductModel.fromState(), ProductModel.fromState()]);
+            .addAll([ProductModel.fromState(1), ProductModel.fromState(1)]);
       }
     });
   }
@@ -78,7 +73,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
         refillList.clear();
         setState(() {
           answer.body
-              .map((e) => refillList.add(RefillModel.fromService(e)))
+              .map((e) => refillList.add(ProductModel.fromServiceRefill(e)))
               .toList();
         });
       }
@@ -107,7 +102,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
     });
   }
 
-  setitemRefill() {
+  setitemRefill() async {
     setState(() {
       isProduct = false;
     });
@@ -119,16 +114,41 @@ class _ShoppingCartState extends State<ShoppingCart> {
     });
   }
 
-  updateTotal() {
-    var data = productsList.where((element) => element.isSelect);
+  updateTotal(int type) {
     setState(() {
-      totalItem = data.length;
       totalPrice = 0;
-      productsList.map((e) {
-        setState(() {
-          e.isSelect ? totalPrice += e.price : null;
-        });
-      }).toList();
+      shoppingBasket.clear();
+      for(var e in productsList) {
+        if(e.isSelect&&type==1){
+          setState(() {
+            shoppingBasket.add(e);
+            totalPrice+=e.price;
+          });
+        }else{
+          if(e.isSelect){
+            setState(() {
+              e.setSelect(false);
+            });
+            
+          }
+        }
+        
+      }
+        for(var e in refillList) {
+        if(e.isSelect&&type==2){
+          setState(() {
+            shoppingBasket.add(e);
+            totalPrice+=e.price;
+          });
+        }else{
+          if(e.isSelect){
+            setState(() {
+              e.setSelect(false);
+            });
+          }
+        }
+
+      }
     });
   }
 
@@ -186,7 +206,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
                           Container(
                             padding: const EdgeInsets.only(right: 8, top: 10),
                             child: Text(
-                              totalItem.toString(),
+                              shoppingBasket.length.toString(),
                               style: TextStyles.white24SemiBoldIt,
                             ),
                           ),
@@ -274,20 +294,16 @@ class _ShoppingCartState extends State<ShoppingCart> {
                 ],
               ),
               childrenDelegate: SliverChildBuilderDelegate(
-                  (context, index) => isProduct
-                      ? ProductCard(
-                          update: updateTotal,
-                          productCurrent: productsList[index],
-                        )
-                      : RefillCard(
-                          refillCurrent: refillList[index],
+                  (context, index) => ProductCard(
+                        update: updateTotal,
+                          productCurrent: isProduct?productsList[index]:refillList[index],
                         ),
                   childCount:
                       isProduct ? productsList.length : refillList.length),
             ),
           )),
           Visibility(
-              visible: totalItem > 0,
+              visible: shoppingBasket.isNotEmpty,
               child: Container(
                   margin: const EdgeInsets.only(
                       left: 15, right: 15, bottom: 30, top: 30),

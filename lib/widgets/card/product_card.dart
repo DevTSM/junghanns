@@ -44,7 +44,7 @@ class ProductCardState extends State<ProductCard> {
           setState(() {
             widget.productCurrent.setSelect(!widget.productCurrent.isSelect);
           });
-          widget.update();
+          widget.update(widget.productCurrent.type);
         });
   }
 

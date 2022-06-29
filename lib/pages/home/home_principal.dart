@@ -5,14 +5,7 @@ import 'package:junghanns/pages/home/routes.dart';
 import 'package:junghanns/pages/shop/shopping_cart.dart';
 import 'package:junghanns/styles/color.dart';
 
-const List<Widget> pages = [
-  Home(),
-  Home(),
-  Routes(),
-  Home(),
-  Home(),
-  ShoppingCart()
-];
+const List<Widget> pages = [Home(), Home(), Routes(), Home(), Home(), Home()];
 
 class HomePrincipal extends StatefulWidget {
   const HomePrincipal({Key? key}) : super(key: key);

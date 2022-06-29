@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:junghanns/pages/shop/shopping_cart.dart';
 
 class ButtonJunghanns extends StatelessWidget{
   Widget? icon;
   BoxDecoration decoration;
+  Function fun;
   TextStyle style;
   String label;
   bool isIcon;
-  ButtonJunghanns({Key? key, this.icon,required this.decoration,required this.style,required this.label,this.isIcon=false}) : super(key: key);
+  ButtonJunghanns({Key? key, this.icon,required this.fun, required this.decoration,required this.style,required this.label,this.isIcon=false}) : super(key: key);
   @override
   Widget build(BuildContext context){
-    return Container(
+    return GestureDetector(
+      onTap: ()=>fun(),
+    child:Container(
       decoration: decoration,
       padding: const EdgeInsets.only(top: 10,bottom: 10),
       child: Row(
@@ -28,7 +32,7 @@ class ButtonJunghanns extends StatelessWidget{
               child: SizedBox(width: 10,)),
         ],
       ),
-    );
+    ));
   }
 
 }

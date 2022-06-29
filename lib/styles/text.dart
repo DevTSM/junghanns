@@ -37,32 +37,32 @@ class TextStyles {
     fontWeight: FontWeight.w600,
     color: ColorsJunghanns.white,
     fontFamily: 'Roboto',
-  ); 
-  static const TextStyle white12_4 =TextStyle(
+  );
+  static const TextStyle white12_4 = TextStyle(
     fontSize: 12,
     fontWeight: FontWeight.w400,
     color: ColorsJunghanns.white,
     fontFamily: 'Roboto',
-  ); 
-  static const TextStyle white17_5 =TextStyle(
+  );
+  static const TextStyle white17_5 = TextStyle(
     fontSize: 17,
     fontWeight: FontWeight.w500,
     color: ColorsJunghanns.white,
     fontFamily: 'Roboto',
-  ); 
-  static const TextStyle red17_6 =TextStyle(
+  );
+  static const TextStyle red17_6 = TextStyle(
     fontSize: 17,
     fontWeight: FontWeight.w600,
     color: ColorsJunghanns.red,
     fontFamily: 'Roboto',
-  ); 
-  static const TextStyle white14_5 =TextStyle(
+  );
+  static const TextStyle white14_5 = TextStyle(
     fontSize: 14,
     fontWeight: FontWeight.w500,
     color: ColorsJunghanns.white,
     fontFamily: 'Roboto',
-  ); 
-  static const TextStyle white27_7 =TextStyle(
+  );
+  static const TextStyle white27_7 = TextStyle(
     fontSize: 27,
     fontWeight: FontWeight.w700,
     color: ColorsJunghanns.white,
@@ -79,20 +79,20 @@ class TextStyles {
     fontWeight: FontWeight.w700,
     color: ColorsJunghanns.blue,
     fontFamily: 'Roboto',
-  ); 
-  static const TextStyle blue23_7 =TextStyle(
+  );
+  static const TextStyle blue23_7 = TextStyle(
     fontSize: 23,
     fontWeight: FontWeight.w700,
     color: ColorsJunghanns.blue,
     fontFamily: 'Roboto',
-  ); 
-  static const TextStyle blue25_7 =TextStyle(
+  );
+  static const TextStyle blue25_7 = TextStyle(
     fontSize: 25,
     fontWeight: FontWeight.w700,
     color: ColorsJunghanns.blue,
     fontFamily: 'Roboto',
-  ); 
-  static const TextStyle blue19_4 =TextStyle(
+  );
+  static const TextStyle blue19_4 = TextStyle(
     fontSize: 19,
     fontWeight: FontWeight.w400,
     color: ColorsJunghanns.blue,
@@ -170,4 +170,23 @@ class TextStyles {
 
   static TextStyle blueJ20It = const TextStyle(
       fontSize: 20, fontFamily: 'MyriadPro-it', color: ColorsJunghanns.blueJ);
+
+  static TextStyle blueJ22Bold = const TextStyle(
+      fontSize: 22, fontFamily: 'MyriadPro-Bold', color: ColorsJunghanns.blueJ);
+
+  static TextStyle blueJ220Bold = const TextStyle(
+      fontSize: 20,
+      fontFamily: 'MyriadPro-Bold',
+      color: ColorsJunghanns.blueJ2);
+
+  static TextStyle blueJ215R = const TextStyle(
+      fontSize: 15,
+      fontFamily: 'MyriadPro-Regular',
+      color: ColorsJunghanns.blueJ2);
+
+  static const TextStyle redJ13 = TextStyle(
+    fontSize: 13,
+    fontFamily: 'MyriadPro-Regular',
+    color: ColorsJunghanns.red,
+  );
 }

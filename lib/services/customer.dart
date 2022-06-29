@@ -65,33 +65,3 @@ Future<Answer> getDetailsCustomer(int id) async {
         body: e, message: "Algo salio mal, intentalo mas tarde.", error: true);
   }
 }
-
-Future<Answer> getListProductsAndRefill() async {
-  log("/CustomerServices <getListProducts>");
-  try {
-    var response = jsonDecode((await http.get(
-            Uri.parse("$urlBase/index.php/almacenmovil?q=recarga&idRuta=1"),
-            headers: {
-          "Content-Type": "aplication/json",
-          "x-api-key": apiKey,
-          "client_secret": clientSecret,
-          "Authorization":
-              "Bearer " + "caf048dc9e6560d05fe75f8d00ee4c48db607654",
-        }))
-        .body);
-    if (response != null) {
-      log("/CustomerServices <getListProducts> Successfull ");
-      return Answer(body: response, message: "", error: false);
-    } else {
-      log("/CustomerServices <getListProducts> Fail");
-      return Answer(
-          body: response,
-          message: "Algo salio mal, intentalo mas tarde.",
-          error: true);
-    }
-  } catch (e) {
-    log("/CustomerServices <getListProducts> Catch ${e.toString()}");
-    return Answer(
-        body: e, message: "Algo salio mal, intentalo mas tarde.", error: true);
-  }
-}

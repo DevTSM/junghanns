@@ -17,6 +17,7 @@ import 'package:junghanns/styles/text.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:junghanns/widgets/card/product_card.dart';
 
+import '../../models/method_payment.dart';
 import '../../widgets/card/refill_card.dart';
 
 class ShoppingCart extends StatefulWidget {
@@ -30,6 +31,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
   late Size size;
   late List<RefillModel> refillList = [];
   late List<ProductModel> productsList = [];
+  late List<MethodPayment> paymentsList = [];
   late double totalPrice;
   late int totalItem;
   late bool isProduct;
@@ -41,6 +43,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
     totalItem = 0;
     isProduct = true;
     getDataProducts();
+    getDataPayment();
   }
 
   getDataProducts() async {
@@ -76,6 +79,28 @@ class _ShoppingCartState extends State<ShoppingCart> {
         setState(() {
           answer.body
               .map((e) => refillList.add(RefillModel.fromService(e)))
+              .toList();
+        });
+      }
+    });
+  }
+
+  getDataPayment() async {
+    await getPaymentMethods(1).then((answer) {
+      if (answer.error) {
+        Fluttertoast.showToast(
+          msg: answer.message,
+          timeInSecForIosWeb: 2,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+        );
+      } else {
+        paymentsList.clear();
+        setState(() {
+          //log("Metodos de pago ---  " + answer.body.toString());
+          answer.body
+              .map((e) => paymentsList.add(MethodPayment.fromService(e)))
               .toList();
         });
       }
@@ -288,12 +313,10 @@ class _ShoppingCartState extends State<ShoppingCart> {
               actionScrollController: ScrollController(
                   initialScrollOffset: 1.0, keepScrollOffset: true),
               title: showTitle(),
-              actions: [
-                showItem("Contado", "Pago total de la compra",
-                    FontAwesomeIcons.coins),
-                showItem("Credito", "Pago parte de la compra",
-                    FontAwesomeIcons.solidCreditCard)
-              ]);
+              actions: paymentsList.map((item) {
+                return showItem(item.wayToPay, "Pago total de la compra",
+                    FontAwesomeIcons.coins);
+              }).toList());
         });
   }
 
@@ -352,11 +375,11 @@ class _ShoppingCartState extends State<ShoppingCart> {
                     child: Text(
                       text1,
                     )),
-                DefaultTextStyle(
+                /*DefaultTextStyle(
                     style: TextStyles.blueJ215R,
                     child: Text(
                       text2,
-                    ))
+                    ))*/
               ],
             ),
           ],

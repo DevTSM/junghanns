@@ -1,7 +1,10 @@
 // ignore_for_file: sized_box_for_whitespace, avoid_unnecessary_containers
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:junghanns/components/button.dart';
 import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/models/sale.dart';
@@ -20,10 +23,15 @@ class DetailsCustomer extends StatefulWidget {
 }
 
 class _DetailsCustomerState extends State<DetailsCustomer> {
+  late dynamic pickedImageFile;
   late Size size;
+  late bool isRange;
   @override
   void initState() {
     super.initState();
+    isRange = false;
+    pickedImageFile=null;
+    setCurrentLocation();
     getDataDetails();
   }
 
@@ -38,16 +46,61 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
           webShowClose: true,
         );
       } else {
-          setState(() {
-            widget.customerCurrent=CustomerModel.fromService(answer.body,widget.customerCurrent.id);
-          });
+        setState(() {
+          widget.customerCurrent =
+              CustomerModel.fromService(answer.body, widget.customerCurrent.id);
+        });
       }
     });
   }
-  navigatorShopping(){
-    Navigator.push(context, MaterialPageRoute<void>(
-                  builder: (BuildContext context) => const ShoppingCart()));
+
+  navigatorShopping() {
+    Navigator.push(
+        context,
+        MaterialPageRoute<void>(
+            builder: (BuildContext context) => const ShoppingCart()));
   }
+
+  setCurrentLocation() async {
+    LocationPermission permission = await Geolocator.requestPermission();
+    if (permission == LocationPermission.whileInUse ||
+        permission == LocationPermission.always) {
+      Position _currentLocation = await Geolocator.getCurrentPosition();
+      if (Geolocator.distanceBetween(
+              _currentLocation.latitude,
+              _currentLocation.longitude,
+              widget.customerCurrent.lat,
+              widget.customerCurrent.lng) <
+          2000000) {
+        setState(() {
+          isRange = true;
+        });
+      }
+    } else {
+      print({"permission": permission.toString()});
+    }
+  }
+
+  void _pickImage(int type) async {
+    try {
+      final picker = ImagePicker();
+      final pickedImage = await picker.getImage(
+          source: type == 1 ? ImageSource.camera : ImageSource.gallery,
+          imageQuality: 80);
+      pickedImageFile = File(pickedImage!.path);
+    } catch (e) {
+      Fluttertoast.showToast(
+        msg:
+            "No fue posible ${type == 1 ? "abrir la camara" : "abrir la galeria"},por favor revisa los permisos e intentelo mas tarde.",
+        timeInSecForIosWeb: 2,
+        toastLength: Toast.LENGTH_LONG,
+        backgroundColor: ColorsJunghanns.red,
+        gravity: ToastGravity.TOP,
+        webShowClose: true,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     setState(() {
@@ -106,10 +159,12 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
               const SizedBox(
                 width: 10,
               ),
-              Image.asset(
-                "assets/icons/photo.png",
-                width: size.width * .13,
-              )
+              GestureDetector(
+                  onTap: () => _pickImage(1),
+                  child: Image.asset(
+                    "assets/icons/photo.png",
+                    width: size.width * .13,
+                  ))
             ],
           ),
           Row(
@@ -147,6 +202,18 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
               child: Stack(
                 alignment: Alignment.bottomRight,
                 children: [
+                  pickedImageFile != null?
+                      Container(
+                        width: double.infinity,
+                        height: size.width * .50,
+                          child: Card(
+
+                            child: Image.file(
+                        pickedImageFile,
+                        fit: BoxFit.cover,
+                      ),
+                          )
+                          ):Container(),
                   Container(
                     padding: const EdgeInsets.only(
                         left: 15, right: 15, top: 10, bottom: 10),
@@ -261,33 +328,47 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
                           widget.customerCurrent.byCollect))
                 ],
               )),
-              const SizedBox(
+          const SizedBox(
             height: 20,
           ),
           Container(
-            padding: const EdgeInsets.only(left: 10, right: 10),
-            child:Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              Expanded(
-                  child: ButtonJunghanns(
-                      decoration: Decorations.greenBorder5,
-                      style: TextStyles.white17_5,
-                      fun: navigatorShopping,
-                      isIcon: true,
-                      icon: Image.asset("assets/icons/shoppingCardWhiteIcon.png",height: 30,),
-                      label: "Venta")),
-                      const SizedBox(width: 10,),
-                      Expanded(
-                  child: ButtonJunghanns(
+              padding: const EdgeInsets.only(left: 10, right: 10),
+              child: isRange
+                  ? Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        Expanded(
+                            child: ButtonJunghanns(
+                                decoration: Decorations.greenBorder5,
+                                style: TextStyles.white17_5,
+                                fun: navigatorShopping,
+                                isIcon: true,
+                                icon: Image.asset(
+                                  "assets/icons/shoppingCardWhiteIcon.png",
+                                  height: 30,
+                                ),
+                                label: "Venta")),
+                        const SizedBox(
+                          width: 10,
+                        ),
+                        Expanded(
+                            child: ButtonJunghanns(
+                                decoration: Decorations.whiteBorder5Red,
+                                style: TextStyles.red17_6,
+                                fun: navigatorShopping,
+                                isIcon: true,
+                                icon: Container(
+                                  width: 0,
+                                  height: 30,
+                                ),
+                                label: "Parada"))
+                      ],
+                    )
+                  : ButtonJunghanns(
+                      fun: print,
                       decoration: Decorations.whiteBorder5Red,
                       style: TextStyles.red17_6,
-                      fun: navigatorShopping,
-                      isIcon: true,
-                      icon: Container(width: 0,height: 30,),
-                      label: "Parada"))
-            ],
-          )),
+                      label: "ESTÁS MUY LEJOS DEL CLIENTE !!")),
           const SizedBox(
             height: 20,
           ),
@@ -296,7 +377,8 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
       ),
     );
   }
-  Widget history(){
+
+  Widget history() {
     return Stack(
       children: [
         Container(
@@ -305,68 +387,94 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
           color: ColorsJunghanns.white,
         ),
         Container(
-          padding: const EdgeInsets.only(left: 10,right: 10),
-          child:Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            observation(),
-            const SizedBox(height: 20,),
-            const Text("\t\t\t\tHistorial de visitas",style: TextStyles.blue25_7,),
-            const SizedBox(height: 20,),
-            widget.customerCurrent.history.isEmpty?Container(
-              padding: const EdgeInsets.only(top: 20,bottom: 50),
-              alignment: Alignment.center,
-              child:const Text("Sin historial",style: TextStyles.grey17_4,)):Column(
-              children: widget.customerCurrent.history.map((e) => Column(
-                children: [
-                  SalesCard(saleCurrent: e),
-                  Row(children: [
-                            Container(
-                              margin: EdgeInsets.only(left: (size.width * .07)+15),
-                              color: ColorsJunghanns.grey,
-                              width: .5,
-                              height: 15,
-                            )
-                          ])
-                ],
-              )).toList(),
-            )
-          ],
-        ))
+            padding: const EdgeInsets.only(left: 10, right: 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                observation(),
+                const SizedBox(
+                  height: 20,
+                ),
+                const Text(
+                  "\t\t\t\tHistorial de visitas",
+                  style: TextStyles.blue25_7,
+                ),
+                const SizedBox(
+                  height: 20,
+                ),
+                widget.customerCurrent.history.isEmpty
+                    ? Container(
+                        padding: const EdgeInsets.only(top: 20, bottom: 50),
+                        alignment: Alignment.center,
+                        child: const Text(
+                          "Sin historial",
+                          style: TextStyles.grey17_4,
+                        ))
+                    : Column(
+                        children: widget.customerCurrent.history
+                            .map((e) => Column(
+                                  children: [
+                                    SalesCard(saleCurrent: e),
+                                    Row(children: [
+                                      Container(
+                                        margin: EdgeInsets.only(
+                                            left: (size.width * .07) + 15),
+                                        color: ColorsJunghanns.grey,
+                                        width: .5,
+                                        height: 15,
+                                      )
+                                    ])
+                                  ],
+                                ))
+                            .toList(),
+                      )
+              ],
+            ))
       ],
     );
   }
-  Widget observation(){
+
+  Widget observation() {
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.0)),
       child: Container(
-        padding: const EdgeInsets.only(left: 15,right: 15,top: 10,bottom: 10),
-      child:Column(
-        children: [
-          Row(
+          padding:
+              const EdgeInsets.only(left: 15, right: 15, top: 10, bottom: 10),
+          child: Column(
             children: [
-              const Expanded(child:Text("Observaciones",style: TextStyles.blue23_7,)),
-              Image.asset("assets/icons/observationIcon.png",width: 50,),
+              Row(
+                children: [
+                  const Expanded(
+                      child: Text(
+                    "Observaciones",
+                    style: TextStyles.blue23_7,
+                  )),
+                  Image.asset(
+                    "assets/icons/observationIcon.png",
+                    width: 50,
+                  ),
+                ],
+              ),
+              Text(widget.customerCurrent.observation),
+              Container(
+                width: double.infinity,
+                alignment: Alignment.bottomRight,
+                child: Image.asset(
+                  "assets/icons/editIcon.png",
+                  width: 25,
+                ),
+              )
             ],
-          ),
-          Text(widget.customerCurrent.observation),
-          Container(
-            width: double.infinity,
-            alignment: Alignment.bottomRight,
-            child: Image.asset("assets/icons/editIcon.png",width: 25,),
-          )
-        ],
-      )),
+          )),
     );
   }
+
   Widget itemBalance(String image, String label, double count) {
     return Card(
       elevation: 1,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.0)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
+      child: Column(crossAxisAlignment: CrossAxisAlignment.center, children: [
         const SizedBox(
           height: 10,
         ),

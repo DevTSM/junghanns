@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:junghanns/pages/shop/shopping_cart.dart';
 
 class ButtonJunghanns extends StatelessWidget{
   Widget? icon;
@@ -19,15 +18,15 @@ class ButtonJunghanns extends StatelessWidget{
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Expanded(
+          const Expanded(
             flex:1,
             child: SizedBox(width: 10,)),
           isIcon?icon!:Container(),
-          Expanded(
+          const Expanded(
             flex: 2,
             child: SizedBox(width: 10,)),
             Text(label,style: style,),
-            Expanded(
+            const Expanded(
               flex: 3,
               child: SizedBox(width: 10,)),
         ],

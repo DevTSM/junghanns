@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:junghanns/components/button.dart';
+import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/models/product.dart';
 import 'package:junghanns/models/sale.dart';
 import 'package:junghanns/services/store.dart';
@@ -16,7 +17,8 @@ import 'package:junghanns/widgets/card/product_card.dart';
 import '../../models/method_payment.dart';
 
 class ShoppingCart extends StatefulWidget {
-  const ShoppingCart({Key? key}) : super(key: key);
+  CustomerModel customerCurrent;
+  ShoppingCart({Key? key, required this.customerCurrent}) : super(key: key);
 
   @override
   State<ShoppingCart> createState() => _ShoppingCartState();
@@ -34,7 +36,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
   @override
   void initState() {
     super.initState();
-    shoppingBasket=[];
+    shoppingBasket = [];
     totalPrice = 0;
     isProduct = true;
     getDataProducts();
@@ -118,36 +120,33 @@ class _ShoppingCartState extends State<ShoppingCart> {
     setState(() {
       totalPrice = 0;
       shoppingBasket.clear();
-      for(var e in productsList) {
-        if(e.isSelect&&type==1){
+      for (var e in productsList) {
+        if (e.isSelect && type == 1) {
           setState(() {
             shoppingBasket.add(e);
-            totalPrice+=e.price;
+            totalPrice += e.price;
           });
-        }else{
-          if(e.isSelect){
+        } else {
+          if (e.isSelect) {
             setState(() {
               e.setSelect(false);
             });
-            
           }
         }
-        
       }
-        for(var e in refillList) {
-        if(e.isSelect&&type==2){
+      for (var e in refillList) {
+        if (e.isSelect && type == 2) {
           setState(() {
             shoppingBasket.add(e);
-            totalPrice+=e.price;
+            totalPrice += e.price;
           });
-        }else{
-          if(e.isSelect){
+        } else {
+          if (e.isSelect) {
             setState(() {
               e.setSelect(false);
             });
           }
         }
-
       }
     });
   }
@@ -296,8 +295,9 @@ class _ShoppingCartState extends State<ShoppingCart> {
               childrenDelegate: SliverChildBuilderDelegate(
                   (context, index) => ProductCard(
                         update: updateTotal,
-                          productCurrent: isProduct?productsList[index]:refillList[index],
-                        ),
+                        productCurrent:
+                            isProduct ? productsList[index] : refillList[index],
+                      ),
                   childCount:
                       isProduct ? productsList.length : refillList.length),
             ),
@@ -330,8 +330,8 @@ class _ShoppingCartState extends State<ShoppingCart> {
                   initialScrollOffset: 1.0, keepScrollOffset: true),
               title: showTitle(),
               actions: paymentsList.map((item) {
-                return showItem(item.wayToPay, "Pago total de la compra",
-                    FontAwesomeIcons.coins);
+                return showItem(
+                    item, "Pago total de la compra", FontAwesomeIcons.coins);
               }).toList());
         });
   }
@@ -364,11 +364,11 @@ class _ShoppingCartState extends State<ShoppingCart> {
     );
   }
 
-  Widget showItem(String text1, String text2, IconData icon) {
+  Widget showItem(MethodPayment methodCurrent, String text2, IconData icon) {
     return GestureDetector(
       onTap: () {
         Navigator.pop(context);
-        showConfirmSale(text1, 500);
+        showConfirmSale(methodCurrent, totalPrice);
       },
       child: Container(
         padding: const EdgeInsets.only(left: 35, top: 8, bottom: 8),
@@ -390,7 +390,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
                 DefaultTextStyle(
                     style: TextStyles.blueJ220Bold,
                     child: Text(
-                      text1,
+                      methodCurrent.wayToPay,
                     )),
                 /*DefaultTextStyle(
                     style: TextStyles.blueJ215R,
@@ -405,7 +405,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
     );
   }
 
-  showConfirmSale(String wayToPay, double amount) {
+  showConfirmSale(MethodPayment methodCurrent, double amount) {
     showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -413,14 +413,14 @@ class _ShoppingCartState extends State<ShoppingCart> {
             child: Container(
               padding: const EdgeInsets.all(12),
               width: size.width * .75,
-              height: size.height * .25,
               decoration: Decorations.whiteS1Card,
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  Expanded(flex: 2, child: textWayToPay(wayToPay)),
-                  Expanded(flex: 2, child: textAmount(amount)),
-                  Expanded(flex: 3, child: buttomsSale())
+                  textWayToPay(methodCurrent.wayToPay),
+                  textAmount(amount),
+                  buttomsSale(methodCurrent)
                 ],
               ),
             ),
@@ -447,13 +447,13 @@ class _ShoppingCartState extends State<ShoppingCart> {
         DefaultTextStyle(
             style: TextStyles.greenJ24Bold,
             child: Text(
-              "\$ $amount",
+              checkDouble(amount.toString()),
             )),
       ],
     );
   }
 
-  Widget buttomsSale() {
+  Widget buttomsSale(MethodPayment methodPayment) {
     return Container(
       alignment: Alignment.center,
       child: Row(
@@ -461,8 +461,41 @@ class _ShoppingCartState extends State<ShoppingCart> {
         children: [
           buttomSale(
               "Si",
-              () => () {
-                    Navigator.pop(context);
+              () => () async {
+                    Map<String, dynamic> data = {
+                      "idCliente": widget.customerCurrent.idClient,
+                      "idCatRuta": 21,
+                      "latitud": widget.customerCurrent.lat,
+                      "longitud": widget.customerCurrent.lng,
+                      "cantidad": 1,
+                      "precioUnitario": totalPrice,
+                      "idProductoServicio": 22,
+                      "idAutorizacion": 1,
+                      "tipoFormaPago": methodPayment.typeWayToPay,
+                      "idClienteOrdenVisitaRuta": widget.customerCurrent.id,
+                      "folio": "552555"
+                    };
+                    await setSale(data).then((answer) {
+                      if (answer.error) {
+                        Fluttertoast.showToast(
+                          msg: answer.message,
+                          timeInSecForIosWeb: 2,
+                          toastLength: Toast.LENGTH_LONG,
+                          gravity: ToastGravity.TOP,
+                          webShowClose: true,
+                        );
+                      } else {
+                        Fluttertoast.showToast(
+                          msg: "Venta realizada con exito",
+                          timeInSecForIosWeb: 2,
+                          toastLength: Toast.LENGTH_LONG,
+                          gravity: ToastGravity.TOP,
+                          webShowClose: true,
+                        );
+                        Navigator.pop(context);
+                        Navigator.pop(context);
+                      }
+                    });
                   },
               Decorations.blueBorder12),
           buttomSale(

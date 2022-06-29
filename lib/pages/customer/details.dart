@@ -59,7 +59,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
     Navigator.push(
         context,
         MaterialPageRoute<void>(
-            builder: (BuildContext context) => const ShoppingCart()));
+            builder: (BuildContext context) => ShoppingCart(customerCurrent:widget.customerCurrent)));
   }
 
   setCurrentLocation() async {

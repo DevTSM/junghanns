@@ -123,7 +123,7 @@ Future<Answer> setSale(Map<String,dynamic> data)async {
       log("/StoreServices <setSale> Successfull ${response.toString()}");
       return Answer(body: response, message: "", error: false);
     }else{
-      log("/StoreServices <setSale> Fail");
+      log("/StoreServices <setSale> Fail ${response.toString()}");
       return Answer(body: response, message: "Algo salio mal, intentalo mas tarde.", error: true);
     }
   }catch(e){

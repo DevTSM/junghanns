@@ -55,11 +55,15 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
     });
   }
 
-  navigatorShopping() {
+  navigatorShopping(bool isPR) {
+    Navigator.pop(context);
     Navigator.push(
         context,
         MaterialPageRoute<void>(
-            builder: (BuildContext context) => ShoppingCart(customerCurrent:widget.customerCurrent)));
+            builder: (BuildContext context) => ShoppingCart(
+                  customerCurrent: widget.customerCurrent,
+                  isPR: isPR,
+                )));
   }
 
   setCurrentLocation() async {
@@ -350,7 +354,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
                             child: ButtonJunghanns(
                                 decoration: Decorations.greenBorder5,
                                 style: TextStyles.white17_5,
-                                fun: navigatorShopping,
+                                fun: showSelectPR,
                                 isIcon: true,
                                 icon: Image.asset(
                                   "assets/icons/shoppingCardWhiteIcon.png",
@@ -364,7 +368,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
                             child: ButtonJunghanns(
                                 decoration: Decorations.whiteBorder5Red,
                                 style: TextStyles.red17_6,
-                                fun: navigatorShopping,
+                                fun: () {},
                                 isIcon: true,
                                 icon: Container(
                                   width: 0,
@@ -385,6 +389,51 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
         ],
       ),
     );
+  }
+
+  showSelectPR() {
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return Center(
+            child: Container(
+              padding: const EdgeInsets.all(25),
+              width: size.width * .75,
+              height: size.height * .24,
+              decoration: Decorations.lightBlueS1Card,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  Expanded(
+                    child: ButtonJunghanns(
+                        isIcon: true,
+                        icon: Image.asset(
+                          "assets/icons/shopP2.png",
+                          width: size.width * 0.14,
+                        ),
+                        fun: () => navigatorShopping(true),
+                        decoration: Decorations.blueBorder12,
+                        style: TextStyles.white14_5,
+                        label: "Productos"),
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  Expanded(
+                      child: ButtonJunghanns(
+                          isIcon: true,
+                          icon: Image.asset("assets/icons/shopR1.png",
+                              width: size.width * 0.14),
+                          fun: () => navigatorShopping(false),
+                          decoration: Decorations.whiteSblackCard,
+                          style: TextStyles.blue16_4,
+                          label: "Recargas"))
+                ],
+              ),
+            ),
+          );
+        });
   }
 
   Widget history() {

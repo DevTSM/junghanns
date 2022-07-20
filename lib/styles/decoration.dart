@@ -55,6 +55,19 @@ class Decorations {
           blurRadius: 1.0,
         )
       ]);
+
+  static BoxDecoration whiteSblackCard = const BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.all(
+        Radius.circular(10),
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black38,
+          blurRadius: 1.0,
+        )
+      ]);
+
   static BoxDecoration white2Card = const BoxDecoration(
     color: Colors.white,
     borderRadius: BorderRadius.all(
@@ -106,4 +119,28 @@ class Decorations {
       Radius.circular(10),
     ),
   );
+
+  static BoxDecoration lightBlueS1Card = const BoxDecoration(
+      color: ColorsJunghanns.lightBlue,
+      borderRadius: BorderRadius.all(
+        Radius.circular(10),
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: ColorsJunghanns.lighGrey,
+          blurRadius: 1.0,
+        )
+      ]);
+
+  static BoxDecoration whiteS2Card = const BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.all(
+        Radius.circular(10),
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black,
+          blurRadius: 1.0,
+        )
+      ]);
 }

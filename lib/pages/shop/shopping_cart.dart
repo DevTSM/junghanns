@@ -18,7 +18,9 @@ import '../../models/method_payment.dart';
 
 class ShoppingCart extends StatefulWidget {
   CustomerModel customerCurrent;
-  ShoppingCart({Key? key, required this.customerCurrent}) : super(key: key);
+  bool isPR;
+  ShoppingCart({Key? key, required this.customerCurrent, required this.isPR})
+      : super(key: key);
 
   @override
   State<ShoppingCart> createState() => _ShoppingCartState();
@@ -31,21 +33,19 @@ class _ShoppingCartState extends State<ShoppingCart> {
   late List<MethodPayment> paymentsList = [];
   late List shoppingBasket;
   late double totalPrice;
-  late bool isProduct;
 
   @override
   void initState() {
     super.initState();
     shoppingBasket = [];
     totalPrice = 0;
-    isProduct = true;
-    getDataProducts();
+
+    widget.isPR ? getDataProducts() : getDataRefill();
     getDataPayment();
   }
 
   getDataProducts() async {
     await getProductList().then((answer) {
-      getDataRefill();
       if (answer.error) {
         Fluttertoast.showToast(
           msg: answer.message,
@@ -101,18 +101,6 @@ class _ShoppingCartState extends State<ShoppingCart> {
               .toList();
         });
       }
-    });
-  }
-
-  setitemRefill() async {
-    setState(() {
-      isProduct = false;
-    });
-  }
-
-  setitemProduct() {
-    setState(() {
-      isProduct = true;
     });
   }
 
@@ -180,7 +168,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
     return Container(
         color: ColorsJunghanns.green,
         padding: EdgeInsets.only(
-            right: 15, left: 23, top: 10, bottom: size.height * .08),
+            right: 15, left: 23, top: 10, bottom: size.height * .05),
         child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -212,7 +200,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
                           Image.asset(
                             "assets/icons/shoppingIcon.png",
                             width: 60,
-                          )
+                          ),
                         ],
                       ),
                       const SizedBox(
@@ -224,6 +212,9 @@ class _ShoppingCartState extends State<ShoppingCart> {
                       )
                     ],
                   )),
+                  SizedBox(
+                    width: size.width * .1,
+                  ),
                 ],
               ),
             ]));
@@ -231,51 +222,11 @@ class _ShoppingCartState extends State<ShoppingCart> {
 
   Widget itemList() {
     return Container(
-      margin: EdgeInsets.only(top: size.height * .18),
+      margin: EdgeInsets.only(top: size.height * .2),
       padding: const EdgeInsets.only(left: 15, right: 15),
       width: double.infinity,
       child: Column(
         children: [
-          Row(
-            children: [
-              Expanded(
-                  child: ButtonJunghanns(
-                      isIcon: true,
-                      icon: Image.asset(
-                        isProduct
-                            ? "assets/icons/shopP2.png"
-                            : "assets/icons/shopP1.png",
-                        width: size.width * 0.14,
-                      ),
-                      fun: setitemProduct,
-                      decoration: isProduct
-                          ? Decorations.blueBorder12
-                          : Decorations.whiteBorder12,
-                      style: isProduct
-                          ? TextStyles.white14_5
-                          : TextStyles.blue16_4,
-                      label: "Productos")),
-              const SizedBox(
-                width: 20,
-              ),
-              Expanded(
-                  child: ButtonJunghanns(
-                      isIcon: true,
-                      icon: Image.asset(
-                          !isProduct
-                              ? "assets/icons/shopR2.png"
-                              : "assets/icons/shopR1.png",
-                          width: size.width * 0.14),
-                      fun: setitemRefill,
-                      decoration: isProduct
-                          ? Decorations.whiteBorder12
-                          : Decorations.blueBorder12,
-                      style: isProduct
-                          ? TextStyles.blue16_4
-                          : TextStyles.white14_5,
-                      label: "Recargas"))
-            ],
-          ),
           const SizedBox(
             height: 20,
           ),
@@ -295,11 +246,12 @@ class _ShoppingCartState extends State<ShoppingCart> {
               childrenDelegate: SliverChildBuilderDelegate(
                   (context, index) => ProductCard(
                         update: updateTotal,
-                        productCurrent:
-                            isProduct ? productsList[index] : refillList[index],
+                        productCurrent: widget.isPR
+                            ? productsList[index]
+                            : refillList[index],
                       ),
                   childCount:
-                      isProduct ? productsList.length : refillList.length),
+                      widget.isPR ? productsList.length : refillList.length),
             ),
           )),
           Visibility(

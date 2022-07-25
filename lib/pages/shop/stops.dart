@@ -4,10 +4,12 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:junghanns/models/stop.dart';
 import 'package:junghanns/styles/decoration.dart';
 
 import '../../components/button.dart';
+import '../../services/store.dart';
 import '../../styles/color.dart';
 import '../../styles/text.dart';
 
@@ -29,42 +31,60 @@ class _StopsState extends State<Stops> {
     getDataStops();
   }
 
-  getDataStops() {
-    stopList.add(StopModel(
-        name: "No estuvo",
-        img: "assets/images/stop1.png",
-        id: 0,
-        isSelect: false));
-    stopList.add(StopModel(
-        name: "Todavia tiene",
-        img: "assets/images/stop2.png",
-        id: 1,
-        isSelect: false));
-    stopList.add(StopModel(
-        name: "No recibió",
-        img: "assets/images/stop3.png",
-        id: 2,
-        isSelect: false));
-    stopList.add(StopModel(
-        name: "No tiene dinero",
-        img: "assets/images/stop4.png",
-        id: 3,
-        isSelect: false));
-    stopList.add(StopModel(
-        name: "Ya es tarde",
-        img: "assets/images/stop5.png",
-        id: 4,
-        isSelect: false));
-    stopList.add(StopModel(
-        name: "Vacaciones",
-        img: "assets/images/stop6.png",
-        id: 5,
-        isSelect: false));
-    stopList.add(StopModel(
-        name: "Cancela servico",
-        img: "assets/images/stop7.png",
-        id: 6,
-        isSelect: false));
+  getDataStops() async {
+    await getStopsList().then((answer) {
+      if (answer.error) {
+        Fluttertoast.showToast(
+          msg: answer.message,
+          timeInSecForIosWeb: 2,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+        );
+      } else {
+        stopList.clear();
+        setState(() {
+          answer.body
+              .map((e) => stopList.add(StopModel.fromService(e)))
+              .toList();
+        });
+        /*stopList.add(StopModel(
+            name: "No estuvo",
+            img: "assets/images/stop1.png",
+            id: 0,
+            isSelect: false));
+        stopList.add(StopModel(
+            name: "Todavia tiene",
+            img: "assets/images/stop2.png",
+            id: 1,
+            isSelect: false));
+        stopList.add(StopModel(
+            name: "No recibió",
+            img: "assets/images/stop3.png",
+            id: 2,
+            isSelect: false));
+        stopList.add(StopModel(
+            name: "No tiene dinero",
+            img: "assets/images/stop4.png",
+            id: 3,
+            isSelect: false));
+        stopList.add(StopModel(
+            name: "Ya es tarde",
+            img: "assets/images/stop5.png",
+            id: 4,
+            isSelect: false));
+        stopList.add(StopModel(
+            name: "Vacaciones",
+            img: "assets/images/stop6.png",
+            id: 5,
+            isSelect: false));
+        stopList.add(StopModel(
+            name: "Cancela servico",
+            img: "assets/images/stop7.png",
+            id: 6,
+            isSelect: false));*/
+      }
+    });
   }
 
   @override
@@ -168,6 +188,7 @@ class _StopsState extends State<Stops> {
                       child: AutoSizeText(
                         text,
                         style: TextStyles.grey17Itw,
+                        textAlign: TextAlign.center,
                       )))
             ],
           )),
@@ -199,8 +220,8 @@ class _StopsState extends State<Stops> {
                 ],
               ),
               childrenDelegate: SliverChildBuilderDelegate(
-                (context, index) => stop(stopList[index].img,
-                    stopList[index].name, stopList[index].id),
+                (context, index) => stop(stopList[index].icon,
+                    stopList[index].description, stopList[index].id),
                 childCount: stopList.length,
               ),
             )));

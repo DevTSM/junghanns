@@ -1,25 +1,33 @@
 class StopModel {
   int id;
-  String img;
-  String name;
+  String icon;
+  String description;
+  String color;
   bool isSelect;
 
   StopModel(
-      {required this.name,
-      required this.img,
-      required this.id,
+      {required this.id,
+      required this.icon,
+      required this.description,
+      required this.color,
       required this.isSelect});
 
   factory StopModel.fromState() {
     return StopModel(
-        name: "No estuvo",
-        img: "assets/images/stop1.png",
         id: 0,
+        icon: "assets/images/stop1.png",
+        description: "No estuvo",
+        color: "bg-red2-light",
         isSelect: false);
   }
-  /*factory StopModel.fromService(Map<String,dynamic> data){
-    return StopModel(name: data["descripcion"]??"", img: "assets/images/stop1.png", id: data["id"]??0, isSelect: false);
-  }*/
+  factory StopModel.fromService(Map<String, dynamic> data) {
+    return StopModel(
+        id: data["id"] ?? 0,
+        description: data["descripcion"] ?? "",
+        icon: "assets/images/stop1.png",
+        color: data["color"],
+        isSelect: false);
+  }
 
   setSelect(isSelect) {
     this.isSelect = isSelect;

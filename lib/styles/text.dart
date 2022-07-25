@@ -150,6 +150,9 @@ class TextStyles {
   static TextStyle white15It = const TextStyle(
       fontSize: 15, fontFamily: 'MyriadPro-it', color: Colors.white60);
 
+  static TextStyle white18Itw = const TextStyle(
+      fontSize: 18, fontFamily: 'MyriadPro-it', color: Colors.white);
+
   static TextStyle white18SemiBoldIt = const TextStyle(
       fontSize: 18, fontFamily: 'MyriadPro-SemiBoldit', color: Colors.white);
 

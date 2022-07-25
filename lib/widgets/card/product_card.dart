@@ -8,10 +8,13 @@ import '../../styles/text.dart';
 
 class ProductCard extends StatefulWidget {
   ProductModel productCurrent;
+  bool isPR;
   Function update;
   ProductCard(
       {Key? key,
-      required this.productCurrent,required this.update})
+      required this.productCurrent,
+      required this.isPR,
+      required this.update})
       : super(key: key);
 
   @override
@@ -31,13 +34,15 @@ class ProductCardState extends State<ProductCard> {
     return GestureDetector(
         child: Container(
             padding: const EdgeInsets.all(15),
-            decoration:
-                widget.productCurrent.isSelect ? Decorations.blueCard : Decorations.whiteJCard,
+            decoration: widget.productCurrent.isSelect
+                ? Decorations.blueCard
+                : Decorations.whiteJCard,
             child: Column(
               children: [
-                Expanded(flex: 6, child: imageProduct()),
+                Expanded(flex: 8, child: imageProduct()),
                 Expanded(flex: 2, child: textProduct()),
-                Expanded(flex: 2, child: priceProduct()),
+                widget.isPR ? stockProduct(0) : Container(),
+                Expanded(flex: 3, child: priceProduct()),
               ],
             )),
         onTap: () {
@@ -52,7 +57,7 @@ class ProductCardState extends State<ProductCard> {
     return Container(
         width: double.infinity,
         decoration: Decorations.white2Card,
-        padding: const EdgeInsets.all(2),
+        padding: const EdgeInsets.all(1),
         child: Image.asset(
           widget.productCurrent.img,
           fit: BoxFit.contain,
@@ -72,7 +77,8 @@ class ProductCardState extends State<ProductCard> {
               group: myGroup,
               style: TextStyles.blueJ20BoldIt,
             )),
-            Flexible(
+            widget.isPR
+                ? Flexible(
                     child: AutoSizeText(
                       widget.productCurrent.name[1],
                       maxLines: 1,
@@ -80,6 +86,35 @@ class ProductCardState extends State<ProductCard> {
                       style: TextStyles.blueJ20It,
                     ),
                   )
+                : Container()
+          ],
+        ));
+  }
+
+  Widget stockProduct(int stock) {
+    return Container(
+        alignment: Alignment.center,
+        margin: const EdgeInsets.only(left: 20, right: 20, bottom: 6),
+        padding: const EdgeInsets.only(top: 2, bottom: 2),
+        decoration: stock > 0 ? Decorations.greenJCard : Decorations.redCard,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Flexible(
+                child: AutoSizeText(
+              stock > 0 ? "Stock:  " : "Sin Stock",
+              maxLines: 1,
+              style: TextStyles.white15Itw,
+            )),
+            stock > 0
+                ? Flexible(
+                    child: AutoSizeText(
+                      stock.toString(),
+                      maxLines: 1,
+                      style: TextStyles.white15BoldIt,
+                    ),
+                  )
+                : Container()
           ],
         ));
   }

@@ -119,26 +119,28 @@ class _RoutesState extends State<Routes> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              IconButton(
+              /*IconButton(
                   onPressed: () {},
                   icon: const Icon(
                     Icons.arrow_back_ios,
                     color: ColorsJunghanns.blueJ,
-                  )),
+                  )),*/
               Expanded(
-                  child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text(
-                    "Ruta de trabajo",
-                    style: TextStyles.blue27_7,
-                  ),
-                  Text(
-                    "  Clientes programados para visita",
-                    style: TextStyles.green15_4,
-                  ),
-                ],
-              )),
+                  child: Container(
+                      padding: const EdgeInsets.only(left: 15),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: const [
+                          Text(
+                            "Ruta de trabajo",
+                            style: TextStyles.blue27_7,
+                          ),
+                          Text(
+                            "  Clientes programados para visita",
+                            style: TextStyles.green15_4,
+                          ),
+                        ],
+                      ))),
               const SizedBox(
                 width: 10,
               ),
@@ -149,7 +151,7 @@ class _RoutesState extends State<Routes> {
             ],
           )),
       Container(
-          padding: const EdgeInsets.only(right: 20, left: 20, top: 15),
+          padding: const EdgeInsets.only(right: 20, left: 20, top: 10),
           child: Row(
             children: [
               Expanded(

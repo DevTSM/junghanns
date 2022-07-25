@@ -1,4 +1,5 @@
 // ignore_for_file: sized_box_for_whitespace, avoid_unnecessary_containers
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -10,11 +11,13 @@ import 'package:junghanns/components/button.dart';
 import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/models/sale.dart';
 import 'package:junghanns/pages/shop/shopping_cart.dart';
+import 'package:junghanns/pages/shop/stops.dart';
 import 'package:junghanns/services/customer.dart';
 import 'package:junghanns/styles/color.dart';
 import 'package:junghanns/styles/decoration.dart';
 import 'package:junghanns/styles/text.dart';
 import 'package:junghanns/widgets/card/sales.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class DetailsCustomer extends StatefulWidget {
   CustomerModel customerCurrent;
@@ -64,6 +67,13 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
                   customerCurrent: widget.customerCurrent,
                   isPR: isPR,
                 )));
+  }
+
+  navigatorStops() {
+    Navigator.push(
+        context,
+        MaterialPageRoute<void>(
+            builder: (BuildContext context) => const Stops()));
   }
 
   setCurrentLocation() async {
@@ -128,7 +138,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
       ),
       backgroundColor: ColorsJunghanns.lightBlue,
       body: SingleChildScrollView(
-        child: Stack(
+        child: Column(
           children: [
             header(),
             balances(),
@@ -145,7 +155,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
     return Container(
         color: ColorsJunghanns.blue,
         padding: EdgeInsets.only(
-            right: 15, left: 23, top: 10, bottom: size.height * .08),
+            right: 15, left: 23, top: 10, bottom: size.height * .03),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -162,11 +172,11 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
                 children: [
                   Text(
                     "${widget.customerCurrent.idClient}",
-                    style: TextStyles.green17_4,
+                    style: TextStyles.green22_4,
                   ),
                   Text(
                     widget.customerCurrent.name,
-                    style: TextStyles.white17_6,
+                    style: TextStyles.white20SemiBoldIt,
                   ),
                 ],
               )),
@@ -181,64 +191,92 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
                   ))
             ],
           ),
-          Row(
-            children: [
-              const SizedBox(
-                width: 20,
-              ),
-              const Icon(
-                Icons.location_on,
-                color: ColorsJunghanns.green,
-              ),
-              Text(
-                widget.customerCurrent.address,
-                style: TextStyles.white12_4,
-              )
-            ],
+          Container(
+            padding: const EdgeInsets.only(top: 10),
+            child: Row(
+              children: [
+                const SizedBox(
+                  width: 20,
+                ),
+                const Icon(
+                  Icons.location_on,
+                  color: ColorsJunghanns.green,
+                ),
+                Text(
+                  widget.customerCurrent.address,
+                  style: TextStyles.white15It,
+                )
+              ],
+            ),
           )
         ]));
   }
 
+  funCurrentLocation() {
+    if (widget.customerCurrent.lat != 0 && widget.customerCurrent.lng != 0) {
+      log("Con ubicación");
+      var urlAux = Uri(
+          scheme: 'https',
+          host: 'www.google.com',
+          path: '/maps/search/',
+          queryParameters: {
+            'api': '1',
+            'query':
+                '${widget.customerCurrent.lat},${widget.customerCurrent.lng}'
+          });
+      log(urlAux.toString());
+      launchUrl(urlAux);
+      //
+    } else {
+      log("Sin Ubicación");
+    }
+  }
+
+  Widget photoCard() {
+    return Container(
+        width: double.infinity,
+        height: size.width * .50,
+        decoration: const BoxDecoration(
+            borderRadius: BorderRadius.all(Radius.circular(10)),
+            image: DecorationImage(
+                image: AssetImage("assets/images/withoutPicture.png"),
+                fit: BoxFit.cover)),
+        child: Stack(
+          alignment: Alignment.bottomRight,
+          children: [
+            pickedImageFile != null
+                ? Container(
+                    width: double.infinity,
+                    height: size.width * .50,
+                    child: Card(
+                      child: Image.file(
+                        pickedImageFile,
+                        fit: BoxFit.cover,
+                      ),
+                    ))
+                : Container(),
+            GestureDetector(
+                child: Container(
+                  padding: const EdgeInsets.only(
+                      left: 15, right: 15, top: 10, bottom: 10),
+                  margin: const EdgeInsets.all(10),
+                  decoration: Decorations.greenBorder5,
+                  child: const Text(
+                    "Ubicación Actual",
+                    style: TextStyles.white17_5,
+                  ),
+                ),
+                onTap: () => funCurrentLocation())
+          ],
+        ));
+  }
+
   Widget balances() {
     return Container(
-      margin: EdgeInsets.only(top: size.height * .13),
+      margin: EdgeInsets.only(top: size.height * .01),
       child: Column(
         children: [
-          Container(
-              margin: const EdgeInsets.only(right: 15, left: 15),
-              width: double.infinity,
-              height: size.width * .50,
-              decoration: const BoxDecoration(
-                  borderRadius: BorderRadius.all(Radius.circular(10)),
-                  image: DecorationImage(
-                      image: AssetImage("assets/images/withoutPicture.png"),
-                      fit: BoxFit.cover)),
-              child: Stack(
-                alignment: Alignment.bottomRight,
-                children: [
-                  pickedImageFile != null
-                      ? Container(
-                          width: double.infinity,
-                          height: size.width * .50,
-                          child: Card(
-                            child: Image.file(
-                              pickedImageFile,
-                              fit: BoxFit.cover,
-                            ),
-                          ))
-                      : Container(),
-                  Container(
-                    padding: const EdgeInsets.only(
-                        left: 15, right: 15, top: 10, bottom: 10),
-                    margin: const EdgeInsets.all(10),
-                    decoration: Decorations.greenBorder5,
-                    child: const Text(
-                      "Ubicación Actual",
-                      style: TextStyles.white17_5,
-                    ),
-                  )
-                ],
-              )),
+          //photoCard(),
           const SizedBox(
             height: 20,
           ),
@@ -325,6 +363,12 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
           const SizedBox(
             height: 20,
           ),
+          //
+          observation(),
+          //
+          const SizedBox(
+            height: 20,
+          ),
           Container(
               padding: const EdgeInsets.only(left: 10, right: 10),
               child: Row(
@@ -345,7 +389,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
             height: 20,
           ),
           Container(
-              padding: const EdgeInsets.only(left: 10, right: 10),
+              padding: const EdgeInsets.only(left: 15, right: 15),
               child: isRange
                   ? Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -368,7 +412,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
                             child: ButtonJunghanns(
                                 decoration: Decorations.whiteBorder5Red,
                                 style: TextStyles.red17_6,
-                                fun: () {},
+                                fun: navigatorStops,
                                 isIcon: true,
                                 icon: Container(
                                   width: 0,
@@ -437,95 +481,91 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
   }
 
   Widget history() {
-    return Stack(
-      children: [
-        Container(
-          width: double.infinity,
-          height: 30,
-          color: ColorsJunghanns.white,
-        ),
-        Container(
-            padding: const EdgeInsets.only(left: 10, right: 10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                observation(),
-                const SizedBox(
-                  height: 20,
-                ),
-                const Text(
-                  "\t\t\t\tHistorial de visitas",
-                  style: TextStyles.blue25_7,
-                ),
-                const SizedBox(
-                  height: 20,
-                ),
-                widget.customerCurrent.history.isEmpty
-                    ? Container(
-                        padding: const EdgeInsets.only(top: 20, bottom: 50),
-                        alignment: Alignment.center,
-                        child: const Text(
-                          "Sin historial",
-                          style: TextStyles.grey17_4,
-                        ))
-                    : Column(
-                        children: widget.customerCurrent.history
-                            .map((e) => Column(
-                                  children: [
-                                    SalesCard(saleCurrent: e),
-                                    Row(children: [
-                                      Container(
-                                        margin: EdgeInsets.only(
-                                            left: (size.width * .07) + 15),
-                                        color: ColorsJunghanns.grey,
-                                        width: .5,
-                                        height: 15,
-                                      )
-                                    ])
-                                  ],
-                                ))
-                            .toList(),
-                      )
-              ],
-            ))
-      ],
-    );
+    return Container(
+        padding: const EdgeInsets.only(left: 15, right: 15),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            //
+            photoCard(),
+            //
+            const SizedBox(
+              height: 20,
+            ),
+            const Text(
+              "\t\t\t\tHistorial de visitas",
+              style: TextStyles.blue25_7,
+            ),
+            const SizedBox(
+              height: 20,
+            ),
+            widget.customerCurrent.history.isEmpty
+                ? Container(
+                    padding: const EdgeInsets.only(top: 20, bottom: 50),
+                    alignment: Alignment.center,
+                    child: const Text(
+                      "Sin historial",
+                      style: TextStyles.grey17_4,
+                    ))
+                : Column(
+                    children: widget.customerCurrent.history
+                        .map((e) => Column(
+                              children: [
+                                SalesCard(saleCurrent: e),
+                                Row(children: [
+                                  Container(
+                                    margin: EdgeInsets.only(
+                                        left: (size.width * .07) + 15),
+                                    color: ColorsJunghanns.grey,
+                                    width: .5,
+                                    height: 15,
+                                  )
+                                ])
+                              ],
+                            ))
+                        .toList(),
+                  )
+          ],
+        ));
   }
 
   Widget observation() {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.0)),
-      child: Container(
-          padding:
-              const EdgeInsets.only(left: 15, right: 15, top: 10, bottom: 10),
-          child: Column(
-            children: [
-              Row(
+    return Container(
+        padding: const EdgeInsets.only(left: 10, right: 10),
+        child: Card(
+          elevation: 2,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.0)),
+          child: Container(
+              padding: const EdgeInsets.only(
+                  left: 15, right: 15, top: 10, bottom: 10),
+              child: Column(
                 children: [
-                  const Expanded(
-                      child: Text(
-                    "Observaciones",
-                    style: TextStyles.blue23_7,
-                  )),
-                  Image.asset(
-                    "assets/icons/observationIcon.png",
-                    width: 50,
+                  Row(
+                    children: [
+                      const Expanded(
+                          child: Text(
+                        "Observaciones",
+                        style: TextStyles.blue23_7,
+                      )),
+                      Image.asset(
+                        "assets/icons/observationIcon.png",
+                        width: 50,
+                      ),
+                    ],
                   ),
+                  Text(widget.customerCurrent.observation),
+                  Container(
+                    width: double.infinity,
+                    alignment: Alignment.bottomRight,
+                    child: Image.asset(
+                      "assets/icons/editIcon.png",
+                      width: 25,
+                    ),
+                  )
                 ],
-              ),
-              Text(widget.customerCurrent.observation),
-              Container(
-                width: double.infinity,
-                alignment: Alignment.bottomRight,
-                child: Image.asset(
-                  "assets/icons/editIcon.png",
-                  width: 25,
-                ),
-              )
-            ],
-          )),
-    );
+              )),
+        ));
   }
 
   Widget itemBalance(String image, String label, double count) {

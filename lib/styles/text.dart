@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:junghanns/styles/color.dart';
 
 class TextStyles {
-  static const TextStyle green17_4 = TextStyle(
-    fontSize: 17,
+  static const TextStyle green22_4 = TextStyle(
+    fontSize: 22,
     fontWeight: FontWeight.w400,
+    fontStyle: FontStyle.italic,
     color: ColorsJunghanns.green,
     fontFamily: 'Roboto',
   );
+
   static const TextStyle green15_4 = TextStyle(
     fontSize: 15,
     fontWeight: FontWeight.w400,
@@ -136,14 +138,26 @@ class TextStyles {
       fontFamily: 'MyriadPro-SemiBoldit',
       color: ColorsJunghanns.blueJ2);
 
-  static TextStyle white18SemiBoldIt = const TextStyle(
-      fontSize: 18, fontFamily: 'MyriadPro-SemiBoldit', color: Colors.white);
-
   static TextStyle blue13It = const TextStyle(
       fontSize: 13, fontFamily: 'MyriadPro-it', color: ColorsJunghanns.blueJ2);
 
+  static TextStyle white15BoldIt = const TextStyle(
+      fontSize: 15, fontFamily: 'MyriadPro-BoldCondit', color: Colors.white);
+
+  static TextStyle white15Itw = const TextStyle(
+      fontSize: 15, fontFamily: 'MyriadPro-it', color: Colors.white);
+
+  static TextStyle white15It = const TextStyle(
+      fontSize: 15, fontFamily: 'MyriadPro-it', color: Colors.white60);
+
+  static TextStyle white18SemiBoldIt = const TextStyle(
+      fontSize: 18, fontFamily: 'MyriadPro-SemiBoldit', color: Colors.white);
+
   static TextStyle white16SemiBoldIt = const TextStyle(
       fontSize: 16, fontFamily: 'MyriadPro-SemiBoldit', color: Colors.white);
+
+  static TextStyle white20SemiBoldIt = const TextStyle(
+      fontSize: 20, fontFamily: 'MyriadPro-SemiBoldit', color: Colors.white);
 
   static TextStyle white24SemiBoldIt = const TextStyle(
       fontSize: 24, fontFamily: 'MyriadPro-SemiBoldit', color: Colors.white);
@@ -165,6 +179,11 @@ class TextStyles {
 
   static TextStyle blueJ20BoldIt = const TextStyle(
       fontSize: 20,
+      fontFamily: 'MyriadPro-BoldCondit',
+      color: ColorsJunghanns.blueJ);
+
+  static TextStyle blueJ30BoldIt = const TextStyle(
+      fontSize: 30,
       fontFamily: 'MyriadPro-BoldCondit',
       color: ColorsJunghanns.blueJ);
 
@@ -194,4 +213,10 @@ class TextStyles {
       fontSize: 24,
       fontFamily: 'MyriadPro-Bold',
       color: ColorsJunghanns.greenJ);
+
+  static TextStyle green18Itw = const TextStyle(
+      fontSize: 18, fontFamily: 'MyriadPro-it', color: ColorsJunghanns.greenJ);
+
+  static TextStyle grey17Itw = const TextStyle(
+      fontSize: 17, fontFamily: 'MyriadPro-it', color: ColorsJunghanns.grey);
 }

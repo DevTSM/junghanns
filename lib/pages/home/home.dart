@@ -17,13 +17,15 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   late Size size;
   @override
-  void initState(){
+  void initState() {
     super.initState();
     getPermission();
   }
+
   getPermission() async {
     await Geolocator.requestPermission();
   }
+
   @override
   Widget build(BuildContext context) {
     setState(() {
@@ -70,7 +72,7 @@ class _HomeState extends State<Home> {
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           const Text(
             "Bienvenido",
-            style: TextStyles.green17_4,
+            style: TextStyles.green22_4,
           ),
           const Text(
             "Alejandro, Martínez",

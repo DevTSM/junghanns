@@ -223,7 +223,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
   Widget itemList() {
     return Container(
       margin: EdgeInsets.only(top: size.height * .2),
-      padding: const EdgeInsets.only(left: 15, right: 15),
+      padding: const EdgeInsets.only(left: 10, right: 10),
       width: double.infinity,
       child: Column(
         children: [
@@ -236,8 +236,8 @@ class _ShoppingCartState extends State<ShoppingCart> {
             child: GridView.custom(
               gridDelegate: SliverWovenGridDelegate.count(
                 crossAxisCount: 2,
-                mainAxisSpacing: 30,
-                crossAxisSpacing: 30,
+                //mainAxisSpacing: 10,
+                crossAxisSpacing: 14,
                 pattern: [
                   WovenGridTile(.85),
                   WovenGridTile(.85),
@@ -246,6 +246,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
               childrenDelegate: SliverChildBuilderDelegate(
                   (context, index) => ProductCard(
                         update: updateTotal,
+                        isPR: widget.isPR,
                         productCurrent: widget.isPR
                             ? productsList[index]
                             : refillList[index],

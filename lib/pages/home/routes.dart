@@ -1,12 +1,16 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:junghanns/models/customer.dart';
+import 'package:junghanns/provider/provider.dart';
 import 'package:junghanns/services/customer.dart';
 import 'package:junghanns/styles/color.dart';
 import 'package:junghanns/styles/decoration.dart';
 import 'package:junghanns/styles/text.dart';
 import 'package:junghanns/widgets/card/routes.dart';
+import 'package:provider/provider.dart';
 
 class Routes extends StatefulWidget {
   const Routes({Key? key}) : super(key: key);
@@ -16,6 +20,7 @@ class Routes extends StatefulWidget {
 }
 
 class _RoutesState extends State<Routes> {
+  late ProviderJunghanns provider;
   late List<CustomerModel> customerList;
   late Size size;
   late int imageCount;
@@ -40,9 +45,11 @@ class _RoutesState extends State<Routes> {
           webShowClose: true,
         );
       } else {
+        provider.handler.deleteTable();
         answer.body.map((e) {
           setState(() {
             customerList.add(CustomerModel.fromList(e, 10));
+            provider.handler.insertUser([customerList.last]);
           });
         }).toList();
       }
@@ -54,7 +61,9 @@ class _RoutesState extends State<Routes> {
     setState(() {
       size = MediaQuery.of(context).size;
     });
+    provider = Provider.of<ProviderJunghanns>(context);
     return Scaffold(
+       key: GlobalKey<ScaffoldState>(),
       appBar: AppBar(
         backgroundColor: ColorsJunghanns.whiteJ,
         systemOverlayStyle: const SystemUiOverlayStyle(
@@ -71,18 +80,20 @@ class _RoutesState extends State<Routes> {
       ),
       body: SizedBox(
           height: double.infinity,
-          child: SingleChildScrollView(
-            child: Column(
+          child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 header(),
                 const SizedBox(
                   height: 20,
                 ),
-                Column(
+                provider.connectionStatus<4?
+                Expanded(child: SingleChildScrollView(
+                  child:Column(
                   children: customerList.map((e) {
                     imageCount == 3 ? imageCount = 1 : imageCount++;
-                    return Column(children: [
+                    return Column(
+                      children: [
                       RoutesCard(
                           icon: Image.asset(
                             "assets/icons/${imageCount == 1 ? "user1" : imageCount == 2 ? "user2" : "user3"}.png",
@@ -102,10 +113,43 @@ class _RoutesState extends State<Routes> {
                       ])
                     ]);
                   }).toList(),
-                )
+                ))):Expanded(
+                  child: FutureBuilder(
+        future: provider.handler.retrieveUsers(),
+        builder: (BuildContext context, AsyncSnapshot<List<CustomerModel>> snapshot) {
+          if (snapshot.hasData) {
+            return ListView.builder(
+              itemCount: snapshot.data?.length,
+              itemBuilder: (BuildContext context, int index) {
+                return Column(
+                      children: [
+                      RoutesCard(
+                          icon: Image.asset(
+                            "assets/icons/${imageCount == 1 ? "user1" : imageCount == 2 ? "user2" : "user3"}.png",
+                            width: size.width * .14,
+                          ),
+                          customerCurrent: snapshot.data![index],
+                          title: ["${snapshot.data![index].idClient} - ", snapshot.data![index].address],
+                          description: snapshot.data![index].name),
+                      Row(children: [
+                        Container(
+                          margin:
+                              EdgeInsets.only(left: (size.width * .07) + 15),
+                          color: ColorsJunghanns.grey,
+                          width: .5,
+                          height: 15,
+                        )
+                      ])
+                    ]
+                );
+              });
+          }else{
+            return Container();
+          }
+          }))
               ],
             ),
-          )),
+          ),
     );
   }
 
@@ -120,7 +164,9 @@ class _RoutesState extends State<Routes> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               IconButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    provider.connectionStatus=100;
+                  },
                   icon: const Icon(
                     Icons.arrow_back_ios,
                     color: ColorsJunghanns.blueJ,

@@ -72,7 +72,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
               _currentLocation.longitude,
               widget.customerCurrent.lat,
               widget.customerCurrent.lng) <
-          30000000) {
+          300) {
         setState(() {
           isRange = true;
         });

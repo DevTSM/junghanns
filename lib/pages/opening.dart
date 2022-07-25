@@ -1,5 +1,9 @@
 import 'dart:async';
+import 'dart:developer';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:junghanns/provider/provider.dart';
+import 'package:provider/provider.dart';
 
 import 'auth/login.dart';
 
@@ -11,10 +15,23 @@ class Opening extends StatefulWidget {
 }
 
 class _OpeningState extends State<Opening> {
+  late ProviderJunghanns provider;
+  late Connectivity _connectivity;
+  late StreamSubscription<ConnectivityResult> _connectivitySubscription;
+  
   @override
   void initState() {
     super.initState();
+    _connectivity = Connectivity();
+    
+        initConnectivity();
+        
     reedireccion();
+  }
+  @override
+  void dispose(){
+    super.dispose();
+    _connectivitySubscription.cancel();
   }
 
   void reedireccion() async {
@@ -26,9 +43,28 @@ class _OpeningState extends State<Opening> {
       );
     });
   }
-
+  Future<void> initConnectivity() async {
+    late ConnectivityResult result;
+    try {
+      result = await _connectivity.checkConnectivity();
+    } catch (e) {
+      log('Couldn\'t check connectivity status', error: e);
+      return;
+    }
+    if (!mounted) {
+      return Future.value(null);
+    }
+    provider.connectionStatus=result.index;
+  }
+  Future<void> _updateConnectionStatus(ConnectivityResult result) async {
+    provider.connectionStatus=result.index;
+  }
   @override
   Widget build(BuildContext context) {
+    provider= Provider.of<ProviderJunghanns>(context);
+    _connectivitySubscription =
+        _connectivity.onConnectivityChanged.listen(_updateConnectionStatus);
+        provider.init();
     return Scaffold(
         body: Stack(
       children: [

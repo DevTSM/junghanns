@@ -1,9 +1,15 @@
 // ignore_for_file: override_on_non_overriding_member
 
+import 'dart:async';
+import 'dart:developer';
 import 'dart:io';
 
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:junghanns/pages/opening.dart';
+import 'package:junghanns/preferences/global_variables.dart';
+import 'package:junghanns/provider/provider.dart';
+import 'package:provider/provider.dart';
 class MyHttpOverrides extends HttpOverrides{
   @override
   HttpClient createHttpClient(SecurityContext? context){
@@ -11,16 +17,34 @@ class MyHttpOverrides extends HttpOverrides{
       ..badCertificateCallback = (X509Certificate cert, String host, int port)=> true;
   }
 }
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   HttpOverrides.global = MyHttpOverrides();
+  await prefs.initPrefs();
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({Key? key}) : super(key: key);
   @override
+  State<StatefulWidget> createState()=>_MyAppState();
+}
+  class _MyAppState extends State<MyApp> {
+  
+  @override
+  void initState(){
+    super.initState();
+  }
+  @override
+  void dispose() {
+    super.dispose();
+  }
+  
+  @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return ChangeNotifierProvider(
+        create: (BuildContext context) => ProviderJunghanns(),
+        child: MaterialApp(
       title: 'JUNGHANNS',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
@@ -30,6 +54,6 @@ class MyApp extends StatelessWidget {
       routes: {
         "/": (context) => const Opening(),
       },
-    );
+    ));
   }
 }

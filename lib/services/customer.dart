@@ -20,7 +20,7 @@ Future<Answer> getListCustomer() async {
         }))
         .body);
     if (response != null) {
-      log("/CustomerServices <getListCustomer> Successfull ");
+      log("/CustomerServices <getListCustomer> Successfull");
       return Answer(body: response, message: "", error: false);
     } else {
       log("/CustomerServices <getListCustomer> Fail");

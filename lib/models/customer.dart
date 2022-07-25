@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:junghanns/models/sale.dart';
 
 class CustomerModel {
@@ -96,5 +98,43 @@ class CustomerModel {
         days: data["diasVisita"]??"",
         observation: (data["observacion"]??"")==""?"Sin observaciones":data["observacion"]??"",
         history: data["historial"]!=null?List.from(data["historial"].map((e)=>SaleModel.fromService(e)).toList()):[]);
+  }
+  factory CustomerModel.fromDataBase(Map<String, dynamic> data) {
+    return CustomerModel(
+      invoice: false,
+      id:data["id"],
+        idClient: data["idCustomer"]??0,
+        idRoute: data["idRuta"]??0,
+        lat: data["lat"],
+        lng: data["lng"],
+        priceLiquid: data["priceLiquid"]??0,
+        byCollect: data["byCollet"]??0,
+        purse: data["purse"]??0,
+        name: data["name"]??"",
+        address: data["address"]??"",
+        nameRoute: data["nameRoute"]??"",
+        typeVisit: data["typeVisit"]??"",
+        category: (data["category"]??"C")=="C"?"Cliente":"Empresa",
+        days: data["days"]??"",
+        observation: (data["observacion"]??"")==""?"Sin observaciones":data["observacion"]??"",
+        history: []);
+  }
+  Map<String, dynamic> getMap() {
+    return {
+      'id':id,
+        'idCustomer':idClient,
+        'idRoute':idRoute,
+        'lat':lat,
+        'lng':lng,
+        'priceLiquid':priceLiquid,
+        'byCollet':byCollect,
+        'purse':purse,
+        'name':name,
+        'address':address,
+        'nameRoute':nameRoute,
+        'typeVisit':typeVisit,
+        'category':category,
+        'days':days,
+        'observacion':observation};
   }
 }

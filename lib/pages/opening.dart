@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:developer';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:junghanns/pages/home/home_principal.dart';
+import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/provider/provider.dart';
 import 'package:provider/provider.dart';
 
@@ -39,7 +41,7 @@ class _OpeningState extends State<Opening> {
       Navigator.pushReplacement<void, void>(
         context,
         MaterialPageRoute<void>(
-            builder: (BuildContext context) => const Login()),
+            builder: (BuildContext context) => prefs.isLogged?const HomePrincipal():const Login()),
       );
     });
   }

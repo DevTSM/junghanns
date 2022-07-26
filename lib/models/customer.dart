@@ -171,7 +171,7 @@ String checkDate(DateTime time){
       break;
     default:
   }
-  date+=" ${time.day} ";
+  date+=", ${time.day} ";
   switch (time.month) {
     case 1:
       date+="Enero";
@@ -212,4 +212,13 @@ String checkDate(DateTime time){
     default:
   }
   return date;
+}
+List<String> getNameRouteRich(String name){
+  int index=name.lastIndexOf(" ");
+  if(index>-1){
+    return [name.substring(0,index), name.substring(index,name.length)];
+  }
+  else{
+    return [name,""];
+  }
 }

@@ -17,9 +17,9 @@ Future<Answer> getProductList() async {
             headers: {
           "Content-Type": "aplication/json",
           "x-api-key": apiKey,
-          "client_secret": clientSecret,
+          "client_secret": prefs.clientSecret,
           "Authorization":
-              "Bearer " + "caf048dc9e6560d05fe75f8d00ee4c48db607654",
+              "Bearer ${prefs.token}",
         }))
         .body);
     if (response != null) {
@@ -47,9 +47,9 @@ Future<Answer> getRefillList() async {
             headers: {
           "Content-Type": "aplication/json",
           "x-api-key": apiKey,
-          "client_secret": clientSecret,
+          "client_secret": prefs.clientSecret,
           "Authorization":
-              "Bearer " + "caf048dc9e6560d05fe75f8d00ee4c48db607654",
+              "Bearer ${prefs.token}",
         }))
         .body);
     if (response != null) {
@@ -78,9 +78,9 @@ Future<Answer> getPaymentMethods(int idClient) async {
             headers: {
           "Content-Type": "aplication/json",
           "x-api-key": apiKey,
-          "client_secret": clientSecret,
+          "client_secret": prefs.clientSecret,
           "Authorization":
-              "Bearer " + "caf048dc9e6560d05fe75f8d00ee4c48db607654",
+              "Bearer ${prefs.token}",
         }))
         .body);
     if (response != null) {
@@ -167,11 +167,11 @@ Future<Answer> setSale(Map<String, dynamic> data) async {
     var response =
         jsonDecode((await http.post(Uri.parse("$urlBase/index.php/cliente"),
                 headers: {
-                  "Content-Type": "aplication/json",
+                  HttpHeaders.contentTypeHeader:'application/json; charset=UTF-8',
                   "x-api-key": apiKey,
-                  "client_secret": clientSecret,
+                  "client_secret": prefs.clientSecret,
                   "Authorization":
-                      "Bearer " + "caf048dc9e6560d05fe75f8d00ee4c48db607654",
+                      "Bearer ${prefs.token}",
                 },
                 body: jsonEncode(data)))
             .body);
@@ -199,8 +199,8 @@ Future<Answer> getStopsList() async {
         (await http.get(Uri.parse("$urlBase/index.php/paradas"), headers: {
       "Content-Type": "aplication/json",
       "x-api-key": apiKey,
-      "client_secret": clientSecret,
-      "Authorization": "Bearer " + "caf048dc9e6560d05fe75f8d00ee4c48db607654",
+      "client_secret": prefs.clientSecret,
+      "Authorization": "Bearer ${prefs.token}",
     }))
             .body);
     if (response != null) {
@@ -220,7 +220,7 @@ Future<Answer> getStopsList() async {
   }
 }
 Future<dynamic> updateAvatar(File image,String id,String cedis) async {
-  log("/StoreServices <updateAvatar>");
+  log("/StoreServices <updateAvatar> ");
   try {
     var stream =
         // ignore: deprecated_member_use, unnecessary_new
@@ -228,15 +228,16 @@ Future<dynamic> updateAvatar(File image,String id,String cedis) async {
     var length = await image.length();
     var uri = Uri.parse("$urlBase/cliente");
     final response = new http.MultipartRequest("POST", uri);
-    response.headers["Authorization"] = "Bearer ${prefs.token}";
-    response.headers["Content-Type"] = "application/json";
+    
+    response.headers["Content-Type"] = 'aplication/json';
     response.headers["x-api-key"] = apiKey;
     response.headers["client_secret"] = prefs.clientSecret;
+    response.headers["Authorization"] = "Bearer ${prefs.token}";
     var multipartFile = http.MultipartFile('image', stream, length,
         filename: basename(image.path));
         
     response.files.add(multipartFile);
-    response.fields.addAll({"action":"updimg", "id_cliente":id,"cedis":cedis});
+    //response.fields.addAll({"action":"updimg", "id_cliente":id,"cedis":cedis});
     var value1;
     var respo = await response.send();
     respo.stream.transform(utf8.decoder).listen((value) {

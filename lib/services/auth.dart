@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:junghanns/models/answer.dart';
 import 'package:junghanns/preferences/global_variables.dart';
@@ -63,7 +64,7 @@ Future<Answer> login(Map<String, dynamic> data) async {
     var response =
         jsonDecode((await http.post(Uri.parse("$urlBase/loginruta"),
                 headers: {
-                  "Content-Type": "aplication/json",
+                  HttpHeaders.contentTypeHeader:'application/json; charset=UTF-8',
                   "x-api-key": apiKey,
                   "client_secret": prefs.clientSecret,
                   "Authorization": "Bearer ${prefs.token}"

@@ -143,7 +143,6 @@ class _LoginState extends State<Login> {
   }
 
   funLogin() async {
-    log("Inicar sesión");
     if (userC.text.isNotEmpty && passC.text.isNotEmpty) {
       Map<String, dynamic> data = {
         "user": userC.text,
@@ -180,11 +179,8 @@ class _LoginState extends State<Login> {
             gravity: ToastGravity.CENTER,
             webShowClose: true,
           );
-          Navigator.pushReplacement(
-          context,
-          MaterialPageRoute<void>(
-              builder: (BuildContext context) => const HomePrincipal()));
                 }else{
+                  prefs.isLogged=true;
                   Navigator.pushReplacement(
           context,
           MaterialPageRoute<void>(

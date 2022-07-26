@@ -97,6 +97,26 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
     }
   }
 
+  funCurrentLocation() {
+    if (widget.customerCurrent.lat != 0 && widget.customerCurrent.lng != 0) {
+      log("Con ubicación");
+      var urlAux = Uri(
+          scheme: 'https',
+          host: 'www.google.com',
+          path: '/maps/search/',
+          queryParameters: {
+            'api': '1',
+            'query':
+                '${widget.customerCurrent.lat},${widget.customerCurrent.lng}'
+          });
+      log(urlAux.toString());
+      launchUrl(urlAux);
+      //
+    } else {
+      log("Sin Ubicación");
+    }
+  }
+
   void _pickImage(int type) async {
     try {
       final picker = ImagePicker();
@@ -108,7 +128,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
           });
       
       if(pickedImageFile!=null){
-        await updateAvatar(pickedImageFile, widget.customerCurrent.idClient.toString(), widget.customerCurrent.nameRoute);
+        await updateAvatar(pickedImageFile, widget.customerCurrent.id.toString(), widget.customerCurrent.nameRoute);
       }
     } catch (e) {
       Fluttertoast.showToast(
@@ -219,26 +239,6 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
         ]));
   }
 
-  funCurrentLocation() {
-    if (widget.customerCurrent.lat != 0 && widget.customerCurrent.lng != 0) {
-      log("Con ubicación");
-      var urlAux = Uri(
-          scheme: 'https',
-          host: 'www.google.com',
-          path: '/maps/search/',
-          queryParameters: {
-            'api': '1',
-            'query':
-                '${widget.customerCurrent.lat},${widget.customerCurrent.lng}'
-          });
-      log(urlAux.toString());
-      launchUrl(urlAux);
-      //
-    } else {
-      log("Sin Ubicación");
-    }
-  }
-
   Widget photoCard() {
     return Container(
         width: double.infinity,
@@ -299,10 +299,10 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              "Lunes, 24 Junio",
-                              style: TextStyles.blue19_7,
-                            ),
+                            Text(
+                          checkDate(DateTime.now()),
+                          style: TextStyles.blue19_7,
+                        ),
                             Text(
                               widget.customerCurrent.category,
                               style: TextStyles.grey14_4,
@@ -321,9 +321,9 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
                           padding: const EdgeInsets.only(
                               left: 5, right: 5, top: 5, bottom: 5),
                           child: RichText(
-                              text: const TextSpan(children: [
-                            TextSpan(text: "Ruta", style: TextStyles.white17_5),
-                            TextSpan(text: "   10", style: TextStyles.white27_7)
+                              text: TextSpan(children: [
+                            TextSpan(text: getNameRouteRich(widget.customerCurrent.nameRoute)[0], style: TextStyles.white17_5),
+                            TextSpan(text: "   ${getNameRouteRich(widget.customerCurrent.nameRoute)[1]}", style: TextStyles.white27_7)
                           ])))),
                 ],
               )),

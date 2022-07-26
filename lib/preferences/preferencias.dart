@@ -28,4 +28,10 @@ class PreferenciasUsuario {
   set token(String token) {
     prefs!.setString("token", token);
   }
+  bool get isLogged {
+    return prefs!.getBool("isLogged") ?? false;
+  }
+  set isLogged(bool isLogged) {
+    prefs!.setBool("isLogged", isLogged);
+  }
 }

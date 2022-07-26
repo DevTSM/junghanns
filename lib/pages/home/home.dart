@@ -1,7 +1,11 @@
 // ignore_for_file: avoid_unnecessary_containers
 
+import 'dart:developer';
+
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:junghanns/styles/color.dart';
 import 'package:junghanns/styles/decoration.dart';
@@ -17,49 +21,55 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   late Size size;
   @override
-  void initState(){
+  void initState() {
     super.initState();
     getPermission();
   }
+
   getPermission() async {
     await Geolocator.requestPermission();
   }
+
   @override
   Widget build(BuildContext context) {
     setState(() {
       size = MediaQuery.of(context).size;
     });
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: ColorsJunghanns.whiteJ,
-        systemOverlayStyle: const SystemUiOverlayStyle(
-            statusBarColor: ColorsJunghanns.whiteJ,
-            statusBarIconBrightness: Brightness.dark,
-            statusBarBrightness: Brightness.dark),
-        leading: GestureDetector(
-          child: Container(
-              padding: const EdgeInsets.only(left: 24),
-              child: Image.asset("assets/icons/menu.png")),
-          onTap: () {},
+        appBar: AppBar(
+          backgroundColor: ColorsJunghanns.whiteJ,
+          systemOverlayStyle: const SystemUiOverlayStyle(
+              statusBarColor: ColorsJunghanns.whiteJ,
+              statusBarIconBrightness: Brightness.dark,
+              statusBarBrightness: Brightness.dark),
+          leading: GestureDetector(
+            child: Container(
+                padding: const EdgeInsets.only(left: 24),
+                child: Image.asset("assets/icons/menu.png")),
+            onTap: () {},
+          ),
+          elevation: 0,
         ),
-        elevation: 0,
-      ),
-      body: Container(
-          height: double.infinity,
-          color: ColorsJunghanns.lightBlue,
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                deliveryMenZone(),
-                const SizedBox(
-                  height: 20,
-                ),
-                customersZone()
-              ],
-            ),
-          )),
-    );
+        body: Stack(
+          children: [
+            Container(
+                height: double.infinity,
+                color: ColorsJunghanns.lightBlue,
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      deliveryMenZone(),
+                      const SizedBox(
+                        height: 20,
+                      ),
+                      customersZone()
+                    ],
+                  ),
+                )),
+            buttonSync()
+          ],
+        ));
   }
 
   Widget deliveryMenZone() {
@@ -70,7 +80,7 @@ class _HomeState extends State<Home> {
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           const Text(
             "Bienvenido",
-            style: TextStyles.green17_4,
+            style: TextStyles.green22_4,
           ),
           const Text(
             "Alejandro, Martínez",
@@ -244,6 +254,38 @@ class _HomeState extends State<Home> {
           icon
         ],
       ),
+    );
+  }
+
+  Widget buttonSync() {
+    return Align(
+      alignment: Alignment.bottomCenter,
+      child: GestureDetector(
+          child: Container(
+            height: 55,
+            width: size.width * 0.5,
+            margin: const EdgeInsets.only(bottom: 15),
+            decoration: Decorations.blueBorder30,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  FontAwesomeIcons.sync,
+                  color: Colors.white,
+                ),
+                Container(
+                    margin: const EdgeInsets.only(left: 10),
+                    child: AutoSizeText(
+                      "Sincronizar",
+                      style: TextStyles.white18Itw,
+                      textAlign: TextAlign.center,
+                    ))
+              ],
+            ),
+          ),
+          onTap: () {
+            log("Sincronizar");
+          }),
     );
   }
 }

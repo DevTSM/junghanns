@@ -16,4 +16,16 @@ class PreferenciasUsuario {
   initPrefs() async {
     prefs = await SharedPreferences.getInstance();
   }
+  String get clientSecret {
+    return prefs!.getString("clientSecret") ?? "";
+  }
+  set clientSecret(String clientSecret) {
+    prefs!.setString("clientSecret", clientSecret);
+  }
+  String get token {
+    return prefs!.getString("token") ?? "";
+  }
+  set token(String token) {
+    prefs!.setString("token", token);
+  }
 }

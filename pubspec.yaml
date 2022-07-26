@@ -26,6 +26,7 @@ dependencies:
   shared_preferences: ^2.0.6
   connectivity_plus: ^2.3.6
   provider:
+  url_launcher: ^6.0.20
 
 dev_dependencies:
   flutter_test:

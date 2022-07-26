@@ -1,6 +1,12 @@
+import 'dart:developer';
+
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:junghanns/pages/home/home_principal.dart';
+import 'package:junghanns/preferences/global_variables.dart';
+import 'package:junghanns/services/auth.dart';
+import 'package:junghanns/services/store.dart';
 import '../../styles/color.dart';
 import '../../styles/decoration.dart';
 import '../../styles/text.dart';
@@ -133,13 +139,91 @@ class _LoginState extends State<Login> {
             style: TextStyles.white16SemiBoldIt,
           ),
         ),
-        onTap: () {
-          print("Inicar sesión");
-          Navigator.pushReplacement(
-              context,
-              MaterialPageRoute<void>(
-                  builder: (BuildContext context) => const HomePrincipal()));
-        });
+        onTap: () => funLogin());
+  }
+
+  funLogin() async {
+    log("Inicar sesión");
+    if (userC.text.isNotEmpty && passC.text.isNotEmpty) {
+      Map<String, dynamic> data = {
+        "user": userC.text,
+        "pass": passC.text,
+      };
+      await getClientSecret(userC.text,passC.text).then((answer) async {
+        if(answer.error){
+          Fluttertoast.showToast(
+            msg: answer.message,
+            timeInSecForIosWeb: 2,
+            toastLength: Toast.LENGTH_LONG,
+            gravity: ToastGravity.CENTER,
+            webShowClose: true,
+          );
+        }else{
+          prefs.clientSecret=answer.body["client_secret"];
+          await getToken(userC.text).then((answer1) async {
+            if(answer1.error){
+              Fluttertoast.showToast(
+            msg: answer.message,
+            timeInSecForIosWeb: 2,
+            toastLength: Toast.LENGTH_LONG,
+            gravity: ToastGravity.CENTER,
+            webShowClose: true,
+          );
+            }else{
+              prefs.token=answer1.body["token"];
+              await login(data).then((answer2){
+                if(answer2.error){
+                  Fluttertoast.showToast(
+            msg: answer2.message,
+            timeInSecForIosWeb: 2,
+            toastLength: Toast.LENGTH_LONG,
+            gravity: ToastGravity.CENTER,
+            webShowClose: true,
+          );
+                }else{
+                  Navigator.pushReplacement(
+          context,
+          MaterialPageRoute<void>(
+              builder: (BuildContext context) => const HomePrincipal()));
+                }
+              } );
+            }
+          });
+        }
+      });
+      // await login(data).then((answer) {
+      //   if (answer.error) {
+      //     Fluttertoast.showToast(
+      //       msg: answer.message,
+      //       timeInSecForIosWeb: 2,
+      //       toastLength: Toast.LENGTH_LONG,
+      //       gravity: ToastGravity.CENTER,
+      //       webShowClose: true,
+      //     );
+      //   } else {
+      //     // Navigator.pushReplacement(
+      //     // context,
+      //     // MaterialPageRoute<void>(
+      //     //     builder: (BuildContext context) => const HomePrincipal()));
+      //     Fluttertoast.showToast(
+      //       msg: "Login exitoso",
+      //       timeInSecForIosWeb: 2,
+      //       toastLength: Toast.LENGTH_LONG,
+      //       gravity: ToastGravity.CENTER,
+      //       webShowClose: true,
+      //     );
+      //   }
+      // });
+      
+    } else {
+      Fluttertoast.showToast(
+        msg: "Campos vacíos",
+        timeInSecForIosWeb: 4,
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.CENTER,
+        webShowClose: true,
+      );
+    }
   }
 
   Widget textBottom() {

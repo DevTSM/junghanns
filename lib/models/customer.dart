@@ -18,6 +18,7 @@ class CustomerModel {
   String typeVisit;
   String category;
   String days;
+  String img;
   String observation;
   List<SaleModel> history;
   CustomerModel(
@@ -37,6 +38,7 @@ class CustomerModel {
       required this.typeVisit,
       required this.category,
       required this.days,
+      required this.img,
       required this.observation,
       required this.history});
   factory CustomerModel.fromState() {
@@ -56,6 +58,7 @@ class CustomerModel {
         typeVisit: "",
         category: "",
         days: "",
+        img:"",
         observation: "",
         history: []);
   }
@@ -76,6 +79,7 @@ class CustomerModel {
         typeVisit: data["tipoVisita"],
         category: (data["categoria"]??"C")=="C"?"Cliente":"Empresa",
         days: "",
+        img: "",
         observation: "",
         history: []);
   }
@@ -85,8 +89,8 @@ class CustomerModel {
       id:id,
         idClient: data["idCliente"]??0,
         idRoute: data["idRuta"]??0,
-        lat: double.parse(data["latitud"]),
-        lng: double.parse(data["longitud"]),
+        lat: double.parse(data["latitud"]??"0"),
+        lng: double.parse(data["longitud"]??"0"),
         priceLiquid: double.parse(data["precioLiquido"]??"0"),
         byCollect: double.parse((data["porCobrar"]??0).toString()),
         purse: double.parse((data["monedero"]??0).toString()),
@@ -96,6 +100,7 @@ class CustomerModel {
         typeVisit: data["tipoVisita"]??"",
         category: (data["categoria"]??"C")=="C"?"Cliente":"Empresa",
         days: data["diasVisita"]??"",
+        img:data["url"]??"",
         observation: (data["observacion"]??"")==""?"Sin observaciones":data["observacion"]??"",
         history: data["historial"]!=null?List.from(data["historial"].map((e)=>SaleModel.fromService(e)).toList()):[]);
   }
@@ -116,6 +121,7 @@ class CustomerModel {
         typeVisit: data["typeVisit"]??"",
         category: (data["category"]??"C")=="C"?"Cliente":"Empresa",
         days: data["days"]??"",
+        img:data["img"]??"",
         observation: (data["observacion"]??"")==""?"Sin observaciones":data["observacion"]??"",
         history: []);
   }
@@ -135,6 +141,75 @@ class CustomerModel {
         'typeVisit':typeVisit,
         'category':category,
         'days':days,
+        'img':img,
         'observacion':observation};
   }
+}
+String checkDate(DateTime time){
+  String date="";
+  switch (time.weekday) {
+    case 1:
+      date+="Lunes";
+      break;
+    case 2:
+      date+="Martes";
+      break;
+    case 3:
+      date+="Miercoles";
+      break;
+    case 4:
+      date+="Jueves";
+      break;
+    case 5:
+      date+="Viernes";
+      break;
+      case 6:
+      date+="Sabado";
+      break;
+      case 7:
+      date+="Domingo";
+      break;
+    default:
+  }
+  date+=" ${time.day} ";
+  switch (time.month) {
+    case 1:
+      date+="Enero";
+      break;
+      case 2:
+      date+="Febrero";
+      break;
+      case 3:
+      date+="Marzo";
+      break;
+      case 4:
+      date+="Abril";
+      break;
+      case 5:
+      date+="Mayo";
+      break;
+      case 6:
+      date+="Junio";
+      break;
+      case 7:
+      date+="Julio";
+      break;
+      case 8:
+      date+="Agosto";
+      break;
+      case 9:
+      date+="Septiembre";
+      break;
+      case 10:
+      date+="Octubre";
+      break;
+      case 11:
+      date+="Noviembre";
+      break;
+      case 12:
+      date+="Diciembre";
+      break;
+    default:
+  }
+  return date;
 }

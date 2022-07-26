@@ -13,6 +13,7 @@ import 'package:junghanns/models/sale.dart';
 import 'package:junghanns/pages/shop/shopping_cart.dart';
 import 'package:junghanns/pages/shop/stops.dart';
 import 'package:junghanns/services/customer.dart';
+import 'package:junghanns/services/store.dart';
 import 'package:junghanns/styles/color.dart';
 import 'package:junghanns/styles/decoration.dart';
 import 'package:junghanns/styles/text.dart';
@@ -86,7 +87,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
               _currentLocation.longitude,
               widget.customerCurrent.lat,
               widget.customerCurrent.lng) <
-          300) {
+          30000) {
         setState(() {
           isRange = true;
         });
@@ -102,7 +103,13 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
       final pickedImage = await picker.getImage(
           source: type == 1 ? ImageSource.camera : ImageSource.gallery,
           imageQuality: 80);
-      pickedImageFile = File(pickedImage!.path);
+          setState(() {
+            pickedImageFile = File(pickedImage!.path);
+          });
+      
+      if(pickedImageFile!=null){
+        await updateAvatar(pickedImageFile, widget.customerCurrent.idClient.toString(), widget.customerCurrent.nameRoute);
+      }
     } catch (e) {
       Fluttertoast.showToast(
         msg:
@@ -236,10 +243,12 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
     return Container(
         width: double.infinity,
         height: size.width * .50,
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
             borderRadius: BorderRadius.all(Radius.circular(10)),
-            image: DecorationImage(
+            image: widget.customerCurrent.img==""?const DecorationImage(
                 image: AssetImage("assets/images/withoutPicture.png"),
+                fit: BoxFit.cover):DecorationImage(
+                image:NetworkImage(widget.customerCurrent.img),
                 fit: BoxFit.cover)),
         child: Stack(
           alignment: Alignment.bottomRight,

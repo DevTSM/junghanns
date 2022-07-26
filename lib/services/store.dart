@@ -1,6 +1,9 @@
 import 'dart:convert';
 import 'dart:developer';
-
+import 'dart:io';
+import 'dart:async';
+import 'package:path/path.dart';
+import 'package:async/async.dart';
 import 'package:junghanns/models/answer.dart';
 import 'package:http/http.dart' as http;
 
@@ -212,6 +215,40 @@ Future<Answer> getStopsList() async {
     }
   } catch (e) {
     log("/StoreServices <getStopsList> Catch ${e.toString()}");
+    return Answer(
+        body: e, message: "Algo salio mal, intentalo mas tarde.", error: true);
+  }
+}
+Future<dynamic> updateAvatar(File image,String id,String cedis) async {
+  log("/StoreServices <updateAvatar>");
+  try {
+    var stream =
+        // ignore: deprecated_member_use, unnecessary_new
+        new http.ByteStream(DelegatingStream.typed(image.openRead()));
+    var length = await image.length();
+    var uri = Uri.parse("$urlBase/cliente");
+    final response = new http.MultipartRequest("POST", uri);
+    response.headers["Authorization"] = "Bearer ${prefs.token}";
+    response.headers["Content-Type"] = "application/json";
+    response.headers["x-api-key"] = apiKey;
+    response.headers["client_secret"] = prefs.clientSecret;
+    var multipartFile = http.MultipartFile('image', stream, length,
+        filename: basename(image.path));
+        
+    response.files.add(multipartFile);
+    response.fields.addAll({"action":"updimg", "id_cliente":id,"cedis":cedis});
+    var value1;
+    var respo = await response.send();
+    respo.stream.transform(utf8.decoder).listen((value) {
+      log("<------Fin User services <updateAvatar> ------->");
+
+      value1 = value;
+      log(value.toString());
+      return value1;
+    });
+    return value1;
+  } catch (e) {
+    log("/StoreServices <updateAvatar> Catch ${e.toString()}");
     return Answer(
         body: e, message: "Algo salio mal, intentalo mas tarde.", error: true);
   }

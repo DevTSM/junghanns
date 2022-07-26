@@ -46,6 +46,7 @@ class _RoutesState extends State<Routes> {
         );
       } else {
         provider.handler.deleteTable();
+        //provider.handler.addColumn();
         answer.body.map((e) {
           setState(() {
             customerList.add(CustomerModel.fromList(e, 10));
@@ -204,8 +205,8 @@ class _RoutesState extends State<Routes> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          "Lunes, 24 Junio",
+                        Text(
+                          checkDate(DateTime.now()),
                           style: TextStyles.blue19_7,
                         ),
                         Text(

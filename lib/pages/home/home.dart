@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/styles/color.dart';
 import 'package:junghanns/styles/decoration.dart';
 import 'package:junghanns/styles/text.dart';
@@ -97,12 +98,12 @@ class _HomeState extends State<Home> {
                   child: Container(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
+                      children: [
                         Text(
-                          "Lunes, 24 Junio",
-                          style: TextStyles.blue19_6,
+                          checkDate(DateTime.now()),
+                          style: TextStyles.blue19_7,
                         ),
-                        Text(
+                        const Text(
                           "23 clientes para visitar",
                           style: TextStyles.grey14_4,
                         )

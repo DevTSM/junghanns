@@ -9,7 +9,7 @@ class DataBase {
       join(path, 'junghanns.db'),
       onCreate: (database, version) async {
         await database.execute(
-          "CREATE TABLE customer(id INTEGER PRIMARY KEY AUTOINCREMENT, idCustomer INTEGER, idRoute INTEGER, lat DOUBLE, lng DOUBLE, priceLiquid DOUBLE, byCollet DOUBLE, purse DOUBLE, name TEXT NOT NULL, address TEXT NOT NULL , nameRoute TEXT NOT NULL,typeVisit TEXT NOT NULL, category TEXT NOT NULL,days TEXT NOT NULL, observacion TEXT NOT NULL)",
+          "CREATE TABLE customer(id INTEGER PRIMARY KEY AUTOINCREMENT, idCustomer INTEGER, idRoute INTEGER, lat DOUBLE, lng DOUBLE, priceLiquid DOUBLE, byCollet DOUBLE, purse DOUBLE, name TEXT NOT NULL, address TEXT NOT NULL , nameRoute TEXT NOT NULL,typeVisit TEXT NOT NULL, category TEXT NOT NULL,days TEXT NOT NULL, img TEXT NOT NULL, observacion TEXT NOT NULL)",
         );
       },
       version: 1,
@@ -28,6 +28,10 @@ class DataBase {
   deleteTable() async {
     final db = await initializeDB();
     db.delete('customer');
+  }
+  addColumn() async {
+    final db = await initializeDB();
+    db.execute("ALTER TABLE customer ADD img TEXT NOT NULL DEFAULT ''");
   }
 
   Future<List<CustomerModel>> retrieveUsers() async {

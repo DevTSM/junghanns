@@ -180,6 +180,10 @@ class _LoginState extends State<Login> {
             gravity: ToastGravity.CENTER,
             webShowClose: true,
           );
+          Navigator.pushReplacement(
+          context,
+          MaterialPageRoute<void>(
+              builder: (BuildContext context) => const HomePrincipal()));
                 }else{
                   Navigator.pushReplacement(
           context,
@@ -191,29 +195,6 @@ class _LoginState extends State<Login> {
           });
         }
       });
-      // await login(data).then((answer) {
-      //   if (answer.error) {
-      //     Fluttertoast.showToast(
-      //       msg: answer.message,
-      //       timeInSecForIosWeb: 2,
-      //       toastLength: Toast.LENGTH_LONG,
-      //       gravity: ToastGravity.CENTER,
-      //       webShowClose: true,
-      //     );
-      //   } else {
-      //     // Navigator.pushReplacement(
-      //     // context,
-      //     // MaterialPageRoute<void>(
-      //     //     builder: (BuildContext context) => const HomePrincipal()));
-      //     Fluttertoast.showToast(
-      //       msg: "Login exitoso",
-      //       timeInSecForIosWeb: 2,
-      //       toastLength: Toast.LENGTH_LONG,
-      //       gravity: ToastGravity.CENTER,
-      //       webShowClose: true,
-      //     );
-      //   }
-      // });
       
     } else {
       Fluttertoast.showToast(

@@ -10,13 +10,13 @@ Future<Answer> getListCustomer() async {
   try {
     var response = jsonDecode((await http.get(
             Uri.parse(
-                "$urlBase/index.php/visita?idRuta=10&date=20220617&tipo=R"),
+                "$urlBase/visita?idRuta=10&date=20220617&tipo=R"),
             headers: {
           "Content-Type": "aplication/json",
           "x-api-key": apiKey,
-          "client_secret": clientSecret,
+          "client_secret": prefs.clientSecret,
           "Authorization":
-              "Bearer " + "caf048dc9e6560d05fe75f8d00ee4c48db607654",
+              "Bearer ${prefs.token}",
         }))
         .body);
     if (response != null) {
@@ -44,13 +44,13 @@ Future<Answer> getDetailsCustomer(int id) async {
             headers: {
           "Content-Type": "aplication/json",
           "x-api-key": apiKey,
-          "client_secret": clientSecret,
+          "client_secret": prefs.clientSecret,
           "Authorization":
-              "Bearer " + "caf048dc9e6560d05fe75f8d00ee4c48db607654",
+              "Bearer ${prefs.token}",
         }))
         .body);
-    if (response != null) {
-      log("/CustomerServices <getDetailsCustomer> Successfull");
+    if (response["idCliente"] != null) {
+      log("/CustomerServices <getDetailsCustomer> Successfull $response");
       return Answer(body: response, message: "", error: false);
     } else {
       log("/CustomerServices <getDetailsCustomer> Fail");

@@ -41,7 +41,6 @@ class ProductCardState extends State<ProductCard> {
               children: [
                 Expanded(flex: 8, child: imageProduct()),
                 Expanded(flex: 2, child: textProduct()),
-                widget.isPR ? stockProduct(0) : Container(),
                 Expanded(flex: 3, child: priceProduct()),
               ],
             )),
@@ -58,9 +57,19 @@ class ProductCardState extends State<ProductCard> {
         width: double.infinity,
         decoration: Decorations.white2Card,
         padding: const EdgeInsets.all(1),
-        child: Image.asset(
-          widget.productCurrent.img,
-          fit: BoxFit.contain,
+        child: Stack(
+          children: [
+            Align(
+              alignment: Alignment.center,
+              child: Image.asset(
+                widget.productCurrent.img,
+                fit: BoxFit.contain,
+              ),
+            ),
+            widget.isPR
+                ? Align(alignment: Alignment.topRight, child: stockProduct(52))
+                : Container()
+          ],
         ));
   }
 
@@ -93,29 +102,15 @@ class ProductCardState extends State<ProductCard> {
 
   Widget stockProduct(int stock) {
     return Container(
+        width: 32,
+        height: 32,
+        margin: const EdgeInsets.only(top: 5, right: 5),
         alignment: Alignment.center,
-        margin: const EdgeInsets.only(left: 20, right: 20, bottom: 6),
-        padding: const EdgeInsets.only(top: 2, bottom: 2),
-        decoration: stock > 0 ? Decorations.greenJCard : Decorations.redCard,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Flexible(
-                child: AutoSizeText(
-              stock > 0 ? "Stock:  " : "Sin Stock",
-              maxLines: 1,
-              style: TextStyles.white15Itw,
-            )),
-            stock > 0
-                ? Flexible(
-                    child: AutoSizeText(
-                      stock.toString(),
-                      maxLines: 1,
-                      style: TextStyles.white15BoldIt,
-                    ),
-                  )
-                : Container()
-          ],
+        decoration:
+            stock > 0 ? Decorations.greenJCardB30 : Decorations.redCardB30,
+        child: AutoSizeText(
+          stock.toString(),
+          style: TextStyles.white15Itw,
         ));
   }
 

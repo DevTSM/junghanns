@@ -70,11 +70,36 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
                 )));
   }
 
-  navigatorStops() {
-    Navigator.push(
-        context,
-        MaterialPageRoute<void>(
-            builder: (BuildContext context) => const Stops()));
+  navigatorStops() async {
+    LocationPermission permission = await Geolocator.requestPermission();
+    if (permission == LocationPermission.whileInUse ||
+        permission == LocationPermission.always) {
+      Position _currentLocation = await Geolocator.getCurrentPosition();
+      if (Geolocator.distanceBetween(
+              _currentLocation.latitude,
+              _currentLocation.longitude,
+              widget.customerCurrent.lat,
+              widget.customerCurrent.lng) <
+          30000) {
+        // ignore: use_build_context_synchronously
+        Navigator.push(
+            context,
+            MaterialPageRoute<void>(
+                builder: (BuildContext context) => Stops(
+                      customerCurrent: widget.customerCurrent,
+                    )));
+      } else {
+        Fluttertoast.showToast(
+          msg: "Lejos del domicilio",
+          timeInSecForIosWeb: 16,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.CENTER,
+          webShowClose: true,
+        );
+      }
+    } else {
+      log("permission $permission");
+    }
   }
 
   setCurrentLocation() async {
@@ -123,12 +148,15 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
       final pickedImage = await picker.getImage(
           source: type == 1 ? ImageSource.camera : ImageSource.gallery,
           imageQuality: 80);
-          setState(() {
-            pickedImageFile = File(pickedImage!.path);
-          });
-      
-      if(pickedImageFile!=null){
-        await updateAvatar(pickedImageFile, widget.customerCurrent.id.toString(), widget.customerCurrent.nameRoute);
+      setState(() {
+        pickedImageFile = File(pickedImage!.path);
+      });
+
+      if (pickedImageFile != null) {
+        await updateAvatar(
+            pickedImageFile,
+            widget.customerCurrent.id.toString(),
+            widget.customerCurrent.nameRoute);
       }
     } catch (e) {
       Fluttertoast.showToast(
@@ -245,11 +273,13 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
         height: size.width * .50,
         decoration: BoxDecoration(
             borderRadius: BorderRadius.all(Radius.circular(10)),
-            image: widget.customerCurrent.img==""?const DecorationImage(
-                image: AssetImage("assets/images/withoutPicture.png"),
-                fit: BoxFit.cover):DecorationImage(
-                image:NetworkImage(widget.customerCurrent.img),
-                fit: BoxFit.cover)),
+            image: widget.customerCurrent.img == ""
+                ? const DecorationImage(
+                    image: AssetImage("assets/images/withoutPicture.png"),
+                    fit: BoxFit.cover)
+                : DecorationImage(
+                    image: NetworkImage(widget.customerCurrent.img),
+                    fit: BoxFit.cover)),
         child: Stack(
           alignment: Alignment.bottomRight,
           children: [
@@ -300,9 +330,9 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                          checkDate(DateTime.now()),
-                          style: TextStyles.blue19_7,
-                        ),
+                              checkDate(DateTime.now()),
+                              style: TextStyles.blue19_7,
+                            ),
                             Text(
                               widget.customerCurrent.category,
                               style: TextStyles.grey14_4,
@@ -322,8 +352,14 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
                               left: 5, right: 5, top: 5, bottom: 5),
                           child: RichText(
                               text: TextSpan(children: [
-                            TextSpan(text: getNameRouteRich(widget.customerCurrent.nameRoute)[0], style: TextStyles.white17_5),
-                            TextSpan(text: "   ${getNameRouteRich(widget.customerCurrent.nameRoute)[1]}", style: TextStyles.white27_7)
+                            TextSpan(
+                                text: getNameRouteRich(
+                                    widget.customerCurrent.nameRoute)[0],
+                                style: TextStyles.white17_5),
+                            TextSpan(
+                                text:
+                                    "   ${getNameRouteRich(widget.customerCurrent.nameRoute)[1]}",
+                                style: TextStyles.white27_7)
                           ])))),
                 ],
               )),

@@ -45,7 +45,21 @@ class _ShoppingCartState extends State<ShoppingCart> {
   }
 
   getDataProducts() async {
-    await getProductList().then((answer) {
+    /*await getProductList().then((answer) {
+      if (answer.error) {
+        Fluttertoast.showToast(
+          msg: answer.message,
+          timeInSecForIosWeb: 2,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+        );
+      } else {
+        productsList
+            .addAll([ProductModel.fromState(1), ProductModel.fromState(1)]);
+      }
+    });*/
+    await getStockList().then((answer) {
       if (answer.error) {
         Fluttertoast.showToast(
           msg: answer.message,

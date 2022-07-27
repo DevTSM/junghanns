@@ -18,8 +18,7 @@ Future<Answer> getProductList() async {
           "Content-Type": "aplication/json",
           "x-api-key": apiKey,
           "client_secret": prefs.clientSecret,
-          "Authorization":
-              "Bearer ${prefs.token}",
+          "Authorization": "Bearer ${prefs.token}",
         }))
         .body);
     if (response != null) {
@@ -39,6 +38,37 @@ Future<Answer> getProductList() async {
   }
 }
 
+//
+Future<Answer> getStockList() async {
+  log("/StoreServices <getStockList>");
+  try {
+    var response = jsonDecode((await http.get(
+            Uri.parse("$urlBase/index.php/almacenmovil?q=stock&idRuta=10"),
+            headers: {
+          "Content-Type": "aplication/json",
+          "x-api-key": apiKey,
+          "client_secret": prefs.clientSecret,
+          "Authorization": "Bearer ${prefs.token}",
+        }))
+        .body);
+    if (response != null) {
+      log("/StoreServices <getStockList> Successfull,  ${response.toString()}");
+      return Answer(body: response, message: "", error: false);
+    } else {
+      log("/StoreServices <getStockList> Fail");
+      return Answer(
+          body: response,
+          message: "Algo salio mal, intentalo mas tarde.",
+          error: true);
+    }
+  } catch (e) {
+    log("/StoreServices <getStockList> Catch ${e.toString()}");
+    return Answer(
+        body: e, message: "Algo salio mal, intentalo mas tarde.", error: true);
+  }
+}
+
+//
 Future<Answer> getRefillList() async {
   log("/StoreServices <getRefillList>");
   try {
@@ -48,8 +78,7 @@ Future<Answer> getRefillList() async {
           "Content-Type": "aplication/json",
           "x-api-key": apiKey,
           "client_secret": prefs.clientSecret,
-          "Authorization":
-              "Bearer ${prefs.token}",
+          "Authorization": "Bearer ${prefs.token}",
         }))
         .body);
     if (response != null) {
@@ -79,8 +108,7 @@ Future<Answer> getPaymentMethods(int idClient) async {
           "Content-Type": "aplication/json",
           "x-api-key": apiKey,
           "client_secret": prefs.clientSecret,
-          "Authorization":
-              "Bearer ${prefs.token}",
+          "Authorization": "Bearer ${prefs.token}",
         }))
         .body);
     if (response != null) {
@@ -167,11 +195,11 @@ Future<Answer> setSale(Map<String, dynamic> data) async {
     var response =
         jsonDecode((await http.post(Uri.parse("$urlBase/index.php/cliente"),
                 headers: {
-                  HttpHeaders.contentTypeHeader:'application/json; charset=UTF-8',
+                  HttpHeaders.contentTypeHeader:
+                      'application/json; charset=UTF-8',
                   "x-api-key": apiKey,
                   "client_secret": prefs.clientSecret,
-                  "Authorization":
-                      "Bearer ${prefs.token}",
+                  "Authorization": "Bearer ${prefs.token}",
                 },
                 body: jsonEncode(data)))
             .body);
@@ -219,7 +247,8 @@ Future<Answer> getStopsList() async {
         body: e, message: "Algo salio mal, intentalo mas tarde.", error: true);
   }
 }
-Future<dynamic> updateAvatar(File image,String id,String cedis) async {
+
+Future<dynamic> updateAvatar(File image, String id, String cedis) async {
   log("/StoreServices <updateAvatar> ");
   try {
     var stream =
@@ -228,14 +257,14 @@ Future<dynamic> updateAvatar(File image,String id,String cedis) async {
     var length = await image.length();
     var uri = Uri.parse("$urlBase/cliente");
     final response = new http.MultipartRequest("POST", uri);
-    
+
     response.headers["Content-Type"] = 'aplication/json';
     response.headers["x-api-key"] = apiKey;
     response.headers["client_secret"] = prefs.clientSecret;
     response.headers["Authorization"] = "Bearer ${prefs.token}";
     var multipartFile = http.MultipartFile('image', stream, length,
         filename: basename(image.path));
-        
+
     response.files.add(multipartFile);
     //response.fields.addAll({"action":"updimg", "id_cliente":id,"cedis":cedis});
     var value1;

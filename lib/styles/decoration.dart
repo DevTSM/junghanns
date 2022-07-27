@@ -118,10 +118,24 @@ class Decorations {
     ),
   );
 
+  static BoxDecoration redCardB30 = const BoxDecoration(
+    color: ColorsJunghanns.red,
+    borderRadius: BorderRadius.all(
+      Radius.circular(30),
+    ),
+  );
+
   static BoxDecoration greenJCard = const BoxDecoration(
     color: ColorsJunghanns.greenJ,
     borderRadius: BorderRadius.all(
       Radius.circular(10),
+    ),
+  );
+
+  static BoxDecoration greenJCardB30 = const BoxDecoration(
+    color: ColorsJunghanns.greenJ,
+    borderRadius: BorderRadius.all(
+      Radius.circular(30),
     ),
   );
 

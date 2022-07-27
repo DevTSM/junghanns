@@ -24,7 +24,7 @@ class StopModel {
     return StopModel(
         id: data["id"] ?? 0,
         description: data["descripcion"] ?? "",
-        icon: "assets/images/stop1.png",
+        icon: data["icon"],
         color: data["color"],
         isSelect: false);
   }

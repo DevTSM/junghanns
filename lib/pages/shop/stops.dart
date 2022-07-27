@@ -5,16 +5,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:junghanns/models/stop.dart';
 import 'package:junghanns/styles/decoration.dart';
 
 import '../../components/button.dart';
+import '../../models/customer.dart';
 import '../../services/store.dart';
 import '../../styles/color.dart';
 import '../../styles/text.dart';
 
 class Stops extends StatefulWidget {
-  const Stops({Key? key}) : super(key: key);
+  CustomerModel customerCurrent;
+  Stops({Key? key, required this.customerCurrent}) : super(key: key);
 
   @override
   State<Stops> createState() => _StopsState();
@@ -47,42 +50,10 @@ class _StopsState extends State<Stops> {
           answer.body
               .map((e) => stopList.add(StopModel.fromService(e)))
               .toList();
+
+          ///Checar el link del ultimo elemento
+          stopList.removeLast();
         });
-        /*stopList.add(StopModel(
-            name: "No estuvo",
-            img: "assets/images/stop1.png",
-            id: 0,
-            isSelect: false));
-        stopList.add(StopModel(
-            name: "Todavia tiene",
-            img: "assets/images/stop2.png",
-            id: 1,
-            isSelect: false));
-        stopList.add(StopModel(
-            name: "No recibió",
-            img: "assets/images/stop3.png",
-            id: 2,
-            isSelect: false));
-        stopList.add(StopModel(
-            name: "No tiene dinero",
-            img: "assets/images/stop4.png",
-            id: 3,
-            isSelect: false));
-        stopList.add(StopModel(
-            name: "Ya es tarde",
-            img: "assets/images/stop5.png",
-            id: 4,
-            isSelect: false));
-        stopList.add(StopModel(
-            name: "Vacaciones",
-            img: "assets/images/stop6.png",
-            id: 5,
-            isSelect: false));
-        stopList.add(StopModel(
-            name: "Cancela servico",
-            img: "assets/images/stop7.png",
-            id: 6,
-            isSelect: false));*/
       }
     });
   }
@@ -134,9 +105,33 @@ class _StopsState extends State<Stops> {
             )));
   }
 
-  funSelectStop() {
-    log("Parada numero $stopSelect");
-    Navigator.pop(context);
+  funSelectStop() async {
+    LocationPermission permission = await Geolocator.requestPermission();
+    if (permission == LocationPermission.whileInUse ||
+        permission == LocationPermission.always) {
+      Position _currentLocation = await Geolocator.getCurrentPosition();
+      if (Geolocator.distanceBetween(
+              _currentLocation.latitude,
+              _currentLocation.longitude,
+              widget.customerCurrent.lat,
+              widget.customerCurrent.lng) <
+          30000) {
+        //
+        log("Parada numero $stopSelect");
+        Navigator.pop(context);
+        //
+      } else {
+        Fluttertoast.showToast(
+          msg: "Lejos del domicilio",
+          timeInSecForIosWeb: 16,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.CENTER,
+          webShowClose: true,
+        );
+      }
+    } else {
+      log("permission $permission");
+    }
   }
 
   Widget fakeStop() {
@@ -180,7 +175,12 @@ class _StopsState extends State<Stops> {
               stopSelect == id ? Decorations.blueCard : const BoxDecoration(),
           child: Column(
             children: [
-              Expanded(flex: 3, child: Image.asset(image)),
+              Expanded(
+                  flex: 3,
+                  child: Container(
+                    decoration: BoxDecoration(
+                        image: DecorationImage(image: NetworkImage(image))),
+                  )),
               Expanded(
                   flex: 1,
                   child: Container(

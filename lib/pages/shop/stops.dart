@@ -99,10 +99,91 @@ class _StopsState extends State<Stops> {
             alignment: Alignment.center,
             child: ButtonJunghanns(
               decoration: Decorations.blueBorder12,
-              fun: () => funSelectStop(),
+              fun: () => showConfirmStop(),
               label: "Seleccionar parada",
               style: TextStyles.white17_5,
             )));
+  }
+
+  showConfirmStop() {
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return Center(
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              width: size.width * .75,
+              decoration: Decorations.whiteS1Card,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  textConfirmWayToStop(),
+                  textWayToStop(),
+                  buttomsSale()
+                ],
+              ),
+            ),
+          );
+        });
+  }
+
+  Widget textConfirmWayToStop() {
+    return Container(
+        alignment: Alignment.center,
+        child: DefaultTextStyle(
+            style: TextStyles.blueJ22Bold, child: const Text("Confirmación")));
+  }
+
+  Widget textWayToStop() {
+    return Container(
+        padding: const EdgeInsets.only(top: 8, bottom: 12),
+        alignment: Alignment.center,
+        child: DefaultTextStyle(
+            style: TextStyles.greenJ15Bold,
+            child: Text(stopList
+                .firstWhere((element) => element.id == stopSelect)
+                .description)));
+  }
+
+  Widget buttomsSale() {
+    return Container(
+      alignment: Alignment.center,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          buttomSale(
+              "Si",
+              () => () {
+                    Navigator.pop(context);
+                    funSelectStop();
+                  },
+              Decorations.blueBorder12),
+          buttomSale(
+              "No",
+              () => () {
+                    Navigator.pop(context);
+                  },
+              Decorations.redCard),
+        ],
+      ),
+    );
+  }
+
+  Widget buttomSale(String op, Function fun, BoxDecoration deco) {
+    return GestureDetector(
+      onTap: fun(),
+      child: Container(
+          alignment: Alignment.center,
+          width: size.width * 0.22,
+          height: size.width * 0.11,
+          decoration: deco,
+          child: DefaultTextStyle(
+              style: TextStyles.white18SemiBoldIt,
+              child: Text(
+                op,
+              ))),
+    );
   }
 
   funSelectStop() async {
@@ -118,8 +199,41 @@ class _StopsState extends State<Stops> {
           30000) {
         //
         log("Parada numero $stopSelect");
-        Navigator.pop(context);
-        //
+
+        Map<String, dynamic> data = {
+          "id_cliente": widget.customerCurrent.idClient,
+          "id_parada": stopSelect,
+          "lat": "${widget.customerCurrent.lat}",
+          "lon": "${widget.customerCurrent.lng}",
+          "id_data_origen": widget.customerCurrent.id,
+          "tipo": widget.customerCurrent.typeVisit.characters.first
+        };
+        log("Parada Data $data");
+
+        ///
+        await setStop(data).then((answer) {
+          if (answer.error) {
+            Fluttertoast.showToast(
+              msg: answer.message,
+              timeInSecForIosWeb: 2,
+              toastLength: Toast.LENGTH_LONG,
+              gravity: ToastGravity.CENTER,
+              webShowClose: true,
+            );
+          } else {
+            //
+            log("Parada asignada");
+            Fluttertoast.showToast(
+              msg: "Parada asignada con exito",
+              timeInSecForIosWeb: 2,
+              toastLength: Toast.LENGTH_LONG,
+              gravity: ToastGravity.CENTER,
+              webShowClose: true,
+            );
+            Navigator.pop(context);
+            //
+          }
+        });
       } else {
         Fluttertoast.showToast(
           msg: "Lejos del domicilio",
@@ -158,7 +272,7 @@ class _StopsState extends State<Stops> {
                           style: TextStyles.blueJ30BoldIt,
                         ),
                         Text(
-                          "  Nombre de cliente Ruta",
+                          widget.customerCurrent.name,
                           style: TextStyles.green18Itw,
                         ),
                       ],

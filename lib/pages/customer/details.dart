@@ -112,7 +112,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
               _currentLocation.longitude,
               widget.customerCurrent.lat,
               widget.customerCurrent.lng) <
-          30000) {
+          300000000) {
         setState(() {
           isRange = true;
         });
@@ -358,7 +358,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
                                 style: TextStyles.white17_5),
                             TextSpan(
                                 text:
-                                    "   ${getNameRouteRich(widget.customerCurrent.nameRoute)[1]}",
+                                    " ${getNameRouteRich(widget.customerCurrent.nameRoute)[1]}",
                                 style: TextStyles.white27_7)
                           ])))),
                 ],

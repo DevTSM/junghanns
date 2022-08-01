@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:junghanns/models/customer.dart';
+import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/styles/color.dart';
 import 'package:junghanns/styles/decoration.dart';
 import 'package:junghanns/styles/text.dart';
@@ -48,7 +49,13 @@ class _HomeState extends State<Home> {
                 padding: const EdgeInsets.only(left: 24),
                 child: Image.asset("assets/icons/menu.png")),
             onTap: () {},
-          ),
+          ),actions: [
+            IconButton(
+              onPressed: () {
+              prefs.isLogged=false;
+              Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+            }, icon: Icon(Icons.exit_to_app,color: ColorsJunghanns.blue,))
+          ],
           elevation: 0,
         ),
         body: Stack(
@@ -123,7 +130,7 @@ class _HomeState extends State<Home> {
                       child: RichText(
                           text: const TextSpan(children: [
                         TextSpan(text: "Ruta", style: TextStyles.white17_5),
-                        TextSpan(text: "   10", style: TextStyles.white27_7)
+                        TextSpan(text: " 10", style: TextStyles.white27_7)
                       ])))),
             ],
           )),

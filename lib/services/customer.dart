@@ -20,7 +20,7 @@ Future<Answer> getListCustomer() async {
         }))
         .body);
     if (response != null) {
-      log("/CustomerServices <getListCustomer> Successfull $response");
+      log("/CustomerServices <getListCustomer> Successfull ");
       return Answer(body: response, message: "", error: false);
     } else {
       log("/CustomerServices <getListCustomer> Fail");
@@ -39,7 +39,7 @@ Future<Answer> getListCustomer() async {
 Future<Answer> getDetailsCustomer(int id) async {
   log("/CustomerServices <getDetailsCustomer>");
   try {
-    var response = jsonDecode((await http.get(
+    var responseEncode = await http.get(
             Uri.parse("$urlBase/index.php/cliente?q=dashboard&tipo=R&id=$id"),
             headers: {
           "Content-Type": "aplication/json",
@@ -47,16 +47,16 @@ Future<Answer> getDetailsCustomer(int id) async {
           "client_secret": prefs.clientSecret,
           "Authorization":
               "Bearer ${prefs.token}",
-        }))
-        .body);
+        });
+      var response=jsonDecode(responseEncode.body);
     if (response["idCliente"] != null) {
-      log("/CustomerServices <getDetailsCustomer> Successfull $response");
+      log("/CustomerServices <getDetailsCustomer> Successfull");
       return Answer(body: response, message: "", error: false);
     } else {
       log("/CustomerServices <getDetailsCustomer> Fail");
       return Answer(
           body: response,
-          message: "Algo salio mal, intentalo mas tarde.",
+          message: response["message"]??"Alo salio mal, intentalo mas tarde.",
           error: true);
     }
   } catch (e) {

@@ -1,3 +1,5 @@
+// ignore_for_file: depend_on_referenced_packages
+
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
@@ -52,7 +54,7 @@ Future<Answer> getStockList() async {
         }))
         .body);
     if (response != null) {
-      log("/StoreServices <getStockList> Successfull,  ${response.toString()}");
+      log("/StoreServices <getStockList> Successfull,");
       return Answer(body: response, message: "", error: false);
     } else {
       log("/StoreServices <getStockList> Fail");
@@ -82,7 +84,7 @@ Future<Answer> getRefillList() async {
         }))
         .body);
     if (response != null) {
-      log("/StoreServices <getRefillList> Successfull ${response.toString()}");
+      log("/StoreServices <getRefillList> Successfull");
       return Answer(body: response, message: "", error: false);
     } else {
       log("/StoreServices <getRefillList> Fail");
@@ -112,7 +114,7 @@ Future<Answer> getPaymentMethods(int idClient) async {
         }))
         .body);
     if (response != null) {
-      log("/StoreServices <getPaymentMethods> Successfull ${response.toString()}");
+      log("/StoreServices <getPaymentMethods> Successfull");
       return Answer(body: response, message: "", error: false);
     } else {
       log("/StoreServices <getPaymentMethods> Fail");
@@ -143,7 +145,7 @@ Future<Answer> getAuthorization(int idClient) async {
         }))
         .body);
     if (response != null) {
-      log("/StoreServices <getAuthorization> Successfull ${response.toString()}");
+      log("/StoreServices <getAuthorization> Successfull");
       return Answer(body: response, message: "", error: false);
     } else {
       log("/StoreServices <getAuthorization> Fail");
@@ -173,7 +175,7 @@ Future<Answer> getFolio(String num) async {
         }))
         .body);
     if (response != null) {
-      log("/StoreServices <getFolio> Successfull ${response.toString()}");
+      log("/StoreServices <getFolio> Successfull");
       return Answer(body: response, message: "", error: false);
     } else {
       log("/StoreServices <getFolio> Fail");
@@ -204,7 +206,7 @@ Future<Answer> setSale(Map<String, dynamic> data) async {
                 body: jsonEncode(data)))
             .body);
     if (response != null) {
-      log("/StoreServices <setSale> Successfull ${response.toString()}");
+      log("/StoreServices <setSale> Successfull");
       return Answer(body: response, message: "", error: false);
     } else {
       log("/StoreServices <setSale> Fail ${response.toString()}");

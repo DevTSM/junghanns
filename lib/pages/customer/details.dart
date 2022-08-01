@@ -12,12 +12,14 @@ import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/models/sale.dart';
 import 'package:junghanns/pages/shop/shopping_cart.dart';
 import 'package:junghanns/pages/shop/stops.dart';
+import 'package:junghanns/provider/provider.dart';
 import 'package:junghanns/services/customer.dart';
 import 'package:junghanns/services/store.dart';
 import 'package:junghanns/styles/color.dart';
 import 'package:junghanns/styles/decoration.dart';
 import 'package:junghanns/styles/text.dart';
 import 'package:junghanns/widgets/card/sales.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class DetailsCustomer extends StatefulWidget {
@@ -28,6 +30,7 @@ class DetailsCustomer extends StatefulWidget {
 }
 
 class _DetailsCustomerState extends State<DetailsCustomer> {
+  late ProviderJunghanns provider;
   late dynamic pickedImageFile;
   late Size size;
   late bool isRange;
@@ -80,7 +83,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
               _currentLocation.longitude,
               widget.customerCurrent.lat,
               widget.customerCurrent.lng) <
-          30000) {
+          30000||provider.connectionStatus==4) {
         // ignore: use_build_context_synchronously
         Navigator.push(
             context,
@@ -176,6 +179,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
     setState(() {
       size = MediaQuery.of(context).size;
     });
+     provider = Provider.of<ProviderJunghanns>(context);
     return Scaffold(
       appBar: AppBar(
         backgroundColor: ColorsJunghanns.blueJ,
@@ -196,6 +200,15 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
         child: Column(
           children: [
             header(),
+            Visibility(
+                  visible: provider.connectionStatus==4,
+                  child: Container(
+                    width: double.infinity,
+                    alignment: Alignment.center,
+                    color: ColorsJunghanns.grey,
+                    padding: const EdgeInsets.only(top: 5,bottom: 5),
+                    child:const Text("Sin conexion a internet",style: TextStyles.white14_5,)
+                  )),
             balances(),
             const SizedBox(
               height: 20,

@@ -34,4 +34,10 @@ class PreferenciasUsuario {
   set isLogged(bool isLogged) {
     prefs!.setBool("isLogged", isLogged);
   }
+  bool get dataStop {
+    return prefs!.getBool("dataStop") ?? false;
+  }
+  set dataStop(bool dataStop) {
+    prefs!.setBool("dataStop", dataStop);
+  }
 }

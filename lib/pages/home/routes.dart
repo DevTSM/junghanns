@@ -84,6 +84,15 @@ class _RoutesState extends State<Routes> {
           child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Visibility(
+                  visible: provider.connectionStatus==4,
+                  child: Container(
+                    width: double.infinity,
+                    alignment: Alignment.center,
+                    color: ColorsJunghanns.grey,
+                    padding: const EdgeInsets.only(top: 5,bottom: 5),
+                    child:const Text("Sin conexion a internet",style: TextStyles.white14_5,)
+                  )),
                 header(),
                 const SizedBox(
                   height: 20,

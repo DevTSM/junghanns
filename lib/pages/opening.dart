@@ -2,9 +2,11 @@ import 'dart:async';
 import 'dart:developer';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:junghanns/pages/home/home_principal.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/provider/provider.dart';
+import 'package:junghanns/services/store.dart';
 import 'package:provider/provider.dart';
 
 import 'auth/login.dart';
@@ -58,8 +60,41 @@ class _OpeningState extends State<Opening> {
     }
     provider.connectionStatus=result.index;
   }
+  setDataStops(Map<String,dynamic> data) async {
+    await setStop(data).then((answer) {
+          if (answer.error) {
+            log("Parada asignada 2");
+            Fluttertoast.showToast(
+              msg: answer.message,
+              timeInSecForIosWeb: 2,
+              toastLength: Toast.LENGTH_LONG,
+              gravity: ToastGravity.CENTER,
+              webShowClose: true,
+            );
+          } else {
+            //
+            log("Parada asignada");
+            //
+          }
+        });
+  }
   Future<void> _updateConnectionStatus(ConnectivityResult result) async {
     provider.connectionStatus=result.index;
+    if(result.index!=4&&prefs.dataStop){
+      Fluttertoast.showToast(
+          msg: "Sincronizando paradas",
+          timeInSecForIosWeb: 16,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.CENTER,
+          webShowClose: true,
+        );
+        List<Map<String,dynamic>> dataNStops=[];
+        List<Map<String,dynamic>> dataList=await provider.handler.retrieveStopOff();
+       List.generate(dataList.length, (i) {
+        dataNStops.add(dataList[i]);
+    });
+    dataNStops.map((e) => log(e.toString())).toList();
+    }
   }
   @override
   Widget build(BuildContext context) {

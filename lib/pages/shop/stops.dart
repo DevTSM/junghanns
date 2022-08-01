@@ -7,7 +7,10 @@ import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:junghanns/models/stop.dart';
+import 'package:junghanns/preferences/global_variables.dart';
+import 'package:junghanns/provider/provider.dart';
 import 'package:junghanns/styles/decoration.dart';
+import 'package:provider/provider.dart';
 
 import '../../components/button.dart';
 import '../../models/customer.dart';
@@ -24,13 +27,15 @@ class Stops extends StatefulWidget {
 }
 
 class _StopsState extends State<Stops> {
+  late ProviderJunghanns provider;
+  late StopModel stopCurrent;
   late Size size;
   late List<StopModel> stopList = [];
-  late int stopSelect = -1;
 
   @override
   void initState() {
     super.initState();
+    stopCurrent=StopModel.fromState();
     getDataStops();
   }
 
@@ -46,23 +51,27 @@ class _StopsState extends State<Stops> {
         );
       } else {
         stopList.clear();
+        provider.handler.deleteStops();
         setState(() {
           answer.body
-              .map((e) => stopList.add(StopModel.fromService(e)))
+              .map((e){
+                stopList.add(StopModel.fromService(e));
+                })
               .toList();
 
           ///Checar el link del ultimo elemento
           stopList.removeLast();
+          stopList.map((e) => provider.handler.insertStop([e])).toList();
         });
       }
     });
   }
-
   @override
   Widget build(BuildContext context) {
     setState(() {
       size = MediaQuery.of(context).size;
     });
+    provider = Provider.of<ProviderJunghanns>(context);
     return Scaffold(
       backgroundColor: ColorsJunghanns.white,
       appBar: AppBar(
@@ -90,7 +99,7 @@ class _StopsState extends State<Stops> {
 
   Widget buttonSelectStop() {
     return Visibility(
-        visible: stopSelect != -1 ? true : false,
+        visible: stopCurrent.id != 0 ? true : false,
         child: Container(
             margin:
                 const EdgeInsets.only(left: 15, right: 15, bottom: 30, top: 30),
@@ -141,9 +150,7 @@ class _StopsState extends State<Stops> {
         alignment: Alignment.center,
         child: DefaultTextStyle(
             style: TextStyles.greenJ15Bold,
-            child: Text(stopList
-                .firstWhere((element) => element.id == stopSelect)
-                .description)));
+            child: Text(stopCurrent.description)));
   }
 
   Widget buttomsSale() {
@@ -196,19 +203,17 @@ class _StopsState extends State<Stops> {
               _currentLocation.longitude,
               widget.customerCurrent.lat,
               widget.customerCurrent.lng) <
-          30000) {
-        //
-        log("Parada numero $stopSelect");
-
+          30000||provider.connectionStatus==4) {
+            if(provider.connectionStatus!=4){
         Map<String, dynamic> data = {
           "id_cliente": widget.customerCurrent.idClient,
-          "id_parada": stopSelect,
+          "id_parada": stopCurrent.id,
           "lat": "${widget.customerCurrent.lat}",
           "lon": "${widget.customerCurrent.lng}",
           "id_data_origen": widget.customerCurrent.id,
           "tipo": widget.customerCurrent.typeVisit.characters.first
         };
-        log("Parada Data $data");
+        
 
         ///
         await setStop(data).then((answer) {
@@ -234,6 +239,26 @@ class _StopsState extends State<Stops> {
             //
           }
         });
+          }else{
+            Map<String, dynamic> data = {
+          "idCustomer": widget.customerCurrent.idClient,
+          "idStop": stopCurrent.id,
+          "lat": "${widget.customerCurrent.lat}",
+          "lng": "${widget.customerCurrent.lng}",
+          "idOrigin": widget.customerCurrent.id,
+          "type": widget.customerCurrent.typeVisit.characters.first
+        };
+        provider.handler.insertStopOff(data);
+        Fluttertoast.showToast(
+          msg: "Guardado de forma local",
+          timeInSecForIosWeb: 16,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.CENTER,
+          webShowClose: true,
+        );
+        Navigator.pop(context);
+        prefs.dataStop=true;
+          }
       } else {
         Fluttertoast.showToast(
           msg: "Lejos del domicilio",
@@ -281,38 +306,37 @@ class _StopsState extends State<Stops> {
         ));
   }
 
-  Widget stop(String image, String text, int id) {
+  Widget stop(StopModel stop) {
     return GestureDetector(
       child: Container(
           padding: const EdgeInsets.all(4),
           decoration:
-              stopSelect == id ? Decorations.blueCard : const BoxDecoration(),
+              stopCurrent.id == stop.id ? Decorations.blueCard : const BoxDecoration(),
           child: Column(
             children: [
               Expanded(
                   flex: 3,
                   child: Container(
                     decoration: BoxDecoration(
-                        image: DecorationImage(image: NetworkImage(image))),
+                        image: DecorationImage(image: NetworkImage(stop.icon))),
                   )),
               Expanded(
                   flex: 1,
                   child: Container(
                       alignment: Alignment.center,
                       child: AutoSizeText(
-                        text,
+                        stop.description,
                         style: TextStyles.grey17Itw,
                         textAlign: TextAlign.center,
                       )))
             ],
           )),
       onTap: () {
-        log("Parada en falso");
         setState(() {
-          if (stopSelect != id) {
-            stopSelect = id;
+          if (stopCurrent.id != stop.id) {
+            stopCurrent=stop;
           } else {
-            stopSelect = -1;
+            stopCurrent=StopModel.fromState();
           }
         });
       },
@@ -320,7 +344,7 @@ class _StopsState extends State<Stops> {
   }
 
   Widget typesOfStops() {
-    return Expanded(
+    return provider.connectionStatus!=4?Expanded(
         child: Container(
             padding: const EdgeInsets.only(left: 20, right: 20),
             margin: const EdgeInsets.only(top: 20),
@@ -334,10 +358,34 @@ class _StopsState extends State<Stops> {
                 ],
               ),
               childrenDelegate: SliverChildBuilderDelegate(
-                (context, index) => stop(stopList[index].icon,
-                    stopList[index].description, stopList[index].id),
+                (context, index) => stop(stopList[index]),
                 childCount: stopList.length,
               ),
-            )));
+            ))):Expanded(
+                  child: Container(
+            padding: const EdgeInsets.only(left: 20, right: 20),
+            margin: const EdgeInsets.only(top: 20),
+            child:FutureBuilder(
+        future: provider.handler.retrieveStop(),
+        builder: (BuildContext context, AsyncSnapshot<List<StopModel>> snapshot) {
+          if (snapshot.hasData) {
+            return GridView.custom(
+              gridDelegate: SliverWovenGridDelegate.count(
+                crossAxisCount: 3,
+                mainAxisSpacing: 10,
+                crossAxisSpacing: 15,
+                pattern: const [
+                  WovenGridTile(.8),
+                ],
+              ),
+              childrenDelegate: SliverChildBuilderDelegate(
+                (context, index) => index!=snapshot.data?.length?stop(snapshot.data![index]):Container(),
+                childCount: snapshot.data?.length,
+              ),
+            );
+          }else{
+            return Container();
+          }
+          })));
   }
 }

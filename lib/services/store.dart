@@ -285,3 +285,34 @@ Future<dynamic> updateAvatar(File image, String id, String cedis) async {
         body: e, message: "Algo salio mal, intentalo mas tarde.", error: true);
   }
 }
+
+Future<Answer> setStop(Map<String, dynamic> data) async {
+  log("/StoreServices <SetStop>");
+  try {
+    var response =
+        jsonDecode((await http.post(Uri.parse("$urlBase/index.php/paradas"),
+                headers: {
+                  HttpHeaders.contentTypeHeader:
+                      'application/json; charset=UTF-8',
+                  "x-api-key": apiKey,
+                  "client_secret": prefs.clientSecret,
+                  "Authorization": "Bearer ${prefs.token}"
+                },
+                body: jsonEncode(data)))
+            .body);
+    if (response != null) {
+      log("/StoreServices <SetStop> Successfull ${response.toString()}");
+      return Answer(body: response, message: "", error: false);
+    } else {
+      log("/StoreServices <SetStop> Fail ${response.toString()}");
+      return Answer(
+          body: response,
+          message: "Algo salio mal, intentalo mas tarde.",
+          error: true);
+    }
+  } catch (e) {
+    log("/StoreServices <SetStop> Catch ${e.toString()}");
+    return Answer(
+        body: e, message: "Algo salio mal, intentalo mas tarde.", error: true);
+  }
+}

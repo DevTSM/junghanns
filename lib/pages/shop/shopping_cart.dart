@@ -69,8 +69,10 @@ class _ShoppingCartState extends State<ShoppingCart> {
           webShowClose: true,
         );
       } else {
-        productsList
-            .addAll([ProductModel.fromState(1), ProductModel.fromState(1)]);
+        setState(() {
+          productsList
+              .addAll([ProductModel.fromState(1), ProductModel.fromState(1)]);
+        });
       }
     });
   }

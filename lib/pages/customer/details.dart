@@ -8,6 +8,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:junghanns/components/button.dart';
+import 'package:junghanns/models/config.dart';
 import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/models/sale.dart';
 import 'package:junghanns/pages/shop/shopping_cart.dart';
@@ -22,6 +23,8 @@ import 'package:junghanns/widgets/card/sales.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../services/auth.dart';
+
 class DetailsCustomer extends StatefulWidget {
   CustomerModel customerCurrent;
   DetailsCustomer({Key? key, required this.customerCurrent}) : super(key: key);
@@ -34,13 +37,53 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
   late dynamic pickedImageFile;
   late Size size;
   late bool isRange;
+
+  late List<ConfigModel> configList;
+
   @override
   void initState() {
     super.initState();
     isRange = false;
     pickedImageFile = null;
-    setCurrentLocation();
-    getDataDetails();
+    configList = [];
+
+    getConfigR();
+  }
+
+  getConfigR() async {
+    await getConfig().then((answer) {
+      if (answer.error) {
+        Fluttertoast.showToast(
+          msg: answer.message,
+          timeInSecForIosWeb: 2,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+        );
+      } else {
+        log("Config yes");
+        answer.body
+            .map((e) => configList.add(ConfigModel.fromService(e)))
+            .toList();
+        getDataDetails();
+      }
+    });
+  }
+
+  getAuth() async {
+    await getAuthorization(widget.customerCurrent.idClient).then((answer) {
+      if (answer.error) {
+        Fluttertoast.showToast(
+          msg: answer.message,
+          timeInSecForIosWeb: 2,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+        );
+      } else {
+        log("Auth yes");
+      }
+    });
   }
 
   getDataDetails() async {
@@ -58,6 +101,8 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
           widget.customerCurrent =
               CustomerModel.fromService(answer.body, widget.customerCurrent.id);
         });
+        setCurrentLocation();
+        getAuth();
       }
     });
   }
@@ -79,11 +124,12 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
         permission == LocationPermission.always) {
       Position _currentLocation = await Geolocator.getCurrentPosition();
       if (Geolocator.distanceBetween(
-              _currentLocation.latitude,
-              _currentLocation.longitude,
-              widget.customerCurrent.lat,
-              widget.customerCurrent.lng) <
-          30000||provider.connectionStatus==4) {
+                  _currentLocation.latitude,
+                  _currentLocation.longitude,
+                  widget.customerCurrent.lat,
+                  widget.customerCurrent.lng) <
+              30000 ||
+          provider.connectionStatus == 4) {
         // ignore: use_build_context_synchronously
         Navigator.push(
             context,
@@ -115,7 +161,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
               _currentLocation.longitude,
               widget.customerCurrent.lat,
               widget.customerCurrent.lng) <
-          300000000) {
+          int.parse(configList.last.valor)) {
         setState(() {
           isRange = true;
         });
@@ -179,7 +225,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
     setState(() {
       size = MediaQuery.of(context).size;
     });
-     provider = Provider.of<ProviderJunghanns>(context);
+    provider = Provider.of<ProviderJunghanns>(context);
     return Scaffold(
       appBar: AppBar(
         backgroundColor: ColorsJunghanns.blueJ,
@@ -201,14 +247,16 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
           children: [
             header(),
             Visibility(
-                  visible: provider.connectionStatus==4,
-                  child: Container(
+                visible: provider.connectionStatus == 4,
+                child: Container(
                     width: double.infinity,
                     alignment: Alignment.center,
                     color: ColorsJunghanns.grey,
-                    padding: const EdgeInsets.only(top: 5,bottom: 5),
-                    child:const Text("Sin conexion a internet",style: TextStyles.white14_5,)
-                  )),
+                    padding: const EdgeInsets.only(top: 5, bottom: 5),
+                    child: const Text(
+                      "Sin conexion a internet",
+                      style: TextStyles.white14_5,
+                    ))),
             balances(),
             const SizedBox(
               height: 20,

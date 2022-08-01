@@ -9,18 +9,16 @@ Future<Answer> getListCustomer() async {
   log("/CustomerServices <getListCustomer>");
   try {
     var response = jsonDecode((await http.get(
-            Uri.parse(
-                "$urlBase/visita?idRuta=10&date=20220617&tipo=R"),
+            Uri.parse("$urlBase/visita?idRuta=10&date=20220617&tipo=R"),
             headers: {
           "Content-Type": "aplication/json",
           "x-api-key": apiKey,
           "client_secret": prefs.clientSecret,
-          "Authorization":
-              "Bearer ${prefs.token}",
+          "Authorization": "Bearer ${prefs.token}",
         }))
         .body);
     if (response != null) {
-      log("/CustomerServices <getListCustomer> Successfull ");
+      log("/CustomerServices <getListCustomer> Successfull");
       return Answer(body: response, message: "", error: false);
     } else {
       log("/CustomerServices <getListCustomer> Fail");
@@ -39,24 +37,23 @@ Future<Answer> getListCustomer() async {
 Future<Answer> getDetailsCustomer(int id) async {
   log("/CustomerServices <getDetailsCustomer>");
   try {
-    var responseEncode = await http.get(
+    var response = jsonDecode((await http.get(
             Uri.parse("$urlBase/index.php/cliente?q=dashboard&tipo=R&id=$id"),
             headers: {
           "Content-Type": "aplication/json",
           "x-api-key": apiKey,
           "client_secret": prefs.clientSecret,
-          "Authorization":
-              "Bearer ${prefs.token}",
-        });
-      var response=jsonDecode(responseEncode.body);
+          "Authorization": "Bearer ${prefs.token}",
+        }))
+        .body);
     if (response["idCliente"] != null) {
-      log("/CustomerServices <getDetailsCustomer> Successfull");
+      log("/CustomerServices <getDetailsCustomer> Successfull $response");
       return Answer(body: response, message: "", error: false);
     } else {
       log("/CustomerServices <getDetailsCustomer> Fail");
       return Answer(
           body: response,
-          message: response["message"]??"Alo salio mal, intentalo mas tarde.",
+          message: "Algo salio mal, intentalo mas tarde.",
           error: true);
     }
   } catch (e) {

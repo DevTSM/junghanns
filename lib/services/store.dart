@@ -54,7 +54,7 @@ Future<Answer> getStockList() async {
         }))
         .body);
     if (response != null) {
-      log("/StoreServices <getStockList> Successfull,");
+      log("/StoreServices <getStockList> Successfull, ${response.toString()}");
       return Answer(body: response, message: "", error: false);
     } else {
       log("/StoreServices <getStockList> Fail");
@@ -84,7 +84,7 @@ Future<Answer> getRefillList() async {
         }))
         .body);
     if (response != null) {
-      log("/StoreServices <getRefillList> Successfull");
+      log("/StoreServices <getRefillList> Successfull, ${response.toString()}");
       return Answer(body: response, message: "", error: false);
     } else {
       log("/StoreServices <getRefillList> Fail");
@@ -114,7 +114,7 @@ Future<Answer> getPaymentMethods(int idClient) async {
         }))
         .body);
     if (response != null) {
-      log("/StoreServices <getPaymentMethods> Successfull");
+      log("/StoreServices <getPaymentMethods> Successfull, ${response.toString()}");
       return Answer(body: response, message: "", error: false);
     } else {
       log("/StoreServices <getPaymentMethods> Fail");
@@ -135,17 +135,16 @@ Future<Answer> getAuthorization(int idClient) async {
   try {
     var response = jsonDecode((await http.get(
             Uri.parse(
-                "$urlBase/index.php/cliente?q=aut&idRuta=21&idCliente=$idClient"),
+                "$urlBase/index.php/cliente?q=aut&idRuta=21&idCliente=$idClient&tipo=contado"),
             headers: {
           "Content-Type": "aplication/json",
           "x-api-key": apiKey,
-          "client_secret": clientSecret,
-          "Authorization":
-              "Bearer " + "caf048dc9e6560d05fe75f8d00ee4c48db607654",
+          "client_secret": prefs.clientSecret,
+          "Authorization": "Bearer ${prefs.token}",
         }))
         .body);
     if (response != null) {
-      log("/StoreServices <getAuthorization> Successfull");
+      log("/StoreServices <getAuthorization> Successfull, ${response.toString()}");
       return Answer(body: response, message: "", error: false);
     } else {
       log("/StoreServices <getAuthorization> Fail");

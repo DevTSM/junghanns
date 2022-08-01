@@ -64,7 +64,7 @@ class _RoutesState extends State<Routes> {
     });
     provider = Provider.of<ProviderJunghanns>(context);
     return Scaffold(
-       key: GlobalKey<ScaffoldState>(),
+      key: GlobalKey<ScaffoldState>(),
       appBar: AppBar(
         backgroundColor: ColorsJunghanns.whiteJ,
         systemOverlayStyle: const SystemUiOverlayStyle(
@@ -80,86 +80,92 @@ class _RoutesState extends State<Routes> {
         elevation: 0,
       ),
       body: SizedBox(
-          height: double.infinity,
-          child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Visibility(
-                  visible: provider.connectionStatus==4,
-                  child: Container(
+        height: double.infinity,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Visibility(
+                visible: provider.connectionStatus == 4,
+                child: Container(
                     width: double.infinity,
                     alignment: Alignment.center,
                     color: ColorsJunghanns.grey,
-                    padding: const EdgeInsets.only(top: 5,bottom: 5),
-                    child:const Text("Sin conexion a internet",style: TextStyles.white14_5,)
-                  )),
-                header(),
-                const SizedBox(
-                  height: 20,
-                ),
-                provider.connectionStatus<4?
-                Expanded(child: SingleChildScrollView(
-                  child:Column(
-                  children: customerList.map((e) {
-                    imageCount == 3 ? imageCount = 1 : imageCount++;
-                    return Column(
-                      children: [
-                      RoutesCard(
-                          icon: Image.asset(
-                            "assets/icons/${imageCount == 1 ? "user1" : imageCount == 2 ? "user2" : "user3"}.png",
-                            width: size.width * .14,
-                          ),
-                          customerCurrent: e,
-                          title: ["${e.idClient} - ", e.address],
-                          description: e.name),
-                      Row(children: [
-                        Container(
-                          margin:
-                              EdgeInsets.only(left: (size.width * .07) + 15),
-                          color: ColorsJunghanns.grey,
-                          width: .5,
-                          height: 15,
-                        )
-                      ])
-                    ]);
-                  }).toList(),
-                ))):Expanded(
-                  child: FutureBuilder(
-        future: provider.handler.retrieveUsers(),
-        builder: (BuildContext context, AsyncSnapshot<List<CustomerModel>> snapshot) {
-          if (snapshot.hasData) {
-            return ListView.builder(
-              itemCount: snapshot.data?.length,
-              itemBuilder: (BuildContext context, int index) {
-                return Column(
-                      children: [
-                      RoutesCard(
-                          icon: Image.asset(
-                            "assets/icons/${imageCount == 1 ? "user1" : imageCount == 2 ? "user2" : "user3"}.png",
-                            width: size.width * .14,
-                          ),
-                          customerCurrent: snapshot.data![index],
-                          title: ["${snapshot.data![index].idClient} - ", snapshot.data![index].address],
-                          description: snapshot.data![index].name),
-                      Row(children: [
-                        Container(
-                          margin:
-                              EdgeInsets.only(left: (size.width * .07) + 15),
-                          color: ColorsJunghanns.grey,
-                          width: .5,
-                          height: 15,
-                        )
-                      ])
-                    ]
-                );
-              });
-          }else{
-            return Container();
-          }
-          }))
-              ],
+                    padding: const EdgeInsets.only(top: 5, bottom: 5),
+                    child: const Text(
+                      "Sin conexion a internet",
+                      style: TextStyles.white14_5,
+                    ))),
+            header(),
+            const SizedBox(
+              height: 20,
             ),
-          ),
+            provider.connectionStatus < 4
+                ? Expanded(
+                    child: SingleChildScrollView(
+                        child: Column(
+                    children: customerList.map((e) {
+                      imageCount == 3 ? imageCount = 1 : imageCount++;
+                      return Column(children: [
+                        RoutesCard(
+                            icon: Image.asset(
+                              "assets/icons/${imageCount == 1 ? "user1" : imageCount == 2 ? "user2" : "user3"}.png",
+                              width: size.width * .14,
+                            ),
+                            customerCurrent: e,
+                            title: ["${e.idClient} - ", e.address],
+                            description: e.name),
+                        Row(children: [
+                          Container(
+                            margin:
+                                EdgeInsets.only(left: (size.width * .07) + 15),
+                            color: ColorsJunghanns.grey,
+                            width: .5,
+                            height: 15,
+                          )
+                        ])
+                      ]);
+                    }).toList(),
+                  )))
+                : Expanded(
+                    child: FutureBuilder(
+                        future: provider.handler.retrieveUsers(),
+                        builder: (BuildContext context,
+                            AsyncSnapshot<List<CustomerModel>> snapshot) {
+                          if (snapshot.hasData) {
+                            return ListView.builder(
+                                itemCount: snapshot.data?.length,
+                                itemBuilder: (BuildContext context, int index) {
+                                  return Column(children: [
+                                    RoutesCard(
+                                        icon: Image.asset(
+                                          "assets/icons/${imageCount == 1 ? "user1" : imageCount == 2 ? "user2" : "user3"}.png",
+                                          width: size.width * .14,
+                                        ),
+                                        customerCurrent: snapshot.data![index],
+                                        title: [
+                                          "${snapshot.data![index].idClient} - ",
+                                          snapshot.data![index].address
+                                        ],
+                                        description:
+                                            snapshot.data![index].name),
+                                    Row(children: [
+                                      Container(
+                                        margin: EdgeInsets.only(
+                                            left: (size.width * .07) + 15),
+                                        color: ColorsJunghanns.grey,
+                                        width: .5,
+                                        height: 15,
+                                      )
+                                    ])
+                                  ]);
+                                });
+                          } else {
+                            return Container();
+                          }
+                        }))
+          ],
+        ),
+      ),
     );
   }
 

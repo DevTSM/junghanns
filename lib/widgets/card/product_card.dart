@@ -1,7 +1,12 @@
+import 'dart:developer';
+
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:junghanns/models/product.dart';
 import 'package:junghanns/models/sale.dart';
+import 'package:junghanns/styles/color.dart';
 
 import '../../styles/decoration.dart';
 import '../../styles/text.dart';
@@ -23,6 +28,7 @@ class ProductCard extends StatefulWidget {
 
 class ProductCardState extends State<ProductCard> {
   var myGroup = AutoSizeGroup();
+  int amount = 0;
 
   @override
   void initState() {
@@ -45,10 +51,10 @@ class ProductCardState extends State<ProductCard> {
               ],
             )),
         onTap: () {
-          setState(() {
-            widget.productCurrent.setSelect(!widget.productCurrent.isSelect);
+          /*setState(() {
+            widget.productCurrent.setSelect(amount > 0);
           });
-          widget.update(widget.productCurrent.type);
+          widget.update(widget.productCurrent.type, amount);*/
         });
   }
 
@@ -66,8 +72,8 @@ class ProductCardState extends State<ProductCard> {
                 fit: BoxFit.contain,
               ),
             ),
-            widget.isPR
-                ? Align(alignment: Alignment.topRight, child: stockProduct(52))
+            widget.isPR && amount > 0
+                ? Align(alignment: Alignment.topRight, child: stockProduct())
                 : Container()
           ],
         ));
@@ -100,16 +106,15 @@ class ProductCardState extends State<ProductCard> {
         ));
   }
 
-  Widget stockProduct(int stock) {
+  Widget stockProduct() {
     return Container(
         width: 32,
         height: 32,
         margin: const EdgeInsets.only(top: 5, right: 5),
         alignment: Alignment.center,
-        decoration:
-            stock > 0 ? Decorations.greenJCardB30 : Decorations.redCardB30,
+        decoration: Decorations.greenJCardB30,
         child: AutoSizeText(
-          stock.toString(),
+          amount.toString(),
           style: TextStyles.white15Itw,
         ));
   }
@@ -127,12 +132,64 @@ class ProductCardState extends State<ProductCard> {
               style: TextStyles.blueJ20BoldIt,
             ),
           ),
-          Container(
+          buttonAdd(),
+          buttonSubtract(),
+          /*Container(
               margin: const EdgeInsets.all(8),
               alignment: Alignment.centerRight,
-              child: Image.asset("assets/icons/arrowGreen.png"))
+              child: Image.asset("assets/icons/arrowGreen.png"))*/
         ],
       ),
     );
+  }
+
+  buttonAdd() {
+    return GestureDetector(
+      child: Container(
+          margin: const EdgeInsets.all(8),
+          alignment: Alignment.centerRight,
+          child: const Icon(
+            FontAwesomeIcons.plus,
+            size: 22,
+            color: ColorsJunghanns.greenJ,
+          )),
+      onTap: () => funAdd(),
+    );
+  }
+
+  funAdd() {
+    setState(() {
+      amount++;
+      widget.productCurrent.setSelect(amount > 0);
+    });
+    log("Sumar $amount");
+    log("ID ${widget.productCurrent.id}");
+    widget.update(widget.productCurrent.type, widget.productCurrent.id,
+        widget.productCurrent.price, true);
+  }
+
+  buttonSubtract() {
+    return GestureDetector(
+        child: Container(
+            margin: const EdgeInsets.all(8),
+            alignment: Alignment.centerLeft,
+            child: const Icon(
+              FontAwesomeIcons.minus,
+              size: 22,
+              color: ColorsJunghanns.red,
+            )),
+        onTap: () => funSubtract());
+  }
+
+  funSubtract() {
+    if (amount > 0) {
+      setState(() {
+        amount--;
+        widget.productCurrent.setSelect(amount > 0);
+      });
+      log("Restar $amount");
+      widget.update(widget.productCurrent.type, widget.productCurrent.id,
+          widget.productCurrent.price, false);
+    }
   }
 }

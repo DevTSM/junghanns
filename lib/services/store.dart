@@ -133,25 +133,25 @@ Future<Answer> getPaymentMethods(int idClient) async {
 Future<Answer> getAuthorization(int idClient) async {
   log("/StoreServices <getAuthorization>");
   // try {
-    var response = await http.get(
-            Uri.parse(
-                "$urlBase/index.php/cliente?q=aut&idRuta=21&idCliente=$idClient&tipo=contado"),
-            headers: {
-          "Content-Type": "aplication/json",
-          "x-api-key": apiKey,
-          "client_secret": prefs.clientSecret,
-          "Authorization": "Bearer ${prefs.token}",
-        });
-    if (response.statusCode ==204) {
-      log("/StoreServices <getAuthorization> Successfull");
-      return Answer(body: response, message: "", error: false);
-    } else {
-      log("/StoreServices <getAuthorization> Fail");
-      return Answer(
-          body: response,
-          message: "Algo salio mal, intentalo mas tarde.",
-          error: true);
-    }
+  var response = await http.get(
+      Uri.parse(
+          "$urlBase/index.php/cliente?q=aut&idRuta=21&idCliente=$idClient&tipo=contado"),
+      headers: {
+        "Content-Type": "aplication/json",
+        "x-api-key": apiKey,
+        "client_secret": prefs.clientSecret,
+        "Authorization": "Bearer ${prefs.token}",
+      });
+  if (response.statusCode == 204) {
+    log("/StoreServices <getAuthorization> Successfull, ${response.toString()}");
+    return Answer(body: response, message: "", error: false);
+  } else {
+    log("/StoreServices <getAuthorization> Fail");
+    return Answer(
+        body: response,
+        message: "Algo salio mal, intentalo mas tarde.",
+        error: true);
+  }
   // } catch (e) {
   //   log("/StoreServices <getAuthorization> Catch ${e.toString()}");
   //   return Answer(

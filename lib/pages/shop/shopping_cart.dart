@@ -71,7 +71,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
       } else {
         setState(() {
           productsList
-              .addAll([ProductModel.fromState(1), ProductModel.fromState(1)]);
+              .addAll([ProductModel.fromState(2), ProductModel.fromState(3)]);
         });
       }
     });
@@ -120,7 +120,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
     });
   }
 
-  updateTotal(int type) {
+  /*updateTotal(int type) {
     setState(() {
       totalPrice = 0;
       shoppingBasket.clear();
@@ -151,6 +151,29 @@ class _ShoppingCartState extends State<ShoppingCart> {
             });
           }
         }
+      }
+    });
+  }*/
+
+  updateTotal2(int type, int id, double price, bool isAdd) {
+    if (type == 1) {
+      for (var e in productsList) {
+        if (e.id == id) {
+          isAdd ? shoppingBasket.add(e) : shoppingBasket.remove(e);
+        }
+      }
+    } else {
+      for (var e in refillList) {
+        if (e.id == id) {
+          isAdd ? shoppingBasket.add(e) : shoppingBasket.remove(e);
+        }
+      }
+    }
+    setState(() {
+      if (isAdd) {
+        totalPrice = totalPrice + price;
+      } else {
+        totalPrice = totalPrice - price;
       }
     });
   }
@@ -261,7 +284,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
               ),
               childrenDelegate: SliverChildBuilderDelegate(
                   (context, index) => ProductCard(
-                        update: updateTotal,
+                        update: updateTotal2,
                         isPR: widget.isPR,
                         productCurrent: widget.isPR
                             ? productsList[index]

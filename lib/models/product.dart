@@ -12,13 +12,13 @@ class ProductModel {
       required this.id,
       required this.type,
       required this.isSelect});
-  factory ProductModel.fromState(int type) {
+  factory ProductModel.fromState(int id) {
     return ProductModel(
         name: ["Cerámica ", "M12 Bco"],
         img: "assets/images/Ceramica.JPG",
-        price: 10.1,
-        id: 0,
-        type: type,
+        price: 45,
+        id: id,
+        type: 1,
         isSelect: false);
   }
   factory ProductModel.fromServiceRefill(Map<String, dynamic> data) {
@@ -26,7 +26,7 @@ class ProductModel {
         name: [data["descripcion"] ?? "", ""],
         img: "assets/icons/refill1.png",
         price: double.parse(data["precio"] ?? "0"),
-        id: data["isProductoServicio"] ?? 0,
+        id: data["idProductoServicio"] ?? 0,
         type: 2,
         isSelect: false);
   }

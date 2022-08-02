@@ -132,8 +132,8 @@ Future<Answer> getPaymentMethods(int idClient) async {
 
 Future<Answer> getAuthorization(int idClient) async {
   log("/StoreServices <getAuthorization>");
-  try {
-    var response = jsonDecode((await http.get(
+  // try {
+    var response = await http.get(
             Uri.parse(
                 "$urlBase/index.php/cliente?q=aut&idRuta=21&idCliente=$idClient&tipo=contado"),
             headers: {
@@ -141,10 +141,9 @@ Future<Answer> getAuthorization(int idClient) async {
           "x-api-key": apiKey,
           "client_secret": prefs.clientSecret,
           "Authorization": "Bearer ${prefs.token}",
-        }))
-        .body);
-    if (response != null) {
-      log("/StoreServices <getAuthorization> Successfull, ${response.toString()}");
+        });
+    if (response.statusCode ==204) {
+      log("/StoreServices <getAuthorization> Successfull");
       return Answer(body: response, message: "", error: false);
     } else {
       log("/StoreServices <getAuthorization> Fail");
@@ -153,11 +152,11 @@ Future<Answer> getAuthorization(int idClient) async {
           message: "Algo salio mal, intentalo mas tarde.",
           error: true);
     }
-  } catch (e) {
-    log("/StoreServices <getAuthorization> Catch ${e.toString()}");
-    return Answer(
-        body: e, message: "Algo salio mal, intentalo mas tarde.", error: true);
-  }
+  // } catch (e) {
+  //   log("/StoreServices <getAuthorization> Catch ${e.toString()}");
+  //   return Answer(
+  //       body: e, message: "Algo salio mal, intentalo mas tarde.", error: true);
+  // }
 }
 
 Future<Answer> getFolio(String num) async {

@@ -27,9 +27,8 @@ class _OpeningState extends State<Opening> {
   void initState() {
     super.initState();
     _connectivity = Connectivity();
-    
+    log("token de acceso =====> ${prefs.token}");
         initConnectivity();
-        
     reedireccion();
   }
   @override
@@ -81,13 +80,13 @@ class _OpeningState extends State<Opening> {
   Future<void> _updateConnectionStatus(ConnectivityResult result) async {
     provider.connectionStatus=result.index;
     if(result.index!=4&&prefs.dataStop){
-      Fluttertoast.showToast(
-          msg: "Sincronizando paradas",
-          timeInSecForIosWeb: 16,
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.CENTER,
-          webShowClose: true,
-        );
+      // Fluttertoast.showToast(
+      //     msg: "Sincronizando paradas",
+      //     timeInSecForIosWeb: 16,
+      //     toastLength: Toast.LENGTH_LONG,
+      //     gravity: ToastGravity.CENTER,
+      //     webShowClose: true,
+      //   );
         List<Map<String,dynamic>> dataNStops=[];
         List<Map<String,dynamic>> dataList=await provider.handler.retrieveStopOff();
        List.generate(dataList.length, (i) {

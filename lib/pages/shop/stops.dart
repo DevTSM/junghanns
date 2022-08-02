@@ -59,8 +59,6 @@ class _StopsState extends State<Stops> {
                 })
               .toList();
 
-          ///Checar el link del ultimo elemento
-          stopList.removeLast();
           stopList.map((e) => provider.handler.insertStop([e])).toList();
         });
       }

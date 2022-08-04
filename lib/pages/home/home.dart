@@ -49,12 +49,16 @@ class _HomeState extends State<Home> {
                 padding: const EdgeInsets.only(left: 24),
                 child: Image.asset("assets/icons/menu.png")),
             onTap: () {},
-          ),actions: [
-            IconButton(
-              onPressed: () {
-              prefs.isLogged=false;
-              Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
-            }, icon: Icon(Icons.exit_to_app,color: ColorsJunghanns.blue,))
+          ),
+          actions: [
+            Container(
+              alignment: Alignment.center,
+              padding: const EdgeInsets.only(right: 10),
+              child: Text(
+                "V 1.0.2",
+                style: TextStyles.blue18SemiBoldIt,
+              ),
+            )
           ],
           elevation: 0,
         ),
@@ -84,14 +88,14 @@ class _HomeState extends State<Home> {
     return Container(
         decoration: Decorations.junghannsWater,
         padding:
-            const EdgeInsets.only(left: 30, right: 30, top: 20, bottom: 20),
+            const EdgeInsets.only(left: 30, right: 30, top: 10, bottom: 10),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           const Text(
             "Bienvenido",
             style: TextStyles.green22_4,
           ),
-          const Text(
-            "Alejandro, Martínez",
+          Text(
+            prefs.nameD,
             style: TextStyles.blue27_7,
           ),
           const SizedBox(
@@ -128,9 +132,12 @@ class _HomeState extends State<Home> {
                       padding: const EdgeInsets.only(
                           left: 5, right: 5, top: 5, bottom: 5),
                       child: RichText(
-                          text: const TextSpan(children: [
-                        TextSpan(text: "Ruta", style: TextStyles.white17_5),
-                        TextSpan(text: " 10", style: TextStyles.white27_7)
+                          text: TextSpan(children: [
+                        const TextSpan(
+                            text: "Ruta", style: TextStyles.white17_5),
+                        TextSpan(
+                            text: prefs.idRouteD.toString(),
+                            style: TextStyles.white27_7)
                       ])))),
             ],
           )),
@@ -215,7 +222,7 @@ class _HomeState extends State<Home> {
               ],
             ),
             const SizedBox(
-              height: 40,
+              height: 20,
             ),
             item(
                 "Servicios Especiales",
@@ -225,7 +232,7 @@ class _HomeState extends State<Home> {
                   width: size.width * .1,
                 )),
             const SizedBox(
-              height: 15,
+              height: 10,
             ),
             item(
                 "Servicios Especiales",
@@ -270,9 +277,9 @@ class _HomeState extends State<Home> {
       alignment: Alignment.bottomCenter,
       child: GestureDetector(
           child: Container(
-            height: 55,
+            height: 50,
             width: size.width * 0.5,
-            margin: const EdgeInsets.only(bottom: 15),
+            margin: const EdgeInsets.only(bottom: 10),
             decoration: Decorations.blueBorder30,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,

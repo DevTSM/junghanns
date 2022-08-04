@@ -142,7 +142,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
           msg: "Lejos del domicilio",
           timeInSecForIosWeb: 16,
           toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.CENTER,
+          gravity: ToastGravity.TOP,
           webShowClose: true,
         );
       }

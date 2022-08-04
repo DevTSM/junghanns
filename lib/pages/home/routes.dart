@@ -12,6 +12,8 @@ import 'package:junghanns/styles/text.dart';
 import 'package:junghanns/widgets/card/routes.dart';
 import 'package:provider/provider.dart';
 
+import '../../preferences/global_variables.dart';
+
 class Routes extends StatefulWidget {
   const Routes({Key? key}) : super(key: key);
 
@@ -204,9 +206,14 @@ class _RoutesState extends State<Routes> {
               const SizedBox(
                 width: 10,
               ),
-              Image.asset(
-                "assets/icons/workRoute.png",
-                width: size.width * .13,
+              GestureDetector(
+                child: Image.asset(
+                  "assets/icons/workRoute.png",
+                  width: size.width * .13,
+                ),
+                onTap: () {
+                  showConfirmLogOut();
+                },
               )
             ],
           )),
@@ -249,5 +256,90 @@ class _RoutesState extends State<Routes> {
             ],
           )),
     ]));
+  }
+
+  showConfirmLogOut() {
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return Center(
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              width: size.width * .75,
+              decoration: Decorations.whiteS1Card,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [textConfirmLogOut(), buttoms()],
+              ),
+            ),
+          );
+        });
+  }
+
+  Widget textConfirmLogOut() {
+    return Container(
+        alignment: Alignment.center,
+        padding: const EdgeInsets.only(top: 15, bottom: 25),
+        child: DefaultTextStyle(
+            style: TextStyles.blueJ22Bold, child: const Text("Cerrar sesión")));
+  }
+
+  Widget buttoms() {
+    return Container(
+      alignment: Alignment.center,
+      padding: const EdgeInsets.only(bottom: 15),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          buttomSale(
+              "Si",
+              () => () {
+                    Navigator.pop(context);
+                    funLogOut();
+                  },
+              Decorations.blueBorder12),
+          buttomSale(
+              "No",
+              () => () {
+                    Navigator.pop(context);
+                  },
+              Decorations.redCard),
+        ],
+      ),
+    );
+  }
+
+  Widget buttomSale(String op, Function fun, BoxDecoration deco) {
+    return GestureDetector(
+      onTap: fun(),
+      child: Container(
+          alignment: Alignment.center,
+          width: size.width * 0.22,
+          height: size.width * 0.11,
+          decoration: deco,
+          child: DefaultTextStyle(
+              style: TextStyles.white18SemiBoldIt,
+              child: Text(
+                op,
+              ))),
+    );
+  }
+
+  funLogOut() {
+    log("LOG OUT");
+    //-------------------------*** LOG OUT
+    prefs.isLogged = false;
+    prefs.idUserD = 0;
+    prefs.idProfileD = 0;
+    prefs.nameUserD = "";
+    prefs.nameD = "";
+    prefs.idRouteD = 0;
+    prefs.nameRouteD = "";
+    prefs.dayWorkD = "";
+    prefs.dayWorkTextD = "";
+    prefs.codeD = "";
+    //--------------------------*********
+    Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
   }
 }

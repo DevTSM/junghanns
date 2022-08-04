@@ -35,7 +35,7 @@ class _StopsState extends State<Stops> {
   @override
   void initState() {
     super.initState();
-    stopCurrent=StopModel.fromState();
+    stopCurrent = StopModel.fromState();
     getDataStops();
   }
 
@@ -53,17 +53,16 @@ class _StopsState extends State<Stops> {
         stopList.clear();
         provider.handler.deleteStops();
         setState(() {
-          answer.body
-              .map((e){
-                stopList.add(StopModel.fromService(e));
-                })
-              .toList();
+          answer.body.map((e) {
+            stopList.add(StopModel.fromService(e));
+          }).toList();
 
           stopList.map((e) => provider.handler.insertStop([e])).toList();
         });
       }
     });
   }
+
   @override
   Widget build(BuildContext context) {
     setState(() {
@@ -197,72 +196,72 @@ class _StopsState extends State<Stops> {
         permission == LocationPermission.always) {
       Position _currentLocation = await Geolocator.getCurrentPosition();
       if (Geolocator.distanceBetween(
-              _currentLocation.latitude,
-              _currentLocation.longitude,
-              widget.customerCurrent.lat,
-              widget.customerCurrent.lng) <
-          30000||provider.connectionStatus==4) {
-            if(provider.connectionStatus!=4){
-        Map<String, dynamic> data = {
-          "id_cliente": widget.customerCurrent.idClient,
-          "id_parada": stopCurrent.id,
-          "lat": "${widget.customerCurrent.lat}",
-          "lon": "${widget.customerCurrent.lng}",
-          "id_data_origen": widget.customerCurrent.id,
-          "tipo": widget.customerCurrent.typeVisit.characters.first
-        };
-        
+                  _currentLocation.latitude,
+                  _currentLocation.longitude,
+                  widget.customerCurrent.lat,
+                  widget.customerCurrent.lng) <
+              30000 ||
+          provider.connectionStatus == 4) {
+        if (provider.connectionStatus != 4) {
+          Map<String, dynamic> data = {
+            "id_cliente": widget.customerCurrent.idClient,
+            "id_parada": stopCurrent.id,
+            "lat": "${widget.customerCurrent.lat}",
+            "lon": "${widget.customerCurrent.lng}",
+            "id_data_origen": widget.customerCurrent.id,
+            "tipo": widget.customerCurrent.typeVisit.characters.first
+          };
 
-        ///
-        await setStop(data).then((answer) {
-          if (answer.error) {
-            Fluttertoast.showToast(
-              msg: answer.message,
-              timeInSecForIosWeb: 2,
-              toastLength: Toast.LENGTH_LONG,
-              gravity: ToastGravity.CENTER,
-              webShowClose: true,
-            );
-          } else {
-            //
-            log("Parada asignada");
-            Fluttertoast.showToast(
-              msg: "Parada asignada con exito",
-              timeInSecForIosWeb: 2,
-              toastLength: Toast.LENGTH_LONG,
-              gravity: ToastGravity.CENTER,
-              webShowClose: true,
-            );
-            Navigator.pop(context);
-            //
-          }
-        });
-          }else{
-            Map<String, dynamic> data = {
-          "idCustomer": widget.customerCurrent.idClient,
-          "idStop": stopCurrent.id,
-          "lat": "${widget.customerCurrent.lat}",
-          "lng": "${widget.customerCurrent.lng}",
-          "idOrigin": widget.customerCurrent.id,
-          "type": widget.customerCurrent.typeVisit.characters.first
-        };
-        provider.handler.insertStopOff(data);
-        Fluttertoast.showToast(
-          msg: "Guardado de forma local",
-          timeInSecForIosWeb: 16,
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.CENTER,
-          webShowClose: true,
-        );
-        Navigator.pop(context);
-        prefs.dataStop=true;
-          }
+          ///
+          await setStop(data).then((answer) {
+            if (answer.error) {
+              Fluttertoast.showToast(
+                msg: answer.message,
+                timeInSecForIosWeb: 2,
+                toastLength: Toast.LENGTH_LONG,
+                gravity: ToastGravity.TOP,
+                webShowClose: true,
+              );
+            } else {
+              //
+              log("Parada asignada");
+              Fluttertoast.showToast(
+                msg: "Parada asignada con exito",
+                timeInSecForIosWeb: 2,
+                toastLength: Toast.LENGTH_LONG,
+                gravity: ToastGravity.TOP,
+                webShowClose: true,
+              );
+              Navigator.pop(context);
+              //
+            }
+          });
+        } else {
+          Map<String, dynamic> data = {
+            "idCustomer": widget.customerCurrent.idClient,
+            "idStop": stopCurrent.id,
+            "lat": "${widget.customerCurrent.lat}",
+            "lng": "${widget.customerCurrent.lng}",
+            "idOrigin": widget.customerCurrent.id,
+            "type": widget.customerCurrent.typeVisit.characters.first
+          };
+          provider.handler.insertStopOff(data);
+          Fluttertoast.showToast(
+            msg: "Guardado de forma local",
+            timeInSecForIosWeb: 16,
+            toastLength: Toast.LENGTH_LONG,
+            gravity: ToastGravity.TOP,
+            webShowClose: true,
+          );
+          Navigator.pop(context);
+          prefs.dataStop = true;
+        }
       } else {
         Fluttertoast.showToast(
           msg: "Lejos del domicilio",
           timeInSecForIosWeb: 16,
           toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.CENTER,
+          gravity: ToastGravity.TOP,
           webShowClose: true,
         );
       }
@@ -308,8 +307,9 @@ class _StopsState extends State<Stops> {
     return GestureDetector(
       child: Container(
           padding: const EdgeInsets.all(4),
-          decoration:
-              stopCurrent.id == stop.id ? Decorations.blueCard : const BoxDecoration(),
+          decoration: stopCurrent.id == stop.id
+              ? Decorations.blueCard
+              : const BoxDecoration(),
           child: Column(
             children: [
               Expanded(
@@ -332,9 +332,9 @@ class _StopsState extends State<Stops> {
       onTap: () {
         setState(() {
           if (stopCurrent.id != stop.id) {
-            stopCurrent=stop;
+            stopCurrent = stop;
           } else {
-            stopCurrent=StopModel.fromState();
+            stopCurrent = StopModel.fromState();
           }
         });
       },
@@ -342,48 +342,53 @@ class _StopsState extends State<Stops> {
   }
 
   Widget typesOfStops() {
-    return provider.connectionStatus!=4?Expanded(
-        child: Container(
-            padding: const EdgeInsets.only(left: 20, right: 20),
-            margin: const EdgeInsets.only(top: 20),
-            child: GridView.custom(
-              gridDelegate: SliverWovenGridDelegate.count(
-                crossAxisCount: 3,
-                mainAxisSpacing: 10,
-                crossAxisSpacing: 15,
-                pattern: const [
-                  WovenGridTile(.8),
-                ],
-              ),
-              childrenDelegate: SliverChildBuilderDelegate(
-                (context, index) => stop(stopList[index]),
-                childCount: stopList.length,
-              ),
-            ))):Expanded(
-                  child: Container(
-            padding: const EdgeInsets.only(left: 20, right: 20),
-            margin: const EdgeInsets.only(top: 20),
-            child:FutureBuilder(
-        future: provider.handler.retrieveStop(),
-        builder: (BuildContext context, AsyncSnapshot<List<StopModel>> snapshot) {
-          if (snapshot.hasData) {
-            return GridView.custom(
-              gridDelegate: SliverWovenGridDelegate.count(
-                crossAxisCount: 3,
-                mainAxisSpacing: 10,
-                crossAxisSpacing: 15,
-                pattern: const [
-                  WovenGridTile(.8),
-                ],
-              ),
-              childrenDelegate: SliverChildBuilderDelegate(
-                (context, index) => index!=snapshot.data?.length?stop(snapshot.data![index]):Container(),
-                childCount: snapshot.data?.length,
-              ),
-            );
-          }else{
-            return Container();
-          }
-          })));
+    return provider.connectionStatus != 4
+        ? Expanded(
+            child: Container(
+                padding: const EdgeInsets.only(left: 20, right: 20),
+                margin: const EdgeInsets.only(top: 20),
+                child: GridView.custom(
+                  gridDelegate: SliverWovenGridDelegate.count(
+                    crossAxisCount: 3,
+                    mainAxisSpacing: 10,
+                    crossAxisSpacing: 15,
+                    pattern: const [
+                      WovenGridTile(.8),
+                    ],
+                  ),
+                  childrenDelegate: SliverChildBuilderDelegate(
+                    (context, index) => stop(stopList[index]),
+                    childCount: stopList.length,
+                  ),
+                )))
+        : Expanded(
+            child: Container(
+                padding: const EdgeInsets.only(left: 20, right: 20),
+                margin: const EdgeInsets.only(top: 20),
+                child: FutureBuilder(
+                    future: provider.handler.retrieveStop(),
+                    builder: (BuildContext context,
+                        AsyncSnapshot<List<StopModel>> snapshot) {
+                      if (snapshot.hasData) {
+                        return GridView.custom(
+                          gridDelegate: SliverWovenGridDelegate.count(
+                            crossAxisCount: 3,
+                            mainAxisSpacing: 10,
+                            crossAxisSpacing: 15,
+                            pattern: const [
+                              WovenGridTile(.8),
+                            ],
+                          ),
+                          childrenDelegate: SliverChildBuilderDelegate(
+                            (context, index) => index != snapshot.data?.length
+                                ? stop(snapshot.data![index])
+                                : Container(),
+                            childCount: snapshot.data?.length,
+                          ),
+                        );
+                      } else {
+                        return Container();
+                      }
+                    })));
   }
 }

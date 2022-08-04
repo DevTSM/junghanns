@@ -1,7 +1,4 @@
 // ignore_for_file: avoid_unnecessary_containers
-
-import 'dart:developer';
-
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -299,7 +296,6 @@ class _HomeState extends State<Home> {
             ),
           ),
           onTap: () {
-            log("Sincronizar");
           }),
     );
   }

@@ -11,6 +11,7 @@ import 'package:junghanns/components/button.dart';
 import 'package:junghanns/models/config.dart';
 import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/models/sale.dart';
+import 'package:junghanns/pages/address/edit_address.dart';
 import 'package:junghanns/pages/shop/shopping_cart.dart';
 import 'package:junghanns/pages/shop/stops.dart';
 import 'package:junghanns/provider/provider.dart';
@@ -21,7 +22,6 @@ import 'package:junghanns/styles/decoration.dart';
 import 'package:junghanns/styles/text.dart';
 import 'package:junghanns/widgets/card/sales.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../services/auth.dart';
 
@@ -173,19 +173,22 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
 
   funCurrentLocation() {
     if (widget.customerCurrent.lat != 0 && widget.customerCurrent.lng != 0) {
-      log("Con ubicación");
-      var urlAux = Uri(
-          scheme: 'https',
-          host: 'www.google.com',
-          path: '/maps/search/',
-          queryParameters: {
-            'api': '1',
-            'query':
-                '${widget.customerCurrent.lat},${widget.customerCurrent.lng}'
-          });
-      log(urlAux.toString());
-      launchUrl(urlAux);
-      //
+      // log("Con ubicación");
+      // var urlAux = Uri(
+      //     scheme: 'https',
+      //     host: 'www.google.com',
+      //     path: '/maps/search/',
+      //     queryParameters: {
+      //       'api': '1',
+      //       'query':
+      //           '${widget.customerCurrent.lat},${widget.customerCurrent.lng}'
+      //     });
+      // log(urlAux.toString());
+      // launchUrl(urlAux);
+      Navigator.push(
+        context,
+        MaterialPageRoute<void>(
+            builder: (BuildContext context) => EditAddress(lat: widget.customerCurrent.lat, lng: widget.customerCurrent.lng)));
     } else {
       log("Sin Ubicación");
     }

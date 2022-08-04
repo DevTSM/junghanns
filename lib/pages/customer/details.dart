@@ -2,8 +2,11 @@
 import 'dart:developer';
 import 'dart:io';
 
+import 'package:auto_size_text/auto_size_text.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
@@ -14,6 +17,7 @@ import 'package:junghanns/models/sale.dart';
 import 'package:junghanns/pages/address/edit_address.dart';
 import 'package:junghanns/pages/shop/shopping_cart.dart';
 import 'package:junghanns/pages/shop/stops.dart';
+import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/provider/provider.dart';
 import 'package:junghanns/services/customer.dart';
 import 'package:junghanns/services/store.dart';
@@ -37,6 +41,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
   late dynamic pickedImageFile;
   late Size size;
   late bool isRange;
+  late bool isLoading;
 
   late List<ConfigModel> configList;
 
@@ -46,7 +51,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
     isRange = false;
     pickedImageFile = null;
     configList = [];
-
+    isLoading = true;
     getConfigR();
   }
 
@@ -71,18 +76,21 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
   }
 
   getAuth() async {
-    await getAuthorization(widget.customerCurrent.idClient).then((answer) {
+    await getAuthorization(widget.customerCurrent.idClient, prefs.idRouteD)
+        .then((answer) {
       if (answer.error) {
-        Fluttertoast.showToast(
-          msg: answer.message,
+        /*Fluttertoast.showToast(
+          msg: "Sin autorizaciones",
           timeInSecForIosWeb: 2,
           toastLength: Toast.LENGTH_LONG,
           gravity: ToastGravity.TOP,
           webShowClose: true,
-        );
+        );*/
+        log("Sin Autorizaciones");
       } else {
         log("Auth yes");
       }
+      setCurrentLocation();
     });
   }
 
@@ -101,7 +109,6 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
           widget.customerCurrent =
               CustomerModel.fromService(answer.body, widget.customerCurrent.id);
         });
-        setCurrentLocation();
         getAuth();
       }
     });
@@ -119,7 +126,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
   }
 
   navigatorStops() async {
-    LocationPermission permission = await Geolocator.requestPermission();
+    /*LocationPermission permission = await Geolocator.requestPermission();
     if (permission == LocationPermission.whileInUse ||
         permission == LocationPermission.always) {
       Position _currentLocation = await Geolocator.getCurrentPosition();
@@ -128,7 +135,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
                   _currentLocation.longitude,
                   widget.customerCurrent.lat,
                   widget.customerCurrent.lng) <
-              30000 ||
+              int.parse(configList.last.valor) ||
           provider.connectionStatus == 4) {
         // ignore: use_build_context_synchronously
         Navigator.push(
@@ -148,27 +155,36 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
       }
     } else {
       log("permission $permission");
+    }*/
+    _onLoading();
+    bool isValid = await funCheckDistance();
+    if (isValid) {
+      Navigator.pop(context);
+      // ignore: use_build_context_synchronously
+      Navigator.push(
+          context,
+          MaterialPageRoute<void>(
+              builder: (BuildContext context) => Stops(
+                  customerCurrent: widget.customerCurrent,
+                  distance: int.parse(configList.last.valor))));
+    } else {
+      Navigator.pop(context);
+      Fluttertoast.showToast(
+        msg: "Lejos del domicilio",
+        timeInSecForIosWeb: 16,
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.TOP,
+        webShowClose: true,
+      );
     }
   }
 
   setCurrentLocation() async {
-    LocationPermission permission = await Geolocator.requestPermission();
-    if (permission == LocationPermission.whileInUse ||
-        permission == LocationPermission.always) {
-      Position _currentLocation = await Geolocator.getCurrentPosition();
-      if (Geolocator.distanceBetween(
-              _currentLocation.latitude,
-              _currentLocation.longitude,
-              widget.customerCurrent.lat,
-              widget.customerCurrent.lng) <
-          int.parse(configList.last.valor)) {
-        setState(() {
-          isRange = true;
-        });
-      }
-    } else {
-      print({"permission": permission.toString()});
-    }
+    bool isValid = await funCheckDistance();
+    setState(() {
+      isRange = isValid;
+      isLoading = false;
+    });
   }
 
   funCurrentLocation() {
@@ -245,28 +261,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
         elevation: 0,
       ),
       backgroundColor: ColorsJunghanns.lightBlue,
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            header(),
-            Visibility(
-                visible: provider.connectionStatus == 4,
-                child: Container(
-                    width: double.infinity,
-                    alignment: Alignment.center,
-                    color: ColorsJunghanns.grey,
-                    padding: const EdgeInsets.only(top: 5, bottom: 5),
-                    child: const Text(
-                      "Sin conexion a internet",
-                      style: TextStyles.white14_5,
-                    ))),
-            balances(),
-            const SizedBox(
-              height: 20,
-            ),
-          ],
-        ),
-      ),
+      body: isLoading ? loading() : refreshScroll(),
     );
   }
 
@@ -311,7 +306,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
             ],
           ),
           Container(
-            padding: const EdgeInsets.only(top: 10),
+            padding: const EdgeInsets.only(top: 10, right: 25),
             child: Row(
               children: [
                 const SizedBox(
@@ -321,14 +316,48 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
                   Icons.location_on,
                   color: ColorsJunghanns.green,
                 ),
-                Text(
+                Expanded(
+                    child: AutoSizeText(
                   widget.customerCurrent.address,
                   style: TextStyles.white15It,
-                )
+                ))
               ],
             ),
           )
         ]));
+  }
+
+  Widget refreshScroll() {
+    return RefreshIndicator(
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              header(),
+              Visibility(
+                  visible: provider.connectionStatus == 4,
+                  child: Container(
+                      width: double.infinity,
+                      alignment: Alignment.center,
+                      color: ColorsJunghanns.grey,
+                      padding: const EdgeInsets.only(top: 5, bottom: 5),
+                      child: const Text(
+                        "Sin conexion a internet",
+                        style: TextStyles.white14_5,
+                      ))),
+              balances(),
+              const SizedBox(
+                height: 20,
+              ),
+            ],
+          ),
+        ),
+        onRefresh: () async {
+          log("Refresh");
+          bool isvalid = await funCheckDistance();
+          setState(() {
+            isRange = isvalid;
+          });
+        });
   }
 
   Widget photoCard() {
@@ -336,7 +365,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
         width: double.infinity,
         height: size.width * .50,
         decoration: BoxDecoration(
-            borderRadius: BorderRadius.all(Radius.circular(10)),
+            borderRadius: const BorderRadius.all(Radius.circular(10)),
             image: widget.customerCurrent.img == ""
                 ? const DecorationImage(
                     image: AssetImage("assets/images/withoutPicture.png"),
@@ -507,7 +536,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
                             child: ButtonJunghanns(
                                 decoration: Decorations.greenBorder5,
                                 style: TextStyles.white17_5,
-                                fun: showSelectPR,
+                                fun: funCheckDistanceSale,
                                 isIcon: true,
                                 icon: Image.asset(
                                   "assets/icons/shoppingCardWhiteIcon.png",
@@ -542,6 +571,24 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
         ],
       ),
     );
+  }
+
+  funCheckDistanceSale() async {
+    _onLoading();
+    bool isValid = await funCheckDistance();
+    if (isValid) {
+      Navigator.pop(context);
+      showSelectPR();
+    } else {
+      Navigator.pop(context);
+      Fluttertoast.showToast(
+        msg: "Lejos del domicilio",
+        timeInSecForIosWeb: 16,
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.TOP,
+        webShowClose: true,
+      );
+    }
   }
 
   showSelectPR() {
@@ -701,6 +748,67 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
           height: 10,
         ),
       ]),
+    );
+  }
+
+  Future<bool> funCheckDistance() async {
+    LocationPermission permission = await Geolocator.requestPermission();
+    if (permission == LocationPermission.whileInUse ||
+        permission == LocationPermission.always) {
+      Position _currentLocation = await Geolocator.getCurrentPosition();
+      if (Geolocator.distanceBetween(
+              _currentLocation.latitude,
+              _currentLocation.longitude,
+              widget.customerCurrent.lat,
+              widget.customerCurrent.lng) <
+          int.parse(configList.last.valor)) {
+        return true;
+      } else {
+        return false;
+      }
+    } else {
+      print({"permission": permission.toString()});
+      return false;
+    }
+  }
+
+  Widget loading() {
+    return Center(
+      child: Container(
+        margin: const EdgeInsets.only(top: 30),
+        decoration: BoxDecoration(
+          color: Colors.blue.withOpacity(0.8),
+          borderRadius: const BorderRadius.all(Radius.circular(25)),
+        ),
+        height: MediaQuery.of(context).size.width * .30,
+        width: MediaQuery.of(context).size.width * .30,
+        child: const SpinKitDualRing(
+          color: Colors.white70,
+          lineWidth: 4,
+        ),
+      ),
+    );
+  }
+
+  void _onLoading() {
+    showCupertinoDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Center(
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.blue.withOpacity(0.8),
+              borderRadius: const BorderRadius.all(Radius.circular(25)),
+            ),
+            height: MediaQuery.of(context).size.width * .30,
+            width: MediaQuery.of(context).size.width * .30,
+            child: const SpinKitDualRing(
+              color: Colors.white70,
+              lineWidth: 4,
+            ),
+          ),
+        );
+      },
     );
   }
 }

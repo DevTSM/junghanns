@@ -1,36 +1,55 @@
 class ProductModel {
-  List<String> name;
-  String img;
+  int idProduct;
+  String description;
   double price;
-  int id;
+  int stock;
+  String img;
   int type; //1 product 2 refill
   bool isSelect;
+
   ProductModel(
-      {required this.name,
-      required this.img,
+      {required this.idProduct,
+      required this.description,
       required this.price,
-      required this.id,
+      required this.stock,
+      required this.img,
       required this.type,
       required this.isSelect});
+
   factory ProductModel.fromState(int id) {
     return ProductModel(
-        name: ["Cerámica ", "M12 Bco"],
+        idProduct: id,
+        description: "Cerámica M12 Bco",
+        price: 200.00,
+        stock: 20,
         img: "assets/images/Ceramica.JPG",
-        price: 45,
-        id: id,
         type: 1,
         isSelect: false);
   }
-  factory ProductModel.fromServiceRefill(Map<String, dynamic> data) {
+
+  factory ProductModel.fromServiceProduct(Map<String, dynamic> data) {
     return ProductModel(
-        name: [data["descripcion"] ?? "", ""],
-        img: "assets/icons/refill1.png",
-        price: double.parse(data["precio"] ?? "0"),
-        id: data["idProductoServicio"] ?? 0,
-        type: 2,
+        idProduct: data["idProductoServicio"] ?? 0,
+        description: data["descripcion"],
+        price: double.parse(data["precio"] ?? "100"),
+        stock: data["stock"],
+        img: data["url"],
+        type: 1,
         isSelect: false);
   }
+
   setSelect(bool isSelect) {
     this.isSelect = isSelect;
+  }
+
+  factory ProductModel.fromServiceRefill(Map<String, dynamic> data) {
+    return ProductModel(
+        idProduct: data["idProductoServicio"] ?? 0,
+        description: data["descripcion"],
+        price: double.parse(data["precio"] ?? "0"),
+        stock: 0,
+        img: "assets/icons/refill1.png",
+        type: 2,
+        isSelect: false);
   }
 }

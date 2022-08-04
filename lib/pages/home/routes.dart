@@ -1,7 +1,9 @@
 import 'dart:developer';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/provider/provider.dart';
@@ -25,45 +27,58 @@ class _RoutesState extends State<Routes> {
   late ProviderJunghanns provider;
   late List<CustomerModel> customerList;
   late Size size;
-  late int imageCount;
+  late bool isLoading;
+
+  late DateTime today;
+  late String todayText, dayText, monthText;
   @override
   void initState() {
     super.initState();
+    isLoading = true;
     customerList = [];
-    imageCount = 0;
+    today = DateTime.now();
+    today.month < 10
+        ? monthText = "0${today.month}"
+        : monthText = "${today.month}";
+    today.day < 10 ? dayText = "0${today.day}" : dayText = "${today.day}";
+    todayText = "${today.year}$monthText$dayText";
     getDataCustomerList();
   }
 
   getDataCustomerList() async {
     customerList.clear();
-    imageCount = 0;
-    await getListCustomer().then((answer) {
+
+    log("Fecha: $todayText");
+    log("Ruta: ${prefs.idRouteD}");
+    await getListCustomer(prefs.idRouteD, todayText).then((answer) {
       if (answer.error) {
         Fluttertoast.showToast(
-          msg: answer.message,
+          msg: "Sin clientes en ruta",
           timeInSecForIosWeb: 2,
           toastLength: Toast.LENGTH_LONG,
           gravity: ToastGravity.TOP,
           webShowClose: true,
         );
+        setState(() {
+          isLoading = false;
+        });
       } else {
         provider.handler.deleteTable();
         //provider.handler.addColumn();
-        answer.body.map((e) {
-          setState(() {
-            customerList.add(CustomerModel.fromList(e, 10));
+        setState(() {
+          answer.body.map((e) {
+            customerList.add(CustomerModel.fromList(e, prefs.idRouteD));
             provider.handler.insertUser([customerList.last]);
-          });
-        }).toList();
+          }).toList();
+          isLoading = false;
+        });
       }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    setState(() {
-      size = MediaQuery.of(context).size;
-    });
+    size = MediaQuery.of(context).size;
     provider = Provider.of<ProviderJunghanns>(context);
     return Scaffold(
       key: GlobalKey<ScaffoldState>(),
@@ -102,32 +117,33 @@ class _RoutesState extends State<Routes> {
               height: 20,
             ),
             provider.connectionStatus < 4
-                ? Expanded(
-                    child: SingleChildScrollView(
-                        child: Column(
-                    children: customerList.map((e) {
-                      imageCount == 3 ? imageCount = 1 : imageCount++;
-                      return Column(children: [
-                        RoutesCard(
-                            icon: Image.asset(
-                              "assets/icons/${imageCount == 1 ? "user1" : imageCount == 2 ? "user2" : "user3"}.png",
-                              width: size.width * .14,
-                            ),
-                            customerCurrent: e,
-                            title: ["${e.idClient} - ", e.address],
-                            description: e.name),
-                        Row(children: [
-                          Container(
-                            margin:
-                                EdgeInsets.only(left: (size.width * .07) + 15),
-                            color: ColorsJunghanns.grey,
-                            width: .5,
-                            height: 15,
-                          )
-                        ])
-                      ]);
-                    }).toList(),
-                  )))
+                ? isLoading
+                    ? loading()
+                    : Expanded(
+                        child: SingleChildScrollView(
+                            child: Column(
+                        children: customerList.map((e) {
+                          return Column(children: [
+                            RoutesCard(
+                                icon: Image.asset(
+                                  "assets/icons/${e.typeVisit == "RUTA" ? "user1" : e.typeVisit == "SEGUNDA" ? "user3" : "user2"}.png",
+                                  width: size.width * .14,
+                                ),
+                                customerCurrent: e,
+                                title: ["${e.idClient} - ", e.address],
+                                description: e.name),
+                            Row(children: [
+                              Container(
+                                margin: EdgeInsets.only(
+                                    left: (size.width * .07) + 15),
+                                color: ColorsJunghanns.grey,
+                                width: .5,
+                                height: 15,
+                              )
+                            ])
+                          ]);
+                        }).toList(),
+                      )))
                 : Expanded(
                     child: FutureBuilder(
                         future: provider.handler.retrieveUsers(),
@@ -140,7 +156,7 @@ class _RoutesState extends State<Routes> {
                                   return Column(children: [
                                     RoutesCard(
                                         icon: Image.asset(
-                                          "assets/icons/${imageCount == 1 ? "user1" : imageCount == 2 ? "user2" : "user3"}.png",
+                                          "assets/icons/${snapshot.data![index].typeVisit == "RUTA" ? "user1" : snapshot.data![index].typeVisit == "SEGUNDA" ? "user3" : "user2"}.png",
                                           width: size.width * .14,
                                         ),
                                         customerCurrent: snapshot.data![index],
@@ -172,8 +188,7 @@ class _RoutesState extends State<Routes> {
   }
 
   Widget header() {
-    return Container(
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Container(
           color: ColorsJunghanns.lightBlue,
           padding: EdgeInsets.only(
@@ -228,7 +243,7 @@ class _RoutesState extends State<Routes> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          checkDate(DateTime.now()),
+                          checkDate(today),
                           style: TextStyles.blue19_7,
                         ),
                         Text(
@@ -249,13 +264,16 @@ class _RoutesState extends State<Routes> {
                       padding: const EdgeInsets.only(
                           left: 5, right: 5, top: 5, bottom: 5),
                       child: RichText(
-                          text: const TextSpan(children: [
-                        TextSpan(text: "Ruta", style: TextStyles.white17_5),
-                        TextSpan(text: "   10", style: TextStyles.white27_7)
+                          text: TextSpan(children: [
+                        const TextSpan(
+                            text: "Ruta  ", style: TextStyles.white17_5),
+                        TextSpan(
+                            text: prefs.idRouteD.toString(),
+                            style: TextStyles.white27_7)
                       ])))),
             ],
           )),
-    ]));
+    ]);
   }
 
   showConfirmLogOut() {
@@ -341,5 +359,23 @@ class _RoutesState extends State<Routes> {
     prefs.codeD = "";
     //--------------------------*********
     Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+  }
+
+  Widget loading() {
+    return Center(
+      child: Container(
+        margin: const EdgeInsets.only(top: 30),
+        decoration: BoxDecoration(
+          color: Colors.blue.withOpacity(0.8),
+          borderRadius: const BorderRadius.all(Radius.circular(25)),
+        ),
+        height: MediaQuery.of(context).size.width * .30,
+        width: MediaQuery.of(context).size.width * .30,
+        child: const SpinKitDualRing(
+          color: Colors.white70,
+          lineWidth: 4,
+        ),
+      ),
+    );
   }
 }

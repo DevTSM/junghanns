@@ -65,13 +65,19 @@ class ProductCardState extends State<ProductCard> {
         padding: const EdgeInsets.all(1),
         child: Stack(
           children: [
-            Align(
-              alignment: Alignment.center,
-              child: Image.asset(
-                widget.productCurrent.img,
-                fit: BoxFit.contain,
-              ),
-            ),
+            widget.productCurrent.type == 1
+                ? Container(
+                    decoration: BoxDecoration(
+                        image: DecorationImage(
+                            image: NetworkImage(widget.productCurrent.img))),
+                  )
+                : Align(
+                    alignment: Alignment.center,
+                    child: Image.asset(
+                      widget.productCurrent.img,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
             widget.isPR && amount > 0
                 ? Align(alignment: Alignment.topRight, child: stockProduct())
                 : Container()
@@ -87,21 +93,11 @@ class ProductCardState extends State<ProductCard> {
           children: [
             Flexible(
                 child: AutoSizeText(
-              widget.productCurrent.name[0],
+              widget.productCurrent.description,
               maxLines: 1,
               group: myGroup,
               style: TextStyles.blueJ20BoldIt,
             )),
-            widget.isPR
-                ? Flexible(
-                    child: AutoSizeText(
-                      widget.productCurrent.name[1],
-                      maxLines: 1,
-                      group: myGroup,
-                      style: TextStyles.blueJ20It,
-                    ),
-                  )
-                : Container()
           ],
         ));
   }
@@ -163,8 +159,8 @@ class ProductCardState extends State<ProductCard> {
       widget.productCurrent.setSelect(amount > 0);
     });
     log("Sumar $amount");
-    log("ID ${widget.productCurrent.id}");
-    widget.update(widget.productCurrent.type, widget.productCurrent.id,
+    log("ID ${widget.productCurrent.idProduct}");
+    widget.update(widget.productCurrent.type, widget.productCurrent.idProduct,
         widget.productCurrent.price, true);
   }
 
@@ -188,7 +184,7 @@ class ProductCardState extends State<ProductCard> {
         widget.productCurrent.setSelect(amount > 0);
       });
       log("Restar $amount");
-      widget.update(widget.productCurrent.type, widget.productCurrent.id,
+      widget.update(widget.productCurrent.type, widget.productCurrent.idProduct,
           widget.productCurrent.price, false);
     }
   }

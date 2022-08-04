@@ -1,8 +1,10 @@
 import 'dart:developer';
 
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geolocator/geolocator.dart';
@@ -20,7 +22,9 @@ import '../../styles/text.dart';
 
 class Stops extends StatefulWidget {
   CustomerModel customerCurrent;
-  Stops({Key? key, required this.customerCurrent}) : super(key: key);
+  int distance;
+  Stops({Key? key, required this.customerCurrent, required this.distance})
+      : super(key: key);
 
   @override
   State<Stops> createState() => _StopsState();
@@ -31,11 +35,13 @@ class _StopsState extends State<Stops> {
   late StopModel stopCurrent;
   late Size size;
   late List<StopModel> stopList = [];
+  late bool isLoading;
 
   @override
   void initState() {
     super.initState();
     stopCurrent = StopModel.fromState();
+    isLoading = true;
     getDataStops();
   }
 
@@ -43,7 +49,7 @@ class _StopsState extends State<Stops> {
     await getStopsList().then((answer) {
       if (answer.error) {
         Fluttertoast.showToast(
-          msg: answer.message,
+          msg: "Sin paradas",
           timeInSecForIosWeb: 2,
           toastLength: Toast.LENGTH_LONG,
           gravity: ToastGravity.TOP,
@@ -52,14 +58,17 @@ class _StopsState extends State<Stops> {
       } else {
         stopList.clear();
         provider.handler.deleteStops();
-        setState(() {
-          answer.body.map((e) {
-            stopList.add(StopModel.fromService(e));
-          }).toList();
 
-          stopList.map((e) => provider.handler.insertStop([e])).toList();
-        });
+        answer.body.map((e) {
+          stopList.add(StopModel.fromService(e));
+        }).toList();
+
+        stopList.map((e) => provider.handler.insertStop([e])).toList();
+        stopList.removeLast();
       }
+      setState(() {
+        isLoading = false;
+      });
     });
   }
 
@@ -88,7 +97,11 @@ class _StopsState extends State<Stops> {
       body: Container(
         color: ColorsJunghanns.whiteJ,
         child: Column(
-          children: [fakeStop(), typesOfStops(), buttonSelectStop()],
+          children: [
+            fakeStop(),
+            isLoading ? loading() : typesOfStops(),
+            buttonSelectStop()
+          ],
         ),
       ),
     );
@@ -191,6 +204,7 @@ class _StopsState extends State<Stops> {
   }
 
   funSelectStop() async {
+    _onLoading();
     LocationPermission permission = await Geolocator.requestPermission();
     if (permission == LocationPermission.whileInUse ||
         permission == LocationPermission.always) {
@@ -200,7 +214,7 @@ class _StopsState extends State<Stops> {
                   _currentLocation.longitude,
                   widget.customerCurrent.lat,
                   widget.customerCurrent.lng) <
-              30000 ||
+              widget.distance ||
           provider.connectionStatus == 4) {
         if (provider.connectionStatus != 4) {
           Map<String, dynamic> data = {
@@ -215,6 +229,7 @@ class _StopsState extends State<Stops> {
           ///
           await setStop(data).then((answer) {
             if (answer.error) {
+              Navigator.pop(context);
               Fluttertoast.showToast(
                 msg: answer.message,
                 timeInSecForIosWeb: 2,
@@ -225,6 +240,7 @@ class _StopsState extends State<Stops> {
             } else {
               //
               log("Parada asignada");
+              Navigator.pop(context);
               Fluttertoast.showToast(
                 msg: "Parada asignada con exito",
                 timeInSecForIosWeb: 2,
@@ -245,6 +261,7 @@ class _StopsState extends State<Stops> {
             "idOrigin": widget.customerCurrent.id,
             "type": widget.customerCurrent.typeVisit.characters.first
           };
+          Navigator.pop(context);
           provider.handler.insertStopOff(data);
           Fluttertoast.showToast(
             msg: "Guardado de forma local",
@@ -257,6 +274,7 @@ class _StopsState extends State<Stops> {
           prefs.dataStop = true;
         }
       } else {
+        Navigator.pop(context);
         Fluttertoast.showToast(
           msg: "Lejos del domicilio",
           timeInSecForIosWeb: 16,
@@ -266,6 +284,7 @@ class _StopsState extends State<Stops> {
         );
       }
     } else {
+      Navigator.pop(context);
       log("permission $permission");
     }
   }
@@ -390,5 +409,45 @@ class _StopsState extends State<Stops> {
                         return Container();
                       }
                     })));
+  }
+
+  Widget loading() {
+    return Center(
+      child: Container(
+        margin: const EdgeInsets.only(top: 30),
+        decoration: BoxDecoration(
+          color: Colors.blue.withOpacity(0.8),
+          borderRadius: const BorderRadius.all(Radius.circular(25)),
+        ),
+        height: MediaQuery.of(context).size.width * .30,
+        width: MediaQuery.of(context).size.width * .30,
+        child: const SpinKitDualRing(
+          color: Colors.white70,
+          lineWidth: 4,
+        ),
+      ),
+    );
+  }
+
+  void _onLoading() {
+    showCupertinoDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Center(
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.blue.withOpacity(0.8),
+              borderRadius: const BorderRadius.all(Radius.circular(25)),
+            ),
+            height: MediaQuery.of(context).size.width * .30,
+            width: MediaQuery.of(context).size.width * .30,
+            child: const SpinKitDualRing(
+              color: Colors.white70,
+              lineWidth: 4,
+            ),
+          ),
+        );
+      },
+    );
   }
 }

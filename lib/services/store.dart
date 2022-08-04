@@ -41,63 +41,63 @@ Future<Answer> getProductList() async {
 }
 
 //
-Future<Answer> getStockList() async {
+Future<Answer> getStockList(int idR) async {
   log("/StoreServices <getStockList>");
-  try {
-    var response = jsonDecode((await http.get(
-            Uri.parse("$urlBase/index.php/almacenmovil?q=stock&idRuta=10"),
-            headers: {
-          "Content-Type": "aplication/json",
-          "x-api-key": apiKey,
-          "client_secret": prefs.clientSecret,
-          "Authorization": "Bearer ${prefs.token}",
-        }))
-        .body);
-    if (response != null) {
-      log("/StoreServices <getStockList> Successfull, ${response.toString()}");
-      return Answer(body: response, message: "", error: false);
-    } else {
-      log("/StoreServices <getStockList> Fail");
-      return Answer(
-          body: response,
-          message: "Algo salio mal, intentalo mas tarde.",
-          error: true);
-    }
-  } catch (e) {
+  //try {
+  var response = await http.get(
+      Uri.parse("$urlBase/index.php/almacenmovil?q=stock&idRuta=$idR"),
+      headers: {
+        "Content-Type": "aplication/json",
+        "x-api-key": apiKey,
+        "client_secret": prefs.clientSecret,
+        "Authorization": "Bearer ${prefs.token}",
+      });
+  log("${response.statusCode}");
+  if (response.statusCode == 200) {
+    log("/StoreServices <getStockList> Successfull, ${response.body}");
+    return Answer(body: jsonDecode(response.body), message: "", error: false);
+  } else {
+    log("/StoreServices <getStockList> Fail");
+    return Answer(
+        body: response,
+        message: "Algo salio mal, intentalo mas tarde.",
+        error: true);
+  }
+  /*} catch (e) {
     log("/StoreServices <getStockList> Catch ${e.toString()}");
     return Answer(
         body: e, message: "Algo salio mal, intentalo mas tarde.", error: true);
-  }
+  }*/
 }
 
 //
-Future<Answer> getRefillList() async {
+Future<Answer> getRefillList(int idR) async {
   log("/StoreServices <getRefillList>");
-  try {
-    var response = jsonDecode((await http.get(
-            Uri.parse("$urlBase/index.php/almacenmovil?q=recarga&idRuta=1"),
-            headers: {
-          "Content-Type": "aplication/json",
-          "x-api-key": apiKey,
-          "client_secret": prefs.clientSecret,
-          "Authorization": "Bearer ${prefs.token}",
-        }))
-        .body);
-    if (response != null) {
-      log("/StoreServices <getRefillList> Successfull, ${response.toString()}");
-      return Answer(body: response, message: "", error: false);
-    } else {
-      log("/StoreServices <getRefillList> Fail");
-      return Answer(
-          body: response,
-          message: "Algo salio mal, intentalo mas tarde.",
-          error: true);
-    }
-  } catch (e) {
+  //try {
+  var response = await http.get(
+      Uri.parse("$urlBase/index.php/almacenmovil?q=recarga&idRuta=$idR"),
+      headers: {
+        "Content-Type": "aplication/json",
+        "x-api-key": apiKey,
+        "client_secret": prefs.clientSecret,
+        "Authorization": "Bearer ${prefs.token}",
+      });
+  log("${response.statusCode}");
+  if (response.statusCode == 200) {
+    log("/StoreServices <getRefillList> Successfull, ${response.body}");
+    return Answer(body: jsonDecode(response.body), message: "", error: false);
+  } else {
+    log("/StoreServices <getRefillList> Fail");
+    return Answer(
+        body: response,
+        message: "Algo salio mal, intentalo mas tarde.",
+        error: true);
+  }
+  /*} catch (e) {
     log("/StoreServices <getRefillList> Catch ${e.toString()}");
     return Answer(
         body: e, message: "Algo salio mal, intentalo mas tarde.", error: true);
-  }
+  }*/
 }
 
 Future<Answer> getPaymentMethods(int idClient) async {
@@ -130,21 +130,22 @@ Future<Answer> getPaymentMethods(int idClient) async {
   }
 }
 
-Future<Answer> getAuthorization(int idClient) async {
+Future<Answer> getAuthorization(int idClient, int idR) async {
   log("/StoreServices <getAuthorization>");
   // try {
   var response = await http.get(
       Uri.parse(
-          "$urlBase/index.php/cliente?q=aut&idRuta=21&idCliente=$idClient&tipo=contado"),
+          "$urlBase/index.php/cliente?q=aut&idRuta=$idR&idCliente=$idClient&tipo=contado"),
       headers: {
         "Content-Type": "aplication/json",
         "x-api-key": apiKey,
         "client_secret": prefs.clientSecret,
         "Authorization": "Bearer ${prefs.token}",
       });
-  if (response.statusCode == 204) {
+  log("${response.statusCode}");
+  if (response.statusCode == 200) {
     log("/StoreServices <getAuthorization> Successfull, ${response.toString()}");
-    return Answer(body: response, message: "", error: false);
+    return Answer(body: jsonDecode(response.body), message: "", error: false);
   } else {
     log("/StoreServices <getAuthorization> Fail");
     return Answer(

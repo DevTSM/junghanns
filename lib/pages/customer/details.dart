@@ -237,7 +237,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
         await updateAvatar(
             multipartFile,
             widget.customerCurrent.idClient.toString(),
-            widget.customerCurrent.nameRoute);
+            "SANDBOX");
       }
     } catch (e) {
       Fluttertoast.showToast(

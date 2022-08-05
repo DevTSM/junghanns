@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:junghanns/components/button.dart';
 import 'package:junghanns/models/config.dart';
@@ -26,7 +27,8 @@ import 'package:junghanns/styles/decoration.dart';
 import 'package:junghanns/styles/text.dart';
 import 'package:junghanns/widgets/card/sales.dart';
 import 'package:provider/provider.dart';
-
+import 'package:http/http.dart' as http;
+ import 'package:http_parser/http_parser.dart';
 import '../../services/auth.dart';
 
 class DetailsCustomer extends StatefulWidget {
@@ -215,15 +217,26 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
       final picker = ImagePicker();
       final pickedImage = await picker.getImage(
           source: type == 1 ? ImageSource.camera : ImageSource.gallery,
-          imageQuality: 80);
+          imageQuality: 50,
+
+          );
       setState(() {
         pickedImageFile = File(pickedImage!.path);
       });
 
       if (pickedImageFile != null) {
+        final img =
+        await pickedImage!.readAsBytes();
+        File fileData = File.fromRawPath(img.buffer.asUint8List(0,img.lengthInBytes));
+   var multipartFile = http.MultipartFile.fromBytes(
+  'image',
+  img.buffer.asUint8List(),
+  filename: 'avatar.png', // use the real name if available, or omit
+  contentType: MediaType('image', 'png'),
+);
         await updateAvatar(
-            pickedImageFile,
-            widget.customerCurrent.id.toString(),
+            multipartFile,
+            widget.customerCurrent.idClient.toString(),
             widget.customerCurrent.nameRoute);
       }
     } catch (e) {

@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 import 'dart:async';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:path/path.dart';
 import 'package:async/async.dart';
 import 'package:junghanns/models/answer.dart';
@@ -249,25 +250,26 @@ Future<Answer> getStopsList() async {
   }
 }
 
-Future<dynamic> updateAvatar(File image, String id, String cedis) async {
+Future<dynamic> updateAvatar(dynamic image, String id, String cedis) async {
   log("/StoreServices <updateAvatar> ");
   try {
-    var stream =
-        // ignore: deprecated_member_use, unnecessary_new
-        new http.ByteStream(DelegatingStream.typed(image.openRead()));
-    var length = await image.length();
+    // var stream =
+    //     // ignore: deprecated_member_use, unnecessary_new
+    //     new http.ByteStream(DelegatingStream.typed(image.openRead()));
+    
+    // var length = await image.length();
+    
     var uri = Uri.parse("$urlBase/cliente");
     final response = new http.MultipartRequest("POST", uri);
-
-    response.headers["Content-Type"] = 'aplication/json';
+    response.headers["Content-Type"] = 'application/json; charset=UTF-8';
     response.headers["x-api-key"] = apiKey;
     response.headers["client_secret"] = prefs.clientSecret;
     response.headers["Authorization"] = "Bearer ${prefs.token}";
-    var multipartFile = http.MultipartFile('image', stream, length,
-        filename: basename(image.path));
+    // var multipartFile = http.MultipartFile('image', stream, length,
+    //     filename: basename(image.path));
 
-    response.files.add(multipartFile);
-    //response.fields.addAll({"action":"updimg", "id_cliente":id,"cedis":cedis});
+    response.files.add(image);
+    response.fields.addAll({"action":"updimg", "id_cliente":id,"cedis":cedis});
     var value1;
     var respo = await response.send();
     respo.stream.transform(utf8.decoder).listen((value) {

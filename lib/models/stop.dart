@@ -28,6 +28,22 @@ class StopModel {
         color: data["color"],
         isSelect: false);
   }
+  factory StopModel.fromDatabase(Map<String, dynamic> data) {
+    return StopModel(
+        id: data["id"] ?? 0,
+        description: data["description"] ?? "",
+        icon: data["icon"],
+        color: data["color"],
+        isSelect: false);
+  }
+  Map<String,dynamic> getMap(){
+    return {
+      "id":id,
+      "description":description,
+      "icon":icon,
+      "color":color
+    };
+  }
 
   setSelect(isSelect) {
     this.isSelect = isSelect;

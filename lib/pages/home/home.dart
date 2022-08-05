@@ -1,13 +1,11 @@
 // ignore_for_file: avoid_unnecessary_containers
-
-import 'dart:developer';
-
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:junghanns/models/customer.dart';
+import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/styles/color.dart';
 import 'package:junghanns/styles/decoration.dart';
 import 'package:junghanns/styles/text.dart';
@@ -49,6 +47,16 @@ class _HomeState extends State<Home> {
                 child: Image.asset("assets/icons/menu.png")),
             onTap: () {},
           ),
+          actions: [
+            Container(
+              alignment: Alignment.center,
+              padding: const EdgeInsets.only(right: 10),
+              child: Text(
+                "V 1.0.2",
+                style: TextStyles.blue18SemiBoldIt,
+              ),
+            )
+          ],
           elevation: 0,
         ),
         body: Stack(
@@ -77,14 +85,14 @@ class _HomeState extends State<Home> {
     return Container(
         decoration: Decorations.junghannsWater,
         padding:
-            const EdgeInsets.only(left: 30, right: 30, top: 20, bottom: 20),
+            const EdgeInsets.only(left: 30, right: 30, top: 10, bottom: 10),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           const Text(
             "Bienvenido",
             style: TextStyles.green22_4,
           ),
-          const Text(
-            "Alejandro, Martínez",
+          Text(
+            prefs.nameD,
             style: TextStyles.blue27_7,
           ),
           const SizedBox(
@@ -121,9 +129,12 @@ class _HomeState extends State<Home> {
                       padding: const EdgeInsets.only(
                           left: 5, right: 5, top: 5, bottom: 5),
                       child: RichText(
-                          text: const TextSpan(children: [
-                        TextSpan(text: "Ruta", style: TextStyles.white17_5),
-                        TextSpan(text: "   10", style: TextStyles.white27_7)
+                          text: TextSpan(children: [
+                        const TextSpan(
+                            text: "Ruta", style: TextStyles.white17_5),
+                        TextSpan(
+                            text: prefs.idRouteD.toString(),
+                            style: TextStyles.white27_7)
                       ])))),
             ],
           )),
@@ -208,7 +219,7 @@ class _HomeState extends State<Home> {
               ],
             ),
             const SizedBox(
-              height: 40,
+              height: 20,
             ),
             item(
                 "Servicios Especiales",
@@ -218,11 +229,11 @@ class _HomeState extends State<Home> {
                   width: size.width * .1,
                 )),
             const SizedBox(
-              height: 15,
+              height: 10,
             ),
             item(
-                "Servicios Especiales",
-                ["8 programados /", " 3 Atentidos"],
+                "Avance Almacen",
+                ["70 Liquidos Almacen /", " 0 Vendidos"],
                 Image.asset(
                   "assets/icons/iconWarehouse.png",
                   width: size.width * .1,
@@ -263,9 +274,9 @@ class _HomeState extends State<Home> {
       alignment: Alignment.bottomCenter,
       child: GestureDetector(
           child: Container(
-            height: 55,
+            height: 50,
             width: size.width * 0.5,
-            margin: const EdgeInsets.only(bottom: 15),
+            margin: const EdgeInsets.only(bottom: 10),
             decoration: Decorations.blueBorder30,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -285,7 +296,6 @@ class _HomeState extends State<Home> {
             ),
           ),
           onTap: () {
-            log("Sincronizar");
           }),
     );
   }

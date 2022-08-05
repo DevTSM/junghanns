@@ -1,7 +1,10 @@
+// ignore_for_file: depend_on_referenced_packages
+
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 import 'dart:async';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:path/path.dart';
 import 'package:async/async.dart';
 import 'package:junghanns/models/answer.dart';
@@ -39,63 +42,63 @@ Future<Answer> getProductList() async {
 }
 
 //
-Future<Answer> getStockList() async {
+Future<Answer> getStockList(int idR) async {
   log("/StoreServices <getStockList>");
-  try {
-    var response = jsonDecode((await http.get(
-            Uri.parse("$urlBase/index.php/almacenmovil?q=stock&idRuta=10"),
-            headers: {
-          "Content-Type": "aplication/json",
-          "x-api-key": apiKey,
-          "client_secret": prefs.clientSecret,
-          "Authorization": "Bearer ${prefs.token}",
-        }))
-        .body);
-    if (response != null) {
-      log("/StoreServices <getStockList> Successfull,  ${response.toString()}");
-      return Answer(body: response, message: "", error: false);
-    } else {
-      log("/StoreServices <getStockList> Fail");
-      return Answer(
-          body: response,
-          message: "Algo salio mal, intentalo mas tarde.",
-          error: true);
-    }
-  } catch (e) {
+  //try {
+  var response = await http.get(
+      Uri.parse("$urlBase/index.php/almacenmovil?q=stock&idRuta=$idR"),
+      headers: {
+        "Content-Type": "aplication/json",
+        "x-api-key": apiKey,
+        "client_secret": prefs.clientSecret,
+        "Authorization": "Bearer ${prefs.token}",
+      });
+  log("${response.statusCode}");
+  if (response.statusCode == 200) {
+    log("/StoreServices <getStockList> Successfull, ${response.body}");
+    return Answer(body: jsonDecode(response.body), message: "", error: false);
+  } else {
+    log("/StoreServices <getStockList> Fail");
+    return Answer(
+        body: response,
+        message: "Algo salio mal, intentalo mas tarde.",
+        error: true);
+  }
+  /*} catch (e) {
     log("/StoreServices <getStockList> Catch ${e.toString()}");
     return Answer(
         body: e, message: "Algo salio mal, intentalo mas tarde.", error: true);
-  }
+  }*/
 }
 
 //
-Future<Answer> getRefillList() async {
+Future<Answer> getRefillList(int idR) async {
   log("/StoreServices <getRefillList>");
-  try {
-    var response = jsonDecode((await http.get(
-            Uri.parse("$urlBase/index.php/almacenmovil?q=recarga&idRuta=1"),
-            headers: {
-          "Content-Type": "aplication/json",
-          "x-api-key": apiKey,
-          "client_secret": prefs.clientSecret,
-          "Authorization": "Bearer ${prefs.token}",
-        }))
-        .body);
-    if (response != null) {
-      log("/StoreServices <getRefillList> Successfull ${response.toString()}");
-      return Answer(body: response, message: "", error: false);
-    } else {
-      log("/StoreServices <getRefillList> Fail");
-      return Answer(
-          body: response,
-          message: "Algo salio mal, intentalo mas tarde.",
-          error: true);
-    }
-  } catch (e) {
+  //try {
+  var response = await http.get(
+      Uri.parse("$urlBase/index.php/almacenmovil?q=recarga&idRuta=$idR"),
+      headers: {
+        "Content-Type": "aplication/json",
+        "x-api-key": apiKey,
+        "client_secret": prefs.clientSecret,
+        "Authorization": "Bearer ${prefs.token}",
+      });
+  log("${response.statusCode}");
+  if (response.statusCode == 200) {
+    log("/StoreServices <getRefillList> Successfull, ${response.body}");
+    return Answer(body: jsonDecode(response.body), message: "", error: false);
+  } else {
+    log("/StoreServices <getRefillList> Fail");
+    return Answer(
+        body: response,
+        message: "Algo salio mal, intentalo mas tarde.",
+        error: true);
+  }
+  /*} catch (e) {
     log("/StoreServices <getRefillList> Catch ${e.toString()}");
     return Answer(
         body: e, message: "Algo salio mal, intentalo mas tarde.", error: true);
-  }
+  }*/
 }
 
 Future<Answer> getPaymentMethods(int idClient) async {
@@ -112,7 +115,7 @@ Future<Answer> getPaymentMethods(int idClient) async {
         }))
         .body);
     if (response != null) {
-      log("/StoreServices <getPaymentMethods> Successfull ${response.toString()}");
+      log("/StoreServices <getPaymentMethods> Successfull, ${response.toString()}");
       return Answer(body: response, message: "", error: false);
     } else {
       log("/StoreServices <getPaymentMethods> Fail");
@@ -128,35 +131,34 @@ Future<Answer> getPaymentMethods(int idClient) async {
   }
 }
 
-Future<Answer> getAuthorization(int idClient) async {
+Future<Answer> getAuthorization(int idClient, int idR) async {
   log("/StoreServices <getAuthorization>");
-  try {
-    var response = jsonDecode((await http.get(
-            Uri.parse(
-                "$urlBase/index.php/cliente?q=aut&idRuta=21&idCliente=$idClient"),
-            headers: {
-          "Content-Type": "aplication/json",
-          "x-api-key": apiKey,
-          "client_secret": clientSecret,
-          "Authorization":
-              "Bearer " + "caf048dc9e6560d05fe75f8d00ee4c48db607654",
-        }))
-        .body);
-    if (response != null) {
-      log("/StoreServices <getAuthorization> Successfull ${response.toString()}");
-      return Answer(body: response, message: "", error: false);
-    } else {
-      log("/StoreServices <getAuthorization> Fail");
-      return Answer(
-          body: response,
-          message: "Algo salio mal, intentalo mas tarde.",
-          error: true);
-    }
-  } catch (e) {
-    log("/StoreServices <getAuthorization> Catch ${e.toString()}");
+  // try {
+  var response = await http.get(
+      Uri.parse(
+          "$urlBase/index.php/cliente?q=aut&idRuta=$idR&idCliente=$idClient&tipo=contado"),
+      headers: {
+        "Content-Type": "aplication/json",
+        "x-api-key": apiKey,
+        "client_secret": prefs.clientSecret,
+        "Authorization": "Bearer ${prefs.token}",
+      });
+  log("${response.statusCode}");
+  if (response.statusCode == 200) {
+    log("/StoreServices <getAuthorization> Successfull, ${response.toString()}");
+    return Answer(body: jsonDecode(response.body), message: "", error: false);
+  } else {
+    log("/StoreServices <getAuthorization> Fail");
     return Answer(
-        body: e, message: "Algo salio mal, intentalo mas tarde.", error: true);
+        body: response,
+        message: "Algo salio mal, intentalo mas tarde.",
+        error: true);
   }
+  // } catch (e) {
+  //   log("/StoreServices <getAuthorization> Catch ${e.toString()}");
+  //   return Answer(
+  //       body: e, message: "Algo salio mal, intentalo mas tarde.", error: true);
+  // }
 }
 
 Future<Answer> getFolio(String num) async {
@@ -173,7 +175,7 @@ Future<Answer> getFolio(String num) async {
         }))
         .body);
     if (response != null) {
-      log("/StoreServices <getFolio> Successfull ${response.toString()}");
+      log("/StoreServices <getFolio> Successfull");
       return Answer(body: response, message: "", error: false);
     } else {
       log("/StoreServices <getFolio> Fail");
@@ -204,7 +206,7 @@ Future<Answer> setSale(Map<String, dynamic> data) async {
                 body: jsonEncode(data)))
             .body);
     if (response != null) {
-      log("/StoreServices <setSale> Successfull ${response.toString()}");
+      log("/StoreServices <setSale> Successfull");
       return Answer(body: response, message: "", error: false);
     } else {
       log("/StoreServices <setSale> Fail ${response.toString()}");
@@ -248,25 +250,26 @@ Future<Answer> getStopsList() async {
   }
 }
 
-Future<dynamic> updateAvatar(File image, String id, String cedis) async {
+Future<dynamic> updateAvatar(dynamic image, String id, String cedis) async {
   log("/StoreServices <updateAvatar> ");
   try {
-    var stream =
-        // ignore: deprecated_member_use, unnecessary_new
-        new http.ByteStream(DelegatingStream.typed(image.openRead()));
-    var length = await image.length();
+    // var stream =
+    //     // ignore: deprecated_member_use, unnecessary_new
+    //     new http.ByteStream(DelegatingStream.typed(image.openRead()));
+    
+    // var length = await image.length();
+    
     var uri = Uri.parse("$urlBase/cliente");
     final response = new http.MultipartRequest("POST", uri);
-
-    response.headers["Content-Type"] = 'aplication/json';
+    response.headers["Content-Type"] = 'application/json; charset=UTF-8';
     response.headers["x-api-key"] = apiKey;
     response.headers["client_secret"] = prefs.clientSecret;
     response.headers["Authorization"] = "Bearer ${prefs.token}";
-    var multipartFile = http.MultipartFile('image', stream, length,
-        filename: basename(image.path));
+    // var multipartFile = http.MultipartFile('image', stream, length,
+    //     filename: basename(image.path));
 
-    response.files.add(multipartFile);
-    //response.fields.addAll({"action":"updimg", "id_cliente":id,"cedis":cedis});
+    response.files.add(image);
+    response.fields.addAll({"action":"updimg", "id_cliente":id,"cedis":cedis});
     var value1;
     var respo = await response.send();
     respo.stream.transform(utf8.decoder).listen((value) {

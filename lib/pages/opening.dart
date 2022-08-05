@@ -2,9 +2,11 @@ import 'dart:async';
 import 'dart:developer';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:junghanns/pages/home/home_principal.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/provider/provider.dart';
+import 'package:junghanns/services/store.dart';
 import 'package:provider/provider.dart';
 
 import 'auth/login.dart';
@@ -20,18 +22,18 @@ class _OpeningState extends State<Opening> {
   late ProviderJunghanns provider;
   late Connectivity _connectivity;
   late StreamSubscription<ConnectivityResult> _connectivitySubscription;
-  
+
   @override
   void initState() {
     super.initState();
     _connectivity = Connectivity();
-    
-        initConnectivity();
-        
+    log("token de acceso =====> ${prefs.token}");
+    initConnectivity();
     reedireccion();
   }
+
   @override
-  void dispose(){
+  void dispose() {
     super.dispose();
     _connectivitySubscription.cancel();
   }
@@ -41,10 +43,12 @@ class _OpeningState extends State<Opening> {
       Navigator.pushReplacement<void, void>(
         context,
         MaterialPageRoute<void>(
-            builder: (BuildContext context) => prefs.isLogged?const HomePrincipal():const Login()),
+            builder: (BuildContext context) =>
+                prefs.isLogged ? const HomePrincipal() : const Login()),
       );
     });
   }
+
   Future<void> initConnectivity() async {
     late ConnectivityResult result;
     try {
@@ -56,17 +60,54 @@ class _OpeningState extends State<Opening> {
     if (!mounted) {
       return Future.value(null);
     }
-    provider.connectionStatus=result.index;
+    provider.connectionStatus = result.index;
   }
+
+  setDataStops(Map<String, dynamic> data) async {
+    await setStop(data).then((answer) {
+      if (answer.error) {
+        log("Parada asignada 2");
+        Fluttertoast.showToast(
+          msg: answer.message,
+          timeInSecForIosWeb: 2,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+        );
+      } else {
+        //
+        log("Parada asignada");
+        //
+      }
+    });
+  }
+
   Future<void> _updateConnectionStatus(ConnectivityResult result) async {
-    provider.connectionStatus=result.index;
+    provider.connectionStatus = result.index;
+    if (result.index != 4 && prefs.dataStop) {
+      // Fluttertoast.showToast(
+      //     msg: "Sincronizando paradas",
+      //     timeInSecForIosWeb: 16,
+      //     toastLength: Toast.LENGTH_LONG,
+      //     gravity: ToastGravity.TOP,
+      //     webShowClose: true,
+      //   );
+      List<Map<String, dynamic>> dataNStops = [];
+      List<Map<String, dynamic>> dataList =
+          await provider.handler.retrieveStopOff();
+      List.generate(dataList.length, (i) {
+        dataNStops.add(dataList[i]);
+      });
+      dataNStops.map((e) => log(e.toString())).toList();
+    }
   }
+
   @override
   Widget build(BuildContext context) {
-    provider= Provider.of<ProviderJunghanns>(context);
+    provider = Provider.of<ProviderJunghanns>(context);
     _connectivitySubscription =
         _connectivity.onConnectivityChanged.listen(_updateConnectionStatus);
-        provider.init();
+    provider.init();
     return Scaffold(
         body: Stack(
       children: [

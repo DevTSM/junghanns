@@ -1,12 +1,14 @@
 import 'dart:developer';
 
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:junghanns/models/delivery_man.dart';
 import 'package:junghanns/pages/home/home_principal.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/services/auth.dart';
-import 'package:junghanns/services/store.dart';
 import '../../styles/color.dart';
 import '../../styles/decoration.dart';
 import '../../styles/text.dart';
@@ -21,6 +23,7 @@ class Login extends StatefulWidget {
 class _LoginState extends State<Login> {
   late Size size;
   late TextEditingController userC, passC;
+  late bool isObscure = true;
 
   @override
   void initState() {
@@ -85,8 +88,8 @@ class _LoginState extends State<Login> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          textField(userC, "Usuario", "assets/icons/user.png"),
-          textField(passC, "Contraseña", "assets/icons/password.png"),
+          textField(userC, "Usuario", "assets/icons/user.png", false),
+          textField(passC, "Contraseña", "assets/icons/password.png", true),
           textOC(),
           buttonLog()
         ],
@@ -94,14 +97,15 @@ class _LoginState extends State<Login> {
     );
   }
 
-  Widget textField(
-      TextEditingController controller, String hintText, String iconS) {
+  Widget textField(TextEditingController controller, String hintText,
+      String iconS, bool isPass) {
     return SizedBox(
         height: size.height * 0.06,
         child: TextFormField(
             controller: controller,
             textAlignVertical: TextAlignVertical.center,
             style: TextStyles.blue18SemiBoldIt,
+            obscureText: isPass ? isObscure : false,
             decoration: InputDecoration(
               hintText: hintText,
               hintStyle: TextStyles.blue18SemiBoldIt,
@@ -114,7 +118,28 @@ class _LoginState extends State<Login> {
                   child: Image.asset(
                     iconS,
                   )),
+              suffixIcon: isPass
+                  ? visibleIcon()
+                  : const Padding(
+                      padding: EdgeInsets.only(top: 10, bottom: 10)),
             )));
+  }
+
+  Widget visibleIcon() {
+    return GestureDetector(
+      child: Padding(
+          padding: const EdgeInsets.only(top: 10, bottom: 10, right: 10),
+          child: Icon(
+            isObscure ? Icons.visibility_off : Icons.visibility,
+            color: ColorsJunghanns.blueJ2,
+          )),
+      onTap: () {
+        log("Cambiar");
+        setState(() {
+          isObscure = !isObscure;
+        });
+      },
+    );
   }
 
   Widget textOC() {
@@ -143,61 +168,80 @@ class _LoginState extends State<Login> {
   }
 
   funLogin() async {
+    _onLoading();
     if (userC.text.isNotEmpty && passC.text.isNotEmpty) {
       Map<String, dynamic> data = {
         "user": userC.text,
         "pass": passC.text,
       };
-      await getClientSecret(userC.text,passC.text).then((answer) async {
-        if(answer.error){
+      await getClientSecret(userC.text, passC.text).then((answer) async {
+        if (answer.error) {
+          Navigator.pop(context);
           Fluttertoast.showToast(
             msg: answer.message,
             timeInSecForIosWeb: 2,
             toastLength: Toast.LENGTH_LONG,
-            gravity: ToastGravity.CENTER,
+            gravity: ToastGravity.TOP,
             webShowClose: true,
           );
-        }else{
-          prefs.clientSecret=answer.body["client_secret"];
+        } else {
+          prefs.clientSecret = answer.body["client_secret"];
           await getToken(userC.text).then((answer1) async {
-            if(answer1.error){
+            if (answer1.error) {
+              Navigator.pop(context);
               Fluttertoast.showToast(
-            msg: answer.message,
-            timeInSecForIosWeb: 2,
-            toastLength: Toast.LENGTH_LONG,
-            gravity: ToastGravity.CENTER,
-            webShowClose: true,
-          );
-            }else{
-              prefs.token=answer1.body["token"];
-              await login(data).then((answer2){
-                if(answer2.error){
+                msg: answer.message,
+                timeInSecForIosWeb: 2,
+                toastLength: Toast.LENGTH_LONG,
+                gravity: ToastGravity.TOP,
+                webShowClose: true,
+              );
+            } else {
+              prefs.token = answer1.body["token"];
+              await login(data).then((answer2) {
+                if (answer2.error) {
+                  Navigator.pop(context);
                   Fluttertoast.showToast(
-            msg: answer2.message,
-            timeInSecForIosWeb: 2,
-            toastLength: Toast.LENGTH_LONG,
-            gravity: ToastGravity.CENTER,
-            webShowClose: true,
-          );
-                }else{
-                  prefs.isLogged=true;
+                    msg: answer2.message,
+                    timeInSecForIosWeb: 2,
+                    toastLength: Toast.LENGTH_LONG,
+                    gravity: ToastGravity.TOP,
+                    webShowClose: true,
+                  );
+                } else {
+                  prefs.isLogged = true;
+                  //---------------------------------- Info DeliveryMan
+                  prefs.idUserD = answer2.body["id_usuario"] ?? 0;
+                  prefs.idProfileD = answer2.body["id_perfil"] ?? 0;
+                  prefs.nameUserD = answer2.body["nombre_usuario"] ?? "";
+                  prefs.nameD = answer2.body["nombre"] ?? "";
+                  prefs.idRouteD = answer2.body["id_ruta"] ?? 0;
+                  prefs.nameRouteD = answer2.body["nombre_ruta"] ?? "";
+                  prefs.dayWorkD = answer2.body["dia_trabajo"] ?? "T";
+                  prefs.dayWorkTextD =
+                      answer2.body["dia_trabajo_texto"] ?? "TEST";
+                  prefs.codeD = answer2.body["codigo_empresa"] ?? "";
+                  log(prefs.nameD);
+                  //-----------------------------------------
+                  Navigator.pop(context);
                   Navigator.pushReplacement(
-          context,
-          MaterialPageRoute<void>(
-              builder: (BuildContext context) => const HomePrincipal()));
+                      context,
+                      MaterialPageRoute<void>(
+                          builder: (BuildContext context) =>
+                              const HomePrincipal()));
                 }
-              } );
+              });
             }
           });
         }
       });
-      
     } else {
+      Navigator.pop(context);
       Fluttertoast.showToast(
         msg: "Campos vacíos",
         timeInSecForIosWeb: 4,
         toastLength: Toast.LENGTH_LONG,
-        gravity: ToastGravity.CENTER,
+        gravity: ToastGravity.TOP,
         webShowClose: true,
       );
     }
@@ -233,6 +277,28 @@ class _LoginState extends State<Login> {
         maxLines: 1,
         style: TextStyles.blue15SemiBold,
       ),
+    );
+  }
+
+  void _onLoading() {
+    showCupertinoDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Center(
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.blue.withOpacity(0.8),
+              borderRadius: const BorderRadius.all(Radius.circular(25)),
+            ),
+            height: MediaQuery.of(context).size.width * .30,
+            width: MediaQuery.of(context).size.width * .30,
+            child: const SpinKitDualRing(
+              color: Colors.white70,
+              lineWidth: 4,
+            ),
+          ),
+        );
+      },
     );
   }
 }

@@ -1,12 +1,14 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:junghanns/components/button.dart';
 import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/models/product.dart';
 import 'package:junghanns/models/sale.dart';
+import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/services/store.dart';
 import 'package:junghanns/styles/color.dart';
 import 'package:junghanns/styles/decoration.dart';
@@ -33,15 +35,16 @@ class _ShoppingCartState extends State<ShoppingCart> {
   late List<MethodPayment> paymentsList = [];
   late List shoppingBasket;
   late double totalPrice;
+  late bool isLoading;
 
   @override
   void initState() {
     super.initState();
     shoppingBasket = [];
     totalPrice = 0;
+    isLoading = true;
 
     widget.isPR ? getDataProducts() : getDataRefill();
-    getDataPayment();
   }
 
   getDataProducts() async {
@@ -59,10 +62,10 @@ class _ShoppingCartState extends State<ShoppingCart> {
             .addAll([ProductModel.fromState(1), ProductModel.fromState(1)]);
       }
     });*/
-    await getStockList().then((answer) {
+    await getStockList(prefs.idRouteD).then((answer) {
       if (answer.error) {
         Fluttertoast.showToast(
-          msg: answer.message,
+          msg: "Sin productos",
           timeInSecForIosWeb: 2,
           toastLength: Toast.LENGTH_LONG,
           gravity: ToastGravity.TOP,
@@ -70,18 +73,20 @@ class _ShoppingCartState extends State<ShoppingCart> {
         );
       } else {
         setState(() {
-          productsList
-              .addAll([ProductModel.fromState(1), ProductModel.fromState(1)]);
+          answer.body.map((e) {
+            productsList.add(ProductModel.fromServiceProduct(e));
+          }).toList();
         });
       }
+      getDataPayment();
     });
   }
 
   getDataRefill() async {
-    await getRefillList().then((answer) {
+    await getRefillList(prefs.idRouteD).then((answer) {
       if (answer.error) {
         Fluttertoast.showToast(
-          msg: answer.message,
+          msg: "Sin recargas",
           timeInSecForIosWeb: 2,
           toastLength: Toast.LENGTH_LONG,
           gravity: ToastGravity.TOP,
@@ -95,6 +100,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
               .toList();
         });
       }
+      getDataPayment();
     });
   }
 
@@ -110,17 +116,20 @@ class _ShoppingCartState extends State<ShoppingCart> {
         );
       } else {
         paymentsList.clear();
-        setState(() {
-          //log("Metodos de pago ---  " + answer.body.toString());
-          answer.body
-              .map((e) => paymentsList.add(MethodPayment.fromService(e)))
-              .toList();
-        });
+        //setState(() {
+        //log("Metodos de pago ---  " + answer.body.toString());
+        answer.body
+            .map((e) => paymentsList.add(MethodPayment.fromService(e)))
+            .toList();
+        // });
       }
+      setState(() {
+        isLoading = false;
+      });
     });
   }
 
-  updateTotal(int type) {
+  /*updateTotal(int type) {
     setState(() {
       totalPrice = 0;
       shoppingBasket.clear();
@@ -153,6 +162,29 @@ class _ShoppingCartState extends State<ShoppingCart> {
         }
       }
     });
+  }*/
+
+  updateTotal2(int type, int id, double price, bool isAdd) {
+    if (type == 1) {
+      for (var e in productsList) {
+        if (e.idProduct == id) {
+          isAdd ? shoppingBasket.add(e) : shoppingBasket.remove(e);
+        }
+      }
+    } else {
+      for (var e in refillList) {
+        if (e.idProduct == id) {
+          isAdd ? shoppingBasket.add(e) : shoppingBasket.remove(e);
+        }
+      }
+    }
+    setState(() {
+      if (isAdd) {
+        totalPrice = totalPrice + price;
+      } else {
+        totalPrice = totalPrice - price;
+      }
+    });
   }
 
   @override
@@ -175,7 +207,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
         elevation: 0,
       ),
       body: Stack(
-        children: [header(), itemList()],
+        children: [header(), isLoading ? loading() : itemList()],
       ),
     );
   }
@@ -238,7 +270,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
 
   Widget itemList() {
     return Container(
-      margin: EdgeInsets.only(top: size.height * .2),
+      margin: EdgeInsets.only(top: size.height * .22),
       padding: const EdgeInsets.only(left: 10, right: 10),
       width: double.infinity,
       child: Column(
@@ -261,7 +293,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
               ),
               childrenDelegate: SliverChildBuilderDelegate(
                   (context, index) => ProductCard(
-                        update: updateTotal,
+                        update: updateTotal2,
                         isPR: widget.isPR,
                         productCurrent: widget.isPR
                             ? productsList[index]
@@ -444,8 +476,10 @@ class _ShoppingCartState extends State<ShoppingCart> {
                       "idClienteOrdenVisitaRuta": widget.customerCurrent.id,
                       "folio": "552555"
                     };
+                    _onLoading();
                     await setSale(data).then((answer) {
                       if (answer.error) {
+                        Navigator.pop(context);
                         Fluttertoast.showToast(
                           msg: answer.message,
                           timeInSecForIosWeb: 2,
@@ -454,6 +488,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
                           webShowClose: true,
                         );
                       } else {
+                        Navigator.pop(context);
                         Fluttertoast.showToast(
                           msg: "Venta realizada con exito",
                           timeInSecForIosWeb: 2,
@@ -491,6 +526,46 @@ class _ShoppingCartState extends State<ShoppingCart> {
               child: Text(
                 op,
               ))),
+    );
+  }
+
+  Widget loading() {
+    return Center(
+      child: Container(
+        margin: const EdgeInsets.only(top: 30),
+        decoration: BoxDecoration(
+          color: Colors.blue.withOpacity(0.8),
+          borderRadius: const BorderRadius.all(Radius.circular(25)),
+        ),
+        height: MediaQuery.of(context).size.width * .30,
+        width: MediaQuery.of(context).size.width * .30,
+        child: const SpinKitDualRing(
+          color: Colors.white70,
+          lineWidth: 4,
+        ),
+      ),
+    );
+  }
+
+  void _onLoading() {
+    showCupertinoDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Center(
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.blue.withOpacity(0.8),
+              borderRadius: const BorderRadius.all(Radius.circular(25)),
+            ),
+            height: MediaQuery.of(context).size.width * .30,
+            width: MediaQuery.of(context).size.width * .30,
+            child: const SpinKitDualRing(
+              color: Colors.white70,
+              lineWidth: 4,
+            ),
+          ),
+        );
+      },
     );
   }
 }

@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
@@ -26,14 +27,18 @@ import 'package:junghanns/styles/color.dart';
 import 'package:junghanns/styles/decoration.dart';
 import 'package:junghanns/styles/text.dart';
 import 'package:junghanns/widgets/card/sales.dart';
+import 'package:map_launcher/map_launcher.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
- import 'package:http_parser/http_parser.dart';
+import 'package:http_parser/http_parser.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../services/auth.dart';
 
 class DetailsCustomer extends StatefulWidget {
   CustomerModel customerCurrent;
-  DetailsCustomer({Key? key, required this.customerCurrent}) : super(key: key);
+  String type;
+  DetailsCustomer({Key? key, required this.customerCurrent, required this.type})
+      : super(key: key);
   @override
   State<StatefulWidget> createState() => _DetailsCustomerState();
 }
@@ -44,6 +49,8 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
   late Size size;
   late bool isRange;
   late bool isLoading;
+  late bool isImgNot;
+  late bool isNotData;
 
   late List<ConfigModel> configList;
 
@@ -54,7 +61,9 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
     pickedImageFile = null;
     configList = [];
     isLoading = true;
-    getConfigR();
+    isImgNot = false;
+    isNotData = true;
+    getDataDetails();
   }
 
   getConfigR() async {
@@ -72,12 +81,13 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
         answer.body
             .map((e) => configList.add(ConfigModel.fromService(e)))
             .toList();
-        getDataDetails();
       }
     });
   }
 
   getAuth() async {
+    log("Cliente: ${widget.customerCurrent.idClient}");
+    log("Ruta: ${prefs.idRouteD}");
     await getAuthorization(widget.customerCurrent.idClient, prefs.idRouteD)
         .then((answer) {
       if (answer.error) {
@@ -97,7 +107,8 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
   }
 
   getDataDetails() async {
-    await getDetailsCustomer(widget.customerCurrent.id).then((answer) {
+    await getDetailsCustomer(widget.customerCurrent.id, widget.type)
+        .then((answer) async {
       if (answer.error) {
         Fluttertoast.showToast(
           msg: answer.message,
@@ -106,13 +117,20 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
           gravity: ToastGravity.TOP,
           webShowClose: true,
         );
+        isNotData = true;
       } else {
         setState(() {
           widget.customerCurrent =
               CustomerModel.fromService(answer.body, widget.customerCurrent.id);
+          isImgNot = (widget.customerCurrent.img == "" ||
+                  widget.customerCurrent.img ==
+                      "https://sandbox.junghanns.app/img/clientes/address/SANDBOX/")
+              ? true
+              : false;
+          isNotData = false;
         });
-        getAuth();
       }
+      getAuth();
     });
   }
 
@@ -203,10 +221,13 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
       //     });
       // log(urlAux.toString());
       // launchUrl(urlAux);
+
       Navigator.push(
-        context,
-        MaterialPageRoute<void>(
-            builder: (BuildContext context) => EditAddress(lat: widget.customerCurrent.lat, lng: widget.customerCurrent.lng)));
+          context,
+          MaterialPageRoute<void>(
+              builder: (BuildContext context) => EditAddress(
+                  lat: widget.customerCurrent.lat,
+                  lng: widget.customerCurrent.lng)));
     } else {
       log("Sin Ubicación");
     }
@@ -216,24 +237,25 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
     try {
       final picker = ImagePicker();
       final pickedImage = await picker.getImage(
-          source: type == 1 ? ImageSource.camera : ImageSource.gallery,
-          imageQuality: 50,
-
-          );
+        source: type == 1 ? ImageSource.camera : ImageSource.gallery,
+        maxHeight: 1500,
+        maxWidth: 1500,
+        imageQuality: 50,
+      );
       setState(() {
         pickedImageFile = File(pickedImage!.path);
       });
 
       if (pickedImageFile != null) {
-        final img =
-        await pickedImage!.readAsBytes();
-        File fileData = File.fromRawPath(img.buffer.asUint8List(0,img.lengthInBytes));
-   var multipartFile = http.MultipartFile.fromBytes(
-  'image',
-  img.buffer.asUint8List(),
-  filename: 'avatar.png', // use the real name if available, or omit
-  contentType: MediaType('image', 'png'),
-);
+        final img = await pickedImage!.readAsBytes();
+        File fileData =
+            File.fromRawPath(img.buffer.asUint8List(0, img.lengthInBytes));
+        var multipartFile = http.MultipartFile.fromBytes(
+          'image',
+          img.buffer.asUint8List(),
+          filename: 'avatar.png', // use the real name if available, or omit
+          contentType: MediaType('image', 'png'),
+        );
         await updateAvatar(
             multipartFile,
             widget.customerCurrent.idClient.toString(),
@@ -274,7 +296,32 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
         elevation: 0,
       ),
       backgroundColor: ColorsJunghanns.lightBlue,
-      body: isLoading ? loading() : refreshScroll(),
+      body: isLoading
+          ? loading()
+          : isNotData
+              ? notData()
+              : refreshScroll(),
+    );
+  }
+
+  Widget notData() {
+    return Stack(
+      children: [
+        Container(
+            padding: const EdgeInsets.all(20),
+            child: GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: const Icon(
+                  Icons.arrow_back_ios,
+                  size: 30,
+                  color: ColorsJunghanns.blueJ,
+                ))),
+        Center(
+            child: Text(
+          "Sin información disponible",
+          style: TextStyles.blue18SemiBoldIt,
+        )),
+      ],
     );
   }
 
@@ -318,24 +365,27 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
                   ))
             ],
           ),
-          Container(
-            padding: const EdgeInsets.only(top: 10, right: 25),
-            child: Row(
-              children: [
-                const SizedBox(
-                  width: 20,
-                ),
-                const Icon(
-                  Icons.location_on,
-                  color: ColorsJunghanns.green,
-                ),
-                Expanded(
-                    child: AutoSizeText(
-                  widget.customerCurrent.address,
-                  style: TextStyles.white15It,
-                ))
-              ],
+          GestureDetector(
+            child: Container(
+              padding: const EdgeInsets.only(top: 10, right: 25),
+              child: Row(
+                children: [
+                  const SizedBox(
+                    width: 20,
+                  ),
+                  const Icon(
+                    Icons.location_on,
+                    color: ColorsJunghanns.green,
+                  ),
+                  Expanded(
+                      child: AutoSizeText(
+                    widget.customerCurrent.address,
+                    style: TextStyles.white15It,
+                  ))
+                ],
+              ),
             ),
+            onTap: () => funGoMaps(),
           )
         ]));
   }
@@ -379,7 +429,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
         height: size.width * .50,
         decoration: BoxDecoration(
             borderRadius: const BorderRadius.all(Radius.circular(10)),
-            image: widget.customerCurrent.img == ""
+            image: isImgNot
                 ? const DecorationImage(
                     image: AssetImage("assets/images/withoutPicture.png"),
                     fit: BoxFit.cover)
@@ -458,13 +508,12 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
                               left: 5, right: 5, top: 5, bottom: 5),
                           child: RichText(
                               text: TextSpan(children: [
-                            TextSpan(
-                                text: getNameRouteRich(
-                                    widget.customerCurrent.nameRoute)[0],
-                                style: TextStyles.white17_5),
+                            const TextSpan(
+                                text: "RUTA ", style: TextStyles.white17_5),
                             TextSpan(
                                 text:
-                                    " ${getNameRouteRich(widget.customerCurrent.nameRoute)[1]}",
+                                    //"${widget.customerCurrent.idRoute}",
+                                    "${prefs.idRouteD}",
                                 style: TextStyles.white27_7)
                           ])))),
                 ],
@@ -765,6 +814,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
   }
 
   Future<bool> funCheckDistance() async {
+    await getConfigR();
     LocationPermission permission = await Geolocator.requestPermission();
     if (permission == LocationPermission.whileInUse ||
         permission == LocationPermission.always) {
@@ -823,5 +873,31 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
         );
       },
     );
+  }
+
+  funGoMaps() async {
+    log("Go Maps");
+    if (widget.customerCurrent.lat != 0 && widget.customerCurrent.lng != 0) {
+      log("Go Maps Yes");
+      var map = await MapLauncher.isMapAvailable(MapType.google);
+      if (map ?? false) {
+        await MapLauncher.showMarker(
+          mapType: MapType.google,
+          coords:
+              Coords(widget.customerCurrent.lat, widget.customerCurrent.lng),
+          title: widget.customerCurrent.name,
+          description: "",
+        );
+      } else {
+        log("Go Maps Not");
+        Fluttertoast.showToast(
+          msg: "Sin mapa disponible",
+          timeInSecForIosWeb: 2,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+        );
+      }
+    }
   }
 }

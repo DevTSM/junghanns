@@ -14,7 +14,6 @@ import 'package:junghanns/provider/provider.dart';
 import 'package:junghanns/styles/decoration.dart';
 import 'package:provider/provider.dart';
 
-import '../../components/button.dart';
 import '../../models/customer.dart';
 import '../../services/store.dart';
 import '../../styles/color.dart';
@@ -100,28 +99,10 @@ class _StopsState extends State<Stops> {
           children: [
             fakeStop(),
             isLoading ? loading() : typesOfStops(),
-            buttonSelectStop()
           ],
         ),
       ),
     );
-  }
-
-  Widget buttonSelectStop() {
-    return Visibility(
-        visible: stopCurrent.id != 0 ? true : false,
-        child: Container(
-            margin:
-                const EdgeInsets.only(left: 15, right: 15, bottom: 30, top: 30),
-            width: double.infinity,
-            height: 40,
-            alignment: Alignment.center,
-            child: ButtonJunghanns(
-              decoration: Decorations.blueBorder12,
-              fun: () => showConfirmStop(),
-              label: "Seleccionar parada",
-              style: TextStyles.white17_5,
-            )));
   }
 
   showConfirmStop() {
@@ -179,6 +160,8 @@ class _StopsState extends State<Stops> {
           buttomSale(
               "No",
               () => () {
+                    stopCurrent = StopModel.fromState();
+                    log("Stop ID: ${stopCurrent.id}");
                     Navigator.pop(context);
                   },
               Decorations.redCard),
@@ -326,9 +309,6 @@ class _StopsState extends State<Stops> {
     return GestureDetector(
       child: Container(
           padding: const EdgeInsets.all(4),
-          decoration: stopCurrent.id == stop.id
-              ? Decorations.blueCard
-              : const BoxDecoration(),
           child: Column(
             children: [
               Expanded(
@@ -349,13 +329,11 @@ class _StopsState extends State<Stops> {
             ],
           )),
       onTap: () {
-        setState(() {
-          if (stopCurrent.id != stop.id) {
-            stopCurrent = stop;
-          } else {
-            stopCurrent = StopModel.fromState();
-          }
-        });
+        if (stopCurrent.id != stop.id) {
+          stopCurrent = stop;
+          log("Stop ID: ${stopCurrent.id}");
+          showConfirmStop();
+        }
       },
     );
   }

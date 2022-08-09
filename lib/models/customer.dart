@@ -5,6 +5,7 @@ import 'package:junghanns/models/sale.dart';
 class CustomerModel {
   bool invoice;
   int id;
+  int orden;
   int idClient;
   int idRoute;
   double lat;
@@ -22,9 +23,9 @@ class CustomerModel {
   String observation;
   List<SaleModel> history;
   CustomerModel(
-      {
-        required this.invoice,
+      {required this.invoice,
       required this.id,
+      required this.orden,
       required this.idClient,
       required this.idRoute,
       required this.lat,
@@ -43,8 +44,9 @@ class CustomerModel {
       required this.history});
   factory CustomerModel.fromState() {
     return CustomerModel(
-      invoice: true,
+        invoice: true,
         id: 0,
+        orden: 0,
         idClient: 0,
         idRoute: 0,
         lat: 0,
@@ -58,14 +60,15 @@ class CustomerModel {
         typeVisit: "",
         category: "",
         days: "",
-        img:"",
+        img: "",
         observation: "",
         history: []);
   }
   factory CustomerModel.fromList(Map<String, dynamic> data, int idRoute) {
     return CustomerModel(
-      invoice: false,
+        invoice: false,
         id: data["id"],
+        orden: data["orden"] ?? 0,
         idClient: data["idCliente"],
         idRoute: idRoute,
         lat: 0,
@@ -77,148 +80,160 @@ class CustomerModel {
         address: data["direccion"],
         nameRoute: "",
         typeVisit: data["tipoVisita"],
-        category: (data["categoria"]??"C")=="C"?"Cliente":"Empresa",
+        category: (data["categoria"] ?? "C") == "C" ? "Cliente" : "Empresa",
         days: "",
         img: "",
         observation: "",
         history: []);
   }
-  factory CustomerModel.fromService(Map<String, dynamic> data,int id) {
+  factory CustomerModel.fromService(Map<String, dynamic> data, int id) {
     return CustomerModel(
-      invoice: false,
-      id:id,
-        idClient: data["idCliente"]??0,
-        idRoute: data["idRuta"]??0,
-        lat: double.parse(data["latitud"]??"0"),
-        lng: double.parse(data["longitud"]??"0"),
-        priceLiquid: double.parse(data["precioLiquido"]??"0"),
-        byCollect: double.parse((data["porCobrar"]??0).toString()),
-        purse: double.parse((data["monedero"]??0).toString()),
-        name: data["nombre"]??"",
-        address: data["domicilio"]??"",
-        nameRoute: data["ruta"]??"",
-        typeVisit: data["tipoVisita"]??"",
-        category: (data["categoria"]??"C")=="C"?"Cliente":"Empresa",
-        days: data["diasVisita"]??"",
-        img:data["url"]??"",
-        observation: (data["observacion"]??"")==""?"Sin observaciones":data["observacion"]??"",
-        history: data["historial"]!=null?List.from(data["historial"].map((e)=>SaleModel.fromService(e)).toList()):[]);
+        invoice: false,
+        id: id,
+        orden: data["orden"] ?? 0,
+        idClient: data["idCliente"] ?? 0,
+        idRoute: data["idRuta"] ?? 0,
+        lat: double.parse(data["latitud"] ?? "0"),
+        lng: double.parse(data["longitud"] ?? "0"),
+        priceLiquid: double.parse(data["precioLiquido"] ?? "0"),
+        byCollect: double.parse((data["porCobrar"] ?? 0).toString()),
+        purse: double.parse((data["monedero"] ?? 0).toString()),
+        name: data["nombre"] ?? "",
+        address: data["domicilio"] ?? "",
+        nameRoute: data["ruta"] ?? "",
+        typeVisit: data["tipoVisita"] ?? "",
+        category: (data["categoria"] ?? "C") == "C" ? "Cliente" : "Empresa",
+        days: data["diasVisita"] ?? "",
+        img: data["url"] ?? "",
+        observation: (data["observacion"] ?? "") == ""
+            ? "Sin observaciones"
+            : data["observacion"] ?? "",
+        history: data["historial"] != null
+            ? List.from(
+                data["historial"].map((e) => SaleModel.fromService(e)).toList())
+            : []);
   }
   factory CustomerModel.fromDataBase(Map<String, dynamic> data) {
     return CustomerModel(
-      invoice: false,
-      id:data["id"],
-        idClient: data["idCustomer"]??0,
-        idRoute: data["idRuta"]??0,
+        invoice: false,
+        id: data["id"],
+        orden: data["orden"] ?? 0,
+        idClient: data["idCustomer"] ?? 0,
+        idRoute: data["idRuta"] ?? 0,
         lat: data["lat"],
         lng: data["lng"],
-        priceLiquid: data["priceLiquid"]??0,
-        byCollect: data["byCollet"]??0,
-        purse: data["purse"]??0,
-        name: data["name"]??"",
-        address: data["address"]??"",
-        nameRoute: data["nameRoute"]??"",
-        typeVisit: data["typeVisit"]??"",
-        category: (data["category"]??"C")=="C"?"Cliente":"Empresa",
-        days: data["days"]??"",
-        img:data["img"]??"",
-        observation: (data["observacion"]??"")==""?"Sin observaciones":data["observacion"]??"",
+        priceLiquid: data["priceLiquid"] ?? 0,
+        byCollect: data["byCollet"] ?? 0,
+        purse: data["purse"] ?? 0,
+        name: data["name"] ?? "",
+        address: data["address"] ?? "",
+        nameRoute: data["nameRoute"] ?? "",
+        typeVisit: data["typeVisit"] ?? "",
+        category: (data["category"] ?? "C") == "C" ? "Cliente" : "Empresa",
+        days: data["days"] ?? "",
+        img: data["img"] ?? "",
+        observation: (data["observacion"] ?? "") == ""
+            ? "Sin observaciones"
+            : data["observacion"] ?? "",
         history: []);
   }
   Map<String, dynamic> getMap() {
     return {
-      'id':id,
-        'idCustomer':idClient,
-        'idRoute':idRoute,
-        'lat':lat,
-        'lng':lng,
-        'priceLiquid':priceLiquid,
-        'byCollet':byCollect,
-        'purse':purse,
-        'name':name,
-        'address':address,
-        'nameRoute':nameRoute,
-        'typeVisit':typeVisit,
-        'category':category,
-        'days':days,
-        'img':img,
-        'observacion':observation};
+      'id': id,
+      'orden': orden,
+      'idCustomer': idClient,
+      'idRoute': idRoute,
+      'lat': lat,
+      'lng': lng,
+      'priceLiquid': priceLiquid,
+      'byCollet': byCollect,
+      'purse': purse,
+      'name': name,
+      'address': address,
+      'nameRoute': nameRoute,
+      'typeVisit': typeVisit,
+      'category': category,
+      'days': days,
+      'img': img,
+      'observacion': observation
+    };
   }
 }
-String checkDate(DateTime time){
-  String date="";
+
+String checkDate(DateTime time) {
+  String date = "";
   switch (time.weekday) {
     case 1:
-      date+="Lunes";
+      date += "Lunes";
       break;
     case 2:
-      date+="Martes";
+      date += "Martes";
       break;
     case 3:
-      date+="Miercoles";
+      date += "Miercoles";
       break;
     case 4:
-      date+="Jueves";
+      date += "Jueves";
       break;
     case 5:
-      date+="Viernes";
+      date += "Viernes";
       break;
-      case 6:
-      date+="Sabado";
+    case 6:
+      date += "Sabado";
       break;
-      case 7:
-      date+="Domingo";
+    case 7:
+      date += "Domingo";
       break;
     default:
   }
-  date+=", ${time.day} ";
+  date += ", ${time.day} ";
   switch (time.month) {
     case 1:
-      date+="Enero";
+      date += "Enero";
       break;
-      case 2:
-      date+="Febrero";
+    case 2:
+      date += "Febrero";
       break;
-      case 3:
-      date+="Marzo";
+    case 3:
+      date += "Marzo";
       break;
-      case 4:
-      date+="Abril";
+    case 4:
+      date += "Abril";
       break;
-      case 5:
-      date+="Mayo";
+    case 5:
+      date += "Mayo";
       break;
-      case 6:
-      date+="Junio";
+    case 6:
+      date += "Junio";
       break;
-      case 7:
-      date+="Julio";
+    case 7:
+      date += "Julio";
       break;
-      case 8:
-      date+="Agosto";
+    case 8:
+      date += "Agosto";
       break;
-      case 9:
-      date+="Septiembre";
+    case 9:
+      date += "Septiembre";
       break;
-      case 10:
-      date+="Octubre";
+    case 10:
+      date += "Octubre";
       break;
-      case 11:
-      date+="Noviembre";
+    case 11:
+      date += "Noviembre";
       break;
-      case 12:
-      date+="Diciembre";
+    case 12:
+      date += "Diciembre";
       break;
     default:
   }
   return date;
 }
-List<String> getNameRouteRich(String name){
-  int index=name.lastIndexOf(" ");
-  if(index>-1){
-    return [name.substring(0,index), name.substring(index,name.length)];
-  }
-  else{
-    return [name,""];
+
+List<String> getNameRouteRich(String name) {
+  int index = name.lastIndexOf(" ");
+  if (index > -1) {
+    return [name.substring(0, index), name.substring(index, name.length)];
+  } else {
+    return [name, ""];
   }
 }

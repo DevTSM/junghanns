@@ -2,10 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:junghanns/components/bottom_bar.dart';
 import 'package:junghanns/pages/home/home.dart';
 import 'package:junghanns/pages/home/routes.dart';
+import 'package:junghanns/pages/home/second.dart';
+import 'package:junghanns/pages/home/specials.dart';
 import 'package:junghanns/pages/shop/shopping_cart.dart';
-import 'package:junghanns/styles/color.dart';
 
-const List<Widget> pages = [Home(), Home(), Routes(), Home(), Home(), Home()];
+const List<Widget> pages = [
+  Home(),
+  Specials(),
+  Routes(),
+  Seconds(),
+  Home(),
+  Home()
+];
 
 class HomePrincipal extends StatefulWidget {
   const HomePrincipal({Key? key}) : super(key: key);

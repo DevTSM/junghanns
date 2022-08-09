@@ -11,12 +11,14 @@ class RoutesCard extends StatelessWidget {
   CustomerModel customerCurrent;
   List<String> title;
   String description;
+  String type;
   RoutesCard(
       {Key? key,
       required this.icon,
       required this.customerCurrent,
       required this.title,
-      required this.description})
+      required this.description,
+      required this.type})
       : super(key: key);
 
   @override
@@ -25,8 +27,10 @@ class RoutesCard extends StatelessWidget {
         onTap: () => Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (context) =>
-                    DetailsCustomer(customerCurrent: customerCurrent))),
+                builder: (context) => DetailsCustomer(
+                      customerCurrent: customerCurrent,
+                      type: type,
+                    ))),
         child: Container(
           padding:
               const EdgeInsets.only(left: 15, right: 15, top: 18, bottom: 10),
@@ -49,7 +53,8 @@ class RoutesCard extends StatelessWidget {
                         )
                       ]),
                       overflow: TextOverflow.ellipsis),
-                  Text(description, style: TextStyles.grey14_4),
+                  Text("${customerCurrent.orden} | $description",
+                      style: TextStyles.grey14_4),
                 ],
               )),
             ],

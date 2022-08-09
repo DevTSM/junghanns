@@ -1,6 +1,5 @@
 import 'dart:developer';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -16,21 +15,22 @@ import 'package:provider/provider.dart';
 
 import '../../preferences/global_variables.dart';
 
-class Routes extends StatefulWidget {
-  const Routes({Key? key}) : super(key: key);
+class Specials extends StatefulWidget {
+  const Specials({Key? key}) : super(key: key);
 
   @override
-  State<StatefulWidget> createState() => _RoutesState();
+  State<StatefulWidget> createState() => _SpecialsState();
 }
 
-class _RoutesState extends State<Routes> {
-  late ProviderJunghanns provider;
+class _SpecialsState extends State<Specials> {
+  //late ProviderJunghanns provider;
   late List<CustomerModel> customerList;
   late Size size;
   late bool isLoading;
 
   late DateTime today;
   late String todayText, dayText, monthText;
+
   @override
   void initState() {
     super.initState();
@@ -50,7 +50,7 @@ class _RoutesState extends State<Routes> {
 
     log("Fecha: $todayText");
     log("Ruta: ${prefs.idRouteD}");
-    await getListCustomer(prefs.idRouteD, todayText, "R").then((answer) {
+    await getListCustomer(prefs.idRouteD, todayText, "E").then((answer) {
       if (answer.error) {
         Fluttertoast.showToast(
           msg: "Sin clientes en ruta",
@@ -63,12 +63,12 @@ class _RoutesState extends State<Routes> {
           isLoading = false;
         });
       } else {
-        provider.handler.deleteTable();
+        //provider.handler.deleteTable();
         //provider.handler.addColumn();
         setState(() {
           answer.body.map((e) {
             customerList.add(CustomerModel.fromList(e, prefs.idRouteD));
-            provider.handler.insertUser([customerList.last]);
+            //provider.handler.insertUser([customerList.last]);
           }).toList();
           isLoading = false;
         });
@@ -79,7 +79,7 @@ class _RoutesState extends State<Routes> {
   @override
   Widget build(BuildContext context) {
     size = MediaQuery.of(context).size;
-    provider = Provider.of<ProviderJunghanns>(context);
+    //provider = Provider.of<ProviderJunghanns>(context);
     return Scaffold(
       key: GlobalKey<ScaffoldState>(),
       appBar: AppBar(
@@ -101,7 +101,7 @@ class _RoutesState extends State<Routes> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Visibility(
+            /*Visibility(
                 visible: provider.connectionStatus == 4,
                 child: Container(
                     width: double.infinity,
@@ -111,48 +111,49 @@ class _RoutesState extends State<Routes> {
                     child: const Text(
                       "Sin conexion a internet",
                       style: TextStyles.white14_5,
-                    ))),
+                    ))),*/
             header(),
             const SizedBox(
               height: 20,
             ),
-            provider.connectionStatus < 4
-                ? isLoading
-                    ? loading()
-                    : customerList.isNotEmpty
-                        ? Expanded(
-                            child: SingleChildScrollView(
-                                child: Column(
-                            children: customerList.map((e) {
-                              return Column(children: [
-                                RoutesCard(
-                                    icon: Image.asset(
-                                      "assets/icons/${e.typeVisit == "RUTA" ? "user1" : e.typeVisit == "SEGUNDA" ? "user3" : "user2"}.png",
-                                      width: size.width * .14,
-                                    ),
-                                    customerCurrent: e,
-                                    type: "R",
-                                    title: ["${e.idClient} - ", e.address],
-                                    description: e.name),
-                                Row(children: [
-                                  Container(
-                                    margin: EdgeInsets.only(
-                                        left: (size.width * .07) + 15),
-                                    color: ColorsJunghanns.grey,
-                                    width: .5,
-                                    height: 15,
-                                  )
-                                ])
-                              ]);
-                            }).toList(),
-                          )))
-                        : Expanded(
-                            child: Center(
-                                child: Text(
-                            "Sin clientes en ruta",
-                            style: TextStyles.blue18SemiBoldIt,
-                          )))
-                : Expanded(
+            //provider.connectionStatus < 4
+            //   ?
+            isLoading
+                ? loading()
+                : customerList.isNotEmpty
+                    ? Expanded(
+                        child: SingleChildScrollView(
+                            child: Column(
+                        children: customerList.map((e) {
+                          return Column(children: [
+                            RoutesCard(
+                                icon: Image.asset(
+                                  "assets/icons/${e.typeVisit == "RUTA" ? "user1" : e.typeVisit == "SEGUNDA" ? "user3" : "user2"}.png",
+                                  width: size.width * .14,
+                                ),
+                                customerCurrent: e,
+                                type: "E",
+                                title: ["${e.idClient} - ", e.address],
+                                description: e.name),
+                            Row(children: [
+                              Container(
+                                margin: EdgeInsets.only(
+                                    left: (size.width * .07) + 15),
+                                color: ColorsJunghanns.grey,
+                                width: .5,
+                                height: 15,
+                              )
+                            ])
+                          ]);
+                        }).toList(),
+                      )))
+                    : Expanded(
+                        child: Center(
+                            child: Text(
+                        "Sin clientes en ruta",
+                        style: TextStyles.blue18SemiBoldIt,
+                      )))
+            /* : Expanded(
                     child: FutureBuilder(
                         future: provider.handler.retrieveUsers(),
                         builder: (BuildContext context,
@@ -167,7 +168,6 @@ class _RoutesState extends State<Routes> {
                                           "assets/icons/${snapshot.data![index].typeVisit == "RUTA" ? "user1" : snapshot.data![index].typeVisit == "SEGUNDA" ? "user3" : "user2"}.png",
                                           width: size.width * .14,
                                         ),
-                                        type: "R",
                                         customerCurrent: snapshot.data![index],
                                         title: [
                                           "${snapshot.data![index].idClient} - ",
@@ -189,7 +189,7 @@ class _RoutesState extends State<Routes> {
                           } else {
                             return Container();
                           }
-                        }))
+                        }))*/
           ],
         ),
       ),
@@ -222,7 +222,7 @@ class _RoutesState extends State<Routes> {
                             style: TextStyles.blue27_7,
                           ),
                           Text(
-                            "  Clientes programados para visita",
+                            "  Clientes especiales",
                             style: TextStyles.green15_4,
                           ),
                         ],

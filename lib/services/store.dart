@@ -101,34 +101,34 @@ Future<Answer> getRefillList(int idR) async {
   }*/
 }
 
-Future<Answer> getPaymentMethods(int idClient) async {
+Future<Answer> getPaymentMethods(int idClient, int idR) async {
   log("/StoreServices <getPaymentMethods>");
-  try {
-    var response = jsonDecode((await http.get(
-            Uri.parse(
-                "$urlBase/index.php/cliente?q=pay&idRuta=22&idCliente=$idClient"),
-            headers: {
-          "Content-Type": "aplication/json",
-          "x-api-key": apiKey,
-          "client_secret": prefs.clientSecret,
-          "Authorization": "Bearer ${prefs.token}",
-        }))
-        .body);
-    if (response != null) {
-      log("/StoreServices <getPaymentMethods> Successfull, ${response.toString()}");
-      return Answer(body: response, message: "", error: false);
-    } else {
-      log("/StoreServices <getPaymentMethods> Fail");
-      return Answer(
-          body: response,
-          message: "Algo salio mal, intentalo mas tarde.",
-          error: true);
-    }
-  } catch (e) {
+  //try {
+  var response = await http.get(
+      Uri.parse(
+          "$urlBase/index.php/cliente?q=pay&idRuta=$idR&idCliente=$idClient"),
+      headers: {
+        "Content-Type": "aplication/json",
+        "x-api-key": apiKey,
+        "client_secret": prefs.clientSecret,
+        "Authorization": "Bearer ${prefs.token}",
+      });
+  log("${response.statusCode}");
+  if (response.statusCode == 200) {
+    log("/StoreServices <getPaymentMethods> Successfull, ${response.body}");
+    return Answer(body: jsonDecode(response.body), message: "", error: false);
+  } else {
+    log("/StoreServices <getPaymentMethods> Fail");
+    return Answer(
+        body: response,
+        message: "Algo salio mal, intentalo mas tarde.",
+        error: true);
+  }
+  /*} catch (e) {
     log("/StoreServices <getPaymentMethods> Catch ${e.toString()}");
     return Answer(
         body: e, message: "Algo salio mal, intentalo mas tarde.", error: true);
-  }
+  }*/
 }
 
 Future<Answer> getAuthorization(int idClient, int idR) async {
@@ -136,7 +136,7 @@ Future<Answer> getAuthorization(int idClient, int idR) async {
   // try {
   var response = await http.get(
       Uri.parse(
-          "$urlBase/index.php/cliente?q=aut&idRuta=$idR&idCliente=$idClient&tipo=contado"),
+          "$urlBase/cliente?q=aut&idRuta=$idR&idCliente=$idClient&tipo=contado"),
       headers: {
         "Content-Type": "aplication/json",
         "x-api-key": apiKey,
@@ -256,9 +256,9 @@ Future<dynamic> updateAvatar(dynamic image, String id, String cedis) async {
     // var stream =
     //     // ignore: deprecated_member_use, unnecessary_new
     //     new http.ByteStream(DelegatingStream.typed(image.openRead()));
-    
+
     // var length = await image.length();
-    
+
     var uri = Uri.parse("$urlBase/cliente");
     final response = new http.MultipartRequest("POST", uri);
     response.headers["Content-Type"] = 'application/json; charset=UTF-8';
@@ -269,7 +269,8 @@ Future<dynamic> updateAvatar(dynamic image, String id, String cedis) async {
     //     filename: basename(image.path));
 
     response.files.add(image);
-    response.fields.addAll({"action":"updimg", "id_cliente":id,"cedis":cedis});
+    response.fields
+        .addAll({"action": "updimg", "id_cliente": id, "cedis": cedis});
     var value1;
     var respo = await response.send();
     respo.stream.transform(utf8.decoder).listen((value) {

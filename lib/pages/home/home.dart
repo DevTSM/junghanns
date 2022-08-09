@@ -52,7 +52,7 @@ class _HomeState extends State<Home> {
               alignment: Alignment.center,
               padding: const EdgeInsets.only(right: 10),
               child: Text(
-                "V 1.0.2",
+                "V 1.0.3",
                 style: TextStyles.blue18SemiBoldIt,
               ),
             )
@@ -295,8 +295,7 @@ class _HomeState extends State<Home> {
               ],
             ),
           ),
-          onTap: () {
-          }),
+          onTap: () {}),
     );
   }
 }

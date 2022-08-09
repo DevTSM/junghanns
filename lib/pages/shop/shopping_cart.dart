@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -105,10 +107,13 @@ class _ShoppingCartState extends State<ShoppingCart> {
   }
 
   getDataPayment() async {
-    await getPaymentMethods(1).then((answer) {
+    log("Cliente: ${widget.customerCurrent.idClient}");
+    log("Ruta: ${prefs.idRouteD}");
+    await getPaymentMethods(widget.customerCurrent.idClient, prefs.idRouteD)
+        .then((answer) {
       if (answer.error) {
         Fluttertoast.showToast(
-          msg: answer.message,
+          msg: "Sin formas de pago",
           timeInSecForIosWeb: 2,
           toastLength: Toast.LENGTH_LONG,
           gravity: ToastGravity.TOP,

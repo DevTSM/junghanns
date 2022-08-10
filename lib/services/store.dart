@@ -145,7 +145,7 @@ Future<Answer> getAuthorization(int idClient, int idR) async {
       });
   log("${response.statusCode}");
   if (response.statusCode == 200) {
-    log("/StoreServices <getAuthorization> Successfull, ${response.toString()}");
+    log("/StoreServices <getAuthorization> Successfull, ${response.body}");
     return Answer(body: jsonDecode(response.body), message: "", error: false);
   } else {
     log("/StoreServices <getAuthorization> Fail");

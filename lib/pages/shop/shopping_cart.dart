@@ -7,6 +7,7 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:junghanns/components/button.dart';
+import 'package:junghanns/models/authorization.dart';
 import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/models/product.dart';
 import 'package:junghanns/models/sale.dart';
@@ -23,7 +24,12 @@ import '../../models/method_payment.dart';
 class ShoppingCart extends StatefulWidget {
   CustomerModel customerCurrent;
   bool isPR;
-  ShoppingCart({Key? key, required this.customerCurrent, required this.isPR})
+  List<AuthorizationModel> authList;
+  ShoppingCart(
+      {Key? key,
+      required this.customerCurrent,
+      required this.isPR,
+      required this.authList})
       : super(key: key);
 
   @override
@@ -38,6 +44,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
   late List shoppingBasket;
   late double totalPrice;
   late bool isLoading;
+  //
 
   @override
   void initState() {
@@ -74,11 +81,9 @@ class _ShoppingCartState extends State<ShoppingCart> {
           webShowClose: true,
         );
       } else {
-        setState(() {
-          answer.body.map((e) {
-            productsList.add(ProductModel.fromServiceProduct(e));
-          }).toList();
-        });
+        answer.body.map((e) {
+          productsList.add(ProductModel.fromServiceProduct(e));
+        }).toList();
       }
       getDataPayment();
     });
@@ -96,11 +101,10 @@ class _ShoppingCartState extends State<ShoppingCart> {
         );
       } else {
         refillList.clear();
-        setState(() {
-          answer.body
-              .map((e) => refillList.add(ProductModel.fromServiceRefill(e)))
-              .toList();
-        });
+
+        answer.body
+            .map((e) => refillList.add(ProductModel.fromServiceRefill(e)))
+            .toList();
       }
       getDataPayment();
     });
@@ -278,52 +282,63 @@ class _ShoppingCartState extends State<ShoppingCart> {
       margin: EdgeInsets.only(top: size.height * .22),
       padding: const EdgeInsets.only(left: 10, right: 10),
       width: double.infinity,
-      child: Column(
-        children: [
-          const SizedBox(
-            height: 20,
-          ),
-          Expanded(
-              child: Container(
-            width: size.width,
-            child: GridView.custom(
-              gridDelegate: SliverWovenGridDelegate.count(
-                crossAxisCount: 2,
-                //mainAxisSpacing: 10,
-                crossAxisSpacing: 14,
-                pattern: [
-                  WovenGridTile(.85),
-                  WovenGridTile(.85),
-                ],
-              ),
-              childrenDelegate: SliverChildBuilderDelegate(
-                  (context, index) => ProductCard(
-                        update: updateTotal2,
-                        isPR: widget.isPR,
-                        productCurrent: widget.isPR
-                            ? productsList[index]
-                            : refillList[index],
-                      ),
-                  childCount:
-                      widget.isPR ? productsList.length : refillList.length),
+      child: (productsList.isEmpty && refillList.isEmpty)
+          ? Center(
+              child: Text(
+              widget.isPR ? "Sin productos" : "Sin recargas",
+              style: TextStyles.blue18SemiBoldIt,
+            ))
+          : Column(
+              children: [
+                const SizedBox(
+                  height: 20,
+                ),
+                Expanded(
+                    child: Container(
+                  width: size.width,
+                  child: GridView.custom(
+                    gridDelegate: SliverWovenGridDelegate.count(
+                      crossAxisCount: 2,
+                      //mainAxisSpacing: 10,
+                      crossAxisSpacing: 14,
+                      pattern: [
+                        WovenGridTile(.85),
+                        WovenGridTile(.85),
+                      ],
+                    ),
+                    childrenDelegate: SliverChildBuilderDelegate(
+                        (context, index) => ProductCard(
+                              update: updateTotal2,
+                              isPR: widget.isPR,
+                              productCurrent: widget.isPR
+                                  ? widget.authList.isEmpty
+                                      ? productsList[index]
+                                      : widget.authList[index].getProduct()
+                                  : refillList[index],
+                            ),
+                        childCount: widget.isPR
+                            ? widget.authList.isEmpty
+                                ? productsList.length
+                                : widget.authList.length
+                            : refillList.length),
+                  ),
+                )),
+                Visibility(
+                    visible: shoppingBasket.isNotEmpty,
+                    child: Container(
+                        margin: const EdgeInsets.only(
+                            left: 15, right: 15, bottom: 30, top: 30),
+                        width: double.infinity,
+                        height: 40,
+                        alignment: Alignment.center,
+                        child: ButtonJunghanns(
+                          decoration: Decorations.blueBorder12,
+                          fun: () => selectWayToPay(),
+                          label: "Terminar venta",
+                          style: TextStyles.white17_5,
+                        )))
+              ],
             ),
-          )),
-          Visibility(
-              visible: shoppingBasket.isNotEmpty,
-              child: Container(
-                  margin: const EdgeInsets.only(
-                      left: 15, right: 15, bottom: 30, top: 30),
-                  width: double.infinity,
-                  height: 40,
-                  alignment: Alignment.center,
-                  child: ButtonJunghanns(
-                    decoration: Decorations.blueBorder12,
-                    fun: () => selectWayToPay(),
-                    label: "Terminar venta",
-                    style: TextStyles.white17_5,
-                  )))
-        ],
-      ),
     );
   }
 

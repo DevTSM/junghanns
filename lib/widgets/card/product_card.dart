@@ -15,6 +15,7 @@ class ProductCard extends StatefulWidget {
   ProductModel productCurrent;
   bool isPR;
   Function update;
+
   ProductCard(
       {Key? key,
       required this.productCurrent,
@@ -29,25 +30,31 @@ class ProductCard extends StatefulWidget {
 class ProductCardState extends State<ProductCard> {
   var myGroup = AutoSizeGroup();
   int amount = 0;
+  int stock2 = 0;
 
   @override
   void initState() {
     super.initState();
+
+    stock2 = widget.productCurrent.stock;
   }
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
         child: Container(
-            padding: const EdgeInsets.all(15),
+            padding: const EdgeInsets.all(13),
             decoration: widget.productCurrent.isSelect
                 ? Decorations.blueCard
                 : Decorations.whiteJCard,
             child: Column(
               children: [
-                Expanded(flex: 8, child: imageProduct()),
+                Expanded(flex: 9, child: imageProduct()),
                 Expanded(flex: 2, child: textProduct()),
-                Expanded(flex: 3, child: priceProduct()),
+                widget.isPR
+                    ? Expanded(flex: 2, child: stockProduct())
+                    : Container(),
+                Expanded(flex: 4, child: priceProduct()),
               ],
             )),
         onTap: () {
@@ -62,7 +69,7 @@ class ProductCardState extends State<ProductCard> {
     return Container(
         width: double.infinity,
         decoration: Decorations.white2Card,
-        padding: const EdgeInsets.all(1),
+        margin: const EdgeInsets.only(bottom: 2),
         child: Stack(
           children: [
             widget.productCurrent.type == 1
@@ -79,7 +86,7 @@ class ProductCardState extends State<ProductCard> {
                     ),
                   ),
             widget.isPR && amount > 0
-                ? Align(alignment: Alignment.topRight, child: stockProduct())
+                ? Align(alignment: Alignment.topRight, child: numberProduct())
                 : Container()
           ],
         ));
@@ -102,7 +109,7 @@ class ProductCardState extends State<ProductCard> {
         ));
   }
 
-  Widget stockProduct() {
+  Widget numberProduct() {
     return Container(
         width: 32,
         height: 32,
@@ -111,6 +118,17 @@ class ProductCardState extends State<ProductCard> {
         decoration: Decorations.greenJCardB30,
         child: AutoSizeText(
           amount.toString(),
+          style: TextStyles.white15Itw,
+        ));
+  }
+
+  Widget stockProduct() {
+    return Container(
+        margin: const EdgeInsets.only(bottom: 2, left: 24, right: 24),
+        alignment: Alignment.center,
+        decoration: Decorations.greenJCardB30,
+        child: AutoSizeText(
+          "Stock: $stock2",
           style: TextStyles.white15Itw,
         ));
   }
@@ -154,14 +172,19 @@ class ProductCardState extends State<ProductCard> {
   }
 
   funAdd() {
-    setState(() {
-      amount++;
-      widget.productCurrent.setSelect(amount > 0);
-    });
-    log("Sumar $amount");
-    log("ID ${widget.productCurrent.idProduct}");
-    widget.update(widget.productCurrent.type, widget.productCurrent.idProduct,
-        widget.productCurrent.price, true);
+    if (stock2 > 0 || !widget.isPR) {
+      setState(() {
+        amount++;
+        stock2--;
+        widget.productCurrent.setSelect(amount > 0);
+      });
+      log("Sumar $amount");
+      log("Stock2 - $stock2");
+      log("Stock1 - ${widget.productCurrent.stock}");
+      log("ID ${widget.productCurrent.idProduct}");
+      widget.update(widget.productCurrent.type, widget.productCurrent.idProduct,
+          widget.productCurrent.price, true);
+    }
   }
 
   buttonSubtract() {
@@ -181,9 +204,12 @@ class ProductCardState extends State<ProductCard> {
     if (amount > 0) {
       setState(() {
         amount--;
+        stock2++;
         widget.productCurrent.setSelect(amount > 0);
       });
       log("Restar $amount");
+      log("Stock2 - $stock2");
+      log("Stock1 - ${widget.productCurrent.stock}");
       widget.update(widget.productCurrent.type, widget.productCurrent.idProduct,
           widget.productCurrent.price, false);
     }

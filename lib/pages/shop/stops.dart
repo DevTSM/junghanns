@@ -63,7 +63,6 @@ class _StopsState extends State<Stops> {
         }).toList();
 
         stopList.map((e) => provider.handler.insertStop([e])).toList();
-        stopList.removeLast();
       }
       setState(() {
         isLoading = false;

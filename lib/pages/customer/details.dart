@@ -13,6 +13,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:junghanns/components/button.dart';
+import 'package:junghanns/models/authorization.dart';
 import 'package:junghanns/models/config.dart';
 import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/models/sale.dart';
@@ -53,6 +54,8 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
   late bool isNotData;
 
   late List<ConfigModel> configList;
+  //
+  late List<AuthorizationModel> authList;
 
   @override
   void initState() {
@@ -60,6 +63,9 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
     isRange = false;
     pickedImageFile = null;
     configList = [];
+    //
+    authList = [];
+    //
     isLoading = true;
     isImgNot = false;
     isNotData = true;
@@ -101,6 +107,12 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
         log("Sin Autorizaciones");
       } else {
         log("Auth yes");
+        answer.body
+            .map((e) => authList.add(AuthorizationModel.fromService(e)))
+            .toList();
+        if (authList.isNotEmpty) {
+          log("Descripción: ${authList.first.description}");
+        }
       }
       setCurrentLocation();
     });
@@ -142,6 +154,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
             builder: (BuildContext context) => ShoppingCart(
                   customerCurrent: widget.customerCurrent,
                   isPR: isPR,
+                  authList: authList,
                 )));
   }
 
@@ -256,10 +269,8 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
           filename: 'avatar.png', // use the real name if available, or omit
           contentType: MediaType('image', 'png'),
         );
-        await updateAvatar(
-            multipartFile,
-            widget.customerCurrent.idClient.toString(),
-            "SANDBOX");
+        await updateAvatar(multipartFile,
+            widget.customerCurrent.idClient.toString(), "SANDBOX");
       }
     } catch (e) {
       Fluttertoast.showToast(

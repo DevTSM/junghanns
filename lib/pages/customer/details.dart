@@ -12,6 +12,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:junghanns/components/bottom_bar.dart';
 import 'package:junghanns/components/button.dart';
 import 'package:junghanns/models/authorization.dart';
 import 'package:junghanns/models/config.dart';
@@ -38,7 +39,8 @@ import '../../services/auth.dart';
 class DetailsCustomer extends StatefulWidget {
   CustomerModel customerCurrent;
   String type;
-  DetailsCustomer({Key? key, required this.customerCurrent, required this.type})
+  int indexHome;
+  DetailsCustomer({Key? key, required this.customerCurrent, required this.type,required this.indexHome})
       : super(key: key);
   @override
   State<StatefulWidget> createState() => _DetailsCustomerState();
@@ -312,6 +314,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
           : isNotData
               ? notData()
               : refreshScroll(),
+      bottomNavigationBar: bottomBar((){}, widget.indexHome,isHome: false,context: context),
     );
   }
 

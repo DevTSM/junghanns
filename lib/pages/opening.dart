@@ -44,7 +44,7 @@ class _OpeningState extends State<Opening> {
         context,
         MaterialPageRoute<void>(
             builder: (BuildContext context) =>
-                prefs.isLogged ? const HomePrincipal() : const Login()),
+                prefs.isLogged ? HomePrincipal() : const Login()),
       );
     });
   }

@@ -4,7 +4,6 @@ import 'package:junghanns/pages/home/home.dart';
 import 'package:junghanns/pages/home/routes.dart';
 import 'package:junghanns/pages/home/second.dart';
 import 'package:junghanns/pages/home/specials.dart';
-import 'package:junghanns/pages/shop/shopping_cart.dart';
 
 const List<Widget> pages = [
   Home(),
@@ -16,7 +15,8 @@ const List<Widget> pages = [
 ];
 
 class HomePrincipal extends StatefulWidget {
-  const HomePrincipal({Key? key}) : super(key: key);
+  int index;
+  HomePrincipal({Key? key,this.index=0}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _HomePrincipalState();
@@ -28,7 +28,7 @@ class _HomePrincipalState extends State<HomePrincipal> {
   @override
   void initState() {
     super.initState();
-    indexCurrent = 0;
+    indexCurrent = widget.index;
   }
 
   @override

@@ -126,6 +126,7 @@ class _RoutesState extends State<Routes> {
                             children: customerList.map((e) {
                               return Column(children: [
                                 RoutesCard(
+                                  indexHome: 2,
                                     icon: Image.asset(
                                       "assets/icons/${e.typeVisit == "RUTA" ? "user1" : e.typeVisit == "SEGUNDA" ? "user3" : "user2"}.png",
                                       width: size.width * .14,
@@ -163,6 +164,7 @@ class _RoutesState extends State<Routes> {
                                 itemBuilder: (BuildContext context, int index) {
                                   return Column(children: [
                                     RoutesCard(
+                                      indexHome: 2,
                                         icon: Image.asset(
                                           "assets/icons/${snapshot.data![index].typeVisit == "RUTA" ? "user1" : snapshot.data![index].typeVisit == "SEGUNDA" ? "user3" : "user2"}.png",
                                           width: size.width * .14,

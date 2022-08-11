@@ -8,6 +8,7 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:junghanns/components/bottom_bar.dart';
 import 'package:junghanns/models/stop.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/provider/provider.dart';
@@ -101,6 +102,7 @@ class _StopsState extends State<Stops> {
           ],
         ),
       ),
+      bottomNavigationBar: bottomBar((){}, 2,isHome: false,context: context),
     );
   }
 

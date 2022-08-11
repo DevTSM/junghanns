@@ -127,6 +127,7 @@ class _SpecialsState extends State<Specials> {
                         children: customerList.map((e) {
                           return Column(children: [
                             RoutesCard(
+                              indexHome: 1,
                                 icon: Image.asset(
                                   "assets/icons/${e.typeVisit == "RUTA" ? "user1" : e.typeVisit == "SEGUNDA" ? "user3" : "user2"}.png",
                                   width: size.width * .14,

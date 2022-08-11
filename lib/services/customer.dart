@@ -9,8 +9,8 @@ Future<Answer> getListCustomer(int idR, String date, String type) async {
   log("/CustomerServices <getListCustomer>");
   //try {
   var response = await http
-      .get(Uri.parse("$urlBase/visita?idRuta=$idR&date=$date&tipo=$type"),
-          //Uri.parse("$urlBase/visita?idRuta=10&date=20220617&tipo=$type"),
+      .get//(Uri.parse("$urlBase/visita?idRuta=$idR&date=$date&tipo=$type"),
+          (Uri.parse("$urlBase/visita?idRuta=10&date=20220617&tipo=$type"),
           headers: {
         "Content-Type": "aplication/json",
         "x-api-key": apiKey,

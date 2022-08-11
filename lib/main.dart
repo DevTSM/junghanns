@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:junghanns/pages/opening.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/provider/provider.dart';
+import 'package:junghanns/routes/routes.dart';
 import 'package:provider/provider.dart';
 class MyHttpOverrides extends HttpOverrides{
   @override
@@ -51,9 +52,7 @@ class MyApp extends StatefulWidget {
         primarySwatch: Colors.blue,
       ),
       initialRoute: '/',
-      routes: {
-        "/": (context) => const Opening(),
-      },
+      routes: getApplicationRoutes(),
     ));
   }
 }

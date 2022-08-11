@@ -12,13 +12,15 @@ class RoutesCard extends StatelessWidget {
   List<String> title;
   String description;
   String type;
+  int indexHome;
   RoutesCard(
       {Key? key,
       required this.icon,
       required this.customerCurrent,
       required this.title,
       required this.description,
-      required this.type})
+      required this.type,
+      required this.indexHome})
       : super(key: key);
 
   @override
@@ -28,6 +30,7 @@ class RoutesCard extends StatelessWidget {
             context,
             MaterialPageRoute(
                 builder: (context) => DetailsCustomer(
+                  indexHome:indexHome,
                       customerCurrent: customerCurrent,
                       type: type,
                     ))),

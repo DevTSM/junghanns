@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:junghanns/pages/home/home_principal.dart';
 import 'package:junghanns/styles/color.dart';
 
-Widget bottomBar(Function setIndexCurrent, int indexCurrent) {
+Widget bottomBar(Function setIndexCurrent, int indexCurrent,{BuildContext? context,bool isHome=true}) {
   return BottomNavigationBar(
     items: <BottomNavigationBarItem>[
       BottomNavigationBarItem(
@@ -87,6 +88,12 @@ Widget bottomBar(Function setIndexCurrent, int indexCurrent) {
     currentIndex: indexCurrent,
     unselectedItemColor: const Color.fromRGBO(188, 190, 192, 1),
     selectedItemColor: ColorsJunghanns.blueJ,
-    onTap: (value) => setIndexCurrent(value),
+    onTap: (value) => isHome?setIndexCurrent(value):navigator(context!,value,indexCurrent),
   );
+}
+navigator(BuildContext context,int index,int indexCurrent){
+  if(index!=indexCurrent){
+  Navigator.pushAndRemoveUntil(context, MaterialPageRoute<void>(
+            builder: (BuildContext context) => HomePrincipal(index: index,)), (route) => false);
+  }
 }

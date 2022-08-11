@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:junghanns/components/bottom_bar.dart';
 import 'package:junghanns/components/button.dart';
 import 'package:junghanns/models/authorization.dart';
 import 'package:junghanns/models/customer.dart';
@@ -218,6 +219,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
       body: Stack(
         children: [header(), isLoading ? loading() : itemList()],
       ),
+      bottomNavigationBar: bottomBar((){}, 2,isHome: false,context: context),
     );
   }
 

@@ -108,10 +108,7 @@ class CustomerModel {
         observation: (data["observacion"] ?? "") == ""
             ? "Sin observaciones"
             : data["observacion"] ?? "",
-        history: data["historial"] != null
-            ? List.from(
-                data["historial"].map((e) => SaleModel.fromService(e)).toList())
-            : []);
+        history: []);
   }
   factory CustomerModel.fromDataBase(Map<String, dynamic> data) {
     return CustomerModel(
@@ -157,6 +154,15 @@ class CustomerModel {
       'img': img,
       'observacion': observation
     };
+  }
+  setHistory(Map<String,dynamic> data){
+    history=data["historial"] != null
+            ? List.from(
+                data["historial"].map((e) => SaleModel.fromService(e)).toList())
+            : [];
+  }
+  setMoney(double purse){
+    this.purse=purse;
   }
 }
 

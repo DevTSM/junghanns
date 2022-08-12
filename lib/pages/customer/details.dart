@@ -8,9 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:junghanns/components/bottom_bar.dart';
 import 'package:junghanns/components/button.dart';
@@ -54,9 +52,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
   late bool isLoading;
   late bool isImgNot;
   late bool isNotData;
-
   late List<ConfigModel> configList;
-  //
   late List<AuthorizationModel> authList;
 
   @override
@@ -94,8 +90,6 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
   }
 
   getAuth() async {
-    log("Cliente: ${widget.customerCurrent.idClient}");
-    log("Ruta: ${prefs.idRouteD}");
     await getAuthorization(widget.customerCurrent.idClient, prefs.idRouteD)
         .then((answer) {
       if (answer.error) {
@@ -120,6 +114,43 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
     });
   }
 
+  getHistory(){
+    getMoney();
+    getHistoryCustomer(widget.customerCurrent.idClient).then((answer){
+      if(answer.error){
+        Fluttertoast.showToast(
+          msg: answer.message,
+          timeInSecForIosWeb: 2,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+        );
+      }else{
+        setState(() {
+          widget.customerCurrent.setHistory(answer.body);
+        });
+        
+      }
+    });
+  }
+  getMoney(){
+    getMoneyCustomer(widget.customerCurrent.idClient).then((answer){
+      if(answer.error){
+        Fluttertoast.showToast(
+          msg: answer.message,
+          timeInSecForIosWeb: 2,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+        );
+      }else{
+        setState(() {
+          widget.customerCurrent.setMoney(double.parse((answer.body["saldo"]??0).toString()));
+        });
+      }
+    });
+  }
+  
   getDataDetails() async {
     await getDetailsCustomer(widget.customerCurrent.id, widget.type)
         .then((answer) async {
@@ -143,6 +174,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
               : false;
           isNotData = false;
         });
+        getHistory();
       }
       getAuth();
     });
@@ -287,6 +319,27 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
     }
   }
 
+  Future<bool> funCheckDistance() async {
+    await getConfigR();
+    LocationPermission permission = await Geolocator.requestPermission();
+    if (permission == LocationPermission.whileInUse ||
+        permission == LocationPermission.always) {
+      Position _currentLocation = await Geolocator.getCurrentPosition();
+      if (Geolocator.distanceBetween(
+              _currentLocation.latitude,
+              _currentLocation.longitude,
+              widget.customerCurrent.lat,
+              widget.customerCurrent.lng) <
+          int.parse(configList.last.valor)) {
+        return true;
+      } else {
+        return false;
+      }
+    } else {
+      print({"permission": permission.toString()});
+      return false;
+    }
+  }
   @override
   Widget build(BuildContext context) {
     setState(() {
@@ -825,28 +878,6 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
         ),
       ]),
     );
-  }
-
-  Future<bool> funCheckDistance() async {
-    await getConfigR();
-    LocationPermission permission = await Geolocator.requestPermission();
-    if (permission == LocationPermission.whileInUse ||
-        permission == LocationPermission.always) {
-      Position _currentLocation = await Geolocator.getCurrentPosition();
-      if (Geolocator.distanceBetween(
-              _currentLocation.latitude,
-              _currentLocation.longitude,
-              widget.customerCurrent.lat,
-              widget.customerCurrent.lng) <
-          int.parse(configList.last.valor)) {
-        return true;
-      } else {
-        return false;
-      }
-    } else {
-      print({"permission": permission.toString()});
-      return false;
-    }
   }
 
   Widget loading() {

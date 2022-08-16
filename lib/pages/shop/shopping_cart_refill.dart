@@ -9,12 +9,10 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:junghanns/components/bottom_bar.dart';
 import 'package:junghanns/components/button.dart';
-import 'package:junghanns/models/authorization.dart';
 import 'package:junghanns/models/config.dart';
 import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/models/product.dart';
 import 'package:junghanns/models/sale.dart';
-import 'package:junghanns/models/shopping_basket.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/services/auth.dart';
 import 'package:junghanns/services/store.dart';
@@ -25,21 +23,23 @@ import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:junghanns/widgets/card/product_card.dart';
 
 import '../../models/method_payment.dart';
+import '../../models/shopping_basket.dart';
 
-class ShoppingCart extends StatefulWidget {
+class ShoppingCartRefill extends StatefulWidget {
   CustomerModel customerCurrent;
-  List<AuthorizationModel> authList;
-  ShoppingCart(
-      {Key? key, required this.customerCurrent, required this.authList})
-      : super(key: key);
+
+  ShoppingCartRefill({
+    Key? key,
+    required this.customerCurrent,
+  }) : super(key: key);
 
   @override
-  State<ShoppingCart> createState() => _ShoppingCartState();
+  State<ShoppingCartRefill> createState() => _ShoppingCartRefillState();
 }
 
-class _ShoppingCartState extends State<ShoppingCart> {
+class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
   late Size size;
-  late List<ProductModel> productsList = [];
+  late List<ProductModel> refillList = [];
   late List<MethodPayment> paymentsList = [];
 
   late double totalPrice;
@@ -55,7 +55,6 @@ class _ShoppingCartState extends State<ShoppingCart> {
 
     totalPrice = 0;
     isLoading = true;
-
     //
     cantidad = 0;
     basket = BasketModel(
@@ -68,60 +67,32 @@ class _ShoppingCartState extends State<ShoppingCart> {
         waysToPay: [],
         idDataOrigin: widget.customerCurrent.id,
         folio: -1,
-        typeOperation: "V");
+        typeOperation: "R");
     configList = [];
 
-    getDataProducts();
+    getDataRefill();
   }
 
-  getDataProducts() async {
+  getDataRefill() async {
     log("${prefs.idRouteD}");
-    await getStockList(prefs.idRouteD).then((answer) {
+    await getRefillList(prefs.idRouteD).then((answer) {
       if (answer.error) {
         Fluttertoast.showToast(
-          msg: "Sin productos",
+          msg: "Sin recargas",
           timeInSecForIosWeb: 2,
           toastLength: Toast.LENGTH_LONG,
           gravity: ToastGravity.TOP,
           webShowClose: true,
         );
       } else {
-        answer.body.map((e) {
-          productsList.add(ProductModel.fromServiceProduct(e));
-        }).toList();
-        checkPriceCvsPriceS();
-        /*Prueba*/
-        /*productsList.add(ProductModel(
-            idProduct: 21,
-            description: "GARRAFON ETIQUETADO 20 LTS",
-            price: 80.0,
-            stock: 50,
-            img: "https://jnsc.mx/img/vacio.jpg",
-            type: 1,
-            isSelect: false));
-        productsList.add(ProductModel(
-            idProduct: 22,
-            description: "LIQUIDO DE RECAMBIO 20 LTS",
-            price: 40.0,
-            stock: 50,
-            img: "https://jnsc.mx/img/garrafon.png",
-            type: 1,
-            isSelect: false));*/
+        refillList.clear();
+
+        answer.body
+            .map((e) => refillList.add(ProductModel.fromServiceRefill(e)))
+            .toList();
       }
       getDataPayment();
     });
-  }
-
-  checkPriceCvsPriceS() {
-    if (productsList.isNotEmpty) {
-      int index = productsList.indexWhere((element) => element.idProduct == 22);
-      if (index != -1) {
-        log("Index de liquido es: $index");
-        if (widget.customerCurrent.priceLiquid < productsList[index].price) {
-          productsList[index].price = widget.customerCurrent.priceLiquid;
-        }
-      }
-    }
   }
 
   getDataPayment() async {
@@ -139,19 +110,11 @@ class _ShoppingCartState extends State<ShoppingCart> {
         );
       } else {
         paymentsList.clear();
-
-        answer.body
-            .map((e) => paymentsList.add(MethodPayment.fromService(e)))
-            .toList();
-        if (widget.customerCurrent.purse > 0) {
-          paymentsList.add(MethodPayment(
-              wayToPay: "Monedero",
-              typeWayToPay: "M",
-              type: "Monedero",
-              idProductService: -1,
-              description: "",
-              number: -1));
-        }
+        answer.body.map((e) {
+          if (e["formaPago"] == "Efectivo") {
+            paymentsList.add(MethodPayment.fromService(e));
+          }
+        }).toList();
       }
       setState(() {
         isLoading = false;
@@ -160,19 +123,9 @@ class _ShoppingCartState extends State<ShoppingCart> {
   }
 
   updateTotal(int id, double price, bool isAdd) {
-    if (widget.authList.isEmpty) {
-      for (var e in productsList) {
-        if (e.idProduct == id) {
-          isAdd ? updateShoppingAdd(e) : updateShoppingSubtraction(e);
-        }
-      }
-    } else {
-      for (var e in widget.authList) {
-        if (e.idProduct == id) {
-          isAdd
-              ? updateShoppingAdd(e.getProduct())
-              : updateShoppingSubtraction(e.getProduct());
-        }
+    for (var e in refillList) {
+      if (e.idProduct == id) {
+        isAdd ? updateShoppingAdd(e) : updateShoppingSubtraction(e);
       }
     }
 
@@ -281,6 +234,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
                           Container(
                             padding: const EdgeInsets.only(right: 8, top: 10),
                             child: Text(
+                              //shoppingBasket.length.toString(),
                               cantidad.toString(),
                               style: TextStyles.white24SemiBoldIt,
                             ),
@@ -313,10 +267,10 @@ class _ShoppingCartState extends State<ShoppingCart> {
       margin: EdgeInsets.only(top: size.height * .22),
       padding: const EdgeInsets.only(left: 10, right: 10),
       width: double.infinity,
-      child: productsList.isEmpty
+      child: refillList.isEmpty
           ? Center(
               child: Text(
-              "Sin productos",
+              "Sin recargas",
               style: TextStyles.blue18SemiBoldIt,
             ))
           : Column(
@@ -339,14 +293,11 @@ class _ShoppingCartState extends State<ShoppingCart> {
                     ),
                     childrenDelegate: SliverChildBuilderDelegate(
                         (context, index) => ProductCard(
-                            update: updateTotal,
-                            isPR: true,
-                            productCurrent: widget.authList.isEmpty
-                                ? productsList[index]
-                                : widget.authList[index].getProduct()),
-                        childCount: widget.authList.isEmpty
-                            ? productsList.length
-                            : widget.authList.length),
+                              update: updateTotal,
+                              isPR: false,
+                              productCurrent: refillList[index],
+                            ),
+                        childCount: refillList.length),
                   ),
                 )),
                 Visibility(
@@ -411,79 +362,12 @@ class _ShoppingCartState extends State<ShoppingCart> {
     );
   }
 
-  bool funCheckMethodPayment(MethodPayment methodCurrent) {
-    bool isTrue = false;
-    log("TIPO DE PAGO - ${methodCurrent.wayToPay}");
-    switch (methodCurrent.wayToPay) {
-      case "Efectivo":
-        isTrue = true;
-        break;
-      case "Credito":
-        if (methodCurrent.idProductService != -1 &&
-            methodCurrent.number != -1) {
-          if (basket.sales.length > 1) {
-            isTrue = false;
-            Fluttertoast.showToast(
-              msg: "Productos no válidos",
-              timeInSecForIosWeb: 2,
-              toastLength: Toast.LENGTH_LONG,
-              gravity: ToastGravity.TOP,
-              webShowClose: true,
-            );
-          } else {
-            if (methodCurrent.idProductService ==
-                basket.sales.first.idProduct) {
-              if (basket.sales.first.number <= methodCurrent.number) {
-                isTrue = true;
-              } else {
-                Fluttertoast.showToast(
-                  msg: "Cantidad no válida",
-                  timeInSecForIosWeb: 2,
-                  toastLength: Toast.LENGTH_LONG,
-                  gravity: ToastGravity.TOP,
-                  webShowClose: true,
-                );
-              }
-            } else {
-              Fluttertoast.showToast(
-                msg: "Producto no válidos",
-                timeInSecForIosWeb: 2,
-                toastLength: Toast.LENGTH_LONG,
-                gravity: ToastGravity.TOP,
-                webShowClose: true,
-              );
-            }
-          }
-        } else {
-          isTrue = false;
-        }
-        break;
-      case "Monedero":
-        if (totalPrice > widget.customerCurrent.purse) {
-          isTrue = false;
-          Fluttertoast.showToast(
-            msg: "Monedero insuficiente",
-            timeInSecForIosWeb: 2,
-            toastLength: Toast.LENGTH_LONG,
-            gravity: ToastGravity.TOP,
-            webShowClose: true,
-          );
-        } else {
-          isTrue = true;
-        }
-        break;
-    }
-    log("ISTRUE - $isTrue");
-    return isTrue;
-  }
-
   Widget showItem(MethodPayment methodCurrent, String text2, IconData icon) {
     return GestureDetector(
       onTap: () {
         Navigator.pop(context);
-        if (funCheckMethodPayment(methodCurrent)) {
-          showConfirmSale(methodCurrent);
-        }
+
+        showConfirmSale(methodCurrent);
       },
       child: Container(
         padding: const EdgeInsets.only(left: 35, top: 8, bottom: 8),
@@ -595,13 +479,6 @@ class _ShoppingCartState extends State<ShoppingCart> {
       });
     }
 
-    if (widget.authList.isNotEmpty) {
-      basket.idAuth = widget.authList.first.idAuth;
-    }
-    if (basket.waysToPay.first.type == "C") {
-      basket.folio = 1;
-    }
-
     ///
     Map<String, dynamic> data = {
       "id_cliente": basket.idCustomer,
@@ -706,6 +583,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
                         Navigator.pop(context);
                       }
                     });
+                    Navigator.pop(context);
                   },*/
               Decorations.blueBorder12),
           buttomSale(
@@ -797,9 +675,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
   Future<bool> funCheckDistance() async {
     await getConfigR();
     //
-    int distanConfig = widget.authList.isEmpty
-        ? int.parse(configList.last.valor)
-        : int.parse(configList.first.valor);
+    int distanConfig = int.parse(configList.last.valor);
     //
     LocationPermission permission = await Geolocator.requestPermission();
     if (permission == LocationPermission.whileInUse ||

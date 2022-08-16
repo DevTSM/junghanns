@@ -102,7 +102,7 @@ class _StopsState extends State<Stops> {
           ],
         ),
       ),
-      bottomNavigationBar: bottomBar((){}, 2,isHome: false,context: context),
+      bottomNavigationBar: bottomBar(() {}, 2, isHome: false, context: context),
     );
   }
 
@@ -202,7 +202,7 @@ class _StopsState extends State<Stops> {
           provider.connectionStatus == 4) {
         if (provider.connectionStatus != 4) {
           Map<String, dynamic> data = {
-            "id_cliente": widget.customerCurrent.idClient,
+            "id_cliente": widget.customerCurrent.idClient.toString(),
             "id_parada": stopCurrent.id,
             "lat": "${widget.customerCurrent.lat}",
             "lon": "${widget.customerCurrent.lng}",
@@ -210,8 +210,10 @@ class _StopsState extends State<Stops> {
             "tipo": widget.customerCurrent.typeVisit.characters.first
           };
 
+          log("LA DATA ES: $data");
+
           ///
-          await setStop(data).then((answer) {
+          await postStop(data).then((answer) {
             if (answer.error) {
               Navigator.pop(context);
               Fluttertoast.showToast(
@@ -232,6 +234,7 @@ class _StopsState extends State<Stops> {
                 gravity: ToastGravity.TOP,
                 webShowClose: true,
               );
+              Navigator.pop(context);
               Navigator.pop(context);
               //
             }
@@ -330,11 +333,9 @@ class _StopsState extends State<Stops> {
             ],
           )),
       onTap: () {
-        if (stopCurrent.id != stop.id) {
-          stopCurrent = stop;
-          log("Stop ID: ${stopCurrent.id}");
-          showConfirmStop();
-        }
+        stopCurrent = stop;
+        log("Stop ID: ${stopCurrent.id}");
+        showConfirmStop();
       },
     );
   }

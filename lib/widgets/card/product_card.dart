@@ -182,8 +182,8 @@ class ProductCardState extends State<ProductCard> {
       log("Stock2 - $stock2");
       log("Stock1 - ${widget.productCurrent.stock}");
       log("ID ${widget.productCurrent.idProduct}");
-      widget.update(widget.productCurrent.type, widget.productCurrent.idProduct,
-          widget.productCurrent.price, true);
+      widget.update(
+          widget.productCurrent.idProduct, widget.productCurrent.price, true);
     }
   }
 
@@ -210,8 +210,8 @@ class ProductCardState extends State<ProductCard> {
       log("Restar $amount");
       log("Stock2 - $stock2");
       log("Stock1 - ${widget.productCurrent.stock}");
-      widget.update(widget.productCurrent.type, widget.productCurrent.idProduct,
-          widget.productCurrent.price, false);
+      widget.update(
+          widget.productCurrent.idProduct, widget.productCurrent.price, false);
     }
   }
 }

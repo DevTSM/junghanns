@@ -1,6 +1,7 @@
 import 'package:junghanns/models/product.dart';
 
 class AuthorizationModel {
+  int idAuth;
   int idProduct;
   String description;
   double price;
@@ -15,7 +16,8 @@ class AuthorizationModel {
   String img;
 
   AuthorizationModel(
-      {required this.idProduct,
+      {required this.idAuth,
+      required this.idProduct,
       required this.description,
       required this.price,
       required this.number,
@@ -30,6 +32,7 @@ class AuthorizationModel {
 
   factory AuthorizationModel.fromState() {
     return AuthorizationModel(
+        idAuth: 0,
         idProduct: 0,
         description: "TEST",
         price: 0.0,
@@ -46,6 +49,7 @@ class AuthorizationModel {
 
   factory AuthorizationModel.fromService(Map<String, dynamic> data) {
     return AuthorizationModel(
+        idAuth: data["id"],
         idProduct: data["idProductoServicio"] ?? 0,
         description: data["descripcion"] ?? "",
         price: double.parse(data["precio"] ?? "0.0"),

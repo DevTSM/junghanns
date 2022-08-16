@@ -227,8 +227,7 @@ class _LoginState extends State<Login> {
                   Navigator.pushReplacement(
                       context,
                       MaterialPageRoute<void>(
-                          builder: (BuildContext context) =>
-                              HomePrincipal()));
+                          builder: (BuildContext context) => HomePrincipal()));
                 }
               });
             }

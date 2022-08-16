@@ -155,14 +155,16 @@ class CustomerModel {
       'observacion': observation
     };
   }
-  setHistory(Map<String,dynamic> data){
-    history=data["historial"] != null
-            ? List.from(
-                data["historial"].map((e) => SaleModel.fromService(e)).toList())
-            : [];
+
+  setHistory(Map<String, dynamic> data) {
+    history = data["historial"] != null
+        ? List.from(
+            data["historial"].map((e) => SaleModel.fromService(e)).toList())
+        : [];
   }
-  setMoney(double purse){
-    this.purse=purse;
+
+  setMoney(double purse) {
+    this.purse = purse;
   }
 }
 

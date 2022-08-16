@@ -18,6 +18,7 @@ import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/models/sale.dart';
 import 'package:junghanns/pages/address/edit_address.dart';
 import 'package:junghanns/pages/shop/shopping_cart.dart';
+import 'package:junghanns/pages/shop/shopping_cart_refill.dart';
 import 'package:junghanns/pages/shop/stops.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/provider/provider.dart';
@@ -38,7 +39,11 @@ class DetailsCustomer extends StatefulWidget {
   CustomerModel customerCurrent;
   String type;
   int indexHome;
-  DetailsCustomer({Key? key, required this.customerCurrent, required this.type,required this.indexHome})
+  DetailsCustomer(
+      {Key? key,
+      required this.customerCurrent,
+      required this.type,
+      required this.indexHome})
       : super(key: key);
   @override
   State<StatefulWidget> createState() => _DetailsCustomerState();
@@ -100,6 +105,35 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
           gravity: ToastGravity.TOP,
           webShowClose: true,
         );*/
+        /*Prueba*/
+        /*authList.add(AuthorizationModel(
+            idAuth: 13706,
+            idProduct: 21,
+            description: "GARRAFON ETIQUETADO 20 LTS",
+            price: 0.0,
+            number: 5,
+            idClient: 9631,
+            idCatAuth: 9,
+            authText: "CORTESIA",
+            type: "V",
+            observation: "4",
+            idReasonAuth: -1,
+            reason: "ASISTENCIA SOCIAL",
+            img: "https://jnsc.mx/img/vacio.jpg"));
+        authList.add(AuthorizationModel(
+            idAuth: 13704,
+            idProduct: 22,
+            description: "LIQUIDO DE RECAMBIO 20 LTS",
+            price: 0.0,
+            number: 3,
+            idClient: 9631,
+            idCatAuth: 4,
+            authText: "GARRAFON A LA PAR",
+            type: "V",
+            observation: "Prueba garrafon a la par",
+            idReasonAuth: 6,
+            reason: "ASISTENCIA SOCIAL",
+            img: "https://jnsc.mx/img/garrafon.png"));*/
         log("Sin Autorizaciones");
       } else {
         log("Auth yes");
@@ -114,10 +148,9 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
     });
   }
 
-  getHistory(){
-    getMoney();
-    getHistoryCustomer(widget.customerCurrent.idClient).then((answer){
-      if(answer.error){
+  getHistory() {
+    getHistoryCustomer(widget.customerCurrent.idClient).then((answer) {
+      if (answer.error) {
         Fluttertoast.showToast(
           msg: answer.message,
           timeInSecForIosWeb: 2,
@@ -125,17 +158,17 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
           gravity: ToastGravity.TOP,
           webShowClose: true,
         );
-      }else{
+      } else {
         setState(() {
           widget.customerCurrent.setHistory(answer.body);
         });
-        
       }
     });
   }
-  getMoney(){
-    getMoneyCustomer(widget.customerCurrent.idClient).then((answer){
-      if(answer.error){
+
+  getMoney() {
+    getMoneyCustomer(widget.customerCurrent.idClient).then((answer) {
+      if (answer.error) {
         Fluttertoast.showToast(
           msg: answer.message,
           timeInSecForIosWeb: 2,
@@ -143,14 +176,19 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
           gravity: ToastGravity.TOP,
           webShowClose: true,
         );
-      }else{
+      } else {
         setState(() {
-          widget.customerCurrent.setMoney(double.parse((answer.body["saldo"]??0).toString()));
+          widget.customerCurrent
+              .setMoney(double.parse((answer.body["saldo"] ?? 0).toString()));
+          /*Prueba*/
+          //widget.customerCurrent.setMoney(100.0);
+          log("MONEDERO: ${widget.customerCurrent.purse}");
         });
       }
+      getAuth();
     });
   }
-  
+
   getDataDetails() async {
     await getDetailsCustomer(widget.customerCurrent.id, widget.type)
         .then((answer) async {
@@ -174,21 +212,29 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
               : false;
           isNotData = false;
         });
-        getHistory();
       }
-      getAuth();
+      getMoney();
     });
   }
 
-  navigatorShopping(bool isPR) {
+  navigatorShopping() {
     Navigator.pop(context);
     Navigator.push(
         context,
         MaterialPageRoute<void>(
             builder: (BuildContext context) => ShoppingCart(
                   customerCurrent: widget.customerCurrent,
-                  isPR: isPR,
-                  authList: authList,
+                  authList: authList.isEmpty ? authList : [authList.first],
+                )));
+  }
+
+  navigatorShoppingRefill() {
+    Navigator.pop(context);
+    Navigator.push(
+        context,
+        MaterialPageRoute<void>(
+            builder: (BuildContext context) => ShoppingCartRefill(
+                  customerCurrent: widget.customerCurrent,
                 )));
   }
 
@@ -252,6 +298,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
       isRange = isValid;
       isLoading = false;
     });
+    getHistory();
   }
 
   funCurrentLocation() {
@@ -340,6 +387,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
       return false;
     }
   }
+
   @override
   Widget build(BuildContext context) {
     setState(() {
@@ -367,7 +415,8 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
           : isNotData
               ? notData()
               : refreshScroll(),
-      bottomNavigationBar: bottomBar((){}, widget.indexHome,isHome: false,context: context),
+      bottomNavigationBar:
+          bottomBar(() {}, widget.indexHome, isHome: false, context: context),
     );
   }
 
@@ -741,7 +790,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
                           "assets/icons/shopP2.png",
                           width: size.width * 0.14,
                         ),
-                        fun: () => navigatorShopping(true),
+                        fun: () => navigatorShopping(),
                         decoration: Decorations.blueBorder12,
                         style: TextStyles.white14_5,
                         label: "Productos"),
@@ -754,7 +803,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
                           isIcon: true,
                           icon: Image.asset("assets/icons/shopR1.png",
                               width: size.width * 0.14),
-                          fun: () => navigatorShopping(false),
+                          fun: () => navigatorShoppingRefill(),
                           decoration: Decorations.whiteSblackCard,
                           style: TextStyles.blue16_4,
                           label: "Recargas"))

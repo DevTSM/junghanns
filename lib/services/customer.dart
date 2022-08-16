@@ -10,7 +10,7 @@ Future<Answer> getListCustomer(int idR, String date, String type) async {
   //try {
   var response = await http
       .get(Uri.parse("$urlBase/visita?idRuta=$idR&date=$date&tipo=$type"),
-          //(Uri.parse("$urlBase/visita?idRuta=10&date=20220617&tipo=$type"),
+          //Uri.parse("$urlBase/visita?idRuta=10&date=20220617&tipo=$type"),
           headers: {
         "Content-Type": "aplication/json",
         "x-api-key": apiKey,
@@ -63,54 +63,54 @@ Future<Answer> getDetailsCustomer(int id, String type) async {
         body: e, message: "Algo salio mal, intentalo mas tarde.", error: true);
   }*/
 }
+
 Future<Answer> getHistoryCustomer(int id) async {
   log("/CustomerServices <getHistoryCustomer>");
   try {
-  var response = await http.get(
-      Uri.parse("$urlBase/cliente?q=history&id=$id"),
-      headers: {
-        "Content-Type": "aplication/json",
-        "x-api-key": apiKey,
-        "client_secret": prefs.clientSecret,
-        "Authorization": "Bearer ${prefs.token}",
-      });
-  if (response.statusCode == 200) {
-    log("/CustomerServices <getHistoryCustomer> Successfull ${jsonDecode(response.body)}");
-    return Answer(body: jsonDecode(response.body), message: "", error: false);
-  } else {
-    log("/CustomerServices <getHistoryCustomer> Fail");
-    return Answer(
-        body: response,
-        message: "Algo salio mal con el historial, intentalo mas tarde.",
-        error: true);
-  }
+    var response = await http
+        .get(Uri.parse("$urlBase/cliente?q=history&id=$id"), headers: {
+      "Content-Type": "aplication/json",
+      "x-api-key": apiKey,
+      "client_secret": prefs.clientSecret,
+      "Authorization": "Bearer ${prefs.token}",
+    });
+    if (response.statusCode == 200) {
+      log("/CustomerServices <getHistoryCustomer> Successfull ${jsonDecode(response.body)}");
+      return Answer(body: jsonDecode(response.body), message: "", error: false);
+    } else {
+      log("/CustomerServices <getHistoryCustomer> Fail");
+      return Answer(
+          body: response,
+          message: "Algo salio mal con el historial, intentalo mas tarde.",
+          error: true);
+    }
   } catch (e) {
     log("/CustomerServices <getHistoryCustomer> Catch");
     return Answer(
         body: e, message: "Algo salio mal, intentalo mas tarde.", error: true);
   }
 }
+
 Future<Answer> getMoneyCustomer(int id) async {
   log("/CustomerServices <getMoneyCustomer>");
   try {
-  var response = await http.get(
-      Uri.parse("$urlBase/cliente?q=money&id=$id"),
-      headers: {
-        "Content-Type": "aplication/json",
-        "x-api-key": apiKey,
-        "client_secret": prefs.clientSecret,
-        "Authorization": "Bearer ${prefs.token}",
-      });
-  if (response.statusCode == 200) {
-    log("/CustomerServices <getMoneyCustomer> Successfull ${jsonDecode(response.body)}");
-    return Answer(body: jsonDecode(response.body), message: "", error: false);
-  } else {
-    log("/CustomerServices <getMoneyCustomer> Fail");
-    return Answer(
-        body: response,
-        message: "No fue posible obtener el saldo, intentalo mas tarde.",
-        error: true);
-  }
+    var response =
+        await http.get(Uri.parse("$urlBase/cliente?q=money&id=$id"), headers: {
+      "Content-Type": "aplication/json",
+      "x-api-key": apiKey,
+      "client_secret": prefs.clientSecret,
+      "Authorization": "Bearer ${prefs.token}",
+    });
+    if (response.statusCode == 200) {
+      log("/CustomerServices <getMoneyCustomer> Successfull ${jsonDecode(response.body)}");
+      return Answer(body: jsonDecode(response.body), message: "", error: false);
+    } else {
+      log("/CustomerServices <getMoneyCustomer> Fail");
+      return Answer(
+          body: response,
+          message: "No fue posible obtener el saldo, intentalo mas tarde.",
+          error: true);
+    }
   } catch (e) {
     log("/CustomerServices <getMoneyCustomer> Catch");
     return Answer(

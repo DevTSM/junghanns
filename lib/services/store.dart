@@ -195,7 +195,7 @@ Future<Answer> setSale(Map<String, dynamic> data) async {
   log("/StoreServices <setSale>");
   try {
     var response =
-        jsonDecode((await http.post(Uri.parse("$urlBase/index.php/cliente"),
+        jsonDecode((await http.post(Uri.parse("$urlBase/index.php/venta"),
                 headers: {
                   HttpHeaders.contentTypeHeader:
                       'application/json; charset=UTF-8',
@@ -220,6 +220,36 @@ Future<Answer> setSale(Map<String, dynamic> data) async {
     return Answer(
         body: e, message: "Algo salio mal, intentalo mas tarde.", error: true);
   }
+}
+
+Future<Answer> postSale(Map<String, dynamic> data) async {
+  log("/StoreServices <PostSale>");
+  //try {
+  var response = await http.post(Uri.parse("$urlBase/index.php/venta"),
+      headers: {
+        HttpHeaders.contentTypeHeader: 'application/json; charset=UTF-8',
+        "x-api-key": apiKey,
+        "client_secret": prefs.clientSecret,
+        "Authorization": "Bearer ${prefs.token}",
+      },
+      body: jsonEncode(data));
+  log("${response.statusCode}");
+  if (response.statusCode == 201) {
+    log("/StoreServices <PostSale> Successfull, ${response.body}");
+    return Answer(body: jsonDecode(response.body), message: "", error: false);
+  } else {
+    log("/StoreServices <PostSale> Fail ${response.body}");
+    return Answer(
+        body: response,
+        message: response.body,
+        //"Algo salio mal, intentalo mas tarde.",
+        error: true);
+  }
+  /*} catch (e) {
+    log("/StoreServices <setSale> Catch ${e.toString()}");
+    return Answer(
+        body: e, message: "Algo salio mal, intentalo mas tarde.", error: true);
+  }*/
 }
 
 Future<Answer> getStopsList() async {
@@ -317,4 +347,34 @@ Future<Answer> setStop(Map<String, dynamic> data) async {
     return Answer(
         body: e, message: "Algo salio mal, intentalo mas tarde.", error: true);
   }
+}
+
+Future<Answer> postStop(Map<String, dynamic> data) async {
+  log("/StoreServices <PostStop>");
+  //try {
+  var response = await http.post(Uri.parse("$urlBase/index.php/paradas"),
+      headers: {
+        HttpHeaders.contentTypeHeader: 'application/json; charset=UTF-8',
+        "x-api-key": apiKey,
+        "client_secret": prefs.clientSecret,
+        "Authorization": "Bearer ${prefs.token}"
+      },
+      body: jsonEncode(data));
+  log("${response.statusCode}");
+  if (response.statusCode == 201) {
+    log("/StoreServices <PostStop> Successfull ${response.body}");
+    return Answer(body: jsonDecode(response.body), message: "", error: false);
+  } else {
+    log("/StoreServices <PostStop> Fail ${response.body}");
+    return Answer(
+        body: response,
+        message: response.body,
+        //"Algo salio mal, intentalo mas tarde.",
+        error: true);
+  }
+  /*} catch (e) {
+    log("/StoreServices <SetStop> Catch ${e.toString()}");
+    return Answer(
+        body: e, message: "Algo salio mal, intentalo mas tarde.", error: true);
+  }*/
 }

@@ -30,6 +30,9 @@ class _SecondsState extends State<Seconds> {
 
   late DateTime today;
   late String todayText, dayText, monthText;
+  //
+  late TextEditingController buscadorC;
+  late List<CustomerModel> searchList;
 
   @override
   void initState() {
@@ -42,6 +45,10 @@ class _SecondsState extends State<Seconds> {
         : monthText = "${today.month}";
     today.day < 10 ? dayText = "0${today.day}" : dayText = "${today.day}";
     todayText = "${today.year}$monthText$dayText";
+    //
+    buscadorC = TextEditingController();
+    searchList = [];
+    //
     getDataCustomerList();
   }
 
@@ -65,11 +72,14 @@ class _SecondsState extends State<Seconds> {
       } else {
         //provider.handler.deleteTable();
         //provider.handler.addColumn();
+        answer.body.map((e) {
+          customerList.add(CustomerModel.fromList(e, prefs.idRouteD));
+          //provider.handler.insertUser([customerList.last]);
+        }).toList();
+
+        searchList = customerList;
+
         setState(() {
-          answer.body.map((e) {
-            customerList.add(CustomerModel.fromList(e, prefs.idRouteD));
-            //provider.handler.insertUser([customerList.last]);
-          }).toList();
           isLoading = false;
         });
       }
@@ -96,12 +106,10 @@ class _SecondsState extends State<Seconds> {
         ),
         elevation: 0,
       ),
-      body: SizedBox(
-        height: double.infinity,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            /*Visibility(
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          /*Visibility(
                 visible: provider.connectionStatus == 4,
                 child: Container(
                     width: double.infinity,
@@ -112,67 +120,29 @@ class _SecondsState extends State<Seconds> {
                       "Sin conexion a internet",
                       style: TextStyles.white14_5,
                     ))),*/
-            header(),
-            const SizedBox(
-              height: 20,
-            ),
-            //provider.connectionStatus < 4
-            //   ?
-            isLoading
-                ? loading()
-                : customerList.isNotEmpty
-                    ? Expanded(
-                        child: SingleChildScrollView(
-                            child: Column(
-                        children: customerList.map((e) {
-                          return Column(children: [
-                            RoutesCard(
-                                indexHome: 3,
-                                //
-                                icon: Container(
-                                  decoration: BoxDecoration(
-                                    color: Color(int.parse(
-                                        e.color
-                                            .toUpperCase()
-                                            .replaceAll("#", "FF"),
-                                        radix: 16)),
-                                    borderRadius: const BorderRadius.all(
-                                      Radius.circular(30),
-                                    ),
-                                  ),
-                                  padding: const EdgeInsets.all(10),
-                                  height: size.width * .14,
-                                  width: size.width * .14,
-                                  child:
-                                      Image.asset("assets/icons/userIcon.png"),
-                                ),
-                                /*Image.asset(
-                                  "assets/icons/${e.typeVisit == "RUTA" ? "user1" : e.typeVisit == "SEGUNDA" ? "user3" : "user2"}.png",
-                                  width: size.width * .14,
-                                ),*/
-                                customerCurrent: e,
-                                type: "S",
-                                title: ["${e.idClient} - ", e.address],
-                                description: e.name),
-                            Row(children: [
-                              Container(
-                                margin: EdgeInsets.only(
-                                    left: (size.width * .07) + 15),
-                                color: ColorsJunghanns.grey,
-                                width: .5,
-                                height: 15,
-                              )
-                            ])
-                          ]);
-                        }).toList(),
-                      )))
-                    : Expanded(
-                        child: Center(
-                            child: Text(
-                        "Sin clientes en ruta",
-                        style: TextStyles.blue18SemiBoldIt,
-                      )))
-            /* : Expanded(
+          header(),
+          const SizedBox(
+            height: 15,
+          ),
+          isLoading
+              ? Container()
+              : customerList.isNotEmpty
+                  ? buscador()
+                  : Container(),
+          //provider.connectionStatus < 4
+          //   ?
+          isLoading
+              ? loading()
+              : customerList.isNotEmpty
+                  ? Flexible(
+                      child: SingleChildScrollView(child: listCustomersAPI()))
+                  : Expanded(
+                      child: Center(
+                          child: Text(
+                      "Sin clientes en ruta",
+                      style: TextStyles.blue18SemiBoldIt,
+                    )))
+          /* : Expanded(
                     child: FutureBuilder(
                         future: provider.handler.retrieveUsers(),
                         builder: (BuildContext context,
@@ -209,9 +179,46 @@ class _SecondsState extends State<Seconds> {
                             return Container();
                           }
                         }))*/
-          ],
-        ),
+        ],
       ),
+    );
+  }
+
+  Widget listCustomersAPI() {
+    return Column(
+      children: searchList.map((e) {
+        return Column(children: [
+          RoutesCard(
+              indexHome: 3,
+              //
+              icon: Container(
+                decoration: BoxDecoration(
+                  color: Color(int.parse(
+                      e.color.toUpperCase().replaceAll("#", "FF"),
+                      radix: 16)),
+                  borderRadius: const BorderRadius.all(
+                    Radius.circular(30),
+                  ),
+                ),
+                padding: const EdgeInsets.all(10),
+                height: size.width * .14,
+                width: size.width * .14,
+                child: Image.asset("assets/icons/userIcon.png"),
+              ),
+              customerCurrent: e,
+              type: "S",
+              title: ["${e.idClient} - ", e.address],
+              description: e.name),
+          Row(children: [
+            Container(
+              margin: EdgeInsets.only(left: (size.width * .07) + 15),
+              color: ColorsJunghanns.grey,
+              width: .5,
+              height: 15,
+            )
+          ])
+        ]);
+      }).toList(),
     );
   }
 
@@ -220,16 +227,10 @@ class _SecondsState extends State<Seconds> {
       Container(
           color: ColorsJunghanns.lightBlue,
           padding: EdgeInsets.only(
-              right: 15, left: 10, top: 10, bottom: size.height * .08),
+              right: 15, left: 10, top: 10, bottom: size.height * .06),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              /*IconButton(
-                  onPressed: () {},
-                  icon: const Icon(
-                    Icons.arrow_back_ios,
-                    color: ColorsJunghanns.blueJ,
-                  )),*/
               Expanded(
                   child: Container(
                       padding: const EdgeInsets.only(left: 15),
@@ -261,7 +262,7 @@ class _SecondsState extends State<Seconds> {
             ],
           )),
       Container(
-          padding: const EdgeInsets.only(right: 20, left: 20, top: 10),
+          padding: const EdgeInsets.only(right: 20, left: 20),
           child: Row(
             children: [
               Expanded(
@@ -405,5 +406,73 @@ class _SecondsState extends State<Seconds> {
         ),
       ),
     );
+  }
+
+  Widget buscador() {
+    return Container(
+        height: size.height * 0.06,
+        margin: const EdgeInsets.only(left: 15, right: 15, top: 5, bottom: 5),
+        child: TextFormField(
+            controller: buscadorC,
+            onEditingComplete: funSearch,
+            onChanged: (value) => funEmpty(value),
+            textAlignVertical: TextAlignVertical.center,
+            style: TextStyles.white18SemiBoldIt,
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: ColorsJunghanns.blueJ,
+              contentPadding: const EdgeInsets.only(left: 24),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10.0),
+              ),
+              suffixIcon: const Padding(
+                  padding: EdgeInsets.only(top: 10, bottom: 10, right: 10),
+                  child: Icon(
+                    Icons.search,
+                    color: ColorsJunghanns.white,
+                  )),
+            )));
+  }
+
+  funEmpty(String value) {
+    if (value == "") {
+      setState(() {
+        searchList = customerList;
+      });
+    }
+  }
+
+  funSearch() {
+    log("Cliente : ${buscadorC.text}");
+
+    if (buscadorC.text != "") {
+      searchList = [];
+      setState(() {
+        for (var element in customerList) {
+          if (element.name
+              .toLowerCase()
+              .startsWith(buscadorC.text.toLowerCase())) {
+            searchList.add(element);
+          } else {
+            if (element.address
+                .toLowerCase()
+                .startsWith(buscadorC.text.toLowerCase())) {
+              searchList.add(element);
+            } else {
+              if (element.idClient
+                  .toString()
+                  .toLowerCase()
+                  .startsWith(buscadorC.text.toLowerCase())) {
+                searchList.add(element);
+              }
+            }
+          }
+        }
+      });
+    } else {
+      setState(() {
+        searchList = customerList;
+      });
+    }
   }
 }

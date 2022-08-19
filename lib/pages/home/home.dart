@@ -52,7 +52,7 @@ class _HomeState extends State<Home> {
               alignment: Alignment.center,
               padding: const EdgeInsets.only(right: 10),
               child: Text(
-                "V 1.0.3",
+                "V 1.0.4",
                 style: TextStyles.blue18SemiBoldIt,
               ),
             )

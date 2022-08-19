@@ -35,7 +35,7 @@ class RoutesCard extends StatelessWidget {
                     ))),
         child: Container(
           padding:
-              const EdgeInsets.only(left: 15, right: 15, top: 18, bottom: 10),
+              const EdgeInsets.only(left: 15, right: 15, top: 12, bottom: 12),
           child: Row(
             children: [
               icon,

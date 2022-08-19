@@ -61,7 +61,7 @@ class AuthorizationModel {
         observation: data["observacion"] ?? "",
         idReasonAuth: data["idMotivoAutorizacion"] ?? 0,
         reason: data["Motivo"] ?? "",
-        img: data["url"] ?? "https://jnsc.mx/img/garrafon.png");
+        img: data["url"] ?? "");
   }
 
   ProductModel getProduct() {

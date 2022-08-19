@@ -15,14 +15,14 @@ import 'package:provider/provider.dart';
 
 import '../../preferences/global_variables.dart';
 
-class Seconds extends StatefulWidget {
-  const Seconds({Key? key}) : super(key: key);
+class Call extends StatefulWidget {
+  const Call({Key? key}) : super(key: key);
 
   @override
-  State<StatefulWidget> createState() => _SecondsState();
+  State<StatefulWidget> createState() => _CallState();
 }
 
-class _SecondsState extends State<Seconds> {
+class _CallState extends State<Call> {
   //late ProviderJunghanns provider;
   late List<CustomerModel> customerList;
   late Size size;
@@ -38,7 +38,7 @@ class _SecondsState extends State<Seconds> {
 
   getDataCustomerList() async {
     customerList.clear();
-    await getListCustomer(prefs.idRouteD, DateTime.now(), "S").then((answer) {
+    await getListCustomer(prefs.idRouteD, DateTime.now(), "C").then((answer) {
       if (answer.error) {
         Fluttertoast.showToast(
           msg: "Sin clientes en ruta",
@@ -102,8 +102,9 @@ class _SecondsState extends State<Seconds> {
                     ))),*/
             header(),
             const SizedBox(
-              height: 20,
+              height: 15,
             ),
+            //buscador(),
             //provider.connectionStatus < 4
             //   ?
             isLoading
@@ -115,8 +116,7 @@ class _SecondsState extends State<Seconds> {
                         children: customerList.map((e) {
                           return Column(children: [
                             RoutesCard(
-                                indexHome: 3,
-                                //
+                                indexHome: 4,
                                 icon: Container(
                                   decoration: BoxDecoration(
                                     color: Color(int.parse(
@@ -139,7 +139,7 @@ class _SecondsState extends State<Seconds> {
                                   width: size.width * .14,
                                 ),*/
                                 customerCurrent: e,
-                                type: "S",
+                                type: "C",
                                 title: ["${e.idClient} - ", e.address],
                                 description: e.name),
                             Row(children: [
@@ -208,7 +208,7 @@ class _SecondsState extends State<Seconds> {
       Container(
           color: ColorsJunghanns.lightBlue,
           padding: EdgeInsets.only(
-              right: 15, left: 10, top: 10, bottom: size.height * .08),
+              right: 15, left: 10, top: 10, bottom: size.height * .06),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -229,7 +229,7 @@ class _SecondsState extends State<Seconds> {
                             style: TextStyles.blue27_7,
                           ),
                           Text(
-                            "  Clientes segunda vuelta",
+                            "  Clientes llamada",
                             style: TextStyles.green15_4,
                           ),
                         ],
@@ -249,7 +249,7 @@ class _SecondsState extends State<Seconds> {
             ],
           )),
       Container(
-          padding: const EdgeInsets.only(right: 20, left: 20, top: 10),
+          padding: const EdgeInsets.only(right: 20, left: 20),
           child: Row(
             children: [
               Expanded(
@@ -394,4 +394,28 @@ class _SecondsState extends State<Seconds> {
       ),
     );
   }
+
+  // Widget buscador() {
+  //   return Container(
+  //       height: size.height * 0.06,
+  //       margin: const EdgeInsets.only(left: 15, right: 15, top: 5, bottom: 5),
+  //       child: TextFormField(
+  //           controller: buscadorC,
+  //           textAlignVertical: TextAlignVertical.center,
+  //           style: TextStyles.white18SemiBoldIt,
+  //           decoration: InputDecoration(
+  //             filled: true,
+  //             fillColor: ColorsJunghanns.blueJ,
+  //             contentPadding: const EdgeInsets.only(left: 24),
+  //             border: OutlineInputBorder(
+  //               borderRadius: BorderRadius.circular(10.0),
+  //             ),
+  //             suffixIcon: const Padding(
+  //                 padding: EdgeInsets.only(top: 10, bottom: 10, right: 10),
+  //                 child: Icon(
+  //                   Icons.search,
+  //                   color: ColorsJunghanns.white,
+  //                 )),
+  //           )));
+  // }
 }

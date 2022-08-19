@@ -10,26 +10,22 @@ import 'package:junghanns/styles/color.dart';
 import '../../styles/decoration.dart';
 import '../../styles/text.dart';
 
-class ProductCard extends StatefulWidget {
+class ProductCardPriority extends StatefulWidget {
   ProductModel productCurrent;
-  bool isPR;
   Function update;
 
-  ProductCard(
-      {Key? key,
-      required this.productCurrent,
-      required this.isPR,
-      required this.update})
+  ProductCardPriority(
+      {Key? key, required this.productCurrent, required this.update})
       : super(key: key);
 
   @override
-  ProductCardState createState() => ProductCardState();
+  ProductCardPriorityState createState() => ProductCardPriorityState();
 }
 
-class ProductCardState extends State<ProductCard> {
-  var myGroup = AutoSizeGroup();
+class ProductCardPriorityState extends State<ProductCardPriority> {
   int _amount = 0;
   int stock2 = 0;
+  late Size size;
 
   @override
   void initState() {
@@ -40,20 +36,20 @@ class ProductCardState extends State<ProductCard> {
 
   @override
   Widget build(BuildContext context) {
+    size = MediaQuery.of(context).size;
     return GestureDetector(
         child: Container(
             padding: const EdgeInsets.all(13),
+            margin: const EdgeInsets.only(bottom: 10),
+            width: double.infinity,
+            height: size.height * 0.15,
             decoration: widget.productCurrent.isSelect
                 ? Decorations.blueCard
                 : Decorations.whiteJCard,
-            child: Column(
+            child: Row(
               children: [
-                Expanded(flex: 9, child: imageProduct()),
-                Expanded(flex: 2, child: textProduct()),
-                widget.isPR
-                    ? Expanded(flex: 2, child: stockProduct())
-                    : Container(),
-                Expanded(flex: 4, child: priceProduct()),
+                Expanded(flex: 5, child: imageProduct()),
+                Expanded(flex: 7, child: info()),
               ],
             )),
         onTap: () {
@@ -61,27 +57,27 @@ class ProductCardState extends State<ProductCard> {
         });
   }
 
+  Widget info() {
+    return Container(
+        padding: const EdgeInsets.only(left: 13),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [textProduct(), stockProduct(), priceProduct()],
+        ));
+  }
+
   Widget imageProduct() {
     return Container(
         width: double.infinity,
         decoration: Decorations.white2Card,
-        margin: const EdgeInsets.only(bottom: 2),
         child: Stack(
           children: [
-            widget.productCurrent.type == 1
-                ? Container(
-                    decoration: BoxDecoration(
-                        image: DecorationImage(
-                            image: NetworkImage(widget.productCurrent.img))),
-                  )
-                : Align(
-                    alignment: Alignment.center,
-                    child: Image.asset(
-                      widget.productCurrent.img,
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-            widget.isPR && _amount > 0
+            Container(
+              decoration: BoxDecoration(
+                  image: DecorationImage(
+                      image: NetworkImage(widget.productCurrent.img))),
+            ),
+            _amount > 0
                 ? Align(alignment: Alignment.topRight, child: numberProduct())
                 : Container()
           ],
@@ -89,20 +85,17 @@ class ProductCardState extends State<ProductCard> {
   }
 
   Widget textProduct() {
-    return Container(
-        alignment: Alignment.center,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Flexible(
-                child: AutoSizeText(
-              widget.productCurrent.description,
-              maxLines: 1,
-              group: myGroup,
-              style: TextStyles.blueJ20BoldIt,
-            )),
-          ],
-        ));
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Flexible(
+            child: AutoSizeText(
+          widget.productCurrent.description,
+          maxLines: 1,
+          style: TextStyles.blueJ20BoldIt,
+        )),
+      ],
+    );
   }
 
   Widget numberProduct() {
@@ -120,7 +113,8 @@ class ProductCardState extends State<ProductCard> {
 
   Widget stockProduct() {
     return Container(
-        margin: const EdgeInsets.only(bottom: 2, left: 24, right: 24),
+        margin: const EdgeInsets.only(bottom: 4, left: 28, right: 28),
+        padding: const EdgeInsets.only(top: 2, bottom: 2),
         alignment: Alignment.center,
         decoration: Decorations.greenJCardB30,
         child: AutoSizeText(
@@ -132,6 +126,7 @@ class ProductCardState extends State<ProductCard> {
   Widget priceProduct() {
     return Container(
       margin: const EdgeInsets.only(top: 2, bottom: 2),
+      padding: const EdgeInsets.only(top: 5, bottom: 5),
       decoration: Decorations.white2Card,
       child: Stack(
         children: [
@@ -139,16 +134,19 @@ class ProductCardState extends State<ProductCard> {
             alignment: Alignment.center,
             child: Text(
               checkDouble(widget.productCurrent.price.toString()),
+              textAlign: TextAlign.center,
               style: TextStyles.blueJ20BoldIt,
             ),
           ),
+          //buttonAdd(),
+          //buttonSubtract(),
         ],
       ),
     );
   }
 
   funAdd() {
-    if (stock2 > 0 || !widget.isPR) {
+    if (stock2 > 0) {
       setState(() {
         _amount++;
         stock2--;
@@ -204,7 +202,7 @@ class ProductCardState extends State<ProductCard> {
                   contentPadding: EdgeInsets.zero,
                   content: Container(
                     padding: const EdgeInsets.all(12),
-                    width: MediaQuery.of(context).size.width * .75,
+                    width: size.width * .75,
                     decoration: Decorations.whiteS1Card,
                     child: Column(
                       mainAxisSize: MainAxisSize.min,

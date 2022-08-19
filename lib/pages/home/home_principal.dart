@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:junghanns/components/bottom_bar.dart';
+import 'package:junghanns/pages/home/call.dart';
 import 'package:junghanns/pages/home/home.dart';
 import 'package:junghanns/pages/home/routes.dart';
 import 'package:junghanns/pages/home/second.dart';
@@ -10,13 +11,13 @@ const List<Widget> pages = [
   Specials(),
   Routes(),
   Seconds(),
-  Home(),
+  Call(),
   Home()
 ];
 
 class HomePrincipal extends StatefulWidget {
   int index;
-  HomePrincipal({Key? key,this.index=0}) : super(key: key);
+  HomePrincipal({Key? key, this.index = 0}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _HomePrincipalState();

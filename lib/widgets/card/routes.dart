@@ -3,7 +3,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/pages/customer/details.dart';
-import 'package:junghanns/styles/color.dart';
 import 'package:junghanns/styles/text.dart';
 
 class RoutesCard extends StatelessWidget {
@@ -30,7 +29,7 @@ class RoutesCard extends StatelessWidget {
             context,
             MaterialPageRoute(
                 builder: (context) => DetailsCustomer(
-                  indexHome:indexHome,
+                      indexHome: indexHome,
                       customerCurrent: customerCurrent,
                       type: type,
                     ))),

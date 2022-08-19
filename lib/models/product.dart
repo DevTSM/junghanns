@@ -31,7 +31,7 @@ class ProductModel {
     return ProductModel(
         idProduct: data["idProductoServicio"] ?? 0,
         description: data["descripcion"],
-        price: double.parse((data["precio"] ?? "100").toString()),
+        price: double.parse((data["precio"] ?? "0").toString()),
         stock: data["stock"],
         img: data["url"],
         type: 1,

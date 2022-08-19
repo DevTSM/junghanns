@@ -27,6 +27,8 @@ class CustomerModel {
   List<MethodPayment> payment;
   List<SaleModel> history;
   List<AuthorizationModel> auth;
+  String referenceAddress;
+  String color;
   CustomerModel(
       {required this.auth,
       required this.payment,
@@ -48,7 +50,11 @@ class CustomerModel {
       required this.days,
       required this.img,
       required this.observation,
-      required this.history});
+      required this.history,
+      //
+      required this.referenceAddress,
+      required this.color});
+
   factory CustomerModel.fromState() {
     return CustomerModel(
       auth: [],
@@ -71,8 +77,12 @@ class CustomerModel {
         days: "",
         img: "",
         observation: "",
-        history: []);
+        history: [],
+        //
+        referenceAddress: "",
+        color: "FF000000");
   }
+
   factory CustomerModel.fromList(Map<String, dynamic> data, int idRoute) {
     return CustomerModel(
         invoice: false,
@@ -95,7 +105,9 @@ class CustomerModel {
         observation: "",
         history: [],
         auth: [],
-        payment: []);
+        payment: [],
+        referenceAddress: "",
+        color: data["color"] ?? "FF000000");
   }
   factory CustomerModel.fromService(Map<String, dynamic> data, int id) {
     return CustomerModel(
@@ -121,7 +133,9 @@ class CustomerModel {
             : data["observacion"] ?? "",
         history: [],
         auth: [],
-        payment: []);
+        payment: [],
+        referenceAddress: data["referenciaDomicilio"] ?? "",
+        color: data["color"] ?? "FF000000");
   }
   factory CustomerModel.fromDataBase(Map<String, dynamic> data) {
     return CustomerModel(
@@ -147,7 +161,9 @@ class CustomerModel {
             : data["observacion"] ?? "",
         history: [],
         auth: [],
-        payment: []);
+        payment: [],
+        referenceAddress: data["referenceAddress"] ?? "",
+        color: data["color"] ?? "000000");
   }
   Map<String, dynamic> getMap() {
     return {
@@ -167,7 +183,9 @@ class CustomerModel {
       'category': category,
       'days': days,
       'img': img,
-      'observacion': observation
+      'observacion': observation,
+      'referenceAddress': referenceAddress,
+      'color': color
     };
   }
 

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -99,8 +100,11 @@ class _RoutesState extends State<Routes> {
                     ))),
             header(),
             const SizedBox(
-              height: 20,
+              height: 15,
             ),
+            //
+            //buscador(),
+            //
             provider.connectionStatus < 4
                 ? isLoading
                     ? loading()
@@ -111,11 +115,28 @@ class _RoutesState extends State<Routes> {
                             children: customerList.map((e) {
                               return Column(children: [
                                 RoutesCard(
-                                  indexHome: 2,
-                                    icon: Image.asset(
+                                    indexHome: 2,
+                                    icon: Container(
+                                      decoration: BoxDecoration(
+                                        color: Color(int.parse(
+                                            e.color
+                                                .toUpperCase()
+                                                .replaceAll("#", "FF"),
+                                            radix: 16)),
+                                        borderRadius: const BorderRadius.all(
+                                          Radius.circular(30),
+                                        ),
+                                      ),
+                                      padding: const EdgeInsets.all(10),
+                                      height: size.width * .14,
+                                      width: size.width * .14,
+                                      child: Image.asset(
+                                          "assets/icons/userIcon.png"),
+                                    ),
+                                    /*Image.asset(
                                       "assets/icons/${e.typeVisit == "RUTA" ? "user1" : e.typeVisit == "SEGUNDA" ? "user3" : "user2"}.png",
                                       width: size.width * .14,
-                                    ),
+                                    ),*/
                                     customerCurrent: e,
                                     type: "R",
                                     title: ["${e.idClient} - ", e.address],
@@ -149,7 +170,7 @@ class _RoutesState extends State<Routes> {
                                 itemBuilder: (BuildContext context, int index) {
                                   return Column(children: [
                                     RoutesCard(
-                                      indexHome: 2,
+                                        indexHome: 2,
                                         icon: Image.asset(
                                           "assets/icons/${snapshot.data![index].typeVisit == "RUTA" ? "user1" : snapshot.data![index].typeVisit == "SEGUNDA" ? "user3" : "user2"}.png",
                                           width: size.width * .14,
@@ -188,7 +209,7 @@ class _RoutesState extends State<Routes> {
       Container(
           color: ColorsJunghanns.lightBlue,
           padding: EdgeInsets.only(
-              right: 15, left: 10, top: 10, bottom: size.height * .08),
+              right: 15, left: 10, top: 10, bottom: size.height * .06),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -229,7 +250,7 @@ class _RoutesState extends State<Routes> {
             ],
           )),
       Container(
-          padding: const EdgeInsets.only(right: 20, left: 20, top: 10),
+          padding: const EdgeInsets.only(right: 20, left: 20),
           child: Row(
             children: [
               Expanded(
@@ -373,4 +394,28 @@ class _RoutesState extends State<Routes> {
       ),
     );
   }
+
+  // Widget buscador() {
+  //   return Container(
+  //       height: size.height * 0.06,
+  //       margin: const EdgeInsets.only(left: 15, right: 15, top: 5, bottom: 5),
+  //       child: TextFormField(
+  //           controller: buscadorC,
+  //           textAlignVertical: TextAlignVertical.center,
+  //           style: TextStyles.white18SemiBoldIt,
+  //           decoration: InputDecoration(
+  //             filled: true,
+  //             fillColor: ColorsJunghanns.blueJ,
+  //             contentPadding: const EdgeInsets.only(left: 24),
+  //             border: OutlineInputBorder(
+  //               borderRadius: BorderRadius.circular(10.0),
+  //             ),
+  //             suffixIcon: const Padding(
+  //                 padding: EdgeInsets.only(top: 10, bottom: 10, right: 10),
+  //                 child: Icon(
+  //                   Icons.search,
+  //                   color: ColorsJunghanns.white,
+  //                 )),
+  //           )));
+  // }
 }

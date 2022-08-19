@@ -23,6 +23,7 @@ class SaleModel {
         count: double.parse((data["cantidad"] ?? "0").toString()).ceil());
   }
 }
+
 String checkDouble(String evalue) {
   switch (evalue[evalue.length - 2]) {
     case '.':

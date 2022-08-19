@@ -1,6 +1,6 @@
 class ConfigModel {
   String parametro;
-  String valor;
+  int valor;
   String unidad;
   String description;
 
@@ -13,7 +13,7 @@ class ConfigModel {
   factory ConfigModel.fromState() {
     return ConfigModel(
         parametro: "",
-        valor: "99",
+        valor: 99,
         unidad: "Mtrs",
         description: "Limite Registro Venta");
   }
@@ -21,7 +21,7 @@ class ConfigModel {
   factory ConfigModel.fromService(Map<String, dynamic> data) {
     return ConfigModel(
         parametro: data["parametro"] ?? "",
-        valor: (data["valor"] ?? 99).toString(),
+        valor: int.parse((data["valor"] ?? 99).toString()),
         unidad: data["unidad"] ?? "Mtrs",
         description: data["descripcion"] ?? "No");
   }

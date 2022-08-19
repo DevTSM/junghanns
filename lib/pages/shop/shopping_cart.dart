@@ -327,7 +327,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
 
   Widget itemList() {
     return Container(
-      margin: EdgeInsets.only(top: size.height * .22),
+      margin: EdgeInsets.only(top: size.height * .24),
       padding: const EdgeInsets.only(left: 10, right: 10),
       width: double.infinity,
       child: productsList.isEmpty

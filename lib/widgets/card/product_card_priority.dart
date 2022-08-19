@@ -42,7 +42,7 @@ class ProductCardPriorityState extends State<ProductCardPriority> {
             padding: const EdgeInsets.all(13),
             margin: const EdgeInsets.only(bottom: 10),
             width: double.infinity,
-            height: size.height * 0.15,
+            height: size.height * 0.18,
             decoration: widget.productCurrent.isSelect
                 ? Decorations.blueCard
                 : Decorations.whiteJCard,

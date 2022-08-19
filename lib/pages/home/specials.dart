@@ -50,7 +50,7 @@ class _SpecialsState extends State<Specials> {
 
     log("Fecha: $todayText");
     log("Ruta: ${prefs.idRouteD}");
-    await getListCustomer(prefs.idRouteD, todayText, "E").then((answer) {
+    await getListCustomer(prefs.idRouteD, DateTime.now(), "E").then((answer) {
       if (answer.error) {
         Fluttertoast.showToast(
           msg: "Sin clientes en ruta",

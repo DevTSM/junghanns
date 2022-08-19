@@ -19,8 +19,8 @@ class SaleModel {
         date: DateTime.parse(data["fecha"] ?? DateTime.now().toString()),
         type: data["tipo"] ?? "VENTA",
         description: data["descripcion"] ?? "",
-        amount: double.parse(data["importe"] ?? "0"),
-        count: double.parse(data["cantidad"] ?? "0").ceil());
+        amount: double.parse((data["importe"] ?? "0").toString()),
+        count: double.parse((data["cantidad"] ?? "0").toString()).ceil());
   }
 }
 String checkDouble(String evalue) {

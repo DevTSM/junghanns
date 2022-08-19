@@ -103,10 +103,10 @@ Future<Answer> getConfig() async {
     }))
             .body);
     if (response != null) {
-      log("/AuthServices <getConfig> Successfull ${response.toString()}");
+      log("/AuthServices <getConfig> Successfull");
       return Answer(body: response, message: "", error: false);
     } else {
-      log("/AuthServices <getConfig> Fail ${response.toString()}");
+      log("/AuthServices <getConfig> Fail");
       return Answer(
           body: response,
           message: "Algo salio mal, intentalo mas tarde.",

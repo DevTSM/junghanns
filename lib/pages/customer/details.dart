@@ -32,7 +32,6 @@ import 'package:map_launcher/map_launcher.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../services/auth.dart';
 
 class DetailsCustomer extends StatefulWidget {
@@ -55,8 +54,6 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
   late Size size;
   late bool isRange;
   late bool isLoading;
-  late bool isImgNot;
-  late bool isNotData;
   late List<ConfigModel> configList;
   late List<AuthorizationModel> authList;
 
@@ -70,8 +67,6 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
     authList = [];
     //
     isLoading = true;
-    isImgNot = false;
-    isNotData = true;
     getDataDetails();
   }
 
@@ -86,7 +81,6 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
           webShowClose: true,
         );
       } else {
-        log("Config yes");
         answer.body
             .map((e) => configList.add(ConfigModel.fromService(e)))
             .toList();
@@ -200,17 +194,10 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
           gravity: ToastGravity.TOP,
           webShowClose: true,
         );
-        isNotData = true;
       } else {
         setState(() {
           widget.customerCurrent =
               CustomerModel.fromService(answer.body, widget.customerCurrent.id);
-          isImgNot = (widget.customerCurrent.img == "" ||
-                  widget.customerCurrent.img ==
-                      "https://sandbox.junghanns.app/img/clientes/address/SANDBOX/")
-              ? true
-              : false;
-          isNotData = false;
         });
       }
       getMoney();
@@ -412,7 +399,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
       backgroundColor: ColorsJunghanns.lightBlue,
       body: isLoading
           ? loading()
-          : isNotData
+          : widget.customerCurrent.id==0
               ? notData()
               : refreshScroll(),
       bottomNavigationBar:
@@ -545,7 +532,9 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
         height: size.width * .50,
         decoration: BoxDecoration(
             borderRadius: const BorderRadius.all(Radius.circular(10)),
-            image: isImgNot
+            image: widget.customerCurrent.img==""||
+                  widget.customerCurrent.img ==
+                      "https://sandbox.junghanns.app/img/clientes/address/SANDBOX/"
                 ? const DecorationImage(
                     image: AssetImage("assets/images/withoutPicture.png"),
                     fit: BoxFit.cover)

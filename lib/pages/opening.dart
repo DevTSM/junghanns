@@ -28,6 +28,12 @@ class _OpeningState extends State<Opening> {
     super.initState();
     _connectivity = Connectivity();
     log("token de acceso =====> ${prefs.token}");
+    if(prefs.version!=version||urlBase!=prefs.ipUrl){
+      prefs.prefs!.clear();
+      prefs.version=version;
+      prefs.ipUrl=urlBase;
+      log("limpiando cache =====>");
+    }
     initConnectivity();
     reedireccion();
   }

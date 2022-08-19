@@ -9,15 +9,27 @@ class DataBase {
     return openDatabase(
       join(path, 'junghanns.db'),
       onCreate: (database, version) async {
+        //lista de clientes 
+        //autorizaciones en jsonEncode
+        //payment en jsonEncode
         await database.execute(
-          "CREATE TABLE customer(id INTEGER PRIMARY KEY AUTOINCREMENT, orden INTEGER , idCustomer INTEGER, idRoute INTEGER, lat DOUBLE, lng DOUBLE, priceLiquid DOUBLE, byCollet DOUBLE, purse DOUBLE, name TEXT NOT NULL, address TEXT NOT NULL , nameRoute TEXT NOT NULL,typeVisit TEXT NOT NULL, category TEXT NOT NULL,days TEXT NOT NULL, img TEXT NOT NULL, observacion TEXT NOT NULL)",
+          "CREATE TABLE customer(id INTEGER PRIMARY KEY AUTOINCREMENT, orden INTEGER , idCustomer INTEGER, idRoute INTEGER, lat DOUBLE, lng DOUBLE, priceLiquid DOUBLE, byCollet DOUBLE, purse DOUBLE, name TEXT NOT NULL, address TEXT NOT NULL , nameRoute TEXT NOT NULL,typeVisit TEXT NOT NULL, category TEXT NOT NULL,days TEXT NOT NULL, img TEXT NOT NULL, observacion TEXT NOT NULL,auth TEXT,payment TEXT)",
         );
+        //lista de paradas en falso
         await database.execute(
           "CREATE TABLE stop(id INTEGER PRIMARY KEY AUTOINCREMENT, description TEXT NOT NULL, icon TEXT NOT NULL , color TEXT NOT NULL)",
         );
+        //paradas en falso offLine
         await database.execute(
           "CREATE TABLE stopOff(idCustomer INTEGER ,idStop INTEGER, lat DOUBLE, lng DOUBLE, idOrigin INTEGER, type TEXT NOT NULL)",
         );
+        //------------------------
+        //ventas offLine
+        //formas de pago y productos en jsonEncode
+        await database.execute(
+          "CREATE TABLE sale(idCustomer INTEGER ,idRoute INTEGER, lat DOUBLE, lng DOUBLE, saleItems TEXT, idAuth INTEGER,paymentMethod TEXT,idOrigin INTEGER,folio INTEGER,type TEXT)",
+        );
+        //
       },
       version: 1,
     );

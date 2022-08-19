@@ -1,15 +1,15 @@
 import 'dart:convert';
 import 'dart:developer';
-
+import 'package:intl/intl.dart';
 import 'package:junghanns/models/answer.dart';
 import 'package:http/http.dart' as http;
 import 'package:junghanns/preferences/global_variables.dart';
 
-Future<Answer> getListCustomer(int idR, String date, String type) async {
+Future<Answer> getListCustomer(int idR, DateTime date, String type) async {
   log("/CustomerServices <getListCustomer>");
   //try {
   var response = await http
-      .get(Uri.parse("$urlBase/visita?idRuta=$idR&date=$date&tipo=$type"),
+      .get(Uri.parse("$urlBase/visita?idRuta=$idR&date=${(DateFormat('yyyyMMdd').format(date))}&tipo=$type"),
           //Uri.parse("$urlBase/visita?idRuta=10&date=20220617&tipo=$type"),
           headers: {
         "Content-Type": "aplication/json",
@@ -17,7 +17,7 @@ Future<Answer> getListCustomer(int idR, String date, String type) async {
         "client_secret": prefs.clientSecret,
         "Authorization": "Bearer ${prefs.token}",
       });
-  log("${response.statusCode}");
+  log("-----${response.body.toString()}");
   if (response.statusCode == 200) {
     log("/CustomerServices <getListCustomer> Successfull, ${response.body}");
     return Answer(body: jsonDecode(response.body), message: "", error: false);

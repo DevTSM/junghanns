@@ -35,7 +35,6 @@ class _HomePrincipalState extends State<HomePrincipal> {
   void dispose() {
     super.dispose();
   }
-
   void setIndexCurrent(int current) {
     setState(() {
       indexCurrent = current;

@@ -21,7 +21,7 @@ class ConfigModel {
   factory ConfigModel.fromService(Map<String, dynamic> data) {
     return ConfigModel(
         parametro: data["parametro"] ?? "",
-        valor: data["valor"] ?? "99",
+        valor: (data["valor"] ?? 99).toString(),
         unidad: data["unidad"] ?? "Mtrs",
         description: data["descripcion"] ?? "No");
   }

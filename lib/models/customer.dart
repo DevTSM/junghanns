@@ -1,5 +1,8 @@
 import 'dart:convert';
 
+import 'package:junghanns/models/authorization.dart';
+import 'package:junghanns/models/config.dart';
+import 'package:junghanns/models/method_payment.dart';
 import 'package:junghanns/models/sale.dart';
 
 class CustomerModel {
@@ -21,9 +24,13 @@ class CustomerModel {
   String days;
   String img;
   String observation;
+  List<MethodPayment> payment;
   List<SaleModel> history;
+  List<AuthorizationModel> auth;
   CustomerModel(
-      {required this.invoice,
+      {required this.auth,
+      required this.payment,
+        required this.invoice,
       required this.id,
       required this.orden,
       required this.idClient,
@@ -44,6 +51,8 @@ class CustomerModel {
       required this.history});
   factory CustomerModel.fromState() {
     return CustomerModel(
+      auth: [],
+      payment:[],
         invoice: true,
         id: 0,
         orden: 0,
@@ -84,7 +93,9 @@ class CustomerModel {
         days: "",
         img: "",
         observation: "",
-        history: []);
+        history: [],
+        auth: [],
+        payment: []);
   }
   factory CustomerModel.fromService(Map<String, dynamic> data, int id) {
     return CustomerModel(
@@ -95,7 +106,7 @@ class CustomerModel {
         idRoute: data["idRuta"] ?? 0,
         lat: double.parse(data["latitud"] ?? "0"),
         lng: double.parse(data["longitud"] ?? "0"),
-        priceLiquid: double.parse(data["precioLiquido"] ?? "0"),
+        priceLiquid: double.parse((data["precioLiquido"] ?? "0").toString()),
         byCollect: double.parse((data["porCobrar"] ?? 0).toString()),
         purse: double.parse((data["monedero"] ?? 0).toString()),
         name: data["nombre"] ?? "",
@@ -108,7 +119,9 @@ class CustomerModel {
         observation: (data["observacion"] ?? "") == ""
             ? "Sin observaciones"
             : data["observacion"] ?? "",
-        history: []);
+        history: [],
+        auth: [],
+        payment: []);
   }
   factory CustomerModel.fromDataBase(Map<String, dynamic> data) {
     return CustomerModel(
@@ -132,7 +145,9 @@ class CustomerModel {
         observation: (data["observacion"] ?? "") == ""
             ? "Sin observaciones"
             : data["observacion"] ?? "",
-        history: []);
+        history: [],
+        auth: [],
+        payment: []);
   }
   Map<String, dynamic> getMap() {
     return {
@@ -165,6 +180,11 @@ class CustomerModel {
 
   setMoney(double purse) {
     this.purse = purse;
+  }
+
+  setPayment(Map<String, dynamic> data ){}
+  setAuth(List<AuthorizationModel> auth){
+    this.auth=auth;
   }
 }
 

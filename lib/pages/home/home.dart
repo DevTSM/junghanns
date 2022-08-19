@@ -52,7 +52,7 @@ class _HomeState extends State<Home> {
               alignment: Alignment.center,
               padding: const EdgeInsets.only(right: 10),
               child: Text(
-                "V 1.0.3",
+                "${urlBase!=ipProd?"Beta ":""}V 1.0.3",
                 style: TextStyles.blue18SemiBoldIt,
               ),
             )
@@ -130,10 +130,10 @@ class _HomeState extends State<Home> {
                           left: 5, right: 5, top: 5, bottom: 5),
                       child: RichText(
                           text: TextSpan(children: [
-                        const TextSpan(
-                            text: "Ruta", style: TextStyles.white17_5),
                         TextSpan(
-                            text: prefs.idRouteD.toString(),
+                            text: prefs.nameRouteD, style: TextStyles.white17_5),
+                        TextSpan(
+                            text: "",
                             style: TextStyles.white27_7)
                       ])))),
             ],

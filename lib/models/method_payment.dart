@@ -30,8 +30,6 @@ class MethodPayment {
         type: data["type"],
         idProductService: data["idProductoServicio"] ?? -1,
         description: data["descripcion"] ?? "",
-        number: data["cantidad"] != null
-            ? double.parse(data["cantidad"]).toInt()
-            : -1);
+        number: int.parse((data["cantidad"]??-1).toString()));
   }
 }

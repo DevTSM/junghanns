@@ -209,13 +209,14 @@ class _LoginState extends State<Login> {
                     webShowClose: true,
                   );
                 } else {
+                  log(answer.body.toString());
                   prefs.isLogged = true;
                   //---------------------------------- Info DeliveryMan
                   prefs.idUserD = answer2.body["id_usuario"] ?? 0;
-                  prefs.idProfileD = answer2.body["id_perfil"] ?? 0;
+                  prefs.idProfileD = int.parse((answer2.body["id_perfil"] ?? 0).toString());
                   prefs.nameUserD = answer2.body["nombre_usuario"] ?? "";
                   prefs.nameD = answer2.body["nombre"] ?? "";
-                  prefs.idRouteD = answer2.body["id_ruta"] ?? 0;
+                  prefs.idRouteD = int.parse((answer2.body["id_ruta"] ?? 0).toString());
                   prefs.nameRouteD = answer2.body["nombre_ruta"] ?? "";
                   prefs.dayWorkD = answer2.body["dia_trabajo"] ?? "T";
                   prefs.dayWorkTextD =

@@ -1,6 +1,4 @@
 import 'dart:developer';
-
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -13,7 +11,6 @@ import 'package:junghanns/styles/decoration.dart';
 import 'package:junghanns/styles/text.dart';
 import 'package:junghanns/widgets/card/routes.dart';
 import 'package:provider/provider.dart';
-
 import '../../preferences/global_variables.dart';
 
 class Routes extends StatefulWidget {
@@ -28,29 +25,17 @@ class _RoutesState extends State<Routes> {
   late List<CustomerModel> customerList;
   late Size size;
   late bool isLoading;
-
-  late DateTime today;
-  late String todayText, dayText, monthText;
   @override
   void initState() {
     super.initState();
     isLoading = true;
     customerList = [];
-    today = DateTime.now();
-    today.month < 10
-        ? monthText = "0${today.month}"
-        : monthText = "${today.month}";
-    today.day < 10 ? dayText = "0${today.day}" : dayText = "${today.day}";
-    todayText = "${today.year}$monthText$dayText";
     getDataCustomerList();
   }
 
   getDataCustomerList() async {
     customerList.clear();
-
-    log("Fecha: $todayText");
-    log("Ruta: ${prefs.idRouteD}");
-    await getListCustomer(prefs.idRouteD, todayText, "R").then((answer) {
+    await getListCustomer(prefs.idRouteD, DateTime.now(), "R").then((answer) {
       if (answer.error) {
         Fluttertoast.showToast(
           msg: "Sin clientes en ruta",
@@ -63,12 +48,12 @@ class _RoutesState extends State<Routes> {
           isLoading = false;
         });
       } else {
-        provider.handler.deleteTable();
+        //provider.handler.deleteTable();
         //provider.handler.addColumn();
         setState(() {
           answer.body.map((e) {
             customerList.add(CustomerModel.fromList(e, prefs.idRouteD));
-            provider.handler.insertUser([customerList.last]);
+            //provider.handler.insertUser([customerList.last]);
           }).toList();
           isLoading = false;
         });
@@ -254,7 +239,7 @@ class _RoutesState extends State<Routes> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          checkDate(today),
+                          checkDate(DateTime.now()),
                           style: TextStyles.blue19_7,
                         ),
                         Text(
@@ -356,7 +341,6 @@ class _RoutesState extends State<Routes> {
   }
 
   funLogOut() {
-    log("LOG OUT");
     //-------------------------*** LOG OUT
     prefs.isLogged = false;
     prefs.idUserD = 0;

@@ -143,7 +143,7 @@ Future<Answer> getAuthorization(int idClient, int idR) async {
         "client_secret": prefs.clientSecret,
         "Authorization": "Bearer ${prefs.token}",
       });
-  log("${response.statusCode}");
+  log("${response.statusCode} ${response.body}");
   if (response.statusCode == 200) {
     log("/StoreServices <getAuthorization> Successfull, ${response.body}");
     return Answer(body: jsonDecode(response.body), message: "", error: false);

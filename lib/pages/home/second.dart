@@ -28,29 +28,17 @@ class _SecondsState extends State<Seconds> {
   late Size size;
   late bool isLoading;
 
-  late DateTime today;
-  late String todayText, dayText, monthText;
-
   @override
   void initState() {
     super.initState();
     isLoading = true;
     customerList = [];
-    today = DateTime.now();
-    today.month < 10
-        ? monthText = "0${today.month}"
-        : monthText = "${today.month}";
-    today.day < 10 ? dayText = "0${today.day}" : dayText = "${today.day}";
-    todayText = "${today.year}$monthText$dayText";
     getDataCustomerList();
   }
 
   getDataCustomerList() async {
     customerList.clear();
-
-    log("Fecha: $todayText");
-    log("Ruta: ${prefs.idRouteD}");
-    await getListCustomer(prefs.idRouteD, todayText, "S").then((answer) {
+    await getListCustomer(prefs.idRouteD, DateTime.now(), "S").then((answer) {
       if (answer.error) {
         Fluttertoast.showToast(
           msg: "Sin clientes en ruta",
@@ -253,7 +241,7 @@ class _SecondsState extends State<Seconds> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          checkDate(today),
+                          checkDate(DateTime.now()),
                           style: TextStyles.blue19_7,
                         ),
                         Text(

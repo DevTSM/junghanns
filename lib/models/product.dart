@@ -31,7 +31,7 @@ class ProductModel {
     return ProductModel(
         idProduct: data["idProductoServicio"] ?? 0,
         description: data["descripcion"],
-        price: double.parse(data["precio"] ?? "100"),
+        price: double.parse((data["precio"] ?? "100").toString()),
         stock: data["stock"],
         img: data["url"],
         type: 1,
@@ -46,7 +46,7 @@ class ProductModel {
     return ProductModel(
         idProduct: data["idProductoServicio"] ?? 0,
         description: data["descripcion"],
-        price: double.parse(data["precio"] ?? "0"),
+        price: double.parse((data["precio"] ?? "0").toString()),
         stock: 0,
         img: "assets/icons/refill1.png",
         type: 2,

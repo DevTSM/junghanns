@@ -310,97 +310,12 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
                         alignment: Alignment.center,
                         child: ButtonJunghanns(
                           decoration: Decorations.blueBorder12,
-                          fun: () => selectWayToPay(),
+                          fun: () => showConfirmSale(paymentsList.first),
                           label: "Terminar venta",
                           style: TextStyles.white17_5,
                         )))
               ],
             ),
-    );
-  }
-
-  void selectWayToPay() async {
-    await showCupertinoModalPopup<int>(
-        context: context,
-        builder: (context) {
-          return CupertinoActionSheet(
-              actionScrollController: ScrollController(
-                  initialScrollOffset: 1.0, keepScrollOffset: true),
-              title: showTitle(),
-              actions: paymentsList.map((item) {
-                return showItem(
-                    item, "Pago total de la compra", FontAwesomeIcons.coins);
-              }).toList());
-        });
-  }
-
-  Widget showTitle() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text("Tipo de pago", style: TextStyles.blueJ22Bold),
-            const Text(
-              "Una vez registrado no podrá corregirlo",
-              style: TextStyles.redJ13,
-            )
-          ],
-        ),
-        GestureDetector(
-          child: const Icon(
-            Icons.clear_rounded,
-            color: ColorsJunghanns.red,
-            size: 30,
-          ),
-          onTap: () {
-            Navigator.pop(context);
-          },
-        )
-      ],
-    );
-  }
-
-  Widget showItem(MethodPayment methodCurrent, String text2, IconData icon) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.pop(context);
-
-        showConfirmSale(methodCurrent);
-      },
-      child: Container(
-        padding: const EdgeInsets.only(left: 35, top: 8, bottom: 8),
-        child: Row(
-          children: [
-            Container(
-                decoration: Decorations.blueJ2Card,
-                padding: const EdgeInsets.only(
-                    right: 10, left: 7, top: 5, bottom: 7),
-                margin: const EdgeInsets.only(right: 15),
-                child: Icon(
-                  icon,
-                  size: 28,
-                  color: Colors.white,
-                )),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                DefaultTextStyle(
-                    style: TextStyles.blueJ220Bold,
-                    child: Text(
-                      methodCurrent.wayToPay,
-                    )),
-                /*DefaultTextStyle(
-                    style: TextStyles.blueJ215R,
-                    child: Text(
-                      text2,
-                    ))*/
-              ],
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -514,7 +429,7 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
           gravity: ToastGravity.TOP,
           webShowClose: true,
         );
-        Navigator.pop(context);
+
         Navigator.pop(context);
       }
     });
@@ -675,7 +590,7 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
   Future<bool> funCheckDistance() async {
     await getConfigR();
     //
-    int distanConfig = int.parse(configList.last.valor);
+    int distanConfig = configList.last.valor;
     //
     LocationPermission permission = await Geolocator.requestPermission();
     if (permission == LocationPermission.whileInUse ||

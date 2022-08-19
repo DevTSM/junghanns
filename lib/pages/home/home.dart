@@ -232,8 +232,8 @@ class _HomeState extends State<Home> {
               height: 10,
             ),
             item(
-                "Avance Almacen",
-                ["70 Liquidos Almacen /", " 0 Vendidos"],
+                "Avance de venta",
+                ["70 Líquidos existencia /", " 0 Vendidos"],
                 Image.asset(
                   "assets/icons/iconWarehouse.png",
                   width: size.width * .1,

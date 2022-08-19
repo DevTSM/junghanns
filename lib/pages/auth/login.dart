@@ -90,7 +90,6 @@ class _LoginState extends State<Login> {
         children: [
           textField(userC, "Usuario", "assets/icons/user.png", false),
           textField(passC, "Contraseña", "assets/icons/password.png", true),
-          textOC(),
           buttonLog()
         ],
       ),
@@ -139,16 +138,6 @@ class _LoginState extends State<Login> {
           isObscure = !isObscure;
         });
       },
-    );
-  }
-
-  Widget textOC() {
-    return Container(
-      alignment: Alignment.centerRight,
-      child: Text(
-        "¿Olvidaste tu contraseña?",
-        style: TextStyles.blue13It,
-      ),
     );
   }
 

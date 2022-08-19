@@ -190,6 +190,8 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
   }
 
   getDataDetails() async {
+    log("Cliente: ${widget.customerCurrent.id}");
+    log("Tipo: ${widget.type}");
     await getDetailsCustomer(widget.customerCurrent.id, widget.type)
         .then((answer) async {
       if (answer.error) {
@@ -279,7 +281,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
           MaterialPageRoute<void>(
               builder: (BuildContext context) => Stops(
                   customerCurrent: widget.customerCurrent,
-                  distance: int.parse(configList.last.valor))));
+                  distance: configList.last.valor)));
     } else {
       Navigator.pop(context);
       Fluttertoast.showToast(
@@ -324,6 +326,14 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
                   lng: widget.customerCurrent.lng)));
     } else {
       log("Sin Ubicación");
+      log("No LAT y No LNG");
+      Fluttertoast.showToast(
+        msg: "Sin coordenadas",
+        timeInSecForIosWeb: 2,
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.TOP,
+        webShowClose: true,
+      );
     }
   }
 
@@ -377,7 +387,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
               _currentLocation.longitude,
               widget.customerCurrent.lat,
               widget.customerCurrent.lng) <
-          int.parse(configList.last.valor)) {
+          configList.last.valor) {
         return true;
       } else {
         return false;
@@ -443,67 +453,105 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
 
   Widget header() {
     return Container(
-        color: ColorsJunghanns.blue,
-        padding: EdgeInsets.only(
-            right: 15, left: 23, top: 10, bottom: size.height * .03),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(
+      color: ColorsJunghanns.blue,
+      padding: EdgeInsets.only(
+          right: 15, left: 23, top: 5, bottom: size.height * .03),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          getBack(),
+          Expanded(
+              child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: const Icon(
-                    Icons.arrow_back_ios,
-                    color: ColorsJunghanns.white,
-                  )),
-              Expanded(
-                  child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "${widget.customerCurrent.idClient}",
-                    style: TextStyles.green22_4,
-                  ),
-                  Text(
-                    widget.customerCurrent.name,
-                    style: TextStyles.white20SemiBoldIt,
-                  ),
-                ],
-              )),
-              const SizedBox(
-                width: 10,
-              ),
-              GestureDetector(
-                  onTap: () => _pickImage(1),
-                  child: Image.asset(
-                    "assets/icons/photo.png",
-                    width: size.width * .13,
-                  ))
+              addressText(),
+              referenceAddressText(),
+              userNameText(),
+            ],
+          )),
+          const SizedBox(
+            width: 10,
+          ),
+          iconPhoto()
+        ],
+      ),
+    );
+  }
+
+  Widget getBack() {
+    return GestureDetector(
+        onTap: () => Navigator.pop(context),
+        child: const Icon(
+          Icons.arrow_back_ios,
+          color: ColorsJunghanns.white,
+        ));
+  }
+
+  Widget addressText() {
+    return GestureDetector(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(
+            Icons.location_on,
+            color: ColorsJunghanns.green,
+            size: 28,
+          ),
+          Expanded(
+              child: AutoSizeText(
+            widget.customerCurrent.address,
+            style: TextStyles.white20SemiBoldIt,
+          ))
+        ],
+      ),
+      onTap: () => funGoMaps(),
+    );
+  }
+
+  Widget referenceAddressText() {
+    return Container(
+        padding: const EdgeInsets.only(top: 8, bottom: 8),
+        child: RichText(
+          text: TextSpan(
+            text: "Referencia de domicilio: ",
+            style: TextStyles.green16Itw,
+            children: <TextSpan>[
+              TextSpan(
+                  text: widget.customerCurrent.referenceAddress,
+                  style: TextStyles.white16SemiBoldIt),
             ],
           ),
-          GestureDetector(
-            child: Container(
-              padding: const EdgeInsets.only(top: 10, right: 25),
-              child: Row(
-                children: [
-                  const SizedBox(
-                    width: 20,
-                  ),
-                  const Icon(
-                    Icons.location_on,
-                    color: ColorsJunghanns.green,
-                  ),
-                  Expanded(
-                      child: AutoSizeText(
-                    widget.customerCurrent.address,
-                    style: TextStyles.white15It,
-                  ))
-                ],
-              ),
-            ),
-            onTap: () => funGoMaps(),
-          )
-        ]));
+        ));
+  }
+
+  Widget userNameText() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(
+          "${widget.customerCurrent.idClient}",
+          style: TextStyles.green18Itw,
+        ),
+        Text(
+          "  |  ",
+          style: TextStyles.white60It18,
+        ),
+        Expanded(
+            child: AutoSizeText(
+          widget.customerCurrent.name,
+          style: TextStyles.white15It,
+        )),
+      ],
+    );
+  }
+
+  Widget iconPhoto() {
+    return GestureDetector(
+        onTap: () => _pickImage(1),
+        child: Image.asset(
+          "assets/icons/photo.png",
+          width: size.width * .13,
+        ));
   }
 
   Widget refreshScroll() {
@@ -533,6 +581,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
         onRefresh: () async {
           log("Refresh");
           bool isvalid = await funCheckDistance();
+          getMoney();
           setState(() {
             isRange = isvalid;
           });
@@ -877,10 +926,10 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
                 children: [
                   Row(
                     children: [
-                      const Expanded(
+                      Expanded(
                           child: Text(
-                        "Observaciones",
-                        style: TextStyles.blue23_7,
+                        "Observaciones de servicio",
+                        style: TextStyles.blueJ20Bold,
                       )),
                       Image.asset(
                         "assets/icons/observationIcon.png",
@@ -888,15 +937,22 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
                       ),
                     ],
                   ),
-                  Text(widget.customerCurrent.observation),
                   Container(
+                      padding:
+                          const EdgeInsets.only(left: 4, right: 4, bottom: 5),
+                      child: Text(
+                        widget.customerCurrent.observation,
+                        textAlign: TextAlign.justify,
+                        style: TextStyles.grey17_4,
+                      )),
+                  /*Container(
                     width: double.infinity,
                     alignment: Alignment.bottomRight,
                     child: Image.asset(
                       "assets/icons/editIcon.png",
                       width: 25,
                     ),
-                  )
+                  )*/
                 ],
               )),
         ));
@@ -992,6 +1048,15 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
           webShowClose: true,
         );
       }
+    } else {
+      log("No LAT y No LNG");
+      Fluttertoast.showToast(
+        msg: "Sin coordenadas",
+        timeInSecForIosWeb: 2,
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.TOP,
+        webShowClose: true,
+      );
     }
   }
 }

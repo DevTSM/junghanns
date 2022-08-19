@@ -22,7 +22,7 @@ Future<Answer> getListCustomer(int idR, String date, String type) async {
     log("/CustomerServices <getListCustomer> Successfull, ${response.body}");
     return Answer(body: jsonDecode(response.body), message: "", error: false);
   } else {
-    log("/CustomerServices <getListCustomer> Fail");
+    log("/CustomerServices <getListCustomer> Fail, ${response.body}");
     return Answer(
         body: response,
         message: "Algo salio mal, intentalo mas tarde.",

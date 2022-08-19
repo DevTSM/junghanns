@@ -22,6 +22,10 @@ class CustomerModel {
   String img;
   String observation;
   List<SaleModel> history;
+  //
+  String referenceAddress;
+  String color;
+
   CustomerModel(
       {required this.invoice,
       required this.id,
@@ -41,7 +45,11 @@ class CustomerModel {
       required this.days,
       required this.img,
       required this.observation,
-      required this.history});
+      required this.history,
+      //
+      required this.referenceAddress,
+      required this.color});
+
   factory CustomerModel.fromState() {
     return CustomerModel(
         invoice: true,
@@ -62,8 +70,12 @@ class CustomerModel {
         days: "",
         img: "",
         observation: "",
-        history: []);
+        history: [],
+        //
+        referenceAddress: "",
+        color: "FF000000");
   }
+
   factory CustomerModel.fromList(Map<String, dynamic> data, int idRoute) {
     return CustomerModel(
         invoice: false,
@@ -84,7 +96,10 @@ class CustomerModel {
         days: "",
         img: "",
         observation: "",
-        history: []);
+        history: [],
+        //
+        referenceAddress: "",
+        color: data["color"] ?? "FF000000");
   }
   factory CustomerModel.fromService(Map<String, dynamic> data, int id) {
     return CustomerModel(
@@ -95,7 +110,7 @@ class CustomerModel {
         idRoute: data["idRuta"] ?? 0,
         lat: double.parse(data["latitud"] ?? "0"),
         lng: double.parse(data["longitud"] ?? "0"),
-        priceLiquid: double.parse(data["precioLiquido"] ?? "0"),
+        priceLiquid: double.parse((data["precioLiquido"] ?? "0").toString()),
         byCollect: double.parse((data["porCobrar"] ?? 0).toString()),
         purse: double.parse((data["monedero"] ?? 0).toString()),
         name: data["nombre"] ?? "",
@@ -108,7 +123,10 @@ class CustomerModel {
         observation: (data["observacion"] ?? "") == ""
             ? "Sin observaciones"
             : data["observacion"] ?? "",
-        history: []);
+        history: [],
+        //
+        referenceAddress: data["referenciaDomicilio"] ?? "",
+        color: data["color"] ?? "FF000000");
   }
   factory CustomerModel.fromDataBase(Map<String, dynamic> data) {
     return CustomerModel(
@@ -132,7 +150,10 @@ class CustomerModel {
         observation: (data["observacion"] ?? "") == ""
             ? "Sin observaciones"
             : data["observacion"] ?? "",
-        history: []);
+        history: [],
+        //
+        referenceAddress: data["referenceAddress"] ?? "",
+        color: data["color"] ?? "000000");
   }
   Map<String, dynamic> getMap() {
     return {
@@ -152,7 +173,9 @@ class CustomerModel {
       'category': category,
       'days': days,
       'img': img,
-      'observacion': observation
+      'observacion': observation,
+      'referenceAddress': referenceAddress,
+      'color': color
     };
   }
 

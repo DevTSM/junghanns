@@ -23,6 +23,7 @@ import 'package:junghanns/styles/decoration.dart';
 import 'package:junghanns/styles/text.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:junghanns/widgets/card/product_card.dart';
+import 'package:junghanns/widgets/card/product_card_priority.dart';
 
 import '../../models/method_payment.dart';
 
@@ -47,7 +48,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
   //
   late BasketModel basket;
   late int cantidad;
-  late List<ConfigModel> configList;
+  late List<ConfigModel> configList = [];
 
   @override
   void initState() {
@@ -55,7 +56,6 @@ class _ShoppingCartState extends State<ShoppingCart> {
 
     totalPrice = 0;
     isLoading = true;
-
     //
     cantidad = 0;
     basket = BasketModel(
@@ -69,7 +69,6 @@ class _ShoppingCartState extends State<ShoppingCart> {
         idDataOrigin: widget.customerCurrent.id,
         folio: -1,
         typeOperation: "V");
-    configList = [];
 
     getDataProducts();
   }
@@ -139,18 +138,36 @@ class _ShoppingCartState extends State<ShoppingCart> {
         );
       } else {
         paymentsList.clear();
+        bool isNotAuth = true;
 
-        answer.body
-            .map((e) => paymentsList.add(MethodPayment.fromService(e)))
-            .toList();
-        if (widget.customerCurrent.purse > 0) {
-          paymentsList.add(MethodPayment(
-              wayToPay: "Monedero",
-              typeWayToPay: "M",
-              type: "Monedero",
-              idProductService: -1,
-              description: "",
-              number: -1));
+        //
+        if (widget.authList.isNotEmpty) {
+          if (widget.authList.first.price == 0) {
+            isNotAuth = false;
+            paymentsList.add(MethodPayment(
+                wayToPay: "Credito",
+                typeWayToPay: "C",
+                type: "Autorizacion",
+                idProductService: widget.authList.first.idProduct,
+                description: widget.authList.first.description,
+                number: widget.authList.first.number));
+          }
+        }
+        //
+        if (isNotAuth) {
+          answer.body
+              .map((e) => paymentsList.add(MethodPayment.fromService(e)))
+              .toList();
+
+          if (widget.customerCurrent.purse > 0) {
+            paymentsList.add(MethodPayment(
+                wayToPay: "Monedero",
+                typeWayToPay: "M",
+                type: "Monedero",
+                idProductService: -1,
+                description: "",
+                number: -1));
+          }
         }
       }
       setState(() {
@@ -321,34 +338,32 @@ class _ShoppingCartState extends State<ShoppingCart> {
             ))
           : Column(
               children: [
-                const SizedBox(
-                  height: 20,
-                ),
+                ProductCardPriority(
+                    productCurrent: widget.authList.isEmpty
+                        ? productsList.first
+                        : widget.authList.first.getProduct(),
+                    update: updateTotal),
                 Expanded(
-                    child: Container(
-                  width: size.width,
-                  child: GridView.custom(
-                    gridDelegate: SliverWovenGridDelegate.count(
-                      crossAxisCount: 2,
-                      mainAxisSpacing: 13,
-                      crossAxisSpacing: 13,
-                      pattern: [
-                        const WovenGridTile(.85),
-                        const WovenGridTile(.85),
-                      ],
-                    ),
-                    childrenDelegate: SliverChildBuilderDelegate(
-                        (context, index) => ProductCard(
-                            update: updateTotal,
-                            isPR: true,
-                            productCurrent: widget.authList.isEmpty
-                                ? productsList[index]
-                                : widget.authList[index].getProduct()),
-                        childCount: widget.authList.isEmpty
-                            ? productsList.length
-                            : widget.authList.length),
-                  ),
-                )),
+                  child: widget.authList.isEmpty
+                      ? GridView.custom(
+                          gridDelegate: SliverWovenGridDelegate.count(
+                            crossAxisCount: 2,
+                            mainAxisSpacing: 13,
+                            crossAxisSpacing: 13,
+                            pattern: [
+                              const WovenGridTile(.85),
+                              const WovenGridTile(.85),
+                            ],
+                          ),
+                          childrenDelegate: SliverChildBuilderDelegate(
+                              (context, index) => ProductCard(
+                                  update: updateTotal,
+                                  isPR: true,
+                                  productCurrent: productsList[index + 1]),
+                              childCount: productsList.length - 1),
+                        )
+                      : Container(),
+                ),
                 Visibility(
                     visible: cantidad > 0,
                     child: Container(
@@ -359,7 +374,16 @@ class _ShoppingCartState extends State<ShoppingCart> {
                         alignment: Alignment.center,
                         child: ButtonJunghanns(
                           decoration: Decorations.blueBorder12,
-                          fun: () => selectWayToPay(),
+                          fun: () {
+                            log("Venta check");
+                            if (paymentsList.length > 1) {
+                              selectWayToPay();
+                            } else {
+                              if (funCheckMethodPayment(paymentsList.first)) {
+                                showConfirmSale(paymentsList.first);
+                              }
+                            }
+                          },
                           label: "Terminar venta",
                           style: TextStyles.white17_5,
                         )))
@@ -446,7 +470,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
               }
             } else {
               Fluttertoast.showToast(
-                msg: "Producto no válidos",
+                msg: "Producto no válido",
                 timeInSecForIosWeb: 2,
                 toastLength: Toast.LENGTH_LONG,
                 gravity: ToastGravity.TOP,
@@ -637,7 +661,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
           gravity: ToastGravity.TOP,
           webShowClose: true,
         );
-        Navigator.pop(context);
+
         Navigator.pop(context);
       }
     });
@@ -797,9 +821,10 @@ class _ShoppingCartState extends State<ShoppingCart> {
   Future<bool> funCheckDistance() async {
     await getConfigR();
     //
-    int distanConfig = widget.authList.isEmpty
-        ? int.parse(configList.last.valor)
-        : int.parse(configList.first.valor);
+    /*int distanConfig = widget.authList.isEmpty
+        ? configList.last.valor
+        : configList.first.valor;*/
+    int distanConfig = configList.last.valor;
     //
     LocationPermission permission = await Geolocator.requestPermission();
     if (permission == LocationPermission.whileInUse ||

@@ -127,11 +127,28 @@ class _SpecialsState extends State<Specials> {
                         children: customerList.map((e) {
                           return Column(children: [
                             RoutesCard(
-                              indexHome: 1,
-                                icon: Image.asset(
+                                indexHome: 1,
+                                icon: Container(
+                                  decoration: BoxDecoration(
+                                    color: Color(int.parse(
+                                        e.color
+                                            .toUpperCase()
+                                            .replaceAll("#", "FF"),
+                                        radix: 16)),
+                                    borderRadius: const BorderRadius.all(
+                                      Radius.circular(30),
+                                    ),
+                                  ),
+                                  padding: const EdgeInsets.all(10),
+                                  height: size.width * .14,
+                                  width: size.width * .14,
+                                  child:
+                                      Image.asset("assets/icons/userIcon.png"),
+                                ),
+                                /*Image.asset(
                                   "assets/icons/${e.typeVisit == "RUTA" ? "user1" : e.typeVisit == "SEGUNDA" ? "user3" : "user2"}.png",
                                   width: size.width * .14,
-                                ),
+                                ),*/
                                 customerCurrent: e,
                                 type: "E",
                                 title: ["${e.idClient} - ", e.address],

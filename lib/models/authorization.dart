@@ -52,8 +52,8 @@ class AuthorizationModel {
         idAuth: data["id"],
         idProduct: data["idProductoServicio"] ?? 0,
         description: data["descripcion"] ?? "",
-        price: double.parse(data["precio"] ?? "0.0"),
-        number: double.parse(data["cantidad"] ?? "0.0").toInt(),
+        price: double.parse((data["precio"] ?? "0").toString()),
+        number: data["cantidad"] ?? 0,
         idClient: data["idCliente"] ?? 0,
         idCatAuth: data["idCatAutorizacion"] ?? 0,
         authText: data["autorizacion"] ?? "",
@@ -61,7 +61,7 @@ class AuthorizationModel {
         observation: data["observacion"] ?? "",
         idReasonAuth: data["idMotivoAutorizacion"] ?? 0,
         reason: data["Motivo"] ?? "",
-        img: data["url"] ?? "https://jnsc.mx/img/garrafon.png");
+        img: data["url"] ?? "");
   }
 
   ProductModel getProduct() {

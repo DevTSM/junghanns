@@ -142,7 +142,7 @@ class _StopsState extends State<Stops> {
         alignment: Alignment.center,
         child: DefaultTextStyle(
             style: TextStyles.greenJ15Bold,
-            child: Text(stopCurrent.description)));
+            child: Text("${stopCurrent.id} | ${stopCurrent.description}")));
   }
 
   Widget buttomsSale() {
@@ -234,7 +234,7 @@ class _StopsState extends State<Stops> {
                 gravity: ToastGravity.TOP,
                 webShowClose: true,
               );
-              Navigator.pop(context);
+
               Navigator.pop(context);
               //
             }
@@ -316,17 +316,17 @@ class _StopsState extends State<Stops> {
           child: Column(
             children: [
               Expanded(
-                  flex: 3,
+                  flex: 7,
                   child: Container(
                     decoration: BoxDecoration(
                         image: DecorationImage(image: NetworkImage(stop.icon))),
                   )),
               Expanded(
-                  flex: 1,
+                  flex: 3,
                   child: Container(
                       alignment: Alignment.center,
                       child: AutoSizeText(
-                        stop.description,
+                        "${stop.id} | ${stop.description}",
                         style: TextStyles.grey17Itw,
                         textAlign: TextAlign.center,
                       )))
@@ -349,8 +349,8 @@ class _StopsState extends State<Stops> {
                 child: GridView.custom(
                   gridDelegate: SliverWovenGridDelegate.count(
                     crossAxisCount: 3,
-                    mainAxisSpacing: 10,
-                    crossAxisSpacing: 15,
+                    mainAxisSpacing: 8,
+                    crossAxisSpacing: 10,
                     pattern: const [
                       WovenGridTile(.8),
                     ],
@@ -372,8 +372,8 @@ class _StopsState extends State<Stops> {
                         return GridView.custom(
                           gridDelegate: SliverWovenGridDelegate.count(
                             crossAxisCount: 3,
-                            mainAxisSpacing: 10,
-                            crossAxisSpacing: 15,
+                            mainAxisSpacing: 8,
+                            crossAxisSpacing: 10,
                             pattern: const [
                               WovenGridTile(.8),
                             ],

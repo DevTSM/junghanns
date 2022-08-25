@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:junghanns/components/bottom_bar.dart';
 import 'package:junghanns/pages/home/call.dart';
 import 'package:junghanns/pages/home/home.dart';
+import 'package:junghanns/pages/home/new_customer.dart';
 import 'package:junghanns/pages/home/routes.dart';
 import 'package:junghanns/pages/home/second.dart';
 import 'package:junghanns/pages/home/specials.dart';
@@ -12,7 +13,7 @@ const List<Widget> pages = [
   Routes(),
   Seconds(),
   Call(),
-  Home()
+  NewCustomer()
 ];
 
 class HomePrincipal extends StatefulWidget {

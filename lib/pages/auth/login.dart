@@ -5,7 +5,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:junghanns/models/delivery_man.dart';
 import 'package:junghanns/pages/home/home_principal.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/services/auth.dart';

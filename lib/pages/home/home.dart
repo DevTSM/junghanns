@@ -1,14 +1,20 @@
 // ignore_for_file: avoid_unnecessary_containers
+import 'dart:developer';
+
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:junghanns/models/customer.dart';
+import 'package:junghanns/models/dashboard.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/styles/color.dart';
 import 'package:junghanns/styles/decoration.dart';
 import 'package:junghanns/styles/text.dart';
+
+import '../../services/store.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -19,14 +25,50 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   late Size size;
+  //
+  late DateTime today;
+  late String todayText, dayText, monthText;
+  late DashboardModel dashboardR;
+  //
+
   @override
   void initState() {
     super.initState();
     getPermission();
+    today = DateTime.now();
+    today.month < 10
+        ? monthText = "0${today.month}"
+        : monthText = "${today.month}";
+    today.day < 10 ? dayText = "0${today.day}" : dayText = "${today.day}";
+    todayText = "${today.year}$monthText$dayText";
+    dashboardR = DashboardModel.fromState();
+    getDashboarR();
   }
 
   getPermission() async {
     await Geolocator.requestPermission();
+  }
+
+  getDashboarR() async {
+    log("Fecha: $todayText");
+    log("Ruta: ${prefs.idRouteD}");
+
+    await getDashboarRuta(prefs.idRouteD, todayText).then((answer) {
+      if (answer.error) {
+        Fluttertoast.showToast(
+          msg: "Sin datos de ruta",
+          timeInSecForIosWeb: 2,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+        );
+      } else {
+        log("Si Dashboard");
+        setState(() {
+          dashboardR = DashboardModel.fromService(answer.body);
+        });
+      }
+    });
   }
 
   @override
@@ -111,8 +153,8 @@ class _HomeState extends State<Home> {
                           checkDate(DateTime.now()),
                           style: TextStyles.blue19_7,
                         ),
-                        const Text(
-                          "23 clientes para visitar",
+                        Text(
+                          "${dashboardR.customersR} clientes para visitar",
                           style: TextStyles.grey14_4,
                         )
                       ],
@@ -169,12 +211,12 @@ class _HomeState extends State<Home> {
                         width: size.width * .1,
                       ),
                       Column(
-                        children: const [
+                        children: [
                           Text(
-                            "47",
+                            "${dashboardR.customersR}",
                             style: TextStyles.white40_7,
                           ),
-                          Text(
+                          const Text(
                             "En ruta",
                             style: TextStyles.white17_6,
                           )
@@ -202,12 +244,12 @@ class _HomeState extends State<Home> {
                                 width: size.width * .1,
                               ),
                               Column(
-                                children: const [
+                                children: [
                                   Text(
-                                    "24",
+                                    "${dashboardR.customersA}",
                                     style: TextStyles.blue40_7,
                                   ),
-                                  Text(
+                                  const Text(
                                     "Atendidos",
                                     style: TextStyles.grey17_4,
                                   )
@@ -223,7 +265,10 @@ class _HomeState extends State<Home> {
             ),
             item(
                 "Servicios Especiales",
-                ["8 programados /", " 3 Atentidos"],
+                [
+                  "${dashboardR.specialServiceP} programados /",
+                  " ${dashboardR.specialServiceA} Atentidos"
+                ],
                 Image.asset(
                   "assets/icons/iconCalendar.png",
                   width: size.width * .1,
@@ -233,7 +278,10 @@ class _HomeState extends State<Home> {
             ),
             item(
                 "Avance de venta",
-                ["70 Líquidos existencia /", " 0 Vendidos"],
+                [
+                  "${dashboardR.liquidStock} Líquidos existencia /",
+                  " ${dashboardR.liquidSales} Vendidos"
+                ],
                 Image.asset(
                   "assets/icons/iconWarehouse.png",
                   width: size.width * .1,

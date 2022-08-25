@@ -141,6 +141,9 @@ class TextStyles {
   static TextStyle blue13It = const TextStyle(
       fontSize: 13, fontFamily: 'MyriadPro-it', color: ColorsJunghanns.blueJ2);
 
+  static TextStyle white14SemiBold = const TextStyle(
+      fontSize: 14, fontFamily: 'MyriadPro-SemiBold', color: Colors.white);
+
   static TextStyle white15BoldIt = const TextStyle(
       fontSize: 15, fontFamily: 'MyriadPro-BoldCondit', color: Colors.white);
 

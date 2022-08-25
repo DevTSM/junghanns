@@ -378,3 +378,32 @@ Future<Answer> postStop(Map<String, dynamic> data) async {
         body: e, message: "Algo salio mal, intentalo mas tarde.", error: true);
   }*/
 }
+
+Future<Answer> getDashboarRuta(int idR, String date) async {
+  log("/StoreServices <getDashboardRuta>");
+  //try {
+  var response = await http.get(
+      Uri.parse("$urlBase/index.php/dashboardruta?idRuta=$idR&date=$date"),
+      headers: {
+        "Content-Type": "aplication/json",
+        "x-api-key": apiKey,
+        "client_secret": prefs.clientSecret,
+        "Authorization": "Bearer ${prefs.token}",
+      });
+  log("${response.statusCode}");
+  if (response.statusCode == 200) {
+    log("/StoreServices <getDashboarRuta> Successfull, ${response.body}");
+    return Answer(body: jsonDecode(response.body), message: "", error: false);
+  } else {
+    log("/StoreServices <getDashboardRuta> Fail, ${response.body}");
+    return Answer(
+        body: response,
+        message: "Algo salio mal, intentalo mas tarde.",
+        error: true);
+  }
+  /*} catch (e) {
+    log("/CustomerServices <getListCustomer> Catch ${e.toString()}");
+    return Answer(
+        body: e, message: "Algo salio mal, intentalo mas tarde.", error: true);
+  }*/
+}

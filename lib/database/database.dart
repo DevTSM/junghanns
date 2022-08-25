@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/models/stop.dart';
 import 'package:sqflite/sqflite.dart';
@@ -9,11 +11,12 @@ class DataBase {
     return openDatabase(
       join(path, 'junghanns.db'),
       onCreate: (database, version) async {
-        //lista de clientes 
+        //lista de clientes
         //autorizaciones en jsonEncode
         //payment en jsonEncode
+        // 1= Especial 2=Ruta, 3=vuelta, 4=llama
         await database.execute(
-          "CREATE TABLE customer(id INTEGER PRIMARY KEY AUTOINCREMENT, orden INTEGER , idCustomer INTEGER, idRoute INTEGER, lat DOUBLE, lng DOUBLE, priceLiquid DOUBLE, byCollet DOUBLE, purse DOUBLE, name TEXT NOT NULL, address TEXT NOT NULL , nameRoute TEXT NOT NULL,typeVisit TEXT NOT NULL, category TEXT NOT NULL,days TEXT NOT NULL, img TEXT NOT NULL, observacion TEXT NOT NULL,auth TEXT,payment TEXT)",
+          "CREATE TABLE customer(id INTEGER PRIMARY KEY AUTOINCREMENT, orden INTEGER , idCustomer INTEGER, idRoute INTEGER,type INTEGER, lat DOUBLE, lng DOUBLE, priceLiquid DOUBLE, byCollet DOUBLE, purse DOUBLE, name TEXT NOT NULL, address TEXT NOT NULL , nameRoute TEXT NOT NULL,typeVisit TEXT NOT NULL, category TEXT NOT NULL,days TEXT NOT NULL, img TEXT NOT NULL, observacion TEXT,auth TEXT,payment TEXT,color TEXT)",
         );
         //lista de paradas en falso
         await database.execute(
@@ -77,13 +80,20 @@ class DataBase {
 
   addColumn() async {
     final db = await initializeDB();
-    db.execute("ALTER TABLE customer ADD img TEXT NOT NULL DEFAULT ''");
+    db.execute("ALTER TABLE customer ADD color TEXT NOT NULL DEFAULT ''");
   }
 
   Future<List<CustomerModel>> retrieveUsers() async {
     final Database db = await initializeDB();
     final List<Map<String, Object?>> queryResult = await db.query('customer');
     return queryResult.map((e) => CustomerModel.fromDataBase(e)).toList();
+  }
+  Future<List<CustomerModel>> retrieveUsersType(int type) async {
+    final Database db = await initializeDB();
+    final List<Map<String, Object?>> queryResult = await db.query('customer',where: "type = ? ",whereArgs: [type]);
+    return queryResult.map((e)=>
+      CustomerModel.fromDataBase(e)
+        ).toList();
   }
 
   Future<List<StopModel>> retrieveStop() async {

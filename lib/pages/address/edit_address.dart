@@ -21,12 +21,14 @@ class _EditAddressState extends State<EditAddress> {
     _currentLocation=Position(altitude: 1,longitude: widget.lng, accuracy: 1, heading: 1, latitude: widget.lat, speed: 1, speedAccuracy: 1, timestamp: DateTime.now(),);
     _lista = [];
     setState(() {
+      if(widget.lat!=0&&widget.lng!=0){
     _lista.add(Marker(
           markerId: const MarkerId('1'),
           infoWindow: const InfoWindow(
               title: 'Cliente',),
           position: LatLng(widget.lat, widget.lng),
           icon: BitmapDescriptor.defaultMarker));
+      }
           });
     setCurrentLocation();
   }
@@ -46,7 +48,7 @@ class _EditAddressState extends State<EditAddress> {
           infoWindow: const InfoWindow(
               title: 'Tu',),
           position: LatLng(_currentLocation.latitude, _currentLocation.longitude),
-          icon: BitmapDescriptor.defaultMarker));
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue)));
           });
     }
   }

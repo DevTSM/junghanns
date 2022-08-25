@@ -57,13 +57,13 @@ class _StopsState extends State<Stops> {
         );
       } else {
         stopList.clear();
-        provider.handler.deleteStops();
+        handler.deleteStops();
 
         answer.body.map((e) {
           stopList.add(StopModel.fromService(e));
         }).toList();
 
-        stopList.map((e) => provider.handler.insertStop([e])).toList();
+        stopList.map((e) => handler.insertStop([e])).toList();
       }
       setState(() {
         isLoading = false;
@@ -249,7 +249,7 @@ class _StopsState extends State<Stops> {
             "type": widget.customerCurrent.typeVisit.characters.first
           };
           Navigator.pop(context);
-          provider.handler.insertStopOff(data);
+          handler.insertStopOff(data);
           Fluttertoast.showToast(
             msg: "Guardado de forma local",
             timeInSecForIosWeb: 16,
@@ -365,7 +365,7 @@ class _StopsState extends State<Stops> {
                 padding: const EdgeInsets.only(left: 20, right: 20),
                 margin: const EdgeInsets.only(top: 20),
                 child: FutureBuilder(
-                    future: provider.handler.retrieveStop(),
+                    future: handler.retrieveStop(),
                     builder: (BuildContext context,
                         AsyncSnapshot<List<StopModel>> snapshot) {
                       if (snapshot.hasData) {

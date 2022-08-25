@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:junghanns/components/loading.dart';
+import 'package:junghanns/components/modal/logout.dart';
 import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/provider/provider.dart';
 import 'package:junghanns/services/customer.dart';
@@ -23,7 +25,7 @@ class Seconds extends StatefulWidget {
 }
 
 class _SecondsState extends State<Seconds> {
-  //late ProviderJunghanns provider;
+  late ProviderJunghanns provider;
   late List<CustomerModel> customerList;
   late Size size;
   late bool isLoading;
@@ -31,14 +33,23 @@ class _SecondsState extends State<Seconds> {
   @override
   void initState() {
     super.initState();
-    isLoading = true;
+    isLoading = false;
     customerList = [];
     getDataCustomerList();
   }
 
   getDataCustomerList() async {
+    Timer(const Duration(milliseconds: 1000), () async {
+    if(provider.connectionStatus<4){
     customerList.clear();
+    setState(() {
+          isLoading = false;
+        });
     await getListCustomer(prefs.idRouteD, DateTime.now(), "S").then((answer) {
+      if(prefs.token!=""){
+        setState(() {
+          isLoading = false;
+        });
       if (answer.error) {
         Fluttertoast.showToast(
           msg: "Sin clientes en ruta",
@@ -47,27 +58,37 @@ class _SecondsState extends State<Seconds> {
           gravity: ToastGravity.TOP,
           webShowClose: true,
         );
-        setState(() {
-          isLoading = false;
-        });
+        
       } else {
-        //provider.handler.deleteTable();
-        //provider.handler.addColumn();
         setState(() {
           answer.body.map((e) {
-            customerList.add(CustomerModel.fromList(e, prefs.idRouteD));
-            //provider.handler.insertUser([customerList.last]);
+            customerList.add(CustomerModel.fromList(e, prefs.idRouteD,3));
           }).toList();
-          isLoading = false;
         });
       }
+      }else{
+          Fluttertoast.showToast(
+          msg: "Las credenciales caducaron.",
+          timeInSecForIosWeb: 2,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+        );
+          Timer(const Duration(milliseconds: 2000), () async {
+          Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+          });
+        }
     });
+    }
+  });
   }
 
   @override
   Widget build(BuildContext context) {
-    size = MediaQuery.of(context).size;
-    //provider = Provider.of<ProviderJunghanns>(context);
+    setState(() {
+      size = MediaQuery.of(context).size;
+    provider = Provider.of<ProviderJunghanns>(context);
+    });
     return Scaffold(
       key: GlobalKey<ScaffoldState>(),
       appBar: AppBar(
@@ -89,25 +110,27 @@ class _SecondsState extends State<Seconds> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            /*Visibility(
+            Visibility(
                 visible: provider.connectionStatus == 4,
                 child: Container(
                     width: double.infinity,
                     alignment: Alignment.center,
-                    color: ColorsJunghanns.grey,
+                    color: ColorsJunghanns.red,
                     padding: const EdgeInsets.only(top: 5, bottom: 5),
                     child: const Text(
                       "Sin conexion a internet",
                       style: TextStyles.white14_5,
-                    ))),*/
+                    ))),
             header(),
             const SizedBox(
               height: 20,
             ),
-            //provider.connectionStatus < 4
-            //   ?
+            provider.connectionStatus < 4
+              ?
             isLoading
-                ? loading()
+                ? const Center(
+                        child: LoadingJunghanns(),
+                      )
                 : customerList.isNotEmpty
                     ? Expanded(
                         child: SingleChildScrollView(
@@ -115,8 +138,6 @@ class _SecondsState extends State<Seconds> {
                         children: customerList.map((e) {
                           return Column(children: [
                             RoutesCard(
-                                indexHome: 3,
-                                //
                                 icon: Container(
                                   decoration: BoxDecoration(
                                     color: Color(int.parse(
@@ -134,14 +155,7 @@ class _SecondsState extends State<Seconds> {
                                   child:
                                       Image.asset("assets/icons/userIcon.png"),
                                 ),
-                                /*Image.asset(
-                                  "assets/icons/${e.typeVisit == "RUTA" ? "user1" : e.typeVisit == "SEGUNDA" ? "user3" : "user2"}.png",
-                                  width: size.width * .14,
-                                ),*/
-                                customerCurrent: e,
-                                type: "S",
-                                title: ["${e.idClient} - ", e.address],
-                                description: e.name),
+                                customerCurrent: e),
                             Row(children: [
                               Container(
                                 margin: EdgeInsets.only(
@@ -157,12 +171,12 @@ class _SecondsState extends State<Seconds> {
                     : Expanded(
                         child: Center(
                             child: Text(
-                        "Sin clientes en ruta",
+                        "Sin clientes",
                         style: TextStyles.blue18SemiBoldIt,
                       )))
-            /* : Expanded(
+             : Expanded(
                     child: FutureBuilder(
-                        future: provider.handler.retrieveUsers(),
+                        future: handler.retrieveUsersType(3),
                         builder: (BuildContext context,
                             AsyncSnapshot<List<CustomerModel>> snapshot) {
                           if (snapshot.hasData) {
@@ -175,13 +189,7 @@ class _SecondsState extends State<Seconds> {
                                           "assets/icons/${snapshot.data![index].typeVisit == "RUTA" ? "user1" : snapshot.data![index].typeVisit == "SEGUNDA" ? "user3" : "user2"}.png",
                                           width: size.width * .14,
                                         ),
-                                        customerCurrent: snapshot.data![index],
-                                        title: [
-                                          "${snapshot.data![index].idClient} - ",
-                                          snapshot.data![index].address
-                                        ],
-                                        description:
-                                            snapshot.data![index].name),
+                                        customerCurrent: snapshot.data![index]),
                                     Row(children: [
                                       Container(
                                         margin: EdgeInsets.only(
@@ -196,7 +204,7 @@ class _SecondsState extends State<Seconds> {
                           } else {
                             return Container();
                           }
-                        }))*/
+                        }))
           ],
         ),
       ),
@@ -212,12 +220,6 @@ class _SecondsState extends State<Seconds> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              /*IconButton(
-                  onPressed: () {},
-                  icon: const Icon(
-                    Icons.arrow_back_ios,
-                    color: ColorsJunghanns.blueJ,
-                  )),*/
               Expanded(
                   child: Container(
                       padding: const EdgeInsets.only(left: 15),
@@ -243,7 +245,7 @@ class _SecondsState extends State<Seconds> {
                   width: size.width * .13,
                 ),
                 onTap: () {
-                  showConfirmLogOut();
+                  showConfirmLogOut(context,size);
                 },
               )
             ],
@@ -281,117 +283,12 @@ class _SecondsState extends State<Seconds> {
                           left: 5, right: 5, top: 5, bottom: 5),
                       child: RichText(
                           text: TextSpan(children: [
-                        const TextSpan(
-                            text: "Ruta  ", style: TextStyles.white17_5),
                         TextSpan(
-                            text: prefs.idRouteD.toString(),
-                            style: TextStyles.white27_7)
+                            text: prefs.nameRouteD, style: TextStyles.white17_5),
                       ])))),
             ],
           )),
     ]);
   }
-
-  showConfirmLogOut() {
-    showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return Center(
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              width: size.width * .75,
-              decoration: Decorations.whiteS1Card,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [textConfirmLogOut(), buttoms()],
-              ),
-            ),
-          );
-        });
-  }
-
-  Widget textConfirmLogOut() {
-    return Container(
-        alignment: Alignment.center,
-        padding: const EdgeInsets.only(top: 15, bottom: 25),
-        child: DefaultTextStyle(
-            style: TextStyles.blueJ22Bold, child: const Text("Cerrar sesión")));
-  }
-
-  Widget buttoms() {
-    return Container(
-      alignment: Alignment.center,
-      padding: const EdgeInsets.only(bottom: 15),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          buttomSale(
-              "Si",
-              () => () {
-                    Navigator.pop(context);
-                    funLogOut();
-                  },
-              Decorations.blueBorder12),
-          buttomSale(
-              "No",
-              () => () {
-                    Navigator.pop(context);
-                  },
-              Decorations.redCard),
-        ],
-      ),
-    );
-  }
-
-  Widget buttomSale(String op, Function fun, BoxDecoration deco) {
-    return GestureDetector(
-      onTap: fun(),
-      child: Container(
-          alignment: Alignment.center,
-          width: size.width * 0.22,
-          height: size.width * 0.11,
-          decoration: deco,
-          child: DefaultTextStyle(
-              style: TextStyles.white18SemiBoldIt,
-              child: Text(
-                op,
-              ))),
-    );
-  }
-
-  funLogOut() {
-    log("LOG OUT");
-    //-------------------------*** LOG OUT
-    prefs.isLogged = false;
-    prefs.idUserD = 0;
-    prefs.idProfileD = 0;
-    prefs.nameUserD = "";
-    prefs.nameD = "";
-    prefs.idRouteD = 0;
-    prefs.nameRouteD = "";
-    prefs.dayWorkD = "";
-    prefs.dayWorkTextD = "";
-    prefs.codeD = "";
-    //--------------------------*********
-    Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
-  }
-
-  Widget loading() {
-    return Center(
-      child: Container(
-        margin: const EdgeInsets.only(top: 30),
-        decoration: BoxDecoration(
-          color: Colors.blue.withOpacity(0.8),
-          borderRadius: const BorderRadius.all(Radius.circular(25)),
-        ),
-        height: MediaQuery.of(context).size.width * .30,
-        width: MediaQuery.of(context).size.width * .30,
-        child: const SpinKitDualRing(
-          color: Colors.white70,
-          lineWidth: 4,
-        ),
-      ),
-    );
-  }
+  
 }

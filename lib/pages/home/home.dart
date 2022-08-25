@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:junghanns/components/button.dart';
 import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/styles/color.dart';
@@ -52,7 +53,7 @@ class _HomeState extends State<Home> {
               alignment: Alignment.center,
               padding: const EdgeInsets.only(right: 10),
               child: Text(
-                "${urlBase!=ipProd?"Beta ":""}V 1.0.3",
+                "${urlBase!=ipProd?"Beta ":""}V 1.0.4",
                 style: TextStyles.blue18SemiBoldIt,
               ),
             )
@@ -78,7 +79,8 @@ class _HomeState extends State<Home> {
                 )),
             buttonSync()
           ],
-        ));
+        ),
+        );
   }
 
   Widget deliveryMenZone() {
@@ -272,7 +274,7 @@ class _HomeState extends State<Home> {
   Widget buttonSync() {
     return Align(
       alignment: Alignment.bottomCenter,
-      child: GestureDetector(
+    child:GestureDetector(
           child: Container(
             height: 50,
             width: size.width * 0.5,
@@ -295,7 +297,7 @@ class _HomeState extends State<Home> {
               ],
             ),
           ),
-          onTap: () {}),
-    );
+          onTap: () {},
+    ));
   }
 }

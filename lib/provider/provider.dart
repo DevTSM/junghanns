@@ -8,13 +8,13 @@ import 'package:junghanns/database/database.dart';
 import 'package:junghanns/models/customer.dart';
 
 class ProviderJunghanns with ChangeNotifier {
-  DataBase handler=DataBase();
-    
+  bool _permission=true;
   int _connectionStatus = 100;
   List<CustomerModel> _customerList=[];
-
-  init(){
-    handler.initializeDB();
+  bool get permission=> _permission;
+  set permission(bool permissionCurrent){
+    _permission=permissionCurrent;
+    notifyListeners();
   }
   int get connectionStatus=> _connectionStatus;
   set connectionStatus(int connectionCurrent){

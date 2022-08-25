@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 
 class ButtonJunghanns extends StatelessWidget{
@@ -31,6 +33,27 @@ class ButtonJunghanns extends StatelessWidget{
               child: SizedBox(width: 10,)),
         ],
       ),
+    ));
+  }
+
+}
+class ButtonJunghannsLabel extends StatelessWidget{
+  BoxDecoration decoration;
+  Function fun;
+  TextStyle style;
+  String label;
+  double width;
+  ButtonJunghannsLabel({Key? key,required this.fun, required this.decoration,required this.style,required this.label,required this.width}) : super(key: key);
+  @override
+  Widget build(BuildContext context){
+    return GestureDetector(
+      onTap: ()=>fun(),
+    child:Container(
+      alignment: Alignment.center,
+      width: width,
+      decoration: decoration,
+      padding: const EdgeInsets.only(top: 10,bottom: 10),
+      child: Text(label,style: style,overflow: TextOverflow.ellipsis,),
     ));
   }
 

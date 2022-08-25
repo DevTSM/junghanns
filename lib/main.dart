@@ -1,12 +1,8 @@
 // ignore_for_file: override_on_non_overriding_member
 
 import 'dart:async';
-import 'dart:developer';
 import 'dart:io';
-
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
-import 'package:junghanns/pages/opening.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/provider/provider.dart';
 import 'package:junghanns/routes/routes.dart';
@@ -22,6 +18,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   HttpOverrides.global = MyHttpOverrides();
   await prefs.initPrefs();
+  await handler.initializeDB();
   runApp(const MyApp());
 }
 

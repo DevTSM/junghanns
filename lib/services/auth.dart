@@ -91,11 +91,11 @@ Future<Answer> login(Map<String, dynamic> data) async {
   }
 }
 
-Future<Answer> getConfig() async {
+Future<Answer> getConfig(int id) async {
   log("/AuthServices <getConfig>");
   try {
     var response =
-        jsonDecode((await http.get(Uri.parse("$urlBase/configruta"), headers: {
+        jsonDecode((await http.get(Uri.parse("$urlBase/configruta?id_cliente=$id&q=distancia_km"), headers: {
       "Content-Type": "aplication/json",
       "x-api-key": apiKey,
       "client_secret": prefs.clientSecret,
@@ -103,7 +103,7 @@ Future<Answer> getConfig() async {
     }))
             .body);
     if (response != null) {
-      log("/AuthServices <getConfig> Successfull");
+      log("/AuthServices <getConfig> Successfull ${response}");
       return Answer(body: response, message: "", error: false);
     } else {
       log("/AuthServices <getConfig> Fail");

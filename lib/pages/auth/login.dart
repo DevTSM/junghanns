@@ -5,7 +5,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:junghanns/models/delivery_man.dart';
 import 'package:junghanns/pages/home/home_principal.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/services/auth.dart';
@@ -31,51 +30,37 @@ class _LoginState extends State<Login> {
     userC = TextEditingController();
     passC = TextEditingController();
   }
-
+  
   @override
   Widget build(BuildContext context) {
     size = MediaQuery.of(context).size;
     return Scaffold(
-        body: SingleChildScrollView(
-            child: Stack(
-      children: [background(), menu(), textBottom()],
-    )));
-  }
-
-  Widget background() {
-    return SizedBox(
-      width: size.width,
-      height: size.height,
-      child: Image.asset(
+        body: Container(
+          width: size.width,
+          height: size.height,
+          decoration: const BoxDecoration(
+            image: DecorationImage(image: AssetImage(
         "assets/images/junghannsWater.png",
-        fit: BoxFit.cover,
-      ),
-    );
-  }
-
-  Widget menu() {
-    return SizedBox(
-      width: size.width,
-      height: size.height,
-      child: Column(
-        children: [
-          SizedBox(
-            height: size.height * 0.15,
+      ),fit: BoxFit.cover),
           ),
-          logoJ(),
-          SizedBox(
-            height: size.height * 0.06,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(15),
+          child:Column(
+            children: [
+              SizedBox(
+            height: size.height * 0.1,
           ),
-          cardLogin(),
-        ],
-      ),
-    );
-  }
-
-  Widget logoJ() {
-    return Image.asset(
+              Container(
+                margin: EdgeInsets.only(top: size.height * .05,left: 30,right: 30),
+                child:Image.asset(
       "assets/images/junghannsLogo.png",
-      width: size.width * 0.64,
+    )),
+    const SizedBox(height: 10,),
+              cardLogin()
+            ],
+          ),
+          ),
+        ),
     );
   }
 

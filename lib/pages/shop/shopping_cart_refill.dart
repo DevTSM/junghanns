@@ -48,6 +48,7 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
   late BasketModel basket;
   late int cantidad;
   late List<ConfigModel> configList;
+  late double distance;
 
   @override
   void initState() {
@@ -57,6 +58,7 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
     isLoading = true;
     //
     cantidad = 0;
+    distance=0;
     basket = BasketModel(
         idCustomer: widget.customerCurrent.idClient,
         idRoute: prefs.idRouteD,
@@ -452,7 +454,7 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
                     } else {
                       Navigator.pop(context);
                       Fluttertoast.showToast(
-                        msg: "Lejos del domicilio",
+                        msg: "Lejos del domicilio $distance ${distance>1?"Metro":"Metros"}",
                         timeInSecForIosWeb: 16,
                         toastLength: Toast.LENGTH_LONG,
                         gravity: ToastGravity.TOP,
@@ -569,7 +571,7 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
   }
 
   getConfigR() async {
-    await getConfig().then((answer) {
+    await getConfig(widget.customerCurrent.idClient).then((answer) {
       if (answer.error) {
         Fluttertoast.showToast(
           msg: answer.message,
@@ -596,11 +598,12 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
     if (permission == LocationPermission.whileInUse ||
         permission == LocationPermission.always) {
       Position _currentLocation = await Geolocator.getCurrentPosition();
-      if (Geolocator.distanceBetween(
+      distance=Geolocator.distanceBetween(
               _currentLocation.latitude,
               _currentLocation.longitude,
               widget.customerCurrent.lat,
-              widget.customerCurrent.lng) <
+              widget.customerCurrent.lng);
+      if (distance <=
           distanConfig) {
         return true;
       } else {

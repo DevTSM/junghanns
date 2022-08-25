@@ -225,9 +225,9 @@ Future<Answer> setSale(Map<String, dynamic> data) async {
 Future<Answer> postSale(Map<String, dynamic> data) async {
   log("/StoreServices <PostSale>");
   //try {
-  var response = await http.post(Uri.parse("$urlBase/index.php/venta"),
+  var response = await http.post(Uri.parse("$urlBase/venta"),
       headers: {
-        HttpHeaders.contentTypeHeader: 'application/json; charset=UTF-8',
+        HttpHeaders.contentTypeHeader: 'application/json',
         "x-api-key": apiKey,
         "client_secret": prefs.clientSecret,
         "Authorization": "Bearer ${prefs.token}",

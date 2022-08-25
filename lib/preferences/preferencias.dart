@@ -44,6 +44,13 @@ class PreferenciasUsuario {
   set token(String token) {
     prefs!.setString("token", token);
   }
+  String get asyncLast {
+    return prefs!.getString("asyncLast") ?? "";
+  }
+
+  set asyncLast(String asyncLast) {
+    prefs!.setString("asyncLast", asyncLast);
+  }
 
   bool get isLogged {
     return prefs!.getBool("isLogged") ?? false;

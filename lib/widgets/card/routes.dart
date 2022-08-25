@@ -8,18 +8,10 @@ import 'package:junghanns/styles/text.dart';
 class RoutesCard extends StatelessWidget {
   Widget icon;
   CustomerModel customerCurrent;
-  List<String> title;
-  String description;
-  String type;
-  int indexHome;
   RoutesCard(
       {Key? key,
       required this.icon,
-      required this.customerCurrent,
-      required this.title,
-      required this.description,
-      required this.type,
-      required this.indexHome})
+      required this.customerCurrent})
       : super(key: key);
 
   @override
@@ -29,9 +21,9 @@ class RoutesCard extends StatelessWidget {
             context,
             MaterialPageRoute(
                 builder: (context) => DetailsCustomer(
-                      indexHome: indexHome,
+                      indexHome: customerCurrent.type,
                       customerCurrent: customerCurrent,
-                      type: type,
+                      type: customerCurrent.type==1?"E":customerCurrent.type==2?"R":customerCurrent.type==3?"S":"C",
                     ))),
         child: Container(
           padding:
@@ -48,14 +40,14 @@ class RoutesCard extends StatelessWidget {
                 children: [
                   RichText(
                       text: TextSpan(children: [
-                        TextSpan(text: title[0], style: TextStyles.blue16_7),
+                        TextSpan(text: customerCurrent.idClient.toString(), style: TextStyles.blue16_7),
                         TextSpan(
-                          text: title[1],
+                          text: " - ${customerCurrent.name}",
                           style: TextStyles.blue16_4,
                         )
                       ]),
                       overflow: TextOverflow.ellipsis),
-                  Text("${customerCurrent.orden} | $description",
+                  Text("${customerCurrent.orden} | ${customerCurrent.name}",
                       style: TextStyles.grey14_4),
                 ],
               )),

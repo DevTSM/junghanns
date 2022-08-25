@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:junghanns/models/authorization.dart';
 import 'package:junghanns/models/config.dart';
@@ -11,6 +12,7 @@ class CustomerModel {
   int orden;
   int idClient;
   int idRoute;
+  int type;
   double lat;
   double lng;
   double priceLiquid;
@@ -37,6 +39,7 @@ class CustomerModel {
       required this.orden,
       required this.idClient,
       required this.idRoute,
+      required this.type,
       required this.lat,
       required this.lng,
       required this.priceLiquid,
@@ -64,6 +67,7 @@ class CustomerModel {
         orden: 0,
         idClient: 0,
         idRoute: 0,
+        type: 0,
         lat: 0,
         lng: 0,
         priceLiquid: 0.0,
@@ -83,13 +87,14 @@ class CustomerModel {
         color: "FF000000");
   }
 
-  factory CustomerModel.fromList(Map<String, dynamic> data, int idRoute) {
+  factory CustomerModel.fromList(Map<String, dynamic> data, int idRoute,int type) {
     return CustomerModel(
         invoice: false,
         id: data["id"],
         orden: data["orden"] ?? 0,
         idClient: data["idCliente"],
         idRoute: idRoute,
+        type:type,
         lat: 0,
         lng: 0,
         priceLiquid: 0,
@@ -109,13 +114,14 @@ class CustomerModel {
         referenceAddress: "",
         color: data["color"] ?? "FF000000");
   }
-  factory CustomerModel.fromService(Map<String, dynamic> data, int id) {
+  factory CustomerModel.fromService(Map<String, dynamic> data, int id,int type) {
     return CustomerModel(
         invoice: false,
         id: id,
         orden: data["orden"] ?? 0,
         idClient: data["idCliente"] ?? 0,
         idRoute: data["idRuta"] ?? 0,
+        type: type,
         lat: double.parse(data["latitud"] ?? "0"),
         lng: double.parse(data["longitud"] ?? "0"),
         priceLiquid: double.parse((data["precioLiquido"] ?? "0").toString()),
@@ -144,6 +150,7 @@ class CustomerModel {
         orden: data["orden"] ?? 0,
         idClient: data["idCustomer"] ?? 0,
         idRoute: data["idRuta"] ?? 0,
+        type:data["type"]??0,
         lat: data["lat"],
         lng: data["lng"],
         priceLiquid: data["priceLiquid"] ?? 0,
@@ -171,6 +178,7 @@ class CustomerModel {
       'orden': orden,
       'idCustomer': idClient,
       'idRoute': idRoute,
+      'type':type,
       'lat': lat,
       'lng': lng,
       'priceLiquid': priceLiquid,
@@ -183,8 +191,9 @@ class CustomerModel {
       'category': category,
       'days': days,
       'img': img,
-      'observacion': observation,
-      'referenceAddress': referenceAddress,
+      'observacion':observation,
+      'auth': "",
+      'payment':"",
       'color': color
     };
   }

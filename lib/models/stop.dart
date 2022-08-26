@@ -22,7 +22,7 @@ class StopModel {
   }
   factory StopModel.fromService(Map<String, dynamic> data) {
     return StopModel(
-        id: data["id"] ?? 0,
+        id: int.parse((data["id"] ?? 0).toString()),
         description: data["descripcion"] ?? "",
         icon: data["icon"],
         color: data["color"],

@@ -20,7 +20,7 @@ class SaleModel {
         type: data["tipo"] ?? "VENTA",
         description: data["descripcion"] ?? "",
         amount: double.parse((data["importe"] ?? "0").toString()),
-        count: data["cantidad"]);
+        count: double.parse((data["cantidad"] ?? "0").toString()).ceil());
   }
 }
 

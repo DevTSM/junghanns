@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:junghanns/components/button.dart';
 import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/models/dashboard.dart';
 import 'package:junghanns/preferences/global_variables.dart';
@@ -26,21 +27,12 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   late Size size;
   //
-  late DateTime today;
-  late String todayText, dayText, monthText;
   late DashboardModel dashboardR;
-  //
 
   @override
   void initState() {
     super.initState();
     getPermission();
-    today = DateTime.now();
-    today.month < 10
-        ? monthText = "0${today.month}"
-        : monthText = "${today.month}";
-    today.day < 10 ? dayText = "0${today.day}" : dayText = "${today.day}";
-    todayText = "${today.year}$monthText$dayText";
     dashboardR = DashboardModel.fromState();
     getDashboarR();
   }
@@ -50,10 +42,10 @@ class _HomeState extends State<Home> {
   }
 
   getDashboarR() async {
-    log("Fecha: $todayText");
+    //log("Fecha: $todayText");
     log("Ruta: ${prefs.idRouteD}");
 
-    await getDashboarRuta(prefs.idRouteD, todayText).then((answer) {
+    await getDashboarRuta(prefs.idRouteD, DateTime.now()).then((answer) {
       if (answer.error) {
         Fluttertoast.showToast(
           msg: "Sin datos de ruta",
@@ -77,50 +69,51 @@ class _HomeState extends State<Home> {
       size = MediaQuery.of(context).size;
     });
     return Scaffold(
-        appBar: AppBar(
-          backgroundColor: ColorsJunghanns.whiteJ,
-          systemOverlayStyle: const SystemUiOverlayStyle(
-              statusBarColor: ColorsJunghanns.whiteJ,
-              statusBarIconBrightness: Brightness.dark,
-              statusBarBrightness: Brightness.dark),
-          leading: GestureDetector(
-            child: Container(
-                padding: const EdgeInsets.only(left: 24),
-                child: Image.asset("assets/icons/menu.png")),
-            onTap: () {},
-          ),
-          actions: [
-            Container(
-              alignment: Alignment.center,
-              padding: const EdgeInsets.only(right: 10),
-              child: Text(
-                "V 1.0.4",
-                style: TextStyles.blue18SemiBoldIt,
-              ),
-            )
-          ],
-          elevation: 0,
+      appBar: AppBar(
+        backgroundColor: ColorsJunghanns.whiteJ,
+        systemOverlayStyle: const SystemUiOverlayStyle(
+            statusBarColor: ColorsJunghanns.whiteJ,
+            statusBarIconBrightness: Brightness.dark,
+            statusBarBrightness: Brightness.dark),
+        leading: GestureDetector(
+          child: Container(
+              padding: const EdgeInsets.only(left: 24),
+              child: Image.asset("assets/icons/menu.png")),
+          onTap: () {},
         ),
-        body: Stack(
-          children: [
-            Container(
-                height: double.infinity,
-                color: ColorsJunghanns.lightBlue,
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      deliveryMenZone(),
-                      const SizedBox(
-                        height: 20,
-                      ),
-                      customersZone()
-                    ],
-                  ),
-                )),
-            buttonSync()
-          ],
-        ));
+        actions: [
+          Container(
+            alignment: Alignment.center,
+            padding: const EdgeInsets.only(right: 10),
+            child: Text(
+              "${urlBase != ipProd ? "Beta " : ""}V 1.0.5",
+              style: TextStyles.blue18SemiBoldIt,
+            ),
+          )
+        ],
+        elevation: 0,
+      ),
+      body: Stack(
+        children: [
+          Container(
+              height: double.infinity,
+              color: ColorsJunghanns.lightBlue,
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    deliveryMenZone(),
+                    const SizedBox(
+                      height: 20,
+                    ),
+                    customersZone()
+                  ],
+                ),
+              )),
+          buttonSync()
+        ],
+      ),
+    );
   }
 
   Widget deliveryMenZone() {
@@ -172,11 +165,10 @@ class _HomeState extends State<Home> {
                           left: 5, right: 5, top: 5, bottom: 5),
                       child: RichText(
                           text: TextSpan(children: [
-                        const TextSpan(
-                            text: "Ruta", style: TextStyles.white17_5),
                         TextSpan(
-                            text: prefs.idRouteD.toString(),
-                            style: TextStyles.white27_7)
+                            text: prefs.nameRouteD,
+                            style: TextStyles.white17_5),
+                        TextSpan(text: "", style: TextStyles.white27_7)
                       ])))),
             ],
           )),
@@ -319,8 +311,8 @@ class _HomeState extends State<Home> {
 
   Widget buttonSync() {
     return Align(
-      alignment: Alignment.bottomCenter,
-      child: GestureDetector(
+        alignment: Alignment.bottomCenter,
+        child: GestureDetector(
           child: Container(
             height: 50,
             width: size.width * 0.5,
@@ -343,7 +335,7 @@ class _HomeState extends State<Home> {
               ],
             ),
           ),
-          onTap: () {}),
-    );
+          onTap: () {},
+        ));
   }
 }

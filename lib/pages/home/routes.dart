@@ -1,9 +1,13 @@
+import 'dart:async';
+import 'dart:convert';
 import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:junghanns/components/loading.dart';
+import 'package:junghanns/components/modal/logout.dart';
 import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/provider/provider.dart';
 import 'package:junghanns/services/customer.dart';
@@ -12,7 +16,6 @@ import 'package:junghanns/styles/decoration.dart';
 import 'package:junghanns/styles/text.dart';
 import 'package:junghanns/widgets/card/routes.dart';
 import 'package:provider/provider.dart';
-
 import '../../preferences/global_variables.dart';
 
 class Routes extends StatefulWidget {
@@ -27,9 +30,6 @@ class _RoutesState extends State<Routes> {
   late List<CustomerModel> customerList;
   late Size size;
   late bool isLoading;
-
-  late DateTime today;
-  late String todayText, dayText, monthText;
   //
   late TextEditingController buscadorC;
   late List<CustomerModel> searchList;
@@ -37,14 +37,8 @@ class _RoutesState extends State<Routes> {
   @override
   void initState() {
     super.initState();
-    isLoading = true;
+    isLoading = false;
     customerList = [];
-    today = DateTime.now();
-    today.month < 10
-        ? monthText = "0${today.month}"
-        : monthText = "${today.month}";
-    today.day < 10 ? dayText = "0${today.day}" : dayText = "${today.day}";
-    todayText = "${today.year}$monthText$dayText";
     //
     buscadorC = TextEditingController();
     searchList = [];
@@ -52,35 +46,59 @@ class _RoutesState extends State<Routes> {
     getDataCustomerList();
   }
 
+  getPermission() async {
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.whileInUse ||
+        permission == LocationPermission.always) {
+      provider.permission = true;
+    } else {
+      provider.permission = false;
+    }
+  }
+
   getDataCustomerList() async {
-    customerList.clear();
-
-    log("Fecha: $todayText");
-    log("Ruta: ${prefs.idRouteD}");
-    await getListCustomer(prefs.idRouteD, todayText, "R").then((answer) {
-      if (answer.error) {
-        Fluttertoast.showToast(
-          msg: "Sin clientes en ruta",
-          timeInSecForIosWeb: 2,
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.TOP,
-          webShowClose: true,
-        );
+    Timer(const Duration(milliseconds: 1000), () async {
+      if (provider.connectionStatus < 4) {
+        customerList.clear();
         setState(() {
-          isLoading = false;
+          isLoading = true;
         });
-      } else {
-        provider.handler.deleteTable();
-        //provider.handler.addColumn();
-        answer.body.map((e) {
-          customerList.add(CustomerModel.fromList(e, prefs.idRouteD));
-          provider.handler.insertUser([customerList.last]);
-        }).toList();
-
-        searchList = customerList;
-
-        setState(() {
-          isLoading = false;
+        await getListCustomer(prefs.idRouteD, DateTime.now(), "R")
+            .then((answer) {
+          setState(() {
+            isLoading = false;
+          });
+          if (prefs.token != "") {
+            if (answer.error) {
+              Fluttertoast.showToast(
+                msg: "Sin clientes en ruta",
+                timeInSecForIosWeb: 2,
+                toastLength: Toast.LENGTH_LONG,
+                gravity: ToastGravity.TOP,
+                webShowClose: true,
+              );
+            } else {
+              setState(() {
+                answer.body.map((e) {
+                  customerList
+                      .add(CustomerModel.fromList(e, prefs.idRouteD, 2));
+                }).toList();
+                searchList = customerList;
+              });
+              getPermission();
+            }
+          } else {
+            Fluttertoast.showToast(
+              msg: "Las credenciales caducaron.",
+              timeInSecForIosWeb: 2,
+              toastLength: Toast.LENGTH_LONG,
+              gravity: ToastGravity.TOP,
+              webShowClose: true,
+            );
+            Timer(const Duration(milliseconds: 2000), () async {
+              Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+            });
+          }
         });
       }
     });
@@ -90,6 +108,7 @@ class _RoutesState extends State<Routes> {
   Widget build(BuildContext context) {
     size = MediaQuery.of(context).size;
     provider = Provider.of<ProviderJunghanns>(context);
+
     return Scaffold(
       key: GlobalKey<ScaffoldState>(),
       appBar: AppBar(
@@ -106,119 +125,141 @@ class _RoutesState extends State<Routes> {
         ),
         elevation: 0,
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Visibility(
-              visible: provider.connectionStatus == 4,
-              child: Container(
-                  width: double.infinity,
-                  alignment: Alignment.center,
-                  color: ColorsJunghanns.grey,
-                  padding: const EdgeInsets.only(top: 5, bottom: 5),
-                  child: const Text(
-                    "Sin conexion a internet",
-                    style: TextStyles.white14_5,
-                  ))),
-          header(),
-          const SizedBox(
-            height: 15,
-          ),
-          isLoading
-              ? Container()
-              : customerList.isNotEmpty
-                  ? buscador()
-                  : Container(),
-          provider.connectionStatus < 4
-              ? isLoading
-                  ? loading()
-                  : customerList.isNotEmpty
-                      ? Flexible(
-                          child:
-                              SingleChildScrollView(child: listCustomersAPI()))
-                      : Expanded(
-                          child: Center(
-                              child: Text(
-                          "Sin clientes en ruta",
-                          style: TextStyles.blue18SemiBoldIt,
-                        )))
-              : Expanded(
-                  child: FutureBuilder(
-                      future: provider.handler.retrieveUsers(),
-                      builder: (BuildContext context,
-                          AsyncSnapshot<List<CustomerModel>> snapshot) {
-                        if (snapshot.hasData) {
-                          return ListView.builder(
-                              itemCount: snapshot.data?.length,
-                              itemBuilder: (BuildContext context, int index) {
-                                return Column(children: [
-                                  RoutesCard(
-                                      indexHome: 2,
-                                      icon: Image.asset(
-                                        "assets/icons/${snapshot.data![index].typeVisit == "RUTA" ? "user1" : snapshot.data![index].typeVisit == "SEGUNDA" ? "user3" : "user2"}.png",
-                                        width: size.width * .14,
-                                      ),
-                                      type: "R",
-                                      customerCurrent: snapshot.data![index],
-                                      title: [
-                                        "${snapshot.data![index].idClient} - ",
-                                        snapshot.data![index].address
-                                      ],
-                                      description: snapshot.data![index].name),
-                                  Row(children: [
-                                    Container(
-                                      margin: EdgeInsets.only(
-                                          left: (size.width * .07) + 15),
-                                      color: ColorsJunghanns.grey,
-                                      width: .5,
-                                      height: 15,
-                                    )
-                                  ])
-                                ]);
-                              });
-                        } else {
-                          return Container();
-                        }
-                      }))
-        ],
-      ),
-    );
-  }
-
-  Widget listCustomersAPI() {
-    return Column(
-      children: searchList.map((e) {
-        return Column(children: [
-          RoutesCard(
-              indexHome: 2,
-              icon: Container(
-                decoration: BoxDecoration(
-                  color: Color(int.parse(
-                      e.color.toUpperCase().replaceAll("#", "FF"),
-                      radix: 16)),
-                  borderRadius: const BorderRadius.all(
-                    Radius.circular(30),
-                  ),
-                ),
-                padding: const EdgeInsets.all(10),
-                height: size.width * .14,
-                width: size.width * .14,
-                child: Image.asset("assets/icons/userIcon.png"),
-              ),
-              customerCurrent: e,
-              type: "R",
-              title: ["${e.idClient} - ", e.address],
-              description: e.name),
-          Row(children: [
-            Container(
-              margin: EdgeInsets.only(left: (size.width * .07) + 15),
-              color: ColorsJunghanns.grey,
-              width: .5,
+      body: SizedBox(
+        height: double.infinity,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Visibility(
+                visible: provider.connectionStatus == 4,
+                child: Container(
+                    width: double.infinity,
+                    alignment: Alignment.center,
+                    color: ColorsJunghanns.red,
+                    padding: const EdgeInsets.only(top: 5, bottom: 5),
+                    child: const Text(
+                      "Sin conexion a internet",
+                      style: TextStyles.white14_5,
+                    ))),
+            Visibility(
+                visible: !provider.permission,
+                child: Container(
+                    width: double.infinity,
+                    alignment: Alignment.center,
+                    color: ColorsJunghanns.red,
+                    padding: const EdgeInsets.only(top: 5, bottom: 5),
+                    child: const Text(
+                      "No has proporcionado permisos de ubicación",
+                      style: TextStyles.white14_5,
+                    ))),
+            header(),
+            const SizedBox(
               height: 15,
-            )
-          ])
-        ]);
-      }).toList(),
+            ),
+            //
+            provider.connectionStatus < 4
+                ? isLoading
+                    ? Container()
+                    : buscador()
+                : Container(),
+            //
+            provider.connectionStatus < 4
+                ? isLoading
+                    ? const Center(
+                        child: LoadingJunghanns(),
+                      )
+                    : customerList.isNotEmpty
+                        ? Expanded(
+                            child: SingleChildScrollView(
+                                child: Column(
+                            children: searchList.map((e) {
+                              return Column(children: [
+                                RoutesCard(
+                                    icon: Container(
+                                      decoration: BoxDecoration(
+                                        color: Color(int.parse(
+                                            e.color
+                                                .toUpperCase()
+                                                .replaceAll("#", "FF"),
+                                            radix: 16)),
+                                        borderRadius: const BorderRadius.all(
+                                          Radius.circular(30),
+                                        ),
+                                      ),
+                                      padding: const EdgeInsets.all(10),
+                                      height: size.width * .14,
+                                      width: size.width * .14,
+                                      child: Image.asset(
+                                          "assets/icons/userIcon.png"),
+                                    ),
+                                    customerCurrent: e),
+                                Row(children: [
+                                  Container(
+                                    margin: EdgeInsets.only(
+                                        left: (size.width * .07) + 15),
+                                    color: ColorsJunghanns.grey,
+                                    width: .5,
+                                    height: 15,
+                                  )
+                                ])
+                              ]);
+                            }).toList(),
+                          )))
+                        : Expanded(
+                            child: Center(
+                                child: Text(
+                            "Sin clientes en ruta",
+                            style: TextStyles.blue18SemiBoldIt,
+                          )))
+                : Expanded(
+                    child: FutureBuilder(
+                        future: handler.retrieveUsersType(2),
+                        builder: (BuildContext context,
+                            AsyncSnapshot<List<CustomerModel>> snapshot) {
+                          if (snapshot.hasData) {
+                            return ListView.builder(
+                                itemCount: snapshot.data?.length,
+                                itemBuilder: (BuildContext context, int index) {
+                                  return Column(children: [
+                                    RoutesCard(
+                                        icon: Container(
+                                          decoration: BoxDecoration(
+                                            color: Color(int.parse(
+                                                snapshot.data?[index].color ??
+                                                    ""
+                                                        .toUpperCase()
+                                                        .replaceAll("#", "FF"),
+                                                radix: 16)),
+                                            borderRadius:
+                                                const BorderRadius.all(
+                                              Radius.circular(30),
+                                            ),
+                                          ),
+                                          padding: const EdgeInsets.all(10),
+                                          height: size.width * .14,
+                                          width: size.width * .14,
+                                          child: Image.asset(
+                                              "assets/icons/userIcon.png"),
+                                        ),
+                                        customerCurrent: snapshot.data![index]),
+                                    Row(children: [
+                                      Container(
+                                        margin: EdgeInsets.only(
+                                            left: (size.width * .07) + 15),
+                                        color: ColorsJunghanns.grey,
+                                        width: .5,
+                                        height: 15,
+                                      )
+                                    ])
+                                  ]);
+                                });
+                          } else {
+                            return Container();
+                          }
+                        }))
+          ],
+        ),
+      ),
     );
   }
 
@@ -256,7 +297,7 @@ class _RoutesState extends State<Routes> {
                   width: size.width * .13,
                 ),
                 onTap: () {
-                  showConfirmLogOut();
+                  showConfirmLogOut(context, size);
                 },
               )
             ],
@@ -272,7 +313,7 @@ class _RoutesState extends State<Routes> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          checkDate(today),
+                          checkDate(DateTime.now()),
                           style: TextStyles.blue19_7,
                         ),
                         Text(
@@ -294,18 +335,16 @@ class _RoutesState extends State<Routes> {
                           left: 5, right: 5, top: 5, bottom: 5),
                       child: RichText(
                           text: TextSpan(children: [
-                        const TextSpan(
-                            text: "Ruta  ", style: TextStyles.white17_5),
                         TextSpan(
-                            text: prefs.idRouteD.toString(),
-                            style: TextStyles.white27_7)
+                            text: prefs.nameRouteD,
+                            style: TextStyles.white17_5),
                       ])))),
             ],
           )),
     ]);
   }
 
-  showConfirmLogOut() {
+  /*showConfirmLogOut() {
     showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -406,7 +445,7 @@ class _RoutesState extends State<Routes> {
         ),
       ),
     );
-  }
+  }*/
 
   Widget buscador() {
     return Container(

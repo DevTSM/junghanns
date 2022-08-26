@@ -1,43 +1,34 @@
 import 'dart:convert';
 import 'dart:developer';
-
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:junghanns/models/answer.dart';
 import 'package:http/http.dart' as http;
 import 'package:junghanns/preferences/global_variables.dart';
 
-Future<Answer> getListCustomer(int idR, String date, String type) async {
+Future<Answer> getListCustomer( int idR, DateTime date, String type) async {
   log("/CustomerServices <getListCustomer>");
-  //try {
+  try {
   var response = await http
-      .get(Uri.parse("$urlBase/visita?idRuta=$idR&date=$date&tipo=$type"),
-          //Uri.parse("$urlBase/visita?idRuta=10&date=20220617&tipo=$type"),
+      .get(Uri.parse("$urlBase/visita?idRuta=$idR&date=${(DateFormat('yyyyMMdd').format(date))}&tipo=$type"),
           headers: {
         "Content-Type": "aplication/json",
         "x-api-key": apiKey,
         "client_secret": prefs.clientSecret,
         "Authorization": "Bearer ${prefs.token}",
       });
-  log("${response.statusCode}");
-  if (response.statusCode == 200) {
-    log("/CustomerServices <getListCustomer> Successfull, ${response.body}");
-    return Answer(body: jsonDecode(response.body), message: "", error: false);
-  } else {
-    log("/CustomerServices <getListCustomer> Fail, ${response.body}");
-    return Answer(
-        body: response,
-        message: "Algo salio mal, intentalo mas tarde.",
-        error: true);
-  }
-  /*} catch (e) {
+      log(response.statusCode.toString());
+      return Answer.fromService(response);
+  } catch (e) {
     log("/CustomerServices <getListCustomer> Catch ${e.toString()}");
     return Answer(
         body: e, message: "Algo salio mal, intentalo mas tarde.", error: true);
-  }*/
+  }
 }
 
 Future<Answer> getDetailsCustomer(int id, String type) async {
   log("/CustomerServices <getDetailsCustomer>");
-  //try {
+  try {
   var response = await http.get(
       Uri.parse("$urlBase/index.php/cliente?q=dashboard&tipo=$type&id=$id"),
       headers: {
@@ -46,22 +37,12 @@ Future<Answer> getDetailsCustomer(int id, String type) async {
         "client_secret": prefs.clientSecret,
         "Authorization": "Bearer ${prefs.token}",
       });
-  log("${response.statusCode}");
-  if (response.statusCode == 200) {
-    log("/CustomerServices <getDetailsCustomer> Successfull ${response.body}");
-    return Answer(body: jsonDecode(response.body), message: "", error: false);
-  } else {
-    log("/CustomerServices <getDetailsCustomer> Fail");
+    return Answer.fromService(response);
+  } catch (e) {
+    log("/CustomerServices <getDetailsCustomer> Catch");
     return Answer(
-        body: response,
-        message: "Algo salio mal, intentalo mas tarde.",
-        error: true);
+        body: e, message: "error: ${e.toString()}", error: true);
   }
-  /*} catch (e) {
-    log("/CustomerServices <getDetailsCustomer> Catch ${e.toString()}");
-    return Answer(
-        body: e, message: "Algo salio mal, intentalo mas tarde.", error: true);
-  }*/
 }
 
 Future<Answer> getHistoryCustomer(int id) async {

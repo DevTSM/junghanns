@@ -30,51 +30,37 @@ class _LoginState extends State<Login> {
     userC = TextEditingController();
     passC = TextEditingController();
   }
-
+  
   @override
   Widget build(BuildContext context) {
     size = MediaQuery.of(context).size;
     return Scaffold(
-        body: SingleChildScrollView(
-            child: Stack(
-      children: [background(), menu(), textBottom()],
-    )));
-  }
-
-  Widget background() {
-    return SizedBox(
-      width: size.width,
-      height: size.height,
-      child: Image.asset(
+        body: Container(
+          width: size.width,
+          height: size.height,
+          decoration: const BoxDecoration(
+            image: DecorationImage(image: AssetImage(
         "assets/images/junghannsWater.png",
-        fit: BoxFit.cover,
-      ),
-    );
-  }
-
-  Widget menu() {
-    return SizedBox(
-      width: size.width,
-      height: size.height,
-      child: Column(
-        children: [
-          SizedBox(
-            height: size.height * 0.15,
+      ),fit: BoxFit.cover),
           ),
-          logoJ(),
-          SizedBox(
-            height: size.height * 0.06,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(15),
+          child:Column(
+            children: [
+              SizedBox(
+            height: size.height * 0.1,
           ),
-          cardLogin(),
-        ],
-      ),
-    );
-  }
-
-  Widget logoJ() {
-    return Image.asset(
+              Container(
+                margin: EdgeInsets.only(top: size.height * .05,left: 30,right: 30),
+                child:Image.asset(
       "assets/images/junghannsLogo.png",
-      width: size.width * 0.64,
+    )),
+    const SizedBox(height: 10,),
+              cardLogin()
+            ],
+          ),
+          ),
+        ),
     );
   }
 
@@ -197,13 +183,14 @@ class _LoginState extends State<Login> {
                     webShowClose: true,
                   );
                 } else {
+                  log(answer.body.toString());
                   prefs.isLogged = true;
                   //---------------------------------- Info DeliveryMan
                   prefs.idUserD = answer2.body["id_usuario"] ?? 0;
-                  prefs.idProfileD = answer2.body["id_perfil"] ?? 0;
+                  prefs.idProfileD = int.parse((answer2.body["id_perfil"] ?? 0).toString());
                   prefs.nameUserD = answer2.body["nombre_usuario"] ?? "";
                   prefs.nameD = answer2.body["nombre"] ?? "";
-                  prefs.idRouteD = answer2.body["id_ruta"] ?? 0;
+                  prefs.idRouteD = int.parse((answer2.body["id_ruta"] ?? 0).toString());
                   prefs.nameRouteD = answer2.body["nombre_ruta"] ?? "";
                   prefs.dayWorkD = answer2.body["dia_trabajo"] ?? "T";
                   prefs.dayWorkTextD =

@@ -50,10 +50,10 @@ class AuthorizationModel {
   factory AuthorizationModel.fromService(Map<String, dynamic> data) {
     return AuthorizationModel(
         idAuth: data["id"],
-        idProduct: data["idProductoServicio"] ?? 0,
+        idProduct: int.parse((data["idProductoServicio"] ?? 0).toString()),
         description: data["descripcion"] ?? "",
-        price: double.parse((data["precio"] ?? "0").toString()),
-        number: data["cantidad"] ?? 0,
+        price: double.parse((data["precio"] ?? "0.0").toString()),
+        number: int.parse((data["cantidad"] ?? "0").toString()),
         idClient: data["idCliente"] ?? 0,
         idCatAuth: data["idCatAutorizacion"] ?? 0,
         authText: data["autorizacion"] ?? "",

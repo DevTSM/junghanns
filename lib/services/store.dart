@@ -5,6 +5,7 @@ import 'dart:developer';
 import 'dart:io';
 import 'dart:async';
 import 'package:image_cropper/image_cropper.dart';
+import 'package:intl/intl.dart';
 import 'package:path/path.dart';
 import 'package:async/async.dart';
 import 'package:junghanns/models/answer.dart';
@@ -143,7 +144,7 @@ Future<Answer> getAuthorization(int idClient, int idR) async {
         "client_secret": prefs.clientSecret,
         "Authorization": "Bearer ${prefs.token}",
       });
-  log("${response.statusCode}");
+  log("${response.statusCode} ${response.body}");
   if (response.statusCode == 200) {
     log("/StoreServices <getAuthorization> Successfull, ${response.body}");
     return Answer(body: jsonDecode(response.body), message: "", error: false);
@@ -225,9 +226,9 @@ Future<Answer> setSale(Map<String, dynamic> data) async {
 Future<Answer> postSale(Map<String, dynamic> data) async {
   log("/StoreServices <PostSale>");
   //try {
-  var response = await http.post(Uri.parse("$urlBase/index.php/venta"),
+  var response = await http.post(Uri.parse("$urlBase/venta"),
       headers: {
-        HttpHeaders.contentTypeHeader: 'application/json; charset=UTF-8',
+        HttpHeaders.contentTypeHeader: 'application/json',
         "x-api-key": apiKey,
         "client_secret": prefs.clientSecret,
         "Authorization": "Bearer ${prefs.token}",
@@ -379,11 +380,12 @@ Future<Answer> postStop(Map<String, dynamic> data) async {
   }*/
 }
 
-Future<Answer> getDashboarRuta(int idR, String date) async {
+Future<Answer> getDashboarRuta(int idR, DateTime date) async {
   log("/StoreServices <getDashboardRuta>");
   //try {
   var response = await http.get(
-      Uri.parse("$urlBase/index.php/dashboardruta?idRuta=$idR&date=$date"),
+      Uri.parse(
+          "$urlBase/index.php/dashboardruta?idRuta=$idR&date=${(DateFormat('yyyyMMdd').format(date))}}"),
       headers: {
         "Content-Type": "aplication/json",
         "x-api-key": apiKey,

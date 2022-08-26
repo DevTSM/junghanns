@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:junghanns/components/loading.dart';
+import 'package:junghanns/components/modal/logout.dart';
 import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/provider/provider.dart';
 import 'package:junghanns/services/customer.dart';
@@ -23,13 +25,10 @@ class Specials extends StatefulWidget {
 }
 
 class _SpecialsState extends State<Specials> {
-  //late ProviderJunghanns provider;
   late List<CustomerModel> customerList;
+  late ProviderJunghanns provider;
   late Size size;
   late bool isLoading;
-
-  late DateTime today;
-  late String todayText, dayText, monthText;
   //
   late TextEditingController buscadorC;
   late List<CustomerModel> searchList;
@@ -37,14 +36,8 @@ class _SpecialsState extends State<Specials> {
   @override
   void initState() {
     super.initState();
-    isLoading = true;
+    isLoading = false;
     customerList = [];
-    today = DateTime.now();
-    today.month < 10
-        ? monthText = "0${today.month}"
-        : monthText = "${today.month}";
-    today.day < 10 ? dayText = "0${today.day}" : dayText = "${today.day}";
-    todayText = "${today.year}$monthText$dayText";
     //
     buscadorC = TextEditingController();
     searchList = [];
@@ -52,35 +45,62 @@ class _SpecialsState extends State<Specials> {
     getDataCustomerList();
   }
 
+  getPermission() async {
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.whileInUse ||
+        permission == LocationPermission.always) {
+      provider.permission = true;
+    } else {
+      provider.permission = false;
+    }
+  }
+
   getDataCustomerList() async {
-    customerList.clear();
-
-    log("Fecha: $todayText");
-    log("Ruta: ${prefs.idRouteD}");
-    await getListCustomer(prefs.idRouteD, todayText, "E").then((answer) {
-      if (answer.error) {
-        Fluttertoast.showToast(
-          msg: "Sin clientes en ruta",
-          timeInSecForIosWeb: 2,
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.TOP,
-          webShowClose: true,
-        );
+    Timer(const Duration(milliseconds: 1000), () async {
+      if (provider.connectionStatus < 4) {
+        customerList.clear();
         setState(() {
-          isLoading = false;
+          isLoading = true;
         });
-      } else {
-        //provider.handler.deleteTable();
-        //provider.handler.addColumn();
-        answer.body.map((e) {
-          customerList.add(CustomerModel.fromList(e, prefs.idRouteD));
-          //provider.handler.insertUser([customerList.last]);
-        }).toList();
-
-        searchList = customerList;
-
-        setState(() {
-          isLoading = false;
+        await getListCustomer(prefs.idRouteD, DateTime.now(), "E")
+            .then((answer) {
+          if (prefs.token != "") {
+            setState(() {
+              isLoading = false;
+            });
+            if (answer.error) {
+              Fluttertoast.showToast(
+                msg: "Sin clientes en ruta",
+                timeInSecForIosWeb: 2,
+                toastLength: Toast.LENGTH_LONG,
+                gravity: ToastGravity.TOP,
+                webShowClose: true,
+              );
+              setState(() {
+                isLoading = false;
+              });
+            } else {
+              setState(() {
+                answer.body.map((e) {
+                  customerList
+                      .add(CustomerModel.fromList(e, prefs.idRouteD, 1));
+                }).toList();
+                searchList = customerList;
+              });
+              getPermission();
+            }
+          } else {
+            Fluttertoast.showToast(
+              msg: "Las credenciales caducaron.",
+              timeInSecForIosWeb: 2,
+              toastLength: Toast.LENGTH_LONG,
+              gravity: ToastGravity.TOP,
+              webShowClose: true,
+            );
+            Timer(const Duration(milliseconds: 2000), () async {
+              Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+            });
+          }
         });
       }
     });
@@ -88,8 +108,10 @@ class _SpecialsState extends State<Specials> {
 
   @override
   Widget build(BuildContext context) {
-    size = MediaQuery.of(context).size;
-    //provider = Provider.of<ProviderJunghanns>(context);
+    setState(() {
+      size = MediaQuery.of(context).size;
+      provider = Provider.of<ProviderJunghanns>(context);
+    });
     return Scaffold(
       key: GlobalKey<ScaffoldState>(),
       appBar: AppBar(
@@ -106,45 +128,95 @@ class _SpecialsState extends State<Specials> {
         ),
         elevation: 0,
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          /*Visibility(
+      body: SizedBox(
+        height: double.infinity,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Visibility(
                 visible: provider.connectionStatus == 4,
                 child: Container(
                     width: double.infinity,
                     alignment: Alignment.center,
-                    color: ColorsJunghanns.grey,
+                    color: ColorsJunghanns.red,
                     padding: const EdgeInsets.only(top: 5, bottom: 5),
                     child: const Text(
                       "Sin conexion a internet",
                       style: TextStyles.white14_5,
-                    ))),*/
-          header(),
-          const SizedBox(
-            height: 15,
-          ),
-          isLoading
-              ? Container()
-              : customerList.isNotEmpty
-                  ? buscador()
-                  : Container(),
-          //provider.connectionStatus < 4
-          //   ?
-          isLoading
-              ? loading()
-              : customerList.isNotEmpty
-                  ? Flexible(
-                      child: SingleChildScrollView(child: listCustomersAPI()))
-                  : Expanded(
-                      child: Center(
-                          child: Text(
-                      "Sin clientes en ruta",
-                      style: TextStyles.blue18SemiBoldIt,
-                    )))
-          /* : Expanded(
+                    ))),
+            Visibility(
+                visible: !provider.permission,
+                child: Container(
+                    width: double.infinity,
+                    alignment: Alignment.center,
+                    color: ColorsJunghanns.red,
+                    padding: const EdgeInsets.only(top: 5, bottom: 5),
+                    child: const Text(
+                      "No has proporcionado permisos de ubicación",
+                      style: TextStyles.white14_5,
+                    ))),
+            header(),
+            const SizedBox(
+              height: 15,
+            ),
+            //
+            provider.connectionStatus < 4
+                ? isLoading
+                    ? Container()
+                    : buscador()
+                : Container(),
+            //
+            provider.connectionStatus < 4
+                ? isLoading
+                    ? const Center(
+                        child: LoadingJunghanns(),
+                      )
+                    : customerList.isNotEmpty
+                        ? Expanded(
+                            child: SingleChildScrollView(
+                                child: Column(
+                            children: searchList.map((e) {
+                              return Column(children: [
+                                RoutesCard(
+                                    icon: Container(
+                                      decoration: BoxDecoration(
+                                        color: Color(int.parse(
+                                            e.color
+                                                .toUpperCase()
+                                                .replaceAll("#", "FF"),
+                                            radix: 16)),
+                                        borderRadius: const BorderRadius.all(
+                                          Radius.circular(30),
+                                        ),
+                                      ),
+                                      padding: const EdgeInsets.all(10),
+                                      height: size.width * .14,
+                                      width: size.width * .14,
+                                      child: Image.asset(
+                                          "assets/icons/userIcon.png"),
+                                    ),
+                                    customerCurrent: e),
+                                Row(children: [
+                                  Container(
+                                    margin: EdgeInsets.only(
+                                        left: (size.width * .07) + 15),
+                                    color: ColorsJunghanns.grey,
+                                    width: .5,
+                                    height: 15,
+                                  )
+                                ])
+                              ]);
+                            }).toList(),
+                          )))
+                        : Expanded(
+                            child: Center(
+                                child: Text(
+                            "Sin clientes",
+                            style: TextStyles.blue18SemiBoldIt,
+                          )))
+                : Expanded(
                     child: FutureBuilder(
-                        future: provider.handler.retrieveUsers(),
+                        future: handler.retrieveUsersType(1),
                         builder: (BuildContext context,
                             AsyncSnapshot<List<CustomerModel>> snapshot) {
                           if (snapshot.hasData) {
@@ -153,17 +225,26 @@ class _SpecialsState extends State<Specials> {
                                 itemBuilder: (BuildContext context, int index) {
                                   return Column(children: [
                                     RoutesCard(
-                                        icon: Image.asset(
-                                          "assets/icons/${snapshot.data![index].typeVisit == "RUTA" ? "user1" : snapshot.data![index].typeVisit == "SEGUNDA" ? "user3" : "user2"}.png",
+                                        icon: Container(
+                                          decoration: BoxDecoration(
+                                            color: Color(int.parse(
+                                                snapshot.data?[index].color ??
+                                                    ""
+                                                        .toUpperCase()
+                                                        .replaceAll("#", "FF"),
+                                                radix: 16)),
+                                            borderRadius:
+                                                const BorderRadius.all(
+                                              Radius.circular(30),
+                                            ),
+                                          ),
+                                          padding: const EdgeInsets.all(10),
+                                          height: size.width * .14,
                                           width: size.width * .14,
+                                          child: Image.asset(
+                                              "assets/icons/userIcon.png"),
                                         ),
-                                        customerCurrent: snapshot.data![index],
-                                        title: [
-                                          "${snapshot.data![index].idClient} - ",
-                                          snapshot.data![index].address
-                                        ],
-                                        description:
-                                            snapshot.data![index].name),
+                                        customerCurrent: snapshot.data![index]),
                                     Row(children: [
                                       Container(
                                         margin: EdgeInsets.only(
@@ -178,46 +259,10 @@ class _SpecialsState extends State<Specials> {
                           } else {
                             return Container();
                           }
-                        }))*/
-        ],
+                        }))
+          ],
+        ),
       ),
-    );
-  }
-
-  Widget listCustomersAPI() {
-    return Column(
-      children: searchList.map((e) {
-        return Column(children: [
-          RoutesCard(
-              indexHome: 1,
-              icon: Container(
-                decoration: BoxDecoration(
-                  color: Color(int.parse(
-                      e.color.toUpperCase().replaceAll("#", "FF"),
-                      radix: 16)),
-                  borderRadius: const BorderRadius.all(
-                    Radius.circular(30),
-                  ),
-                ),
-                padding: const EdgeInsets.all(10),
-                height: size.width * .14,
-                width: size.width * .14,
-                child: Image.asset("assets/icons/userIcon.png"),
-              ),
-              customerCurrent: e,
-              type: "E",
-              title: ["${e.idClient} - ", e.address],
-              description: e.name),
-          Row(children: [
-            Container(
-              margin: EdgeInsets.only(left: (size.width * .07) + 15),
-              color: ColorsJunghanns.grey,
-              width: .5,
-              height: 15,
-            )
-          ])
-        ]);
-      }).toList(),
     );
   }
 
@@ -255,7 +300,7 @@ class _SpecialsState extends State<Specials> {
                   width: size.width * .13,
                 ),
                 onTap: () {
-                  showConfirmLogOut();
+                  showConfirmLogOut(context, size);
                 },
               )
             ],
@@ -271,7 +316,7 @@ class _SpecialsState extends State<Specials> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          checkDate(today),
+                          checkDate(DateTime.now()),
                           style: TextStyles.blue19_7,
                         ),
                         Text(
@@ -293,18 +338,16 @@ class _SpecialsState extends State<Specials> {
                           left: 5, right: 5, top: 5, bottom: 5),
                       child: RichText(
                           text: TextSpan(children: [
-                        const TextSpan(
-                            text: "Ruta  ", style: TextStyles.white17_5),
                         TextSpan(
-                            text: prefs.idRouteD.toString(),
-                            style: TextStyles.white27_7)
+                            text: prefs.nameRouteD,
+                            style: TextStyles.white17_5),
                       ])))),
             ],
           )),
     ]);
   }
 
-  showConfirmLogOut() {
+  /*showConfirmLogOut() {
     showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -405,8 +448,7 @@ class _SpecialsState extends State<Specials> {
         ),
       ),
     );
-  }
-
+  }*/
   Widget buscador() {
     return Container(
         height: size.height * 0.06,

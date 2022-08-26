@@ -49,6 +49,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
   late BasketModel basket;
   late int cantidad;
   late List<ConfigModel> configList = [];
+  late double distance;
 
   @override
   void initState() {
@@ -58,6 +59,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
     isLoading = true;
     //
     cantidad = 0;
+    distance=0;
     basket = BasketModel(
         idCustomer: widget.customerCurrent.idClient,
         idRoute: prefs.idRouteD,
@@ -89,23 +91,6 @@ class _ShoppingCartState extends State<ShoppingCart> {
           productsList.add(ProductModel.fromServiceProduct(e));
         }).toList();
         checkPriceCvsPriceS();
-        /*Prueba*/
-        /*productsList.add(ProductModel(
-            idProduct: 21,
-            description: "GARRAFON ETIQUETADO 20 LTS",
-            price: 80.0,
-            stock: 50,
-            img: "https://jnsc.mx/img/vacio.jpg",
-            type: 1,
-            isSelect: false));
-        productsList.add(ProductModel(
-            idProduct: 22,
-            description: "LIQUIDO DE RECAMBIO 20 LTS",
-            price: 40.0,
-            stock: 50,
-            img: "https://jnsc.mx/img/garrafon.png",
-            type: 1,
-            isSelect: false));*/
       }
       getDataPayment();
     });
@@ -145,8 +130,8 @@ class _ShoppingCartState extends State<ShoppingCart> {
           if (widget.authList.first.price == 0) {
             isNotAuth = false;
             paymentsList.add(MethodPayment(
-                wayToPay: "Credito",
-                typeWayToPay: "C",
+                wayToPay: "Efectivo",
+                typeWayToPay: "E",
                 type: "Autorizacion",
                 idProductService: widget.authList.first.idProduct,
                 description: widget.authList.first.description,
@@ -632,7 +617,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
       "id_ruta": basket.idRoute,
       "latitud": basket.lat.toString(),
       "longitud": basket.lng.toString(),
-      "venta": listSales,
+      "venta": List.from(listSales.toList()),
       "id_autorizacion": basket.idAuth != -1 ? basket.idAuth : null,
       "formas_de_pago": listWaysToPay,
       "id_data_origen": basket.idDataOrigin,
@@ -684,7 +669,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
                     } else {
                       Navigator.pop(context);
                       Fluttertoast.showToast(
-                        msg: "Lejos del domicilio",
+                        msg: "Lejos del domicilio $distance ${distance>1?"Metro":"Metros"}",
                         timeInSecForIosWeb: 16,
                         toastLength: Toast.LENGTH_LONG,
                         gravity: ToastGravity.TOP,
@@ -692,45 +677,6 @@ class _ShoppingCartState extends State<ShoppingCart> {
                       );
                     }
                   },
-              /*() async {
-                    Map<String, dynamic> data = {
-                      "idCliente": widget.customerCurrent.idClient,
-                      "idCatRuta": 21,
-                      "latitud": widget.customerCurrent.lat,
-                      "longitud": widget.customerCurrent.lng,
-                      "cantidad": 1,
-                      "precioUnitario": totalPrice,
-                      "idProductoServicio": 22,
-                      "idAutorizacion": 1,
-                      "tipoFormaPago": methodPayment.typeWayToPay,
-                      "idClienteOrdenVisitaRuta": widget.customerCurrent.id,
-                      "folio": "552555"
-                    };
-                    onLoading();
-                    await setSale(data).then((answer) {
-                      if (answer.error) {
-                        Navigator.pop(context);
-                        Fluttertoast.showToast(
-                          msg: answer.message,
-                          timeInSecForIosWeb: 2,
-                          toastLength: Toast.LENGTH_LONG,
-                          gravity: ToastGravity.TOP,
-                          webShowClose: true,
-                        );
-                      } else {
-                        Navigator.pop(context);
-                        Fluttertoast.showToast(
-                          msg: "Venta realizada con exito",
-                          timeInSecForIosWeb: 2,
-                          toastLength: Toast.LENGTH_LONG,
-                          gravity: ToastGravity.TOP,
-                          webShowClose: true,
-                        );
-                        Navigator.pop(context);
-                        Navigator.pop(context);
-                      }
-                    });
-                  },*/
               Decorations.blueBorder12),
           buttomSale(
               "No",
@@ -800,7 +746,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
   }
 
   getConfigR() async {
-    await getConfig().then((answer) {
+    await getConfig(widget.customerCurrent.idClient).then((answer) {
       if (answer.error) {
         Fluttertoast.showToast(
           msg: answer.message,
@@ -830,11 +776,12 @@ class _ShoppingCartState extends State<ShoppingCart> {
     if (permission == LocationPermission.whileInUse ||
         permission == LocationPermission.always) {
       Position _currentLocation = await Geolocator.getCurrentPosition();
-      if (Geolocator.distanceBetween(
+      distance=Geolocator.distanceBetween(
               _currentLocation.latitude,
               _currentLocation.longitude,
               widget.customerCurrent.lat,
-              widget.customerCurrent.lng) <
+              widget.customerCurrent.lng);
+      if (distance <=
           distanConfig) {
         return true;
       } else {

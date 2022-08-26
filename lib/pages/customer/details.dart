@@ -1,4 +1,5 @@
 // ignore_for_file: sized_box_for_whitespace, avoid_unnecessary_containers
+import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
 
@@ -32,7 +33,6 @@ import 'package:map_launcher/map_launcher.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../services/auth.dart';
 
 class DetailsCustomer extends StatefulWidget {
@@ -55,8 +55,6 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
   late Size size;
   late bool isRange;
   late bool isLoading;
-  late bool isImgNot;
-  late bool isNotData;
   late List<ConfigModel> configList;
   late List<AuthorizationModel> authList;
 
@@ -69,14 +67,12 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
     //
     authList = [];
     //
-    isLoading = true;
-    isImgNot = false;
-    isNotData = true;
+    isLoading = false;
     getDataDetails();
   }
 
   getConfigR() async {
-    await getConfig().then((answer) {
+    await getConfig(widget.customerCurrent.idClient).then((answer) {
       if (answer.error) {
         Fluttertoast.showToast(
           msg: answer.message,
@@ -86,7 +82,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
           webShowClose: true,
         );
       } else {
-        log("Config yes");
+        log(answer.body.toString());
         answer.body
             .map((e) => configList.add(ConfigModel.fromService(e)))
             .toList();
@@ -98,42 +94,6 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
     await getAuthorization(widget.customerCurrent.idClient, prefs.idRouteD)
         .then((answer) {
       if (answer.error) {
-        /*Fluttertoast.showToast(
-          msg: "Sin autorizaciones",
-          timeInSecForIosWeb: 2,
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.TOP,
-          webShowClose: true,
-        );*/
-        /*Prueba*/
-        /*authList.add(AuthorizationModel(
-            idAuth: 13706,
-            idProduct: 21,
-            description: "GARRAFON ETIQUETADO 20 LTS",
-            price: 0.0,
-            number: 5,
-            idClient: 9631,
-            idCatAuth: 9,
-            authText: "CORTESIA",
-            type: "V",
-            observation: "4",
-            idReasonAuth: -1,
-            reason: "ASISTENCIA SOCIAL",
-            img: "https://jnsc.mx/img/vacio.jpg"));
-        authList.add(AuthorizationModel(
-            idAuth: 13704,
-            idProduct: 22,
-            description: "LIQUIDO DE RECAMBIO 20 LTS",
-            price: 0.0,
-            number: 3,
-            idClient: 9631,
-            idCatAuth: 4,
-            authText: "GARRAFON A LA PAR",
-            type: "V",
-            observation: "Prueba garrafon a la par",
-            idReasonAuth: 6,
-            reason: "ASISTENCIA SOCIAL",
-            img: "https://jnsc.mx/img/garrafon.png"));*/
         log("Sin Autorizaciones");
       } else {
         log("Auth yes");
@@ -180,9 +140,6 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
         setState(() {
           widget.customerCurrent
               .setMoney(double.parse((answer.body["saldo"] ?? 0).toString()));
-          /*Prueba*/
-          //widget.customerCurrent.setMoney(100.0);
-          log("MONEDERO: ${widget.customerCurrent.purse}");
         });
       }
       getAuth();
@@ -190,32 +147,27 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
   }
 
   getDataDetails() async {
-    log("Cliente: ${widget.customerCurrent.id}");
-    log("Tipo: ${widget.type}");
-    await getDetailsCustomer(widget.customerCurrent.id, widget.type)
-        .then((answer) async {
-      if (answer.error) {
-        Fluttertoast.showToast(
-          msg: answer.message,
-          timeInSecForIosWeb: 2,
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.TOP,
-          webShowClose: true,
-        );
-        isNotData = true;
-      } else {
-        setState(() {
-          widget.customerCurrent =
-              CustomerModel.fromService(answer.body, widget.customerCurrent.id);
-          isImgNot = (widget.customerCurrent.img == "" ||
-                  widget.customerCurrent.img ==
-                      "https://sandbox.junghanns.app/img/clientes/address/SANDBOX/")
-              ? true
-              : false;
-          isNotData = false;
+    Timer(const Duration(milliseconds: 1000), () async {
+      if (provider.connectionStatus < 4) {
+        await getDetailsCustomer(widget.customerCurrent.id, widget.type)
+            .then((answer) async {
+          if (answer.error) {
+            Fluttertoast.showToast(
+              msg: answer.message,
+              timeInSecForIosWeb: 2,
+              toastLength: Toast.LENGTH_LONG,
+              gravity: ToastGravity.TOP,
+              webShowClose: true,
+            );
+          } else {
+            setState(() {
+              widget.customerCurrent = CustomerModel.fromService(answer.body,
+                  widget.customerCurrent.id, widget.customerCurrent.type);
+            });
+          }
+          getMoney();
         });
       }
-      getMoney();
     });
   }
 
@@ -241,36 +193,6 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
   }
 
   navigatorStops() async {
-    /*LocationPermission permission = await Geolocator.requestPermission();
-    if (permission == LocationPermission.whileInUse ||
-        permission == LocationPermission.always) {
-      Position _currentLocation = await Geolocator.getCurrentPosition();
-      if (Geolocator.distanceBetween(
-                  _currentLocation.latitude,
-                  _currentLocation.longitude,
-                  widget.customerCurrent.lat,
-                  widget.customerCurrent.lng) <
-              int.parse(configList.last.valor) ||
-          provider.connectionStatus == 4) {
-        // ignore: use_build_context_synchronously
-        Navigator.push(
-            context,
-            MaterialPageRoute<void>(
-                builder: (BuildContext context) => Stops(
-                      customerCurrent: widget.customerCurrent,
-                    )));
-      } else {
-        Fluttertoast.showToast(
-          msg: "Lejos del domicilio",
-          timeInSecForIosWeb: 16,
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.TOP,
-          webShowClose: true,
-        );
-      }
-    } else {
-      log("permission $permission");
-    }*/
     _onLoading();
     bool isValid = await funCheckDistance();
     if (isValid) {
@@ -304,37 +226,12 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
   }
 
   funCurrentLocation() {
-    if (widget.customerCurrent.lat != 0 && widget.customerCurrent.lng != 0) {
-      // log("Con ubicación");
-      // var urlAux = Uri(
-      //     scheme: 'https',
-      //     host: 'www.google.com',
-      //     path: '/maps/search/',
-      //     queryParameters: {
-      //       'api': '1',
-      //       'query':
-      //           '${widget.customerCurrent.lat},${widget.customerCurrent.lng}'
-      //     });
-      // log(urlAux.toString());
-      // launchUrl(urlAux);
-
-      Navigator.push(
-          context,
-          MaterialPageRoute<void>(
-              builder: (BuildContext context) => EditAddress(
-                  lat: widget.customerCurrent.lat,
-                  lng: widget.customerCurrent.lng)));
-    } else {
-      log("Sin Ubicación");
-      log("No LAT y No LNG");
-      Fluttertoast.showToast(
-        msg: "Sin coordenadas",
-        timeInSecForIosWeb: 2,
-        toastLength: Toast.LENGTH_LONG,
-        gravity: ToastGravity.TOP,
-        webShowClose: true,
-      );
-    }
+    Navigator.push(
+        context,
+        MaterialPageRoute<void>(
+            builder: (BuildContext context) => EditAddress(
+                lat: widget.customerCurrent.lat,
+                lng: widget.customerCurrent.lng)));
   }
 
   void _pickImage(int type) async {
@@ -381,19 +278,28 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
     LocationPermission permission = await Geolocator.requestPermission();
     if (permission == LocationPermission.whileInUse ||
         permission == LocationPermission.always) {
+      provider.permission = true;
       Position _currentLocation = await Geolocator.getCurrentPosition();
-      if (Geolocator.distanceBetween(
-              _currentLocation.latitude,
-              _currentLocation.longitude,
-              widget.customerCurrent.lat,
-              widget.customerCurrent.lng) <
-          configList.last.valor) {
+      double dif = Geolocator.distanceBetween(
+          widget.customerCurrent.lat,
+          widget.customerCurrent.lng,
+          _currentLocation.latitude,
+          _currentLocation.longitude);
+      //         Fluttertoast.showToast(
+      //   msg: "distancia $dif\n configuracion: ${configList.last.valor}\n lat:${_currentLocation.latitude}\n lng:${_currentLocation.latitude}",
+      //   timeInSecForIosWeb: 16,
+      //   toastLength: Toast.LENGTH_LONG,
+      //   gravity: ToastGravity.TOP,
+      //   webShowClose: true,
+      // );
+      if (dif <= configList.last.valor) {
         return true;
       } else {
         return false;
       }
     } else {
       print({"permission": permission.toString()});
+      provider.permission = false;
       return false;
     }
   }
@@ -422,7 +328,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
       backgroundColor: ColorsJunghanns.lightBlue,
       body: isLoading
           ? loading()
-          : isNotData
+          : widget.customerCurrent.id == 0
               ? notData()
               : refreshScroll(),
       bottomNavigationBar:
@@ -559,13 +465,24 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
         child: SingleChildScrollView(
           child: Column(
             children: [
+              Visibility(
+                  visible: !provider.permission,
+                  child: Container(
+                      width: double.infinity,
+                      alignment: Alignment.center,
+                      color: ColorsJunghanns.red,
+                      padding: const EdgeInsets.only(top: 5, bottom: 5),
+                      child: const Text(
+                        "No has proporcionado permisos de ubicación",
+                        style: TextStyles.white14_5,
+                      ))),
               header(),
               Visibility(
                   visible: provider.connectionStatus == 4,
                   child: Container(
                       width: double.infinity,
                       alignment: Alignment.center,
-                      color: ColorsJunghanns.grey,
+                      color: ColorsJunghanns.red,
                       padding: const EdgeInsets.only(top: 5, bottom: 5),
                       child: const Text(
                         "Sin conexion a internet",
@@ -594,7 +511,9 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
         height: size.width * .50,
         decoration: BoxDecoration(
             borderRadius: const BorderRadius.all(Radius.circular(10)),
-            image: isImgNot
+            image: widget.customerCurrent.img == "" ||
+                    widget.customerCurrent.img ==
+                        "https://sandbox.junghanns.app/img/clientes/address/SANDBOX/"
                 ? const DecorationImage(
                     image: AssetImage("assets/images/withoutPicture.png"),
                     fit: BoxFit.cover)
@@ -673,13 +592,9 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
                               left: 5, right: 5, top: 5, bottom: 5),
                           child: RichText(
                               text: TextSpan(children: [
-                            const TextSpan(
-                                text: "RUTA ", style: TextStyles.white17_5),
                             TextSpan(
-                                text:
-                                    //"${widget.customerCurrent.idRoute}",
-                                    "${prefs.idRouteD}",
-                                style: TextStyles.white27_7)
+                                text: widget.customerCurrent.nameRoute,
+                                style: TextStyles.white17_5),
                           ])))),
                 ],
               )),

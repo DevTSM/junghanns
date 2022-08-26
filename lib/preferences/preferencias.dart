@@ -15,7 +15,20 @@ class PreferenciasUsuario {
   initPrefs() async {
     prefs = await SharedPreferences.getInstance();
   }
+  String get ipUrl {
+    return prefs!.getString("ipUrl") ?? "";
+  }
 
+  set ipUrl(String ipUrl) {
+    prefs!.setString("ipUrl", ipUrl);
+  }
+  String get version {
+    return prefs!.getString("version") ?? "";
+  }
+
+  set version(String version) {
+    prefs!.setString("version", version);
+  }
   String get clientSecret {
     return prefs!.getString("clientSecret") ?? "";
   }
@@ -30,6 +43,13 @@ class PreferenciasUsuario {
 
   set token(String token) {
     prefs!.setString("token", token);
+  }
+  String get asyncLast {
+    return prefs!.getString("asyncLast") ?? "";
+  }
+
+  set asyncLast(String asyncLast) {
+    prefs!.setString("asyncLast", asyncLast);
   }
 
   bool get isLogged {

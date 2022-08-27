@@ -382,10 +382,11 @@ Future<Answer> postStop(Map<String, dynamic> data) async {
 
 Future<Answer> getDashboarRuta(int idR, DateTime date) async {
   log("/StoreServices <getDashboardRuta>");
+  log("Fecha : ${(DateFormat('yyyyMMdd').format(date))}");
   //try {
   var response = await http.get(
       Uri.parse(
-          "$urlBase/index.php/dashboardruta?idRuta=$idR&date=${(DateFormat('yyyyMMdd').format(date))}}"),
+          "$urlBase/dashboardruta?idRuta=$idR&date=${(DateFormat('yyyyMMdd').format(date))}}"),
       headers: {
         "Content-Type": "aplication/json",
         "x-api-key": apiKey,

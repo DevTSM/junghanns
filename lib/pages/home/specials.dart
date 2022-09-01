@@ -56,7 +56,7 @@ class _SpecialsState extends State<Specials> {
   }
 
   getDataCustomerList() async {
-    Timer(const Duration(milliseconds: 1000), () async {
+    Timer(const Duration(milliseconds: 800), () async {
       if (provider.connectionStatus < 4) {
         customerList.clear();
         setState(() {
@@ -141,7 +141,7 @@ class _SpecialsState extends State<Specials> {
                     color: ColorsJunghanns.red,
                     padding: const EdgeInsets.only(top: 5, bottom: 5),
                     child: const Text(
-                      "Sin conexion a internet",
+                      "Sin conexión a internet",
                       style: TextStyles.white14_5,
                     ))),
             Visibility(
@@ -458,11 +458,18 @@ class _SpecialsState extends State<Specials> {
             onEditingComplete: funSearch,
             onChanged: (value) => funEmpty(value),
             textAlignVertical: TextAlignVertical.center,
-            style: TextStyles.white18SemiBoldIt,
+            style: TextStyles.blueJ15SemiBold,
             decoration: InputDecoration(
+              hintText: "Buscar ...",
+              hintStyle: TextStyles.grey15Itw,
               filled: true,
-              fillColor: ColorsJunghanns.blueJ,
+              fillColor: ColorsJunghanns.whiteJ,
               contentPadding: const EdgeInsets.only(left: 24),
+              enabledBorder: OutlineInputBorder(
+                borderSide:
+                    const BorderSide(width: 1, color: ColorsJunghanns.blue),
+                borderRadius: BorderRadius.circular(10),
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10.0),
               ),
@@ -470,7 +477,7 @@ class _SpecialsState extends State<Specials> {
                   padding: EdgeInsets.only(top: 10, bottom: 10, right: 10),
                   child: Icon(
                     Icons.search,
-                    color: ColorsJunghanns.white,
+                    color: ColorsJunghanns.blue,
                   )),
             )));
   }

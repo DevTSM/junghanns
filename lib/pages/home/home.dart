@@ -86,7 +86,7 @@ class _HomeState extends State<Home> {
             alignment: Alignment.center,
             padding: const EdgeInsets.only(right: 10),
             child: Text(
-              "${urlBase != ipProd ? "Beta " : ""}V 1.0.5",
+              "${urlBase != ipProd ? "Beta " : ""}V 1.0.6",
               style: TextStyles.blue18SemiBoldIt,
             ),
           )
@@ -168,7 +168,7 @@ class _HomeState extends State<Home> {
                         TextSpan(
                             text: prefs.nameRouteD,
                             style: TextStyles.white17_5),
-                        TextSpan(text: "", style: TextStyles.white27_7)
+                        const TextSpan(text: "", style: TextStyles.white27_7)
                       ])))),
             ],
           )),

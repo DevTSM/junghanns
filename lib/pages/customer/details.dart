@@ -485,7 +485,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
                       color: ColorsJunghanns.red,
                       padding: const EdgeInsets.only(top: 5, bottom: 5),
                       child: const Text(
-                        "Sin conexion a internet",
+                        "Sin conexión a internet",
                         style: TextStyles.white14_5,
                       ))),
               balances(),

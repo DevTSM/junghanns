@@ -13,8 +13,8 @@ const List<Widget> pages = [
   Routes(),
   Seconds(),
   Call(),
-  Home()
-  //NewCustomer()
+  //Home()
+  NewCustomer()
 ];
 
 class HomePrincipal extends StatefulWidget {

@@ -153,6 +153,9 @@ class TextStyles {
   static TextStyle white15It = const TextStyle(
       fontSize: 15, fontFamily: 'MyriadPro-it', color: Colors.white60);
 
+  static TextStyle white15R = const TextStyle(
+      fontSize: 15, fontFamily: 'MyriadPro-Regular', color: Colors.white);
+
   static TextStyle white60It18 = const TextStyle(
       fontSize: 18, fontFamily: 'MyriadPro-it', color: Colors.white60);
 
@@ -197,6 +200,16 @@ class TextStyles {
   static TextStyle blueJ20Bold = const TextStyle(
       fontSize: 20, fontFamily: 'MyriadPro-Bold', color: ColorsJunghanns.blueJ);
 
+  static TextStyle blueJ18SemiBold = const TextStyle(
+      fontSize: 18,
+      fontFamily: 'MyriadPro-SemiBold',
+      color: ColorsJunghanns.blueJ);
+
+  static TextStyle blueJ15SemiBold = const TextStyle(
+      fontSize: 15,
+      fontFamily: 'MyriadPro-SemiBold',
+      color: ColorsJunghanns.blueJ);
+
   static TextStyle blueJ18Bold = const TextStyle(
       fontSize: 18, fontFamily: 'MyriadPro-Bold', color: ColorsJunghanns.blueJ);
 
@@ -221,10 +234,33 @@ class TextStyles {
       fontFamily: 'MyriadPro-Regular',
       color: ColorsJunghanns.blueJ2);
 
+  static TextStyle blueJ218R = const TextStyle(
+      fontSize: 18,
+      fontFamily: 'MyriadPro-Regular',
+      color: ColorsJunghanns.blueJ2);
+
   static const TextStyle redJ13 = TextStyle(
     fontSize: 13,
     fontFamily: 'MyriadPro-Regular',
     color: ColorsJunghanns.red,
+  );
+
+  static const TextStyle redJ13N = TextStyle(
+    fontSize: 13,
+    color: ColorsJunghanns.red,
+  );
+
+  static TextStyle redJ18R = const TextStyle(
+      fontSize: 18,
+      fontFamily: 'MyriadPro-Regular',
+      color: ColorsJunghanns.red);
+
+  static TextStyle redJ24Bold = const TextStyle(
+      fontSize: 24, fontFamily: 'MyriadPro-Bold', color: ColorsJunghanns.red);
+
+  static const TextStyle greenJ13N = TextStyle(
+    fontSize: 13,
+    color: ColorsJunghanns.greenJ,
   );
 
   static TextStyle greenJ24Bold = const TextStyle(
@@ -242,6 +278,11 @@ class TextStyles {
       fontFamily: 'MyriadPro-Bold',
       color: ColorsJunghanns.greenJ);
 
+  static TextStyle greenJ20Bold = const TextStyle(
+      fontSize: 20,
+      fontFamily: 'MyriadPro-Bold',
+      color: ColorsJunghanns.greenJ);
+
   static TextStyle green18Itw = const TextStyle(
       fontSize: 18, fontFamily: 'MyriadPro-it', color: ColorsJunghanns.greenJ);
 
@@ -253,4 +294,7 @@ class TextStyles {
 
   static TextStyle grey17Itw = const TextStyle(
       fontSize: 17, fontFamily: 'MyriadPro-it', color: ColorsJunghanns.grey);
+
+  static TextStyle grey15Itw = const TextStyle(
+      fontSize: 15, fontFamily: 'MyriadPro-it', color: ColorsJunghanns.grey);
 }

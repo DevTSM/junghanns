@@ -16,6 +16,12 @@ class Decorations {
       color: ColorsJunghanns.white,
       border: Border.all(color: ColorsJunghanns.red),
       borderRadius: const BorderRadius.all(Radius.circular(5)));
+
+  static BoxDecoration whiteBorder10Red = BoxDecoration(
+      color: ColorsJunghanns.white,
+      border: Border.all(color: ColorsJunghanns.red),
+      borderRadius: const BorderRadius.all(Radius.circular(10)));
+
   static const BoxDecoration lightBlueBorder5 = BoxDecoration(
       color: ColorsJunghanns.lightBlue,
       borderRadius: BorderRadius.all(Radius.circular(5)));

@@ -1,4 +1,5 @@
 // ignore_for_file: avoid_unnecessary_containers
+import 'dart:async';
 import 'dart:developer';
 
 import 'package:auto_size_text/auto_size_text.dart';
@@ -7,7 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:junghanns/components/button.dart';
+import 'package:junghanns/components/modal/logout.dart';
 import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/models/dashboard.dart';
 import 'package:junghanns/preferences/global_variables.dart';
@@ -42,10 +43,8 @@ class _HomeState extends State<Home> {
   }
 
   getDashboarR() async {
-    //log("Fecha: $todayText");
-    log("Ruta: ${prefs.idRouteD}");
-
     await getDashboarRuta(prefs.idRouteD, DateTime.now()).then((answer) {
+      if (prefs.token != "") {
       if (answer.error) {
         Fluttertoast.showToast(
           msg: "Sin datos de ruta",
@@ -55,11 +54,23 @@ class _HomeState extends State<Home> {
           webShowClose: true,
         );
       } else {
-        log("Si Dashboard");
+        log("Si Dashboard ${answer.body.toString()}");
         setState(() {
           dashboardR = DashboardModel.fromService(answer.body);
         });
       }
+      }else {
+            Fluttertoast.showToast(
+              msg: "Las credenciales caducaron.",
+              timeInSecForIosWeb: 2,
+              toastLength: Toast.LENGTH_LONG,
+              gravity: ToastGravity.TOP,
+              webShowClose: true,
+            );
+            Timer(const Duration(milliseconds: 2000), () async {
+              Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+            });
+          }
     });
   }
 
@@ -68,32 +79,7 @@ class _HomeState extends State<Home> {
     setState(() {
       size = MediaQuery.of(context).size;
     });
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: ColorsJunghanns.whiteJ,
-        systemOverlayStyle: const SystemUiOverlayStyle(
-            statusBarColor: ColorsJunghanns.whiteJ,
-            statusBarIconBrightness: Brightness.dark,
-            statusBarBrightness: Brightness.dark),
-        leading: GestureDetector(
-          child: Container(
-              padding: const EdgeInsets.only(left: 24),
-              child: Image.asset("assets/icons/menu.png")),
-          onTap: () {},
-        ),
-        actions: [
-          Container(
-            alignment: Alignment.center,
-            padding: const EdgeInsets.only(right: 10),
-            child: Text(
-              "${urlBase != ipProd ? "Beta " : ""}V 1.0.5",
-              style: TextStyles.blue18SemiBoldIt,
-            ),
-          )
-        ],
-        elevation: 0,
-      ),
-      body: Stack(
+    return Stack(
         children: [
           Container(
               height: double.infinity,
@@ -112,7 +98,6 @@ class _HomeState extends State<Home> {
               )),
           buttonSync()
         ],
-      ),
     );
   }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:junghanns/components/app_bar.dart';
 import 'package:junghanns/components/bottom_bar.dart';
 import 'package:junghanns/pages/home/call.dart';
 import 'package:junghanns/pages/home/home.dart';
@@ -51,10 +52,7 @@ class _HomePrincipalState extends State<HomePrincipal> {
       size = MediaQuery.of(context).size;
     });
     return Scaffold(
-      /*appBar: AppBar(
-        backgroundColor: ColorsJunghanns.whiteJ,
-        elevation: 0,
-      ),*/
+      appBar: appBarJunghanns(context, size),
       body: pages[indexCurrent],
       bottomNavigationBar: bottomBar(setIndexCurrent, indexCurrent),
     );

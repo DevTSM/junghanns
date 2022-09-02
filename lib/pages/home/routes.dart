@@ -109,23 +109,7 @@ class _RoutesState extends State<Routes> {
     size = MediaQuery.of(context).size;
     provider = Provider.of<ProviderJunghanns>(context);
 
-    return Scaffold(
-      key: GlobalKey<ScaffoldState>(),
-      appBar: AppBar(
-        backgroundColor: ColorsJunghanns.whiteJ,
-        systemOverlayStyle: const SystemUiOverlayStyle(
-            statusBarColor: ColorsJunghanns.whiteJ,
-            statusBarIconBrightness: Brightness.dark,
-            statusBarBrightness: Brightness.dark),
-        leading: GestureDetector(
-          child: Container(
-              padding: const EdgeInsets.only(left: 24),
-              child: Image.asset("assets/icons/menu.png")),
-          onTap: () {},
-        ),
-        elevation: 0,
-      ),
-      body: SizedBox(
+    return SizedBox(
         height: double.infinity,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -259,7 +243,6 @@ class _RoutesState extends State<Routes> {
                         }))
           ],
         ),
-      ),
     );
   }
 
@@ -268,14 +251,8 @@ class _RoutesState extends State<Routes> {
       Container(
           color: ColorsJunghanns.lightBlue,
           padding: EdgeInsets.only(
-              right: 15, left: 10, top: 10, bottom: size.height * .06),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                  child: Container(
-                      padding: const EdgeInsets.only(left: 15),
-                      child: Column(
+              right: 15, left: 15, top: 10, bottom: size.height * .06),
+          child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: const [
                           Text(
@@ -287,21 +264,7 @@ class _RoutesState extends State<Routes> {
                             style: TextStyles.green15_4,
                           ),
                         ],
-                      ))),
-              const SizedBox(
-                width: 10,
-              ),
-              GestureDetector(
-                child: Image.asset(
-                  "assets/icons/workRoute.png",
-                  width: size.width * .13,
-                ),
-                onTap: () {
-                  showConfirmLogOut(context, size);
-                },
-              )
-            ],
-          )),
+                      )),
       Container(
           padding: const EdgeInsets.only(right: 20, left: 20),
           child: Row(

@@ -382,8 +382,8 @@ Future<Answer> postStop(Map<String, dynamic> data) async {
 
 Future<Answer> getDashboarRuta(int idR, DateTime date) async {
   log("/StoreServices <getDashboardRuta>");
-  log("Fecha : ${(DateFormat('yyyyMMdd').format(date))}");
-  //try {
+  log("Fecha : ${(DateFormat('yyyyMMdd').format(date))}    -> $idR");
+  try {
   var response = await http.get(
       Uri.parse(
           "$urlBase/dashboardruta?idRuta=$idR&date=${(DateFormat('yyyyMMdd').format(date))}}"),
@@ -393,20 +393,10 @@ Future<Answer> getDashboarRuta(int idR, DateTime date) async {
         "client_secret": prefs.clientSecret,
         "Authorization": "Bearer ${prefs.token}",
       });
-  log("${response.statusCode}");
-  if (response.statusCode == 200) {
-    log("/StoreServices <getDashboarRuta> Successfull, ${response.body}");
-    return Answer(body: jsonDecode(response.body), message: "", error: false);
-  } else {
-    log("/StoreServices <getDashboardRuta> Fail, ${response.body}");
+  return Answer.fromService(response);
+  } catch (e) {
+    log("/CustomerServices <getListCustomer> Catch");
     return Answer(
-        body: response,
-        message: "Algo salio mal, intentalo mas tarde.",
-        error: true);
+        body: {"error":e.toString()}, message: "Algo salio mal, intentalo mas tarde.", error: true);
   }
-  /*} catch (e) {
-    log("/CustomerServices <getListCustomer> Catch ${e.toString()}");
-    return Answer(
-        body: e, message: "Algo salio mal, intentalo mas tarde.", error: true);
-  }*/
 }

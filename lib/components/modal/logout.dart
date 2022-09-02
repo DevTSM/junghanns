@@ -5,16 +5,14 @@ import 'package:junghanns/components/button.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/styles/decoration.dart';
 import 'package:junghanns/styles/text.dart';
+  class LogOut extends StatelessWidget{
+  const LogOut({Key? key}) : super(key: key);
 
-showConfirmLogOut(BuildContext context,Size size) {
-    showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return Center(
-            child: Container(
+  @override
+  Widget build(BuildContext context) {
+    return Container(
               padding: const EdgeInsets.all(12),
-              width: size.width * .75,
-              decoration: Decorations.whiteS1Card,
+              width: MediaQuery.of(context).size.width * .75,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -32,7 +30,7 @@ showConfirmLogOut(BuildContext context,Size size) {
                           flex: 2,
                           child: ButtonJunghannsLabel(
                               width: double.infinity,
-                              fun: () => () {
+                              fun: (){
                                     Navigator.pop(context);
                                     log("LOG OUT");
                                     //-------------------------*** LOG OUT
@@ -61,9 +59,8 @@ showConfirmLogOut(BuildContext context,Size size) {
                           flex: 2,
                           child: ButtonJunghannsLabel(
                               width: double.infinity,
-                              fun: () => () => () {
-                                    Navigator.pop(context);
-                                  },
+                              fun: ()=>
+                                    Navigator.pop(context),
                               decoration: Decorations.redCard,
                               style: TextStyles.white18SemiBoldIt,
                               label: "No")),
@@ -71,7 +68,12 @@ showConfirmLogOut(BuildContext context,Size size) {
                   ),
                 ],
               ),
-            ),
-          );
-        });
+            );
+  }
+  }
+  showLogOut(BuildContext context){
+    showDialog(
+    context: context,
+    builder: (_) => AlertDialog(content: LogOut(),),
+  );
   }

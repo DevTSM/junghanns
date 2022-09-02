@@ -46,7 +46,6 @@ class _OpeningState extends State<Opening> {
     //validamos si ya se hizo la sincronizacion
     Timer(const Duration(milliseconds: 2000), () async {
       if (prefs.isLogged) {
-        log("--------------------------------2");
         if (DateTime.now()
                 .difference(DateTime.parse(prefs.asyncLast != ""
                     ? prefs.asyncLast
@@ -57,8 +56,8 @@ class _OpeningState extends State<Opening> {
             isAsync = true;
           });
           prefs.asyncLast = DateTime.now().toString();
-          log("/sincronizando la base de datos");
-          Async asyncDB = Async();
+          log("/sincronizando base de datos");
+          Async asyncDB = Async(provider: provider);
           await asyncDB.init().then((value) {
             if (value) {
               Navigator.pushReplacement<void, void>(
@@ -110,7 +109,6 @@ class _OpeningState extends State<Opening> {
     }
     provider.connectionStatus = result.index;
     if (result.index < 4) {
-      log("--------------------------------");
       asyncDB();
     }
   }
@@ -183,7 +181,7 @@ class _OpeningState extends State<Opening> {
                 )),
             Visibility(
                 visible: isAsync,
-                child: const Text("Sincronizando datos, ya falta poco"))
+                child:Text(provider.labelAsync))
           ]),
         ),
       ],

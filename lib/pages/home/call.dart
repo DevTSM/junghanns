@@ -109,23 +109,7 @@ class _CallState extends State<Call> {
       size = MediaQuery.of(context).size;
       provider = Provider.of<ProviderJunghanns>(context);
     });
-    return Scaffold(
-      key: GlobalKey<ScaffoldState>(),
-      appBar: AppBar(
-        backgroundColor: ColorsJunghanns.whiteJ,
-        systemOverlayStyle: const SystemUiOverlayStyle(
-            statusBarColor: ColorsJunghanns.whiteJ,
-            statusBarIconBrightness: Brightness.dark,
-            statusBarBrightness: Brightness.dark),
-        leading: GestureDetector(
-          child: Container(
-              padding: const EdgeInsets.only(left: 24),
-              child: Image.asset("assets/icons/menu.png")),
-          onTap: () {},
-        ),
-        elevation: 0,
-      ),
-      body: SizedBox(
+    return SizedBox(
         height: double.infinity,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -245,7 +229,6 @@ class _CallState extends State<Call> {
                         }))
           ],
         ),
-      ),
     );
   }
 
@@ -255,13 +238,7 @@ class _CallState extends State<Call> {
           color: ColorsJunghanns.lightBlue,
           padding: EdgeInsets.only(
               right: 15, left: 10, top: 10, bottom: size.height * .06),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                  child: Container(
-                      padding: const EdgeInsets.only(left: 15),
-                      child: Column(
+          child:Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: const [
                           Text(
@@ -273,21 +250,7 @@ class _CallState extends State<Call> {
                             style: TextStyles.green15_4,
                           ),
                         ],
-                      ))),
-              const SizedBox(
-                width: 10,
-              ),
-              GestureDetector(
-                child: Image.asset(
-                  "assets/icons/workRoute.png",
-                  width: size.width * .13,
-                ),
-                onTap: () {
-                  showConfirmLogOut(context, size);
-                },
-              )
-            ],
-          )),
+                      )),
       Container(
           padding: const EdgeInsets.only(right: 20, left: 20),
           child: Row(
@@ -329,109 +292,6 @@ class _CallState extends State<Call> {
           )),
     ]);
   }
-
-  /*showConfirmLogOut() {
-    showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return Center(
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              width: size.width * .75,
-              decoration: Decorations.whiteS1Card,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [textConfirmLogOut(), buttoms()],
-              ),
-            ),
-          );
-        });
-  }
-
-  Widget textConfirmLogOut() {
-    return Container(
-        alignment: Alignment.center,
-        padding: const EdgeInsets.only(top: 15, bottom: 25),
-        child: DefaultTextStyle(
-            style: TextStyles.blueJ22Bold, child: const Text("Cerrar sesión")));
-  }
-
-  Widget buttoms() {
-    return Container(
-      alignment: Alignment.center,
-      padding: const EdgeInsets.only(bottom: 15),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          buttomSale(
-              "Si",
-              () => () {
-                    Navigator.pop(context);
-                    funLogOut();
-                  },
-              Decorations.blueBorder12),
-          buttomSale(
-              "No",
-              () => () {
-                    Navigator.pop(context);
-                  },
-              Decorations.redCard),
-        ],
-      ),
-    );
-  }
-
-  Widget buttomSale(String op, Function fun, BoxDecoration deco) {
-    return GestureDetector(
-      onTap: fun(),
-      child: Container(
-          alignment: Alignment.center,
-          width: size.width * 0.22,
-          height: size.width * 0.11,
-          decoration: deco,
-          child: DefaultTextStyle(
-              style: TextStyles.white18SemiBoldIt,
-              child: Text(
-                op,
-              ))),
-    );
-  }
-
-  funLogOut() {
-    log("LOG OUT");
-    //-------------------------*** LOG OUT
-    prefs.isLogged = false;
-    prefs.idUserD = 0;
-    prefs.idProfileD = 0;
-    prefs.nameUserD = "";
-    prefs.nameD = "";
-    prefs.idRouteD = 0;
-    prefs.nameRouteD = "";
-    prefs.dayWorkD = "";
-    prefs.dayWorkTextD = "";
-    prefs.codeD = "";
-    //--------------------------*********
-    Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
-  }
-
-  Widget loading() {
-    return Center(
-      child: Container(
-        margin: const EdgeInsets.only(top: 30),
-        decoration: BoxDecoration(
-          color: Colors.blue.withOpacity(0.8),
-          borderRadius: const BorderRadius.all(Radius.circular(25)),
-        ),
-        height: MediaQuery.of(context).size.width * .30,
-        width: MediaQuery.of(context).size.width * .30,
-        child: const SpinKitDualRing(
-          color: Colors.white70,
-          lineWidth: 4,
-        ),
-      ),
-    );
-  }*/
 
   Widget buscador() {
     return Container(

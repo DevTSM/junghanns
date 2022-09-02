@@ -6,7 +6,7 @@
    <application
         android:label="junghanns"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/launcher_icon">
         <meta-data android:name="com.google.android.maps.v2.API_KEY"
                android:value="AIzaSyARHOe5DZ1uMpMEwuwSEr6ciJ0m3hpScEk"/>
         <activity

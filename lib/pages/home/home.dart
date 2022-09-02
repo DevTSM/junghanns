@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:junghanns/components/loading.dart';
 import 'package:junghanns/components/modal/logout.dart';
 import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/models/dashboard.dart';
@@ -29,12 +30,14 @@ class _HomeState extends State<Home> {
   late Size size;
   //
   late DashboardModel dashboardR;
+  late bool isLoading;
 
   @override
   void initState() {
     super.initState();
     getPermission();
     dashboardR = DashboardModel.fromState();
+    isLoading=true;
     getDashboarR();
   }
 
@@ -43,7 +46,13 @@ class _HomeState extends State<Home> {
   }
 
   getDashboarR() async {
+    setState(() {
+      isLoading=true;
+    });
     await getDashboarRuta(prefs.idRouteD, DateTime.now()).then((answer) {
+      setState(() {
+      isLoading=false;
+    });
       if (prefs.token != "") {
       if (answer.error) {
         Fluttertoast.showToast(
@@ -79,7 +88,8 @@ class _HomeState extends State<Home> {
     setState(() {
       size = MediaQuery.of(context).size;
     });
-    return Stack(
+    return 
+      Stack(
         children: [
           Container(
               height: double.infinity,
@@ -96,7 +106,8 @@ class _HomeState extends State<Home> {
                   ],
                 ),
               )),
-          buttonSync()
+          buttonSync(),
+          Visibility(visible: isLoading, child: const LoadingJunghanns())
         ],
     );
   }
@@ -153,7 +164,7 @@ class _HomeState extends State<Home> {
                         TextSpan(
                             text: prefs.nameRouteD,
                             style: TextStyles.white17_5),
-                        TextSpan(text: "", style: TextStyles.white27_7)
+                        const TextSpan(text: "", style: TextStyles.white27_7)
                       ])))),
             ],
           )),

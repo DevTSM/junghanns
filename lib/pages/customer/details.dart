@@ -13,6 +13,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:junghanns/components/bottom_bar.dart';
 import 'package:junghanns/components/button.dart';
+import 'package:junghanns/components/loading.dart';
 import 'package:junghanns/models/authorization.dart';
 import 'package:junghanns/models/config.dart';
 import 'package:junghanns/models/customer.dart';
@@ -127,7 +128,13 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
   }
 
   getMoney() {
+    setState(() {
+      isLoading=true;
+    });
     getMoneyCustomer(widget.customerCurrent.idClient).then((answer) {
+      setState(() {
+      isLoading=false;
+    });
       if (answer.error) {
         Fluttertoast.showToast(
           msg: answer.message,
@@ -147,10 +154,16 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
   }
 
   getDataDetails() async {
+    setState(() {
+      isLoading=true;
+    });
     Timer(const Duration(milliseconds: 1000), () async {
       if (provider.connectionStatus < 4) {
         await getDetailsCustomer(widget.customerCurrent.id, widget.type)
             .then((answer) async {
+              setState(() {
+      isLoading=false;
+    });
           if (answer.error) {
             Fluttertoast.showToast(
               msg: answer.message,
@@ -310,7 +323,9 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
       size = MediaQuery.of(context).size;
     });
     provider = Provider.of<ProviderJunghanns>(context);
-    return Scaffold(
+    return Stack(
+        children: [
+          Scaffold(
       appBar: AppBar(
         backgroundColor: ColorsJunghanns.blueJ,
         systemOverlayStyle: const SystemUiOverlayStyle(
@@ -326,13 +341,14 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
         elevation: 0,
       ),
       backgroundColor: ColorsJunghanns.lightBlue,
-      body: isLoading
-          ? loading()
-          : widget.customerCurrent.id == 0
+      body: widget.customerCurrent.id == 0
               ? notData()
               : refreshScroll(),
       bottomNavigationBar:
           bottomBar(() {}, widget.indexHome, isHome: false, context: context),
+          ),
+        Visibility(visible: isLoading, child: const LoadingJunghanns())
+    ]
     );
   }
 
@@ -485,7 +501,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
                       color: ColorsJunghanns.red,
                       padding: const EdgeInsets.only(top: 5, bottom: 5),
                       child: const Text(
-                        "Sin conexion a internet",
+                        "Sin conexión a internet",
                         style: TextStyles.white14_5,
                       ))),
               balances(),
@@ -790,10 +806,13 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
             const SizedBox(
               height: 20,
             ),
-            const Text(
-              "\t\t\t\tHistorial de visitas",
+            const SizedBox(
+              width: double.infinity,
+              child:Text(
+              "Historial de visitas",
               style: TextStyles.blue25_7,
-            ),
+              textAlign: TextAlign.center,
+            )),
             const SizedBox(
               height: 20,
             ),

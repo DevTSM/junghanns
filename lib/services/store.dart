@@ -400,3 +400,188 @@ Future<Answer> getDashboarRuta(int idR, DateTime date) async {
         body: {"error":e.toString()}, message: "Algo salio mal, intentalo mas tarde.", error: true);
   }
 }
+
+Future<Answer> getTypesOfStreets() async {
+  log("/StoreServices <getTypesOfStreets>");
+  var response = await http.get(Uri.parse("$urlBase/vialidades"), headers: {
+    "Content-Type": "aplication/json",
+    "x-api-key": apiKey,
+    "client_secret": prefs.clientSecret,
+    "Authorization": "Bearer ${prefs.token}",
+  });
+  log("${response.statusCode}");
+  if (response.statusCode == 200) {
+    log("/StoreServices <getTypesOfStreets> Successfull, ${response.body}");
+    return Answer(body: jsonDecode(response.body), message: "", error: false);
+  } else {
+    log("/StoreServices <getTypresOfStreets> Fail, ${response.body}");
+    return Answer(
+        body: response,
+        message: "Algo salio mal, intentalo mas tarde.",
+        error: true);
+  }
+}
+
+Future<Answer> getTypesOfSalesC() async {
+  log("/StoreServices <getTypesOfSalesC>");
+  var response =
+      await http.get(Uri.parse("$urlBase/tipovtacambaceo"), headers: {
+    "Content-Type": "aplication/json",
+    "x-api-key": apiKey,
+    "client_secret": prefs.clientSecret,
+    "Authorization": "Bearer ${prefs.token}",
+  });
+  log("${response.statusCode}");
+  if (response.statusCode == 200) {
+    log("/StoreServices <getTypesOfSalesC> Successfull, ${response.body}");
+    return Answer(body: jsonDecode(response.body), message: "", error: false);
+  } else {
+    log("/StoreServices <getTypresOfSalesC> Fail, ${response.body}");
+    return Answer(
+        body: response,
+        message: "Algo salio mal, intentalo mas tarde.",
+        error: true);
+  }
+}
+
+Future<Answer> getEmployees() async {
+  log("/StoreServices <getEmployees>");
+  var response = await http.get(Uri.parse("$urlBase/empleados"), headers: {
+    "Content-Type": "aplication/json",
+    "x-api-key": apiKey,
+    "client_secret": prefs.clientSecret,
+    "Authorization": "Bearer ${prefs.token}",
+  });
+  log("${response.statusCode}");
+  if (response.statusCode == 200) {
+    log("/StoreServices <getEmployees> Successfull, ${response.body}");
+    return Answer(body: jsonDecode(response.body), message: "", error: false);
+  } else {
+    log("/StoreServices <getEmployees> Fail, ${response.body}");
+    return Answer(
+        body: response,
+        message: "Algo salio mal, intentalo mas tarde.",
+        error: true);
+  }
+}
+
+Future<Answer> postNewCustomer(Map<String, dynamic> data) async {
+  log("/StoreServices <PostNewCustomer>");
+  var response = await http.post(Uri.parse("$urlBase/cliente"),
+      headers: {
+        HttpHeaders.contentTypeHeader: 'application/json; charset=UTF-8',
+        "x-api-key": apiKey,
+        "client_secret": prefs.clientSecret,
+        "Authorization": "Bearer ${prefs.token}"
+      },
+      body: jsonEncode(data));
+  log("${response.statusCode}");
+  if (response.statusCode == 201) {
+    log("/StoreServices <PostNewCustomer> Successfull ${response.body}");
+    return Answer(body: jsonDecode(response.body), message: "", error: false);
+  } else {
+    log("/StoreServices <PostNewCustomer> Fail ${response.body}");
+    return Answer(
+        body: response,
+        message: response.body,
+        //"Algo salio mal, intentalo mas tarde.",
+        error: true);
+  }
+}
+
+Future<Answer> putValidateOTP(Map<String, dynamic> data) async {
+  log("/StoreServices <PutValidateOTP>");
+  var response = await http.put(Uri.parse("$urlBase/otp"),
+      headers: {
+        HttpHeaders.contentTypeHeader: 'application/json; charset=UTF-8',
+        "x-api-key": apiKey,
+        "client_secret": prefs.clientSecret,
+        "Authorization": "Bearer ${prefs.token}"
+      },
+      body: jsonEncode(data));
+  log("${response.statusCode}");
+  var dataOTP = jsonDecode(response.body);
+  if (response.statusCode == 200) {
+    String check = dataOTP["message"] ?? "";
+    if (check == "") {
+      log("/StoreServices <PutValidateOTP> Successfull ${response.body}");
+      return Answer(body: jsonDecode(response.body), message: "", error: false);
+    } else {
+      log("/StoreServices <PutValidateOTP> Fail ${response.body}");
+      return Answer(body: dataOTP, message: dataOTP["message"], error: true);
+    }
+  } else {
+    log("/StoreServices <PutValidateOTP> Fail ${response.body}");
+    return Answer(body: dataOTP, message: response.body, error: true);
+  }
+}
+
+Future<Answer> postResendCode(Map<String, dynamic> data) async {
+  log("/StoreServices <PostResendCode>");
+  var response = await http.post(Uri.parse("$urlBase/otp"),
+      headers: {
+        HttpHeaders.contentTypeHeader: 'application/json; charset=UTF-8',
+        "x-api-key": apiKey,
+        "client_secret": prefs.clientSecret,
+        "Authorization": "Bearer ${prefs.token}"
+      },
+      body: jsonEncode(data));
+  log("${response.statusCode}");
+  if (response.statusCode == 201) {
+    log("/StoreServices <PostResendCode> Successfull ${response.body}");
+    return Answer(body: jsonDecode(response.body), message: "", error: false);
+  } else {
+    log("/StoreServices <PostResendCode> Fail ${response.body}");
+    return Answer(
+        body: response,
+        message: response.body,
+        //"Algo salio mal, intentalo mas tarde.",
+        error: true);
+  }
+}
+
+Future<Answer> putCancelOTP(Map<String, dynamic> data) async {
+  log("/StoreServices <PutCancelOTP>");
+  var response = await http.put(Uri.parse("$urlBase/cliente"),
+      headers: {
+        HttpHeaders.contentTypeHeader: 'application/json; charset=UTF-8',
+        "x-api-key": apiKey,
+        "client_secret": prefs.clientSecret,
+        "Authorization": "Bearer ${prefs.token}"
+      },
+      body: jsonEncode(data));
+  log("${response.statusCode}");
+  var dataOTP = jsonDecode(response.body);
+  if (response.statusCode == 200) {
+    String check = dataOTP["status"] ?? "";
+    if (check == "Rechazado") {
+      log("/StoreServices <PutCancelOTP> Successfull ${response.body}");
+      return Answer(body: jsonDecode(response.body), message: "", error: false);
+    } else {
+      log("/StoreServices <PutCancelOTP> 1-Fail ${response.body}");
+      return Answer(body: dataOTP, message: response.body, error: true);
+    }
+  } else {
+    log("/StoreServices <PutCancelOTP> 2-Fail ${response.body}");
+    return Answer(body: dataOTP, message: response.body, error: true);
+  }
+}
+
+Future<Answer> getStatusRecordNewCustomer(int idR) async {
+  log("/StoreServices <getStatusRecordNewCustomer>");
+  var response = await http
+      .get(Uri.parse("$urlBase/cliente?q=lead_estatus&id_ruta=$idR"), headers: {
+    "Content-Type": "aplication/json",
+    "x-api-key": apiKey,
+    "client_secret": prefs.clientSecret,
+    "Authorization": "Bearer ${prefs.token}",
+  });
+  log("${response.statusCode}");
+  if (response.statusCode == 200) {
+    log("/StoreServices <getStatusRecordNewCustomer> Successfull, ${response.body}");
+    return Answer(body: jsonDecode(response.body), message: "", error: false);
+  } else {
+    log("/StoreServices <getStatusRecordNewCustomer> Fail, ${response.body}");
+    return Answer(body: response, message: response.body, error: true);
+  }
+}

@@ -37,7 +37,7 @@ class _RoutesState extends State<Routes> {
   @override
   void initState() {
     super.initState();
-    isLoading = false;
+    isLoading = true;
     customerList = [];
     //
     buscadorC = TextEditingController();
@@ -57,7 +57,7 @@ class _RoutesState extends State<Routes> {
   }
 
   getDataCustomerList() async {
-    Timer(const Duration(milliseconds: 1000), () async {
+    Timer(const Duration(milliseconds: 800), () async {
       if (provider.connectionStatus < 4) {
         customerList.clear();
         setState(() {
@@ -109,7 +109,9 @@ class _RoutesState extends State<Routes> {
     size = MediaQuery.of(context).size;
     provider = Provider.of<ProviderJunghanns>(context);
 
-    return SizedBox(
+    return Stack(
+      children: [
+      SizedBox(
         height: double.infinity,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -122,7 +124,7 @@ class _RoutesState extends State<Routes> {
                     color: ColorsJunghanns.red,
                     padding: const EdgeInsets.only(top: 5, bottom: 5),
                     child: const Text(
-                      "Sin conexion a internet",
+                      "Sin conexión a internet",
                       style: TextStyles.white14_5,
                     ))),
             Visibility(
@@ -140,19 +142,10 @@ class _RoutesState extends State<Routes> {
             const SizedBox(
               height: 15,
             ),
-            //
+            Visibility(
+                visible: provider.connectionStatus < 4, child: buscador()),
             provider.connectionStatus < 4
-                ? isLoading
-                    ? Container()
-                    : buscador()
-                : Container(),
-            //
-            provider.connectionStatus < 4
-                ? isLoading
-                    ? const Center(
-                        child: LoadingJunghanns(),
-                      )
-                    : customerList.isNotEmpty
+                ? customerList.isNotEmpty
                         ? Expanded(
                             child: SingleChildScrollView(
                                 child: Column(
@@ -243,7 +236,9 @@ class _RoutesState extends State<Routes> {
                         }))
           ],
         ),
-    );
+      ),
+      Visibility(visible: isLoading, child: const LoadingJunghanns())
+    ]);
   }
 
   Widget header() {
@@ -253,18 +248,18 @@ class _RoutesState extends State<Routes> {
           padding: EdgeInsets.only(
               right: 15, left: 15, top: 10, bottom: size.height * .06),
           child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
-                          Text(
-                            "Ruta de trabajo",
-                            style: TextStyles.blue27_7,
-                          ),
-                          Text(
-                            "  Clientes programados para visita",
-                            style: TextStyles.green15_4,
-                          ),
-                        ],
-                      )),
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: const [
+              Text(
+                "Ruta de trabajo",
+                style: TextStyles.blue27_7,
+              ),
+              Text(
+                "  Clientes programados para visita",
+                style: TextStyles.green15_4,
+              ),
+            ],
+          )),
       Container(
           padding: const EdgeInsets.only(right: 20, left: 20),
           child: Row(
@@ -307,109 +302,6 @@ class _RoutesState extends State<Routes> {
     ]);
   }
 
-  /*showConfirmLogOut() {
-    showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return Center(
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              width: size.width * .75,
-              decoration: Decorations.whiteS1Card,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [textConfirmLogOut(), buttoms()],
-              ),
-            ),
-          );
-        });
-  }
-
-  Widget textConfirmLogOut() {
-    return Container(
-        alignment: Alignment.center,
-        padding: const EdgeInsets.only(top: 15, bottom: 25),
-        child: DefaultTextStyle(
-            style: TextStyles.blueJ22Bold, child: const Text("Cerrar sesión")));
-  }
-
-  Widget buttoms() {
-    return Container(
-      alignment: Alignment.center,
-      padding: const EdgeInsets.only(bottom: 15),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          buttomSale(
-              "Si",
-              () => () {
-                    Navigator.pop(context);
-                    funLogOut();
-                  },
-              Decorations.blueBorder12),
-          buttomSale(
-              "No",
-              () => () {
-                    Navigator.pop(context);
-                  },
-              Decorations.redCard),
-        ],
-      ),
-    );
-  }
-
-  Widget buttomSale(String op, Function fun, BoxDecoration deco) {
-    return GestureDetector(
-      onTap: fun(),
-      child: Container(
-          alignment: Alignment.center,
-          width: size.width * 0.22,
-          height: size.width * 0.11,
-          decoration: deco,
-          child: DefaultTextStyle(
-              style: TextStyles.white18SemiBoldIt,
-              child: Text(
-                op,
-              ))),
-    );
-  }
-
-  funLogOut() {
-    log("LOG OUT");
-    //-------------------------*** LOG OUT
-    prefs.isLogged = false;
-    prefs.idUserD = 0;
-    prefs.idProfileD = 0;
-    prefs.nameUserD = "";
-    prefs.nameD = "";
-    prefs.idRouteD = 0;
-    prefs.nameRouteD = "";
-    prefs.dayWorkD = "";
-    prefs.dayWorkTextD = "";
-    prefs.codeD = "";
-    //--------------------------*********
-    Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
-  }
-
-  Widget loading() {
-    return Center(
-      child: Container(
-        margin: const EdgeInsets.only(top: 30),
-        decoration: BoxDecoration(
-          color: Colors.blue.withOpacity(0.8),
-          borderRadius: const BorderRadius.all(Radius.circular(25)),
-        ),
-        height: MediaQuery.of(context).size.width * .30,
-        width: MediaQuery.of(context).size.width * .30,
-        child: const SpinKitDualRing(
-          color: Colors.white70,
-          lineWidth: 4,
-        ),
-      ),
-    );
-  }*/
-
   Widget buscador() {
     return Container(
         height: size.height * 0.06,
@@ -419,11 +311,18 @@ class _RoutesState extends State<Routes> {
             onEditingComplete: funSearch,
             onChanged: (value) => funEmpty(value),
             textAlignVertical: TextAlignVertical.center,
-            style: TextStyles.white18SemiBoldIt,
+            style: TextStyles.blueJ15SemiBold,
             decoration: InputDecoration(
+              hintText: "Buscar ...",
+              hintStyle: TextStyles.grey15Itw,
               filled: true,
-              fillColor: ColorsJunghanns.blueJ,
+              fillColor: ColorsJunghanns.whiteJ,
               contentPadding: const EdgeInsets.only(left: 24),
+              enabledBorder: OutlineInputBorder(
+                borderSide:
+                    const BorderSide(width: 1, color: ColorsJunghanns.blue),
+                borderRadius: BorderRadius.circular(10),
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10.0),
               ),
@@ -431,7 +330,7 @@ class _RoutesState extends State<Routes> {
                   padding: EdgeInsets.only(top: 10, bottom: 10, right: 10),
                   child: Icon(
                     Icons.search,
-                    color: ColorsJunghanns.white,
+                    color: ColorsJunghanns.blue,
                   )),
             )));
   }

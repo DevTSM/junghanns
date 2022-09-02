@@ -20,6 +20,11 @@ class SalesCard extends StatelessWidget{
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(saleCurrent.description,style: TextStyles.blue16_7,),
+                Visibility(
+                  visible: saleCurrent.type=="VENTA",
+                  child: Row(children: [
+                  Text("Cantidad: ${saleCurrent.count} \$${saleCurrent.amount}",style: TextStyles.grey14_4,),
+                ],)),
                 Text(DateFormat('yyyy-MM-dd | HH:mm').format(saleCurrent.date),style: TextStyles.grey14_4),
               ],
             )),

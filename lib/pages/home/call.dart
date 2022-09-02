@@ -56,7 +56,7 @@ class _CallState extends State<Call> {
   }
 
   getDataCustomerList() async {
-    Timer(const Duration(milliseconds: 1000), () async {
+    Timer(const Duration(milliseconds: 800), () async {
       if (provider.connectionStatus < 4) {
         customerList.clear();
         setState(() {
@@ -109,7 +109,9 @@ class _CallState extends State<Call> {
       size = MediaQuery.of(context).size;
       provider = Provider.of<ProviderJunghanns>(context);
     });
-    return SizedBox(
+    return Stack(
+        children: [
+    SizedBox(
         height: double.infinity,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -122,7 +124,7 @@ class _CallState extends State<Call> {
                     color: ColorsJunghanns.red,
                     padding: const EdgeInsets.only(top: 5, bottom: 5),
                     child: const Text(
-                      "Sin conexion a internet",
+                      "Sin conexión a internet",
                       style: TextStyles.white14_5,
                     ))),
             Visibility(
@@ -140,19 +142,11 @@ class _CallState extends State<Call> {
             const SizedBox(
               height: 15,
             ),
-            //
+            Visibility(
+            visible:provider.connectionStatus < 4,
+             child:buscador()),
             provider.connectionStatus < 4
-                ? isLoading
-                    ? Container()
-                    : buscador()
-                : Container(),
-
-            provider.connectionStatus < 4
-                ? isLoading
-                    ? const Center(
-                        child: LoadingJunghanns(),
-                      )
-                    : customerList.isNotEmpty
+                ? customerList.isNotEmpty
                         ? Expanded(
                             child: SingleChildScrollView(
                                 child: Column(
@@ -229,6 +223,9 @@ class _CallState extends State<Call> {
                         }))
           ],
         ),
+        ),
+    Visibility(visible: isLoading, child: const LoadingJunghanns())
+    ]
     );
   }
 
@@ -302,11 +299,18 @@ class _CallState extends State<Call> {
             onEditingComplete: funSearch,
             onChanged: (value) => funEmpty(value),
             textAlignVertical: TextAlignVertical.center,
-            style: TextStyles.white18SemiBoldIt,
+            style: TextStyles.blueJ15SemiBold,
             decoration: InputDecoration(
+              hintText: "Buscar ...",
+              hintStyle: TextStyles.grey15Itw,
               filled: true,
-              fillColor: ColorsJunghanns.blueJ,
+              fillColor: ColorsJunghanns.whiteJ,
               contentPadding: const EdgeInsets.only(left: 24),
+              enabledBorder: OutlineInputBorder(
+                borderSide:
+                    const BorderSide(width: 1, color: ColorsJunghanns.blue),
+                borderRadius: BorderRadius.circular(10),
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10.0),
               ),
@@ -314,7 +318,7 @@ class _CallState extends State<Call> {
                   padding: EdgeInsets.only(top: 10, bottom: 10, right: 10),
                   child: Icon(
                     Icons.search,
-                    color: ColorsJunghanns.white,
+                    color: ColorsJunghanns.blue,
                   )),
             )));
   }

@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/provider/provider.dart';
 import 'package:junghanns/routes/routes.dart';
@@ -47,6 +48,15 @@ class _MyAppState extends State<MyApp> {
     return ChangeNotifierProvider(
         create: (BuildContext context) => ProviderJunghanns(),
         child: MaterialApp(
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [
+            Locale('en', ''), // English, no country code
+            Locale('es'), // Spanish, no country code
+          ],
           title: 'JUNGHANNS',
           debugShowCheckedModeBanner: false,
           theme: ThemeData(

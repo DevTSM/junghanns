@@ -10,6 +10,7 @@ class EmployeeModel {
 
   factory EmployeeModel.fromService(Map<String, dynamic> data) {
     return EmployeeModel(
-        id: data["id"] ?? -1, employee: data["empleado"] ?? "No");
+        id: int.parse((data["id"] ?? -1).toString()),
+        employee: data["empleado"] ?? "No");
   }
 }

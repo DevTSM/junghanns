@@ -119,9 +119,6 @@ class _NewCustomerState extends State<NewCustomer> {
           isLoading = true;
         });
         await getTypesOfStreets().then((answer) {
-          setState(() {
-          isLoading = false;
-        });
           if (answer.error) {
             Fluttertoast.showToast(
               msg: "Sin vialidades",
@@ -196,7 +193,8 @@ class _NewCustomerState extends State<NewCustomer> {
         log("STATUS RECORD");
         if (answer.body["status"] == "awaiting_validation") {
           phoneEdit = answer.body["tel_movil"];
-          idNewCustomer = answer.body["id_cliente_cambaceo"];
+          idNewCustomer =
+              int.parse((answer.body["id_cliente_cambaceo"] ?? -1).toString());
           nameCustomerAPI = answer.body["nombre_lead"];
           Position _currentLocation = await Geolocator.getCurrentPosition();
           lat = _currentLocation.latitude;
@@ -215,138 +213,142 @@ class _NewCustomerState extends State<NewCustomer> {
     size = MediaQuery.of(context).size;
     provider = Provider.of<ProviderJunghanns>(context);
     return Stack(
-        children: [
-          Container(
-              padding: const EdgeInsets.only(left: 24, right: 24, bottom: 15),
-              color: ColorsJunghanns.lightBlue,
-              child: formNewCustomer()),
-          //
-          Visibility(visible: isOTP, child: otpField()),
-          //
-          Visibility(
-              visible: provider.connectionStatus == 4,
-              child: Container(
-                  color: ColorsJunghanns.whiteJ,
-                  child: Center(
-                      child: Text(
-                    "Sin conexión a internet",
-                    style: TextStyles.redJ24Bold,
-                    textAlign: TextAlign.center,
-                  )))),
-                   Visibility(visible: isLoading, child: const LoadingJunghanns())
-        ],
+      children: [
+        Container(
+            padding: const EdgeInsets.only(left: 24, right: 24, bottom: 15),
+            color: ColorsJunghanns.lightBlue,
+            child: formNewCustomer()),
+        //
+        Visibility(visible: isOTP, child: otpField()),
+        //
+        Visibility(
+            visible: provider.connectionStatus == 4,
+            child: Container(
+                color: ColorsJunghanns.whiteJ,
+                child: Center(
+                    child: Text(
+                  "Sin conexión a internet",
+                  style: TextStyles.redJ24Bold,
+                  textAlign: TextAlign.center,
+                )))),
+        Visibility(visible: isLoading, child: const LoadingJunghanns())
+      ],
     );
   }
 
   Widget formNewCustomer() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.only(left: 1,right: 1),
-      child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Visibility(
-            visible: !provider.permission,
-            child: Container(
-                width: double.infinity,
-                alignment: Alignment.center,
-                color: ColorsJunghanns.red,
-                padding: const EdgeInsets.only(top: 5, bottom: 5),
-                child: const Text(
-                  "No has proporcionado permisos de ubicación",
-                  style: TextStyles.white14_5,
-                ))),
-        Text(
-          "Nuevo cliente",
-          style: TextStyles.blueJ22Bold,
-        ),
-        buttonLocation(),
-        //
-        typeCustomer(),
-        //
-        typeCustomerS == "PARTICULAR"
-            ? textField(
-                "*Nombre(s)", "Nombre(s)", errName, nameC, false, false, 1)
-            : Container(),
-        typeCustomerS == "PARTICULAR"
-            ? textField(
-                "*Apellidos", "Apellidos", errLastN, lastNameC, false, false, 1)
-            : Container(),
-        typeCustomerS == "PARTICULAR"
-            ? buttonField(
-                "*Fecha Nacimiento",
-                dateBirth.year == 1900
-                    ? "Fecha Nacimiento"
-                    : "${dateBirth.day} / ${dateBirth.month} / ${dateBirth.year}",
-                errDateB != ""
+        padding: const EdgeInsets.only(left: 1, right: 1),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Visibility(
+                visible: !provider.permission,
+                child: Container(
+                    width: double.infinity,
+                    alignment: Alignment.center,
+                    color: ColorsJunghanns.red,
+                    padding: const EdgeInsets.only(top: 5, bottom: 5),
+                    child: const Text(
+                      "No has proporcionado permisos de ubicación",
+                      style: TextStyles.white14_5,
+                    ))),
+            Text(
+              "Nuevo cliente",
+              style: TextStyles.blueJ22Bold,
+            ),
+            buttonLocation(),
+            //
+            typeCustomer(),
+            //
+            typeCustomerS == "PARTICULAR"
+                ? textField(
+                    "*Nombre(s)", "Nombre(s)", errName, nameC, false, false, 1)
+                : Container(),
+            typeCustomerS == "PARTICULAR"
+                ? textField("*Apellidos", "Apellidos", errLastN, lastNameC,
+                    false, false, 1)
+                : Container(),
+            typeCustomerS == "PARTICULAR"
+                ? buttonField(
+                    "*Fecha Nacimiento",
+                    dateBirth.year == 1900
+                        ? "Fecha Nacimiento"
+                        : "${dateBirth.day} / ${dateBirth.month} / ${dateBirth.year}",
+                    errDateB != ""
+                        ? Decorations.whiteBorder10Red
+                        : Decorations.whiteSblackCard,
+                    dateBirth.year == 1900
+                        ? TextStyles.grey15Itw
+                        : TextStyles.blueJ15SemiBold,
+                    selectDate,
+                    errDateB)
+                : Container(),
+            //
+            typeCustomerS == "EMPRESA"
+                ? textField("*Nombre Empresa", "Razón Social", errCompany,
+                    companyC, false, false, 1)
+                : Container(),
+            typeCustomerS == "EMPRESA"
+                ? textField("*Contacto", "Contacto", errContact, contactC,
+                    false, false, 1)
+                : Container(),
+            textField("*Télefono Móvil", "555 555 5555", errPhone, phoneC, true,
+                true, 1),
+            textField("*E-mail", "ejemplo@midominio.com", errEmail, emailC,
+                false, false, 1),
+            buttonField(
+                "*Tipo Vialidad",
+                typeStreetS.id == -1
+                    ? "Tipo Vialidad"
+                    : typeStreetS.description,
+                errTypeStreet != ""
                     ? Decorations.whiteBorder10Red
                     : Decorations.whiteSblackCard,
-                dateBirth.year == 1900
+                typeStreetS.id == -1
                     ? TextStyles.grey15Itw
                     : TextStyles.blueJ15SemiBold,
-                selectDate,
-                errDateB)
-            : Container(),
-        //
-        typeCustomerS == "EMPRESA"
-            ? textField("*Nombre Empresa", "Razón Social", errCompany, companyC,
-                false, false, 1)
-            : Container(),
-        typeCustomerS == "EMPRESA"
-            ? textField(
-                "*Contacto", "Contacto", errContact, contactC, false, false, 1)
-            : Container(),
-        textField(
-            "*Télefono Móvil", "555 555 5555", errPhone, phoneC, true, true, 1),
-        textField("*E-mail", "ejemplo@midominio.com", errEmail, emailC, false,
-            false, 1),
-        buttonField(
-            "*Tipo Vialidad",
-            typeStreetS.id == -1 ? "Tipo Vialidad" : typeStreetS.description,
-            errTypeStreet != ""
-                ? Decorations.whiteBorder10Red
-                : Decorations.whiteSblackCard,
-            typeStreetS.id == -1
-                ? TextStyles.grey15Itw
-                : TextStyles.blueJ15SemiBold,
-            selectTypeStreet,
-            errTypeStreet),
-        textField("*Calle", "Calle", errStreet, streetC, false, false, 1),
-        textField(
-            "*No. Exterior", "No. Exterior", errNumE, numEc, false, false, 1),
-        textField("No. Interior", "No, Interiro", "", numIc, false, false, 1),
-        textField("*Colonia", "Colonia", errColony, colonyC, false, false, 1),
-        textField("*Municipio o Alcaldía", "Municipio o Alcaldia", errTown,
-            townC, false, false, 1),
-        textField("*Estado", "Estado", errState, stateC, false, false, 1),
-        textField(
-            "*Código Postal", "Código Postal", errCode, codeC, true, false, 1),
-        textField("Refecencias del domicilio", "Referencias del domicilio", "",
-            referenceC, false, false, 5),
-        buttonField(
-            "*Tipo de Venta",
-            typeSaleCs.id == -1 ? "Tipo de Venta" : typeSaleCs.description,
-            errTypeSaleC != ""
-                ? Decorations.whiteBorder10Red
-                : Decorations.whiteSblackCard,
-            typeSaleCs.id == -1
-                ? TextStyles.grey15Itw
-                : TextStyles.blueJ15SemiBold,
-            selectTypeSaleC,
-            errTypeSaleC),
-        buttonField(
-            "*Personal de Alta",
-            employeeS.id == -1 ? "Personal de Alta" : employeeS.employee,
-            errEmployee != ""
-                ? Decorations.whiteBorder10Red
-                : Decorations.whiteSblackCard,
-            employeeS.id == -1
-                ? TextStyles.grey15Itw
-                : TextStyles.blueJ15SemiBold,
-            selectEmployee,
-            errEmployee),
-        buttonContinue()
-      ],
-    ));
+                selectTypeStreet,
+                errTypeStreet),
+            textField("*Calle", "Calle", errStreet, streetC, false, false, 1),
+            textField("*No. Exterior", "No. Exterior", errNumE, numEc, false,
+                false, 1),
+            textField(
+                "No. Interior", "No, Interiro", "", numIc, false, false, 1),
+            textField(
+                "*Colonia", "Colonia", errColony, colonyC, false, false, 1),
+            textField("*Municipio o Alcaldía", "Municipio o Alcaldia", errTown,
+                townC, false, false, 1),
+            textField("*Estado", "Estado", errState, stateC, false, false, 1),
+            textField("*Código Postal", "Código Postal", errCode, codeC, true,
+                false, 1),
+            textField("Refecencias del domicilio", "Referencias del domicilio",
+                "", referenceC, false, false, 5),
+            buttonField(
+                "*Tipo de Venta",
+                typeSaleCs.id == -1 ? "Tipo de Venta" : typeSaleCs.description,
+                errTypeSaleC != ""
+                    ? Decorations.whiteBorder10Red
+                    : Decorations.whiteSblackCard,
+                typeSaleCs.id == -1
+                    ? TextStyles.grey15Itw
+                    : TextStyles.blueJ15SemiBold,
+                selectTypeSaleC,
+                errTypeSaleC),
+            buttonField(
+                "*Personal de Alta",
+                employeeS.id == -1 ? "Personal de Alta" : employeeS.employee,
+                errEmployee != ""
+                    ? Decorations.whiteBorder10Red
+                    : Decorations.whiteSblackCard,
+                employeeS.id == -1
+                    ? TextStyles.grey15Itw
+                    : TextStyles.blueJ15SemiBold,
+                selectEmployee,
+                errEmployee),
+            buttonContinue()
+          ],
+        ));
   }
 
   Widget buttonLocation() {
@@ -1080,7 +1082,7 @@ class _NewCustomerState extends State<NewCustomer> {
           gravity: ToastGravity.TOP,
           webShowClose: true,
         );
-        idNewCustomer = answer.body["id"];
+        idNewCustomer = int.parse((answer.body["id"] ?? -1).toString());
         log(idNewCustomer.toString());
       }
     });
@@ -1294,7 +1296,7 @@ class _NewCustomerState extends State<NewCustomer> {
           gravity: ToastGravity.TOP,
           webShowClose: true,
         );
-        idNewCustomer = answer.body["id"];
+        idNewCustomer = int.parse((answer.body["id"] ?? -1).toString());
         log(idNewCustomer.toString());
       }
     });

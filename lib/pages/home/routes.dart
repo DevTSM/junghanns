@@ -1,13 +1,9 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:developer';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:junghanns/components/loading.dart';
-import 'package:junghanns/components/modal/logout.dart';
 import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/provider/provider.dart';
 import 'package:junghanns/services/customer.dart';
@@ -104,48 +100,77 @@ class _RoutesState extends State<Routes> {
     });
   }
 
+  funRefreshList() async {
+    log("Refresh List");
+    customerList.clear();
+    await getListCustomer(prefs.idRouteD, DateTime.now(), "R").then((answer) {
+      if (answer.error) {
+        Fluttertoast.showToast(
+          msg: "Sin clientes en ruta",
+          timeInSecForIosWeb: 2,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+        );
+      } else {
+        answer.body.map((e) {
+          customerList.add(CustomerModel.fromList(e, prefs.idRouteD, 2));
+        }).toList();
+        setState(() {
+          searchList = customerList;
+        });
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     size = MediaQuery.of(context).size;
     provider = Provider.of<ProviderJunghanns>(context);
-
-    return Stack(
-      children: [
-      SizedBox(
-        height: double.infinity,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Visibility(
-                visible: provider.connectionStatus == 4,
-                child: Container(
-                    width: double.infinity,
-                    alignment: Alignment.center,
-                    color: ColorsJunghanns.red,
-                    padding: const EdgeInsets.only(top: 5, bottom: 5),
-                    child: const Text(
-                      "Sin conexión a internet",
-                      style: TextStyles.white14_5,
-                    ))),
-            Visibility(
-                visible: !provider.permission,
-                child: Container(
-                    width: double.infinity,
-                    alignment: Alignment.center,
-                    color: ColorsJunghanns.red,
-                    padding: const EdgeInsets.only(top: 5, bottom: 5),
-                    child: const Text(
-                      "No has proporcionado permisos de ubicación",
-                      style: TextStyles.white14_5,
-                    ))),
-            header(),
-            const SizedBox(
-              height: 15,
-            ),
-            Visibility(
-                visible: provider.connectionStatus < 4, child: buscador()),
-            provider.connectionStatus < 4
-                ? customerList.isNotEmpty
+    return Stack(children: [
+      RefreshIndicator(
+          onRefresh: () async {
+            if (provider.connectionStatus < 4) {
+              funRefreshList();
+            }
+          },
+          child: SizedBox(
+            height: double.infinity,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Visibility(
+                    visible: provider.connectionStatus == 4,
+                    child: Container(
+                        width: double.infinity,
+                        alignment: Alignment.center,
+                        color: ColorsJunghanns.red,
+                        padding: const EdgeInsets.only(top: 5, bottom: 5),
+                        child: const Text(
+                          "Sin conexión a internet",
+                          style: TextStyles.white14_5,
+                        ))),
+                Visibility(
+                    visible: !provider.permission,
+                    child: Container(
+                        width: double.infinity,
+                        alignment: Alignment.center,
+                        color: ColorsJunghanns.red,
+                        padding: const EdgeInsets.only(top: 5, bottom: 5),
+                        child: const Text(
+                          "No has proporcionado permisos de ubicación",
+                          style: TextStyles.white14_5,
+                        ))),
+                header(),
+                const SizedBox(
+                  height: 15,
+                ),
+                Visibility(
+                    visible: provider.connectionStatus < 4 &&
+                        customerList.isNotEmpty,
+                    child: buscador()),
+                provider.connectionStatus < 4
+                    ? customerList.isNotEmpty
                         ? Expanded(
                             child: SingleChildScrollView(
                                 child: Column(
@@ -188,55 +213,59 @@ class _RoutesState extends State<Routes> {
                             "Sin clientes en ruta",
                             style: TextStyles.blue18SemiBoldIt,
                           )))
-                : Expanded(
-                    child: FutureBuilder(
-                        future: handler.retrieveUsersType(2),
-                        builder: (BuildContext context,
-                            AsyncSnapshot<List<CustomerModel>> snapshot) {
-                          if (snapshot.hasData) {
-                            return ListView.builder(
-                                itemCount: snapshot.data?.length,
-                                itemBuilder: (BuildContext context, int index) {
-                                  return Column(children: [
-                                    RoutesCard(
-                                        icon: Container(
-                                          decoration: BoxDecoration(
-                                            color: Color(int.parse(
-                                                snapshot.data?[index].color ??
-                                                    ""
-                                                        .toUpperCase()
-                                                        .replaceAll("#", "FF"),
-                                                radix: 16)),
-                                            borderRadius:
-                                                const BorderRadius.all(
-                                              Radius.circular(30),
+                    : Expanded(
+                        child: FutureBuilder(
+                            future: handler.retrieveUsersType(2),
+                            builder: (BuildContext context,
+                                AsyncSnapshot<List<CustomerModel>> snapshot) {
+                              if (snapshot.hasData) {
+                                return ListView.builder(
+                                    itemCount: snapshot.data?.length,
+                                    itemBuilder:
+                                        (BuildContext context, int index) {
+                                      return Column(children: [
+                                        RoutesCard(
+                                            icon: Container(
+                                              decoration: BoxDecoration(
+                                                color: Color(int.parse(
+                                                    snapshot.data?[index]
+                                                            .color ??
+                                                        ""
+                                                            .toUpperCase()
+                                                            .replaceAll(
+                                                                "#", "FF"),
+                                                    radix: 16)),
+                                                borderRadius:
+                                                    const BorderRadius.all(
+                                                  Radius.circular(30),
+                                                ),
+                                              ),
+                                              padding: const EdgeInsets.all(10),
+                                              height: size.width * .14,
+                                              width: size.width * .14,
+                                              child: Image.asset(
+                                                  "assets/icons/userIcon.png"),
                                             ),
-                                          ),
-                                          padding: const EdgeInsets.all(10),
-                                          height: size.width * .14,
-                                          width: size.width * .14,
-                                          child: Image.asset(
-                                              "assets/icons/userIcon.png"),
-                                        ),
-                                        customerCurrent: snapshot.data![index]),
-                                    Row(children: [
-                                      Container(
-                                        margin: EdgeInsets.only(
-                                            left: (size.width * .07) + 15),
-                                        color: ColorsJunghanns.grey,
-                                        width: .5,
-                                        height: 15,
-                                      )
-                                    ])
-                                  ]);
-                                });
-                          } else {
-                            return Container();
-                          }
-                        }))
-          ],
-        ),
-      ),
+                                            customerCurrent:
+                                                snapshot.data![index]),
+                                        Row(children: [
+                                          Container(
+                                            margin: EdgeInsets.only(
+                                                left: (size.width * .07) + 15),
+                                            color: ColorsJunghanns.grey,
+                                            width: .5,
+                                            height: 15,
+                                          )
+                                        ])
+                                      ]);
+                                    });
+                              } else {
+                                return Container();
+                              }
+                            }))
+              ],
+            ),
+          )),
       Visibility(visible: isLoading, child: const LoadingJunghanns())
     ]);
   }
@@ -266,20 +295,18 @@ class _RoutesState extends State<Routes> {
             children: [
               Expanded(
                   flex: 4,
-                  child: Container(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          checkDate(DateTime.now()),
-                          style: TextStyles.blue19_7,
-                        ),
-                        Text(
-                          "${customerList.length} clientes para visitar",
-                          style: TextStyles.grey14_4,
-                        )
-                      ],
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        checkDate(DateTime.now()),
+                        style: TextStyles.blue19_7,
+                      ),
+                      Text(
+                        "${customerList.length} clientes para visitar",
+                        style: TextStyles.grey14_4,
+                      )
+                    ],
                   )),
               const SizedBox(
                 width: 10,

@@ -384,20 +384,24 @@ Future<Answer> getDashboarRuta(int idR, DateTime date) async {
   log("/StoreServices <getDashboardRuta>");
   log("Fecha : ${(DateFormat('yyyyMMdd').format(date))}    -> $idR");
   try {
-  var response = await http.get(
-      Uri.parse(
-          "$urlBase/dashboardruta?idRuta=$idR&date=${(DateFormat('yyyyMMdd').format(date))}}"),
-      headers: {
-        "Content-Type": "aplication/json",
-        "x-api-key": apiKey,
-        "client_secret": prefs.clientSecret,
-        "Authorization": "Bearer ${prefs.token}",
-      });
-  return Answer.fromService(response);
+    var response = await http.get(
+        Uri.parse(
+            "$urlBase/dashboardruta?idRuta=$idR&date=${(DateFormat('yyyyMMdd').format(date))}}"),
+        headers: {
+          "Content-Type": "aplication/json",
+          "x-api-key": apiKey,
+          "client_secret": prefs.clientSecret,
+          "Authorization": "Bearer ${prefs.token}",
+        });
+    log(response.statusCode.toString());
+    log(response.body);
+    return Answer.fromService(response);
   } catch (e) {
     log("/CustomerServices <getListCustomer> Catch");
     return Answer(
-        body: {"error":e.toString()}, message: "Algo salio mal, intentalo mas tarde.", error: true);
+        body: {"error": e.toString()},
+        message: "Algo salio mal, intentalo mas tarde.",
+        error: true);
   }
 }
 

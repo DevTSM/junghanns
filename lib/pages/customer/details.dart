@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:junghanns/components/bottom_bar.dart';
@@ -95,6 +96,35 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
     await getAuthorization(widget.customerCurrent.idClient, prefs.idRouteD)
         .then((answer) {
       if (answer.error) {
+        /*Prueba*/
+        /*authList.add(AuthorizationModel(
+            idAuth: 13706,
+            idProduct: 21,
+            description: "GARRAFON ETIQUETADO 20 LTS",
+            price: 0.0,
+            number: 5,
+            idClient: 9631,
+            idCatAuth: 9,
+            authText: "CORTESIA",
+            type: "V",
+            observation: "4",
+            idReasonAuth: -1,
+            reason: "ASISTENCIA SOCIAL",
+            img: "https://jnsc.mx/img/vacio.jpg"));
+        authList.add(AuthorizationModel(
+            idAuth: 13704,
+            idProduct: 22,
+            description: "LIQUIDO DE RECAMBIO 20 LTS",
+            price: 1.0,
+            number: 3,
+            idClient: 9631,
+            idCatAuth: 4,
+            authText: "GARRAFON A LA PAR",
+            type: "V",
+            observation: "Prueba garrafon a la par",
+            idReasonAuth: 6,
+            reason: "ASISTENCIA SOCIAL",
+            img: "https://jnsc.mx/img/garrafon.png"));*/
         log("Sin Autorizaciones");
       } else {
         log("Auth yes");
@@ -128,13 +158,13 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
   }
 
   getMoney() {
-    setState(() {
-      isLoading=true;
-    });
+    /*setState(() {
+      isLoading = true;
+    });*/
     getMoneyCustomer(widget.customerCurrent.idClient).then((answer) {
-      setState(() {
-      isLoading=false;
-    });
+      /*setState(() {
+        isLoading = false;
+      });*/
       if (answer.error) {
         Fluttertoast.showToast(
           msg: answer.message,
@@ -154,16 +184,16 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
   }
 
   getDataDetails() async {
-    setState(() {
-      isLoading=true;
-    });
     Timer(const Duration(milliseconds: 1000), () async {
       if (provider.connectionStatus < 4) {
+        setState(() {
+          isLoading = true;
+        });
         await getDetailsCustomer(widget.customerCurrent.id, widget.type)
             .then((answer) async {
-              setState(() {
-      isLoading=false;
-    });
+          /*setState(() {
+            isLoading = false;
+          });*/
           if (answer.error) {
             Fluttertoast.showToast(
               msg: answer.message,
@@ -206,10 +236,16 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
   }
 
   navigatorStops() async {
-    _onLoading();
+    //_onLoading();
+    setState(() {
+      isLoading = true;
+    });
     bool isValid = await funCheckDistance();
     if (isValid) {
-      Navigator.pop(context);
+      //Navigator.pop(context);
+      setState(() {
+        isLoading = false;
+      });
       // ignore: use_build_context_synchronously
       Navigator.push(
           context,
@@ -218,7 +254,10 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
                   customerCurrent: widget.customerCurrent,
                   distance: configList.last.valor)));
     } else {
-      Navigator.pop(context);
+      //Navigator.pop(context);
+      setState(() {
+        isLoading = false;
+      });
       Fluttertoast.showToast(
         msg: "Lejos del domicilio",
         timeInSecForIosWeb: 16,
@@ -323,33 +362,29 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
       size = MediaQuery.of(context).size;
     });
     provider = Provider.of<ProviderJunghanns>(context);
-    return Stack(
-        children: [
-          Scaffold(
-      appBar: AppBar(
-        backgroundColor: ColorsJunghanns.blueJ,
-        systemOverlayStyle: const SystemUiOverlayStyle(
-            statusBarColor: ColorsJunghanns.blueJ,
-            statusBarIconBrightness: Brightness.light,
-            statusBarBrightness: Brightness.light),
-        leading: GestureDetector(
-          child: Container(
-              padding: const EdgeInsets.only(left: 24),
-              child: Image.asset("assets/icons/menuWhite.png")),
-          onTap: () {},
-        ),
-        elevation: 0,
-      ),
-      backgroundColor: ColorsJunghanns.lightBlue,
-      body: widget.customerCurrent.id == 0
-              ? notData()
-              : refreshScroll(),
-      bottomNavigationBar:
-          bottomBar(() {}, widget.indexHome, isHome: false, context: context),
+    return Stack(children: [
+      Scaffold(
+        appBar: AppBar(
+          backgroundColor: ColorsJunghanns.blueJ,
+          systemOverlayStyle: const SystemUiOverlayStyle(
+              statusBarColor: ColorsJunghanns.blueJ,
+              statusBarIconBrightness: Brightness.light,
+              statusBarBrightness: Brightness.light),
+          leading: GestureDetector(
+            child: Container(
+                padding: const EdgeInsets.only(left: 24),
+                child: Image.asset("assets/icons/menuWhite.png")),
+            onTap: () {},
           ),
-        Visibility(visible: isLoading, child: const LoadingJunghanns())
-    ]
-    );
+          elevation: 0,
+        ),
+        backgroundColor: ColorsJunghanns.lightBlue,
+        body: widget.customerCurrent.id == 0 ? notData() : refreshScroll(),
+        bottomNavigationBar:
+            bottomBar(() {}, widget.indexHome, isHome: false, context: context),
+      ),
+      Visibility(visible: isLoading, child: const LoadingJunghanns())
+    ]);
   }
 
   Widget notData() {
@@ -568,12 +603,12 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
 
   Widget balances() {
     return Container(
-      margin: EdgeInsets.only(top: size.height * .01),
+      margin: const EdgeInsets.only(top: 4),
       child: Column(
         children: [
           //photoCard(),
           const SizedBox(
-            height: 20,
+            height: 15,
           ),
           Container(
               padding: const EdgeInsets.only(left: 15, right: 15),
@@ -615,7 +650,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
                 ],
               )),
           const SizedBox(
-            height: 20,
+            height: 15,
           ),
           Container(
             decoration: Decorations.lightBlueBorder5,
@@ -656,14 +691,24 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
               ],
             ),
           ),
+
+          SizedBox(
+            height: widget.customerCurrent.descServiceS != "" ? 15 : 0,
+          ),
+
+          widget.customerCurrent.descServiceS != ""
+              ? observation("Descripción de servicio",
+                  widget.customerCurrent.descServiceS)
+              : Container(),
           const SizedBox(
-            height: 20,
+            height: 10,
           ),
           //
-          observation(),
+          observation(
+              "Observaciones de servicio", widget.customerCurrent.observation),
           //
           const SizedBox(
-            height: 20,
+            height: 10,
           ),
           Container(
               padding: const EdgeInsets.only(left: 10, right: 10),
@@ -682,8 +727,17 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
                 ],
               )),
           const SizedBox(
-            height: 20,
+            height: 15,
           ),
+          //
+          widget.customerCurrent.notifS != ""
+              ? observation(
+                  "Notificación de servicio", widget.customerCurrent.notifS)
+              : Container(),
+          SizedBox(
+            height: widget.customerCurrent.notifS != "" ? 15 : 0,
+          ),
+          //
           Container(
               padding: const EdgeInsets.only(left: 15, right: 15),
               child: isRange
@@ -732,13 +786,23 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
   }
 
   funCheckDistanceSale() async {
-    _onLoading();
+    //_onLoading();
+    setState(() {
+      isLoading = true;
+    });
+    getMoney();
     bool isValid = await funCheckDistance();
     if (isValid) {
-      Navigator.pop(context);
+      //Navigator.pop(context);
+      setState(() {
+        isLoading = false;
+      });
       showSelectPR();
     } else {
-      Navigator.pop(context);
+      //Navigator.pop(context);
+      setState(() {
+        isLoading = false;
+      });
       Fluttertoast.showToast(
         msg: "Lejos del domicilio",
         timeInSecForIosWeb: 16,
@@ -807,12 +871,12 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
               height: 20,
             ),
             const SizedBox(
-              width: double.infinity,
-              child:Text(
-              "Historial de visitas",
-              style: TextStyles.blue25_7,
-              textAlign: TextAlign.center,
-            )),
+                width: double.infinity,
+                child: Text(
+                  "Historial de visitas",
+                  style: TextStyles.blue25_7,
+                  textAlign: TextAlign.center,
+                )),
             const SizedBox(
               height: 20,
             ),
@@ -846,13 +910,19 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
         ));
   }
 
-  Widget observation() {
+  Widget observation(String titleO, String textO) {
     return Container(
         padding: const EdgeInsets.only(left: 10, right: 10),
         child: Card(
           elevation: 2,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.0)),
+          shape: RoundedRectangleBorder(
+              side: titleO == "Observaciones de servicio"
+                  ? BorderSide.none
+                  : titleO == "Descripción de servicio"
+                      ? const BorderSide(
+                          color: ColorsJunghanns.greenJ, width: 1)
+                      : const BorderSide(color: Colors.orange, width: 1),
+              borderRadius: BorderRadius.circular(5.0)),
           child: Container(
               padding: const EdgeInsets.only(
                   left: 15, right: 15, top: 10, bottom: 10),
@@ -862,23 +932,35 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
                     children: [
                       Expanded(
                           child: Text(
-                        "Observaciones de servicio",
-                        style: TextStyles.blueJ20Bold,
+                        titleO,
+                        style: titleO == "Observaciones de servicio"
+                            ? TextStyles.blueJ20Bold
+                            : titleO == "Descripción de servicio"
+                                ? TextStyles.greenJ20Bold
+                                : TextStyles.orangeJ20Bold,
                       )),
-                      Image.asset(
-                        "assets/icons/observationIcon.png",
-                        width: 50,
-                      ),
+                      titleO == "Observaciones de servicio"
+                          ? Image.asset(
+                              "assets/icons/observationIcon.png",
+                              width: 50,
+                            )
+                          : Icon(
+                              titleO == "Descripción de servicio"
+                                  ? FontAwesomeIcons.exclamationCircle
+                                  : FontAwesomeIcons.exclamationTriangle,
+                              color: titleO == "Descripción de servicio"
+                                  ? ColorsJunghanns.greenJ
+                                  : ColorsJunghanns.orange,
+                              size: 28,
+                            ),
                     ],
                   ),
                   Container(
-                      padding:
-                          const EdgeInsets.only(left: 4, right: 4, bottom: 5),
-                      child: Text(
-                        widget.customerCurrent.observation,
-                        textAlign: TextAlign.justify,
-                        style: TextStyles.grey17_4,
-                      )),
+                      padding: const EdgeInsets.only(
+                          left: 4, right: 4, bottom: 5, top: 8),
+                      child: Text(textO,
+                          textAlign: TextAlign.justify,
+                          style: TextStyles.grey17_4)),
                   /*Container(
                     width: double.infinity,
                     alignment: Alignment.bottomRight,

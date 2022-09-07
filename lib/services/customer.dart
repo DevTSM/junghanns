@@ -6,19 +6,20 @@ import 'package:junghanns/models/answer.dart';
 import 'package:http/http.dart' as http;
 import 'package:junghanns/preferences/global_variables.dart';
 
-Future<Answer> getListCustomer( int idR, DateTime date, String type) async {
+Future<Answer> getListCustomer(int idR, DateTime date, String type) async {
   log("/CustomerServices <getListCustomer>");
   try {
-  var response = await http
-      .get(Uri.parse("$urlBase/visita?idRuta=$idR&date=${(DateFormat('yyyyMMdd').format(date))}&tipo=$type"),
-          headers: {
-        "Content-Type": "aplication/json",
-        "x-api-key": apiKey,
-        "client_secret": prefs.clientSecret,
-        "Authorization": "Bearer ${prefs.token}",
-      });
-      log(response.statusCode.toString());
-      return Answer.fromService(response);
+    var response = await http.get(
+        Uri.parse(
+            "$urlBase/visita?idRuta=$idR&date=${(DateFormat('yyyyMMdd').format(date))}&tipo=$type"),
+        headers: {
+          "Content-Type": "aplication/json",
+          "x-api-key": apiKey,
+          "client_secret": prefs.clientSecret,
+          "Authorization": "Bearer ${prefs.token}",
+        });
+    log(response.statusCode.toString());
+    return Answer.fromService(response);
   } catch (e) {
     log("/CustomerServices <getListCustomer> Catch ${e.toString()}");
     return Answer(
@@ -29,19 +30,19 @@ Future<Answer> getListCustomer( int idR, DateTime date, String type) async {
 Future<Answer> getDetailsCustomer(int id, String type) async {
   log("/CustomerServices <getDetailsCustomer>");
   try {
-  var response = await http.get(
-      Uri.parse("$urlBase/index.php/cliente?q=dashboard&tipo=$type&id=$id"),
-      headers: {
-        "Content-Type": "aplication/json",
-        "x-api-key": apiKey,
-        "client_secret": prefs.clientSecret,
-        "Authorization": "Bearer ${prefs.token}",
-      });
+    var response = await http.get(
+        Uri.parse("$urlBase/index.php/cliente?q=dashboard&tipo=$type&id=$id"),
+        headers: {
+          "Content-Type": "aplication/json",
+          "x-api-key": apiKey,
+          "client_secret": prefs.clientSecret,
+          "Authorization": "Bearer ${prefs.token}",
+        });
+    log("/CustomerServices <getDetailsCustomer> ${response.body}");
     return Answer.fromService(response);
   } catch (e) {
     log("/CustomerServices <getDetailsCustomer> Catch");
-    return Answer(
-        body: e, message: "error: ${e.toString()}", error: true);
+    return Answer(body: e, message: "error: ${e.toString()}", error: true);
   }
 }
 

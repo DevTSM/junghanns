@@ -104,128 +104,160 @@ class _SecondsState extends State<Seconds> {
     });
   }
 
+  funRefreshList() async {
+    log("Refresh List");
+    customerList.clear();
+    await getListCustomer(prefs.idRouteD, DateTime.now(), "S").then((answer) {
+      if (answer.error) {
+        Fluttertoast.showToast(
+          msg: "Sin clientes en ruta",
+          timeInSecForIosWeb: 2,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+        );
+      } else {
+        answer.body.map((e) {
+          customerList.add(CustomerModel.fromList(e, prefs.idRouteD, 3));
+        }).toList();
+        setState(() {
+          searchList = customerList;
+        });
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     setState(() {
       size = MediaQuery.of(context).size;
       provider = Provider.of<ProviderJunghanns>(context);
     });
-    return Stack(
-        children: [
-    SizedBox(
-        height: double.infinity,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Visibility(
-                visible: provider.connectionStatus == 4,
-                child: Container(
-                    width: double.infinity,
-                    alignment: Alignment.center,
-                    color: ColorsJunghanns.red,
-                    padding: const EdgeInsets.only(top: 5, bottom: 5),
-                    child: const Text(
-                      "Sin conexión a internet",
-                      style: TextStyles.white14_5,
-                    ))),
-            Visibility(
-                visible: !provider.permission,
-                child: Container(
-                    width: double.infinity,
-                    alignment: Alignment.center,
-                    color: ColorsJunghanns.red,
-                    padding: const EdgeInsets.only(top: 5, bottom: 5),
-                    child: const Text(
-                      "No has proporcionado permisos de ubicación",
-                      style: TextStyles.white14_5,
-                    ))),
-            header(),
-            const SizedBox(
-              height: 15,
-            ),
-            Visibility(
-              visible: provider.connectionStatus < 4,
-              child: buscador()),
-            provider.connectionStatus < 4
-                ? customerList.isNotEmpty
-                        ? Expanded(
-                            child: SingleChildScrollView(
-                                child: Column(
-                            children: searchList.map((e) {
-                              return Column(children: [
-                                RoutesCard(
-                                    icon: Container(
-                                      decoration: BoxDecoration(
-                                        color: Color(int.parse(
-                                            e.color
-                                                .toUpperCase()
-                                                .replaceAll("#", "FF"),
-                                            radix: 16)),
-                                        borderRadius: const BorderRadius.all(
-                                          Radius.circular(30),
+    return Stack(children: [
+      RefreshIndicator(
+          onRefresh: () async {
+            log("Texto");
+            if (provider.connectionStatus < 4) {
+              funRefreshList();
+            }
+          },
+          child: SizedBox(
+              height: double.infinity,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Visibility(
+                      visible: provider.connectionStatus == 4,
+                      child: Container(
+                          width: double.infinity,
+                          alignment: Alignment.center,
+                          color: ColorsJunghanns.red,
+                          padding: const EdgeInsets.only(top: 5, bottom: 5),
+                          child: const Text(
+                            "Sin conexión a internet",
+                            style: TextStyles.white14_5,
+                          ))),
+                  Visibility(
+                      visible: !provider.permission,
+                      child: Container(
+                          width: double.infinity,
+                          alignment: Alignment.center,
+                          color: ColorsJunghanns.red,
+                          padding: const EdgeInsets.only(top: 5, bottom: 5),
+                          child: const Text(
+                            "No has proporcionado permisos de ubicación",
+                            style: TextStyles.white14_5,
+                          ))),
+                  header(),
+                  const SizedBox(
+                    height: 15,
+                  ),
+                  Visibility(
+                      visible: provider.connectionStatus < 4 &&
+                          customerList.isNotEmpty,
+                      child: buscador()),
+                  provider.connectionStatus < 4
+                      ? customerList.isNotEmpty
+                          ? Expanded(
+                              child: SingleChildScrollView(
+                                  child: Column(
+                              children: searchList.map((e) {
+                                return Column(children: [
+                                  RoutesCard(
+                                      icon: Container(
+                                        decoration: BoxDecoration(
+                                          color: Color(int.parse(
+                                              e.color
+                                                  .toUpperCase()
+                                                  .replaceAll("#", "FF"),
+                                              radix: 16)),
+                                          borderRadius: const BorderRadius.all(
+                                            Radius.circular(30),
+                                          ),
                                         ),
+                                        padding: const EdgeInsets.all(10),
+                                        height: size.width * .14,
+                                        width: size.width * .14,
+                                        child: Image.asset(
+                                            "assets/icons/userIcon.png"),
                                       ),
-                                      padding: const EdgeInsets.all(10),
-                                      height: size.width * .14,
-                                      width: size.width * .14,
-                                      child: Image.asset(
-                                          "assets/icons/userIcon.png"),
-                                    ),
-                                    customerCurrent: e),
-                                Row(children: [
-                                  Container(
-                                    margin: EdgeInsets.only(
-                                        left: (size.width * .07) + 15),
-                                    color: ColorsJunghanns.grey,
-                                    width: .5,
-                                    height: 15,
-                                  )
-                                ])
-                              ]);
-                            }).toList(),
-                          )))
-                        : Expanded(
-                            child: Center(
-                                child: Text(
-                            "Sin clientes",
-                            style: TextStyles.blue18SemiBoldIt,
-                          )))
-                : Expanded(
-                    child: FutureBuilder(
-                        future: handler.retrieveUsersType(3),
-                        builder: (BuildContext context,
-                            AsyncSnapshot<List<CustomerModel>> snapshot) {
-                          if (snapshot.hasData) {
-                            return ListView.builder(
-                                itemCount: snapshot.data?.length,
-                                itemBuilder: (BuildContext context, int index) {
-                                  return Column(children: [
-                                    RoutesCard(
-                                        icon: Image.asset(
-                                          "assets/icons/${snapshot.data![index].typeVisit == "RUTA" ? "user1" : snapshot.data![index].typeVisit == "SEGUNDA" ? "user3" : "user2"}.png",
-                                          width: size.width * .14,
-                                        ),
-                                        customerCurrent: snapshot.data![index]),
-                                    Row(children: [
-                                      Container(
-                                        margin: EdgeInsets.only(
-                                            left: (size.width * .07) + 15),
-                                        color: ColorsJunghanns.grey,
-                                        width: .5,
-                                        height: 15,
-                                      )
-                                    ])
-                                  ]);
-                                });
-                          } else {
-                            return Container();
-                          }
-                        }))
-          ],
-        )),
-        Visibility(visible: isLoading, child: const LoadingJunghanns())
-    ]
-    );
+                                      customerCurrent: e),
+                                  Row(children: [
+                                    Container(
+                                      margin: EdgeInsets.only(
+                                          left: (size.width * .07) + 15),
+                                      color: ColorsJunghanns.grey,
+                                      width: .5,
+                                      height: 15,
+                                    )
+                                  ])
+                                ]);
+                              }).toList(),
+                            )))
+                          : Expanded(
+                              child: Center(
+                                  child: Text(
+                              "Sin clientes",
+                              style: TextStyles.blue18SemiBoldIt,
+                            )))
+                      : Expanded(
+                          child: FutureBuilder(
+                              future: handler.retrieveUsersType(3),
+                              builder: (BuildContext context,
+                                  AsyncSnapshot<List<CustomerModel>> snapshot) {
+                                if (snapshot.hasData) {
+                                  return ListView.builder(
+                                      itemCount: snapshot.data?.length,
+                                      itemBuilder:
+                                          (BuildContext context, int index) {
+                                        return Column(children: [
+                                          RoutesCard(
+                                              icon: Image.asset(
+                                                "assets/icons/${snapshot.data![index].typeVisit == "RUTA" ? "user1" : snapshot.data![index].typeVisit == "SEGUNDA" ? "user3" : "user2"}.png",
+                                                width: size.width * .14,
+                                              ),
+                                              customerCurrent:
+                                                  snapshot.data![index]),
+                                          Row(children: [
+                                            Container(
+                                              margin: EdgeInsets.only(
+                                                  left:
+                                                      (size.width * .07) + 15),
+                                              color: ColorsJunghanns.grey,
+                                              width: .5,
+                                              height: 15,
+                                            )
+                                          ])
+                                        ]);
+                                      });
+                                } else {
+                                  return Container();
+                                }
+                              }))
+                ],
+              ))),
+      Visibility(visible: isLoading, child: const LoadingJunghanns())
+    ]);
   }
 
   Widget header() {
@@ -235,18 +267,18 @@ class _SecondsState extends State<Seconds> {
           padding: EdgeInsets.only(
               right: 15, left: 15, top: 10, bottom: size.height * .06),
           child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
-                          Text(
-                            "Ruta de trabajo",
-                            style: TextStyles.blue27_7,
-                          ),
-                          Text(
-                            "  Clientes segunda vuelta",
-                            style: TextStyles.green15_4,
-                          ),
-                        ],
-                      )),
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: const [
+              Text(
+                "Ruta de trabajo",
+                style: TextStyles.blue27_7,
+              ),
+              Text(
+                "  Clientes segunda vuelta",
+                style: TextStyles.green15_4,
+              ),
+            ],
+          )),
       Container(
           padding: const EdgeInsets.only(right: 20, left: 20),
           child: Row(

@@ -31,10 +31,18 @@ class CustomerModel {
   List<AuthorizationModel> auth;
   String referenceAddress;
   String color;
+  //
+  String descServiceS;
+  int numberS;
+  int idProdServS;
+  String descriptionS;
+  double priceS;
+  String notifS;
+
   CustomerModel(
       {required this.auth,
       required this.payment,
-        required this.invoice,
+      required this.invoice,
       required this.id,
       required this.orden,
       required this.idClient,
@@ -56,12 +64,19 @@ class CustomerModel {
       required this.history,
       //
       required this.referenceAddress,
-      required this.color});
+      required this.color,
+      //
+      required this.descServiceS,
+      required this.numberS,
+      required this.idProdServS,
+      required this.descriptionS,
+      required this.priceS,
+      required this.notifS});
 
   factory CustomerModel.fromState() {
     return CustomerModel(
-      auth: [],
-      payment:[],
+        auth: [],
+        payment: [],
         invoice: true,
         id: 0,
         orden: 0,
@@ -84,17 +99,25 @@ class CustomerModel {
         history: [],
         //
         referenceAddress: "",
-        color: "FF000000");
+        color: "FF000000",
+        //
+        descServiceS: "",
+        numberS: 0,
+        idProdServS: 0,
+        descriptionS: "",
+        priceS: 0,
+        notifS: "");
   }
 
-  factory CustomerModel.fromList(Map<String, dynamic> data, int idRoute,int type) {
+  factory CustomerModel.fromList(
+      Map<String, dynamic> data, int idRoute, int type) {
     return CustomerModel(
         invoice: false,
         id: data["id"],
         orden: data["orden"] ?? 0,
         idClient: data["idCliente"],
         idRoute: idRoute,
-        type:type,
+        type: type,
         lat: 0,
         lng: 0,
         priceLiquid: 0,
@@ -112,9 +135,17 @@ class CustomerModel {
         auth: [],
         payment: [],
         referenceAddress: "",
-        color: data["color"] ?? "FF000000");
+        color: data["color"] ?? "FF000000",
+        //
+        descServiceS: "",
+        numberS: 0,
+        idProdServS: 0,
+        descriptionS: "",
+        priceS: 0,
+        notifS: "");
   }
-  factory CustomerModel.fromService(Map<String, dynamic> data, int id,int type) {
+  factory CustomerModel.fromService(
+      Map<String, dynamic> data, int id, int type) {
     return CustomerModel(
         invoice: false,
         id: id,
@@ -122,8 +153,8 @@ class CustomerModel {
         idClient: data["idCliente"] ?? 0,
         idRoute: data["idRuta"] ?? 0,
         type: type,
-        lat: double.parse(data["latitud"] ?? "0"),
-        lng: double.parse(data["longitud"] ?? "0"),
+        lat: double.parse(data["latitud"] != "" ? data["latitud"] : "0"),
+        lng: double.parse(data["longitud"] != "" ? data["longitud"] : "0"),
         priceLiquid: double.parse((data["precioLiquido"] ?? "0").toString()),
         byCollect: double.parse((data["porCobrar"] ?? 0).toString()),
         purse: double.parse((data["monedero"] ?? 0).toString()),
@@ -141,7 +172,24 @@ class CustomerModel {
         auth: [],
         payment: [],
         referenceAddress: data["referenciaDomicilio"] ?? "",
-        color: data["color"] ?? "FF000000");
+        color: data["color"] ?? "FF000000",
+        //
+        descServiceS: data["descServicio"] ?? "",
+        numberS: data["cargosFijos"] != null
+            ? int.parse((data["cargosFijos"]["cantidad"] ?? 0).toString())
+            : 0,
+        idProdServS: data["cargosFijos"] != null
+            ? int.parse(
+                (data["cargosFijos"]["idProductoServicio"] ?? 0).toString())
+            : 0,
+        descriptionS: data["cargosFijos"] != null
+            ? data["cargosFijos"]["descripcion"] ?? ""
+            : "",
+        priceS: data["cargosFijos"] != null
+            ? double.parse(
+                (data["cargosFijos"]["precioUnitario"] ?? 10).toString())
+            : 0,
+        notifS: data["notificacion"] ?? "");
   }
   factory CustomerModel.fromDataBase(Map<String, dynamic> data) {
     return CustomerModel(
@@ -150,7 +198,7 @@ class CustomerModel {
         orden: data["orden"] ?? 0,
         idClient: data["idCustomer"] ?? 0,
         idRoute: data["idRuta"] ?? 0,
-        type:data["type"]??0,
+        type: data["type"] ?? 0,
         lat: data["lat"],
         lng: data["lng"],
         priceLiquid: data["priceLiquid"] ?? 0,
@@ -170,7 +218,14 @@ class CustomerModel {
         auth: [],
         payment: [],
         referenceAddress: data["referenceAddress"] ?? "",
-        color: data["color"] ?? "000000");
+        color: data["color"] ?? "000000",
+        //
+        descServiceS: "",
+        numberS: 0,
+        idProdServS: 0,
+        descriptionS: "",
+        priceS: 0,
+        notifS: "");
   }
   Map<String, dynamic> getMap() {
     return {
@@ -178,7 +233,7 @@ class CustomerModel {
       'orden': orden,
       'idCustomer': idClient,
       'idRoute': idRoute,
-      'type':type,
+      'type': type,
       'lat': lat,
       'lng': lng,
       'priceLiquid': priceLiquid,
@@ -191,9 +246,9 @@ class CustomerModel {
       'category': category,
       'days': days,
       'img': img,
-      'observacion':observation,
+      'observacion': observation,
       'auth': "",
-      'payment':"",
+      'payment': "",
       'color': color
     };
   }
@@ -209,9 +264,9 @@ class CustomerModel {
     this.purse = purse;
   }
 
-  setPayment(Map<String, dynamic> data ){}
-  setAuth(List<AuthorizationModel> auth){
-    this.auth=auth;
+  setPayment(Map<String, dynamic> data) {}
+  setAuth(List<AuthorizationModel> auth) {
+    this.auth = auth;
   }
 }
 

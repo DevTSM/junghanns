@@ -9,6 +9,7 @@ import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:junghanns/components/bottom_bar.dart';
+import 'package:junghanns/components/loading.dart';
 import 'package:junghanns/models/stop.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/provider/provider.dart';
@@ -94,14 +95,16 @@ class _StopsState extends State<Stops> {
         elevation: 0,
       ),
       body: Container(
-        color: ColorsJunghanns.whiteJ,
-        child: Column(
-          children: [
-            fakeStop(),
-            isLoading ? loading() : typesOfStops(),
-          ],
-        ),
-      ),
+          color: ColorsJunghanns.whiteJ,
+          child: Stack(children: [
+            Column(
+              children: [
+                fakeStop(),
+                typesOfStops(),
+              ],
+            ),
+            Visibility(visible: isLoading, child: const LoadingJunghanns())
+          ])),
       bottomNavigationBar: bottomBar(() {}, 2, isHome: false, context: context),
     );
   }
@@ -188,7 +191,9 @@ class _StopsState extends State<Stops> {
   }
 
   funSelectStop() async {
-    _onLoading();
+    setState(() {
+      isLoading = true;
+    });
     LocationPermission permission = await Geolocator.requestPermission();
     if (permission == LocationPermission.whileInUse ||
         permission == LocationPermission.always) {
@@ -214,8 +219,10 @@ class _StopsState extends State<Stops> {
 
           ///
           await postStop(data).then((answer) {
+            setState(() {
+              isLoading = false;
+            });
             if (answer.error) {
-              Navigator.pop(context);
               Fluttertoast.showToast(
                 msg: answer.message,
                 timeInSecForIosWeb: 2,
@@ -226,7 +233,7 @@ class _StopsState extends State<Stops> {
             } else {
               //
               log("Parada asignada");
-              Navigator.pop(context);
+
               Fluttertoast.showToast(
                 msg: "Parada asignada con exito",
                 timeInSecForIosWeb: 2,

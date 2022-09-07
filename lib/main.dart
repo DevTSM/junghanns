@@ -1,4 +1,4 @@
-// ignore_for_file: override_on_non_overriding_member
+// ignore_for_file: override_on_non_overriding_member, unnecessary_new
 
 import 'dart:async';
 import 'dart:io';
@@ -9,6 +9,16 @@ import 'package:junghanns/provider/provider.dart';
 import 'package:junghanns/routes/routes.dart';
 import 'package:provider/provider.dart';
 
+
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  await prefs.initPrefs();
+  HttpOverrides.global = new MyHttpOverrides();
+  await handler.initializeDB();
+  runApp(const MyApp());
+}
 class MyHttpOverrides extends HttpOverrides {
   @override
   HttpClient createHttpClient(SecurityContext? context) {
@@ -17,15 +27,6 @@ class MyHttpOverrides extends HttpOverrides {
           (X509Certificate cert, String host, int port) => true;
   }
 }
-
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  HttpOverrides.global = MyHttpOverrides();
-  await prefs.initPrefs();
-  await handler.initializeDB();
-  runApp(const MyApp());
-}
-
 class MyApp extends StatefulWidget {
   const MyApp({Key? key}) : super(key: key);
   @override

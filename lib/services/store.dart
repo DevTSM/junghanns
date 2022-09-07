@@ -382,20 +382,22 @@ Future<Answer> postStop(Map<String, dynamic> data) async {
 
 Future<Answer> getDashboarRuta(int idR, DateTime date) async {
   log("/StoreServices <getDashboardRuta>");
-  log("Fecha : ${(DateFormat('yyyyMMdd').format(date))}    -> $idR");
+  log("$urlBase/dashboardruta?idRuta=$idR&date=${(DateFormat('yyyyMMdd').format(date))}");
   try {
   var response = await http.get(
+   // Uri.https("qro.jusoftdelivery.com:", "/dashboardruta?idRuta=$idR&date=${(DateFormat('yyyyMMdd').format(date))}"),
       Uri.parse(
-          "$urlBase/dashboardruta?idRuta=$idR&date=${(DateFormat('yyyyMMdd').format(date))}}"),
+          "$urlBase/dashboardruta?idRuta=$idR&date=${(DateFormat('yyyyMMdd').format(date))}"),
       headers: {
-        "Content-Type": "aplication/json",
+        HttpHeaders.contentTypeHeader: "aplication/json",
         "x-api-key": apiKey,
         "client_secret": prefs.clientSecret,
         "Authorization": "Bearer ${prefs.token}",
       });
+      log("${response.body} -----");
   return Answer.fromService(response);
   } catch (e) {
-    log("/CustomerServices <getListCustomer> Catch");
+    log("/CustomerServices <getListCustomer> Catch ${e.toString()}");
     return Answer(
         body: {"error":e.toString()}, message: "Algo salio mal, intentalo mas tarde.", error: true);
   }

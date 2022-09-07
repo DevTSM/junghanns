@@ -39,10 +39,10 @@ class ProductCardPriorityState extends State<ProductCardPriority> {
     size = MediaQuery.of(context).size;
     return GestureDetector(
         child: Container(
-            padding: const EdgeInsets.all(13),
-            margin: const EdgeInsets.only(bottom: 10),
+            padding: const EdgeInsets.all(12),
+            margin: const EdgeInsets.only(bottom: 8),
             width: double.infinity,
-            height: size.height * 0.18,
+            height: size.height * 0.17,
             decoration: widget.productCurrent.isSelect
                 ? Decorations.blueCard
                 : Decorations.whiteJCard,
@@ -59,7 +59,7 @@ class ProductCardPriorityState extends State<ProductCardPriority> {
 
   Widget info() {
     return Container(
-        padding: const EdgeInsets.only(left: 13),
+        padding: const EdgeInsets.only(left: 12),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [textProduct(), stockProduct(), priceProduct()],
@@ -113,7 +113,7 @@ class ProductCardPriorityState extends State<ProductCardPriority> {
 
   Widget stockProduct() {
     return Container(
-        margin: const EdgeInsets.only(bottom: 4, left: 28, right: 28),
+        margin: const EdgeInsets.only(bottom: 2, left: 28, right: 28),
         padding: const EdgeInsets.only(top: 2, bottom: 2),
         alignment: Alignment.center,
         decoration: Decorations.greenJCardB30,
@@ -125,7 +125,6 @@ class ProductCardPriorityState extends State<ProductCardPriority> {
 
   Widget priceProduct() {
     return Container(
-      margin: const EdgeInsets.only(top: 2, bottom: 2),
       padding: const EdgeInsets.only(top: 5, bottom: 5),
       decoration: Decorations.white2Card,
       child: Stack(

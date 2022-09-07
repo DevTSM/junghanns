@@ -399,7 +399,9 @@ Future<Answer> getDashboarRuta(int idR, DateTime date) async {
   } catch (e) {
     log("/CustomerServices <getListCustomer> Catch ${e.toString()}");
     return Answer(
-        body: {"error":e.toString()}, message: "Algo salio mal, intentalo mas tarde.", error: true);
+        body: {"error": e.toString()},
+        message: "Algo salio mal, intentalo mas tarde.",
+        error: true);
   }
 }
 

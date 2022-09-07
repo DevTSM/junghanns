@@ -8,6 +8,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:junghanns/pages/home/home_principal.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/services/auth.dart';
+import '../../components/loading.dart';
 import '../../styles/color.dart';
 import '../../styles/decoration.dart';
 import '../../styles/text.dart';
@@ -23,6 +24,7 @@ class _LoginState extends State<Login> {
   late Size size;
   late TextEditingController userC, passC;
   late bool isObscure = true;
+  late bool isLoading = false;
 
   @override
   void initState() {
@@ -30,38 +32,45 @@ class _LoginState extends State<Login> {
     userC = TextEditingController();
     passC = TextEditingController();
   }
-  
+
   @override
   Widget build(BuildContext context) {
     size = MediaQuery.of(context).size;
     return Scaffold(
-        body: Container(
-          width: size.width,
-          height: size.height,
-          decoration: const BoxDecoration(
-            image: DecorationImage(image: AssetImage(
-        "assets/images/junghannsWater.png",
-      ),fit: BoxFit.cover),
-          ),
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(15),
-          child:Column(
+        body: Stack(children: [
+      Container(
+        width: size.width,
+        height: size.height,
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+              image: AssetImage(
+                "assets/images/junghannsWater.png",
+              ),
+              fit: BoxFit.cover),
+        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(15),
+          child: Column(
             children: [
               SizedBox(
-            height: size.height * 0.1,
-          ),
+                height: size.height * 0.1,
+              ),
               Container(
-                margin: EdgeInsets.only(top: size.height * .05,left: 30,right: 30),
-                child:Image.asset(
-      "assets/images/junghannsLogo.png",
-    )),
-    const SizedBox(height: 10,),
+                  margin: EdgeInsets.only(
+                      top: size.height * .05, left: 30, right: 30),
+                  child: Image.asset(
+                    "assets/images/junghannsLogo.png",
+                  )),
+              const SizedBox(
+                height: 10,
+              ),
               cardLogin()
             ],
           ),
-          ),
         ),
-    );
+      ),
+      Visibility(visible: isLoading, child: const LoadingJunghanns())
+    ]));
   }
 
   Widget cardLogin() {
@@ -142,7 +151,10 @@ class _LoginState extends State<Login> {
   }
 
   funLogin() async {
-    _onLoading();
+    //_onLoading();
+    setState(() {
+      isLoading = true;
+    });
     if (userC.text.isNotEmpty && passC.text.isNotEmpty) {
       Map<String, dynamic> data = {
         "user": userC.text,
@@ -150,7 +162,10 @@ class _LoginState extends State<Login> {
       };
       await getClientSecret(userC.text, passC.text).then((answer) async {
         if (answer.error) {
-          Navigator.pop(context);
+          //Navigator.pop(context);
+          setState(() {
+            isLoading = false;
+          });
           Fluttertoast.showToast(
             msg: answer.message,
             timeInSecForIosWeb: 2,
@@ -162,7 +177,10 @@ class _LoginState extends State<Login> {
           prefs.clientSecret = answer.body["client_secret"];
           await getToken(userC.text).then((answer1) async {
             if (answer1.error) {
-              Navigator.pop(context);
+              //Navigator.pop(context);
+              setState(() {
+                isLoading = false;
+              });
               Fluttertoast.showToast(
                 msg: answer.message,
                 timeInSecForIosWeb: 2,
@@ -174,7 +192,10 @@ class _LoginState extends State<Login> {
               prefs.token = answer1.body["token"];
               await login(data).then((answer2) {
                 if (answer2.error) {
-                  Navigator.pop(context);
+                  //Navigator.pop(context);
+                  setState(() {
+                    isLoading = false;
+                  });
                   Fluttertoast.showToast(
                     msg: answer2.message,
                     timeInSecForIosWeb: 2,
@@ -187,10 +208,12 @@ class _LoginState extends State<Login> {
                   prefs.isLogged = true;
                   //---------------------------------- Info DeliveryMan
                   prefs.idUserD = answer2.body["id_usuario"] ?? 0;
-                  prefs.idProfileD = int.parse((answer2.body["id_perfil"] ?? 0).toString());
+                  prefs.idProfileD =
+                      int.parse((answer2.body["id_perfil"] ?? 0).toString());
                   prefs.nameUserD = answer2.body["nombre_usuario"] ?? "";
                   prefs.nameD = answer2.body["nombre"] ?? "";
-                  prefs.idRouteD = int.parse((answer2.body["id_ruta"] ?? 0).toString());
+                  prefs.idRouteD =
+                      int.parse((answer2.body["id_ruta"] ?? 0).toString());
                   prefs.nameRouteD = answer2.body["nombre_ruta"] ?? "";
                   prefs.dayWorkD = answer2.body["dia_trabajo"] ?? "T";
                   prefs.dayWorkTextD =
@@ -198,7 +221,10 @@ class _LoginState extends State<Login> {
                   prefs.codeD = answer2.body["codigo_empresa"] ?? "";
                   log(prefs.nameD);
                   //-----------------------------------------
-                  Navigator.pop(context);
+                  //Navigator.pop(context);
+                  setState(() {
+                    isLoading = false;
+                  });
                   Navigator.pushReplacement(
                       context,
                       MaterialPageRoute<void>(
@@ -210,7 +236,10 @@ class _LoginState extends State<Login> {
         }
       });
     } else {
-      Navigator.pop(context);
+      //Navigator.pop(context);
+      setState(() {
+        isLoading = false;
+      });
       Fluttertoast.showToast(
         msg: "Campos vacíos",
         timeInSecForIosWeb: 4,

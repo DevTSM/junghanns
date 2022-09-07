@@ -9,6 +9,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:junghanns/components/bottom_bar.dart';
 import 'package:junghanns/components/button.dart';
+import 'package:junghanns/components/loading.dart';
 import 'package:junghanns/models/config.dart';
 import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/models/product.dart';
@@ -201,7 +202,7 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
         elevation: 0,
       ),
       body: Stack(
-        children: [header(), isLoading ? loading() : itemList()],
+        children: [header(), isLoading ? const LoadingJunghanns() : itemList()],
       ),
       bottomNavigationBar: bottomBar(() {}, 2, isHome: false, context: context),
     );
@@ -413,8 +414,11 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
     log("LA DATA ES: $data");
 
     await postSale(data).then((answer) {
+      setState(() {
+        isLoading = false;
+      });
       if (answer.error) {
-        Navigator.pop(context);
+        //Navigator.pop(context);
         Fluttertoast.showToast(
           msg: answer.message,
           timeInSecForIosWeb: 2,
@@ -423,7 +427,7 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
           webShowClose: true,
         );
       } else {
-        Navigator.pop(context);
+        //Navigator.pop(context);
         Fluttertoast.showToast(
           msg: "Venta realizada con exito",
           timeInSecForIosWeb: 2,
@@ -447,12 +451,18 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
               "Si",
               () => () async {
                     Navigator.pop(context);
-                    onLoading();
+                    //onLoading();
+                    setState(() {
+                      isLoading = true;
+                    });
                     bool isD = await funCheckDistance();
                     if (isD) {
                       funSale(methodPayment);
                     } else {
-                      Navigator.pop(context);
+                      //Navigator.pop(context);
+                      setState(() {
+                        isLoading = false;
+                      });
                       Fluttertoast.showToast(
                         msg:
                             "Lejos del domicilio $distance ${distance > 1 ? "Metro" : "Metros"}",

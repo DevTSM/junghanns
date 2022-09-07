@@ -23,22 +23,22 @@ PreferredSizeWidget appBarJunghanns(BuildContext context, Size size) {
         alignment: Alignment.center,
         padding: const EdgeInsets.only(right: 15),
         child: Text(
-          "${urlBase != ipProd ? "Beta " : ""}V 1.0.5",
+          "${urlBase != ipProd ? "Beta " : ""}V 1.0.6",
           style: TextStyles.blue18SemiBoldIt,
         ),
       ),
       GestureDetector(
-                child: Container(
-                  padding: const EdgeInsets.only(right: 10),
-                  child:Image.asset(
-                  "assets/icons/workRoute.png",
-                  width: size.width * .10,
-                )),
-                onTap: () {
-                  //showConfirmLogOut(context, size);
-                  showLogOut(context);
-                },
-              ),
+        child: Container(
+            padding: const EdgeInsets.only(right: 10),
+            child: Image.asset(
+              "assets/icons/workRoute.png",
+              width: size.width * .10,
+            )),
+        onTap: () {
+          //showConfirmLogOut(context, size);
+          showLogOut(context);
+        },
+      ),
     ],
     elevation: 0,
   );

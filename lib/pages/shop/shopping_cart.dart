@@ -1,5 +1,4 @@
 import 'dart:developer';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -9,6 +8,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:junghanns/components/bottom_bar.dart';
 import 'package:junghanns/components/button.dart';
+import 'package:junghanns/components/loading.dart';
 import 'package:junghanns/models/authorization.dart';
 import 'package:junghanns/models/config.dart';
 import 'package:junghanns/models/customer.dart';
@@ -26,6 +26,15 @@ import 'package:junghanns/widgets/card/product_card.dart';
 import 'package:junghanns/widgets/card/product_card_priority.dart';
 
 import '../../models/method_payment.dart';
+
+class SecondWayToPay {
+  String wayToPay;
+  String typeWayToPay;
+  double cost;
+
+  SecondWayToPay(
+      {required this.wayToPay, required this.typeWayToPay, required this.cost});
+}
 
 class ShoppingCart extends StatefulWidget {
   CustomerModel customerCurrent;
@@ -50,16 +59,20 @@ class _ShoppingCartState extends State<ShoppingCart> {
   late int cantidad;
   late List<ConfigModel> configList = [];
   late double distance;
+  //
+  late SecondWayToPay secWayToPay;
 
   @override
   void initState() {
     super.initState();
 
-    totalPrice = 0;
+    totalPrice = widget.customerCurrent.priceS != 0
+        ? (widget.customerCurrent.priceS * widget.customerCurrent.numberS)
+        : 0;
     isLoading = true;
     //
     cantidad = 0;
-    distance=0;
+    distance = 0;
     basket = BasketModel(
         idCustomer: widget.customerCurrent.idClient,
         idRoute: prefs.idRouteD,
@@ -71,6 +84,8 @@ class _ShoppingCartState extends State<ShoppingCart> {
         idDataOrigin: widget.customerCurrent.id,
         folio: -1,
         typeOperation: "V");
+    //
+    secWayToPay = SecondWayToPay(wayToPay: "", typeWayToPay: "", cost: 0);
 
     getDataProducts();
   }
@@ -127,16 +142,14 @@ class _ShoppingCartState extends State<ShoppingCart> {
 
         //
         if (widget.authList.isNotEmpty) {
-          if (widget.authList.first.price == 0) {
-            isNotAuth = false;
-            paymentsList.add(MethodPayment(
-                wayToPay: "Efectivo",
-                typeWayToPay: "E",
-                type: "Autorizacion",
-                idProductService: widget.authList.first.idProduct,
-                description: widget.authList.first.description,
-                number: widget.authList.first.number));
-          }
+          isNotAuth = false;
+          paymentsList.add(MethodPayment(
+              wayToPay: "Credito",
+              typeWayToPay: "C",
+              type: "Autorizacion",
+              idProductService: widget.authList.first.idProduct,
+              description: widget.authList.first.description,
+              number: widget.authList.first.number));
         }
         //
         if (isNotAuth) {
@@ -248,17 +261,35 @@ class _ShoppingCartState extends State<ShoppingCart> {
         elevation: 0,
       ),
       body: Stack(
-        children: [header(), isLoading ? loading() : itemList()],
+        children: [
+          header(),
+          isLoading ? const LoadingJunghanns() : itemList(),
+          addCharger(),
+        ],
       ),
       bottomNavigationBar: bottomBar(() {}, 2, isHome: false, context: context),
     );
+  }
+
+  Widget addCharger() {
+    return Visibility(
+        visible: widget.customerCurrent.priceS != 0,
+        child: Container(
+            width: double.infinity,
+            color: ColorsJunghanns.red,
+            padding: const EdgeInsets.only(top: 5, bottom: 5),
+            child: const Text(
+              "Costo adicional",
+              style: TextStyles.white17_5,
+              textAlign: TextAlign.center,
+            )));
   }
 
   Widget header() {
     return Container(
         color: ColorsJunghanns.green,
         padding: EdgeInsets.only(
-            right: 15, left: 23, top: 10, bottom: size.height * .05),
+            right: 15, left: 23, top: 38, bottom: size.height * .03),
         child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -323,6 +354,9 @@ class _ShoppingCartState extends State<ShoppingCart> {
             ))
           : Column(
               children: [
+                widget.customerCurrent.descServiceS != ""
+                    ? extraCharge()
+                    : Container(),
                 ProductCardPriority(
                     productCurrent: widget.authList.isEmpty
                         ? productsList.first
@@ -353,7 +387,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
                     visible: cantidad > 0,
                     child: Container(
                         margin: const EdgeInsets.only(
-                            left: 15, right: 15, bottom: 30, top: 30),
+                            left: 15, right: 15, bottom: 10, top: 10),
                         width: double.infinity,
                         height: 40,
                         alignment: Alignment.center,
@@ -377,6 +411,36 @@ class _ShoppingCartState extends State<ShoppingCart> {
     );
   }
 
+  Widget extraCharge() {
+    return Container(
+        width: size.width,
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.all(6),
+        decoration: Decorations.blueCard,
+        child: Column(
+          children: [
+            Text(
+              widget.customerCurrent.descServiceS,
+              style: TextStyles.blueJ20BoldIt,
+              textAlign: TextAlign.center,
+            ),
+            widget.customerCurrent.priceS != 0
+                ? Container(
+                    decoration: Decorations.white2Card,
+                    padding: const EdgeInsets.fromLTRB(45, 5, 45, 5),
+                    margin: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      checkDouble((widget.customerCurrent.priceS *
+                              widget.customerCurrent.numberS)
+                          .toString()),
+                      style: TextStyles.blueJ20BoldIt,
+                    ),
+                  )
+                : Container()
+          ],
+        ));
+  }
+
   void selectWayToPay() async {
     await showCupertinoModalPopup<int>(
         context: context,
@@ -386,8 +450,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
                   initialScrollOffset: 1.0, keepScrollOffset: true),
               title: showTitle(),
               actions: paymentsList.map((item) {
-                return showItem(
-                    item, "Pago total de la compra", FontAwesomeIcons.coins);
+                return showItem(item, FontAwesomeIcons.coins);
               }).toList());
         });
   }
@@ -426,9 +489,12 @@ class _ShoppingCartState extends State<ShoppingCart> {
     switch (methodCurrent.wayToPay) {
       case "Efectivo":
         isTrue = true;
+        secWayToPay = SecondWayToPay(wayToPay: "", typeWayToPay: "", cost: 0);
         break;
       case "Credito":
-        if (methodCurrent.idProductService != -1 &&
+        isTrue = true;
+        secWayToPay = SecondWayToPay(wayToPay: "", typeWayToPay: "", cost: 0);
+        /*if (methodCurrent.idProductService != -1 &&
             methodCurrent.number != -1) {
           if (basket.sales.length > 1) {
             isTrue = false;
@@ -465,18 +531,14 @@ class _ShoppingCartState extends State<ShoppingCart> {
           }
         } else {
           isTrue = false;
-        }
+        }*/
         break;
       case "Monedero":
         if (totalPrice > widget.customerCurrent.purse) {
-          isTrue = false;
-          Fluttertoast.showToast(
-            msg: "Monedero insuficiente",
-            timeInSecForIosWeb: 2,
-            toastLength: Toast.LENGTH_LONG,
-            gravity: ToastGravity.TOP,
-            webShowClose: true,
-          );
+          secWayToPay.wayToPay = "Efectivo";
+          secWayToPay.typeWayToPay = "E";
+          secWayToPay.cost = totalPrice - widget.customerCurrent.purse;
+          isTrue = true;
         } else {
           isTrue = true;
         }
@@ -486,7 +548,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
     return isTrue;
   }
 
-  Widget showItem(MethodPayment methodCurrent, String text2, IconData icon) {
+  Widget showItem(MethodPayment methodCurrent, IconData icon) {
     return GestureDetector(
       onTap: () {
         Navigator.pop(context);
@@ -496,35 +558,23 @@ class _ShoppingCartState extends State<ShoppingCart> {
       },
       child: Container(
         padding: const EdgeInsets.only(left: 35, top: 8, bottom: 8),
-        child: Row(
-          children: [
-            Container(
-                decoration: Decorations.blueJ2Card,
-                padding: const EdgeInsets.only(
-                    right: 10, left: 7, top: 5, bottom: 7),
-                margin: const EdgeInsets.only(right: 15),
-                child: Icon(
-                  icon,
-                  size: 28,
-                  color: Colors.white,
-                )),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                DefaultTextStyle(
-                    style: TextStyles.blueJ220Bold,
-                    child: Text(
-                      methodCurrent.wayToPay,
-                    )),
-                /*DefaultTextStyle(
-                    style: TextStyles.blueJ215R,
-                    child: Text(
-                      text2,
-                    ))*/
-              ],
-            ),
-          ],
-        ),
+        child: Row(children: [
+          Container(
+              decoration: Decorations.blueJ2Card,
+              padding:
+                  const EdgeInsets.only(right: 10, left: 7, top: 5, bottom: 7),
+              margin: const EdgeInsets.only(right: 15),
+              child: Icon(
+                icon,
+                size: 28,
+                color: Colors.white,
+              )),
+          DefaultTextStyle(
+              style: TextStyles.blueJ220Bold,
+              child: Text(
+                methodCurrent.wayToPay,
+              )),
+        ]),
       ),
     );
   }
@@ -542,7 +592,10 @@ class _ShoppingCartState extends State<ShoppingCart> {
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  textWayToPay(methodCurrent.wayToPay),
+                  secWayToPay.wayToPay.isEmpty
+                      ? textWayToPay(methodCurrent.wayToPay)
+                      : textTwoWayToPay(
+                          methodCurrent.wayToPay, widget.customerCurrent.purse),
                   textAmount(),
                   buttomsSale(methodCurrent)
                 ],
@@ -550,6 +603,18 @@ class _ShoppingCartState extends State<ShoppingCart> {
             ),
           );
         });
+  }
+
+  Widget textTwoWayToPay(String wayToPay, double cost) {
+    return Column(children: [
+      DefaultTextStyle(
+          style: TextStyles.blueJ22Bold, child: const Text("Pago en ")),
+      DefaultTextStyle(
+          style: TextStyles.blueJ18Bold, child: Text("$wayToPay - \$${cost}0")),
+      DefaultTextStyle(
+          style: TextStyles.blueJ18Bold,
+          child: Text("${secWayToPay.wayToPay} - \$${secWayToPay.cost}0")),
+    ]);
   }
 
   Widget textWayToPay(String wayToPay) {
@@ -579,12 +644,25 @@ class _ShoppingCartState extends State<ShoppingCart> {
 
   funSale(MethodPayment methodPayment) async {
     log("FUNCIÓN DE VENTA");
-    log("FORMA DE PAGO - ${methodPayment.wayToPay}");
-
-    basket.waysToPay
-        .add(WayToPay(type: methodPayment.typeWayToPay, cost: totalPrice));
-    log("FORMA DE PAGO - ${basket.waysToPay.first.type}");
-    log("TOTAL - ${basket.waysToPay.first.cost}");
+    if (secWayToPay.wayToPay.isEmpty) {
+      log("FORMA DE PAGO - ${methodPayment.wayToPay}");
+      basket.waysToPay
+          .add(WayToPay(type: methodPayment.typeWayToPay, cost: totalPrice));
+      log("FORMA DE PAGO - ${basket.waysToPay.first.type}");
+      log("TOTAL - ${basket.waysToPay.first.cost}");
+    } else {
+      log("1.- FORMA DE PAGO - ${methodPayment.wayToPay}");
+      log("2.- FORMA DE PAGO - ${secWayToPay.wayToPay}");
+      basket.waysToPay.add(WayToPay(
+          type: methodPayment.typeWayToPay,
+          cost: widget.customerCurrent.purse));
+      basket.waysToPay.add(
+          WayToPay(type: secWayToPay.typeWayToPay, cost: secWayToPay.cost));
+      log("1.-FORMA DE PAGO - ${basket.waysToPay[0].type}");
+      log("1.-IMPORTE - ${basket.waysToPay[0].cost}");
+      log("2.-FORMA DE PAGO - ${basket.waysToPay[1].type}");
+      log("2.-IMPORTE - ${basket.waysToPay[1].cost}");
+    }
 
     ///
     List<Map> listSales = [];
@@ -593,6 +671,14 @@ class _ShoppingCartState extends State<ShoppingCart> {
         "cantidad": element.number,
         "id_producto": element.idProduct,
         "precio_unitario": element.unitPrice
+      });
+    }
+
+    if (widget.customerCurrent.priceS != 0) {
+      listSales.add({
+        "cantidad": widget.customerCurrent.numberS,
+        "id_producto": widget.customerCurrent.idProdServS,
+        "precio_unitario": widget.customerCurrent.priceS
       });
     }
 
@@ -628,8 +714,11 @@ class _ShoppingCartState extends State<ShoppingCart> {
     log("LA DATA ES: $data");
 
     await postSale(data).then((answer) {
+      setState(() {
+        isLoading = false;
+      });
       if (answer.error) {
-        Navigator.pop(context);
+        //Navigator.pop(context);
         Fluttertoast.showToast(
           msg: answer.message,
           timeInSecForIosWeb: 2,
@@ -638,7 +727,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
           webShowClose: true,
         );
       } else {
-        Navigator.pop(context);
+        //Navigator.pop(context);
         Fluttertoast.showToast(
           msg: "Venta realizada con exito",
           timeInSecForIosWeb: 2,
@@ -662,14 +751,21 @@ class _ShoppingCartState extends State<ShoppingCart> {
               "Si",
               () => () async {
                     Navigator.pop(context);
-                    onLoading();
+                    //onLoading();
+                    setState(() {
+                      isLoading = true;
+                    });
                     bool isD = await funCheckDistance();
                     if (isD) {
                       funSale(methodPayment);
                     } else {
-                      Navigator.pop(context);
+                      //Navigator.pop(context);
+                      setState(() {
+                        isLoading = false;
+                      });
                       Fluttertoast.showToast(
-                        msg: "Lejos del domicilio $distance ${distance>1?"Metro":"Metros"}",
+                        msg:
+                            "Lejos del domicilio $distance ${distance > 1 ? "Metro" : "Metros"}",
                         timeInSecForIosWeb: 16,
                         toastLength: Toast.LENGTH_LONG,
                         gravity: ToastGravity.TOP,
@@ -681,6 +777,8 @@ class _ShoppingCartState extends State<ShoppingCart> {
           buttomSale(
               "No",
               () => () {
+                    secWayToPay =
+                        SecondWayToPay(wayToPay: "", typeWayToPay: "", cost: 0);
                     Navigator.pop(context);
                   },
               Decorations.redCard),
@@ -776,13 +874,12 @@ class _ShoppingCartState extends State<ShoppingCart> {
     if (permission == LocationPermission.whileInUse ||
         permission == LocationPermission.always) {
       Position _currentLocation = await Geolocator.getCurrentPosition();
-      distance=Geolocator.distanceBetween(
-              _currentLocation.latitude,
-              _currentLocation.longitude,
-              widget.customerCurrent.lat,
-              widget.customerCurrent.lng);
-      if (distance <=
-          distanConfig) {
+      distance = Geolocator.distanceBetween(
+          _currentLocation.latitude,
+          _currentLocation.longitude,
+          widget.customerCurrent.lat,
+          widget.customerCurrent.lng);
+      if (distance <= distanConfig) {
         return true;
       } else {
         return false;

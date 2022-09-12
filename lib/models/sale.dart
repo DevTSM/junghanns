@@ -27,13 +27,13 @@ class SaleModel {
 String checkDouble(String evalue) {
   switch (evalue[evalue.length - 2]) {
     case '.':
-      return "\$ " + evalue + "0";
+      return "\$ $evalue 0";
     default:
-      return "\$ " + evalue;
+      return "\$ $evalue";
   }
 }
 
-List<String> checkDoubleRich(String evalue) {
+/*List<String> checkDoubleRich(String evalue) {
   print(evalue);
   switch (evalue[evalue.length - 2]) {
     case '.':
@@ -47,4 +47,4 @@ List<String> checkDoubleRich(String evalue) {
         evalue.substring(evalue.indexOf('.'), evalue.length)
       ];
   }
-}
+}*/

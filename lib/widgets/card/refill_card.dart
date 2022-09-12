@@ -1,21 +1,21 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:intl/intl.dart';
 import 'package:junghanns/models/refill.dart';
-import 'package:junghanns/models/sale.dart';
 
 import '../../styles/decoration.dart';
 import '../../styles/text.dart';
 
 class RefillCard extends StatefulWidget {
   RefillModel refillCurrent;
-  RefillCard({Key? key, required this.refillCurrent})
-      : super(key: key);
+  RefillCard({Key? key, required this.refillCurrent}) : super(key: key);
 
   @override
   RefillCardState createState() => RefillCardState();
 }
 
 class RefillCardState extends State<RefillCard> {
+  late NumberFormat formatMoney = NumberFormat("\$#,##0.00");
 
   @override
   void initState() {
@@ -27,8 +27,9 @@ class RefillCardState extends State<RefillCard> {
     return GestureDetector(
         child: Container(
             padding: const EdgeInsets.all(15),
-            decoration:
-                widget.refillCurrent.isSelect ? Decorations.blueCard : Decorations.whiteJCard,
+            decoration: widget.refillCurrent.isSelect
+                ? Decorations.blueCard
+                : Decorations.whiteJCard,
             child: Column(
               children: [
                 Expanded(flex: 4, child: imageRefill()),
@@ -70,7 +71,7 @@ class RefillCardState extends State<RefillCard> {
           Container(
             alignment: Alignment.center,
             child: Text(
-              checkDouble(widget.refillCurrent.price.toString()),
+              formatMoney.format(widget.refillCurrent.price),
               style: TextStyles.blueJ20BoldIt,
             ),
           ),

@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:intl/intl.dart';
 import 'package:junghanns/models/product.dart';
 import 'package:junghanns/models/sale.dart';
 import 'package:junghanns/styles/color.dart';
@@ -30,6 +31,7 @@ class ProductCardState extends State<ProductCard> {
   var myGroup = AutoSizeGroup();
   int _amount = 0;
   int stock2 = 0;
+  late NumberFormat formatMoney = NumberFormat("\$#,##0.00");
 
   @override
   void initState() {
@@ -138,7 +140,7 @@ class ProductCardState extends State<ProductCard> {
           Container(
             alignment: Alignment.center,
             child: Text(
-              checkDouble(widget.productCurrent.price.toString()),
+              formatMoney.format(widget.productCurrent.price),
               style: TextStyles.blueJ20BoldIt,
             ),
           ),

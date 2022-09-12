@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:junghanns/components/loading.dart';
+import 'package:junghanns/components/without_internet.dart';
+import 'package:junghanns/components/without_location.dart';
 import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/provider/provider.dart';
 import 'package:junghanns/services/customer.dart';
@@ -33,7 +35,7 @@ class _RoutesState extends State<Routes> {
   @override
   void initState() {
     super.initState();
-    isLoading = true;
+    isLoading = false;
     customerList = [];
     //
     buscadorC = TextEditingController();
@@ -141,26 +143,10 @@ class _RoutesState extends State<Routes> {
               children: [
                 Visibility(
                     visible: provider.connectionStatus == 4,
-                    child: Container(
-                        width: double.infinity,
-                        alignment: Alignment.center,
-                        color: ColorsJunghanns.red,
-                        padding: const EdgeInsets.only(top: 5, bottom: 5),
-                        child: const Text(
-                          "Sin conexión a internet",
-                          style: TextStyles.white14_5,
-                        ))),
+                    child: const WithoutInternet()),
                 Visibility(
                     visible: !provider.permission,
-                    child: Container(
-                        width: double.infinity,
-                        alignment: Alignment.center,
-                        color: ColorsJunghanns.red,
-                        padding: const EdgeInsets.only(top: 5, bottom: 5),
-                        child: const Text(
-                          "No has proporcionado permisos de ubicación",
-                          style: TextStyles.white14_5,
-                        ))),
+                    child: const WithoutLocation()),
                 header(),
                 const SizedBox(
                   height: 15,

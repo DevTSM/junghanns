@@ -4,21 +4,21 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:auto_size_text/auto_size_text.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:junghanns/components/bottom_bar.dart';
 import 'package:junghanns/components/button.dart';
 import 'package:junghanns/components/loading.dart';
+import 'package:junghanns/components/without_internet.dart';
+import 'package:junghanns/components/without_location.dart';
 import 'package:junghanns/models/authorization.dart';
 import 'package:junghanns/models/config.dart';
 import 'package:junghanns/models/customer.dart';
-import 'package:junghanns/models/sale.dart';
 import 'package:junghanns/pages/address/edit_address.dart';
 import 'package:junghanns/pages/shop/shopping_cart.dart';
 import 'package:junghanns/pages/shop/shopping_cart_refill.dart';
@@ -59,6 +59,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
   late bool isLoading;
   late List<ConfigModel> configList;
   late List<AuthorizationModel> authList;
+  late NumberFormat formatMoney = NumberFormat("\$#,##0.00");
 
   @override
   void initState() {
@@ -184,7 +185,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
   }
 
   getDataDetails() async {
-    Timer(const Duration(milliseconds: 1000), () async {
+    Timer(const Duration(milliseconds: 800), () async {
       if (provider.connectionStatus < 4) {
         setState(() {
           isLoading = true;
@@ -518,27 +519,11 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
             children: [
               Visibility(
                   visible: !provider.permission,
-                  child: Container(
-                      width: double.infinity,
-                      alignment: Alignment.center,
-                      color: ColorsJunghanns.red,
-                      padding: const EdgeInsets.only(top: 5, bottom: 5),
-                      child: const Text(
-                        "No has proporcionado permisos de ubicación",
-                        style: TextStyles.white14_5,
-                      ))),
+                  child: const WithoutLocation()),
               header(),
               Visibility(
                   visible: provider.connectionStatus == 4,
-                  child: Container(
-                      width: double.infinity,
-                      alignment: Alignment.center,
-                      color: ColorsJunghanns.red,
-                      padding: const EdgeInsets.only(top: 5, bottom: 5),
-                      child: const Text(
-                        "Sin conexión a internet",
-                        style: TextStyles.white14_5,
-                      ))),
+                  child: const WithoutInternet()),
               balances(),
               const SizedBox(
                 height: 20,
@@ -786,20 +771,17 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
   }
 
   funCheckDistanceSale() async {
-    //_onLoading();
     setState(() {
       isLoading = true;
     });
     getMoney();
     bool isValid = await funCheckDistance();
     if (isValid) {
-      //Navigator.pop(context);
       setState(() {
         isLoading = false;
       });
       showSelectPR();
     } else {
-      //Navigator.pop(context);
       setState(() {
         isLoading = false;
       });
@@ -989,8 +971,9 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
         const SizedBox(
           height: 5,
         ),
-        Text(
-          checkDouble(count.toString()),
+        AutoSizeText(
+          formatMoney.format(count),
+          maxLines: 1,
           style: TextStyles.blue27_7,
         ),
         Text(label, style: TextStyles.grey14_7),
@@ -998,46 +981,6 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
           height: 10,
         ),
       ]),
-    );
-  }
-
-  Widget loading() {
-    return Center(
-      child: Container(
-        margin: const EdgeInsets.only(top: 30),
-        decoration: BoxDecoration(
-          color: Colors.blue.withOpacity(0.8),
-          borderRadius: const BorderRadius.all(Radius.circular(25)),
-        ),
-        height: MediaQuery.of(context).size.width * .30,
-        width: MediaQuery.of(context).size.width * .30,
-        child: const SpinKitDualRing(
-          color: Colors.white70,
-          lineWidth: 4,
-        ),
-      ),
-    );
-  }
-
-  void _onLoading() {
-    showCupertinoDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Center(
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.blue.withOpacity(0.8),
-              borderRadius: const BorderRadius.all(Radius.circular(25)),
-            ),
-            height: MediaQuery.of(context).size.width * .30,
-            width: MediaQuery.of(context).size.width * .30,
-            child: const SpinKitDualRing(
-              color: Colors.white70,
-              lineWidth: 4,
-            ),
-          ),
-        );
-      },
     );
   }
 

@@ -14,7 +14,6 @@ const List<Widget> pages = [
   Routes(),
   Seconds(),
   Call(),
-  //Home()
   NewCustomer()
 ];
 

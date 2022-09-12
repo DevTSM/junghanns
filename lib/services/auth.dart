@@ -21,15 +21,11 @@ Future<Answer> getClientSecret(String user, String password) async {
       return Answer(body: response, message: "", error: false);
     } else {
       log("/AuthServices <getClientSecret> Fail ${response.toString()}");
-      return Answer(
-          body: response,
-          message: "Algo salio mal, intentalo mas tarde.",
-          error: true);
+      return Answer(body: response, message: response.toString(), error: true);
     }
   } catch (e) {
     log("/AuthServices <getClientSecret> Catch ${e.toString()}");
-    return Answer(
-        body: e, message: "Algo salio mal, intentalo mas tarde.", error: true);
+    return Answer(body: e, message: e.toString(), error: true);
   }
 }
 
@@ -94,16 +90,17 @@ Future<Answer> login(Map<String, dynamic> data) async {
 Future<Answer> getConfig(int id) async {
   log("/AuthServices <getConfig>");
   try {
-    var response =
-        jsonDecode((await http.get(Uri.parse("$urlBase/configruta?id_cliente=$id&q=distancia_km"), headers: {
-      "Content-Type": "aplication/json",
-      "x-api-key": apiKey,
-      "client_secret": prefs.clientSecret,
-      "Authorization": "Bearer ${prefs.token}",
-    }))
-            .body);
+    var response = jsonDecode((await http.get(
+            Uri.parse("$urlBase/configruta?id_cliente=$id&q=distancia_km"),
+            headers: {
+          "Content-Type": "aplication/json",
+          "x-api-key": apiKey,
+          "client_secret": prefs.clientSecret,
+          "Authorization": "Bearer ${prefs.token}",
+        }))
+        .body);
     if (response != null) {
-      log("/AuthServices <getConfig> Successfull ${response}");
+      log("/AuthServices <getConfig> Successfull $response");
       return Answer(body: response, message: "", error: false);
     } else {
       log("/AuthServices <getConfig> Fail");
@@ -116,5 +113,24 @@ Future<Answer> getConfig(int id) async {
     log("/AuthServices <getConfig> Catch ${e.toString()}");
     return Answer(
         body: e, message: "Algo salio mal, intentalo mas tarde.", error: true);
+  }
+}
+
+Future<Answer> getFolio(String folio) async {
+  log("/AuthServices <getFolio>");
+  var response = await http
+      .get(Uri.parse("$urlBase/validate?q=folio&num=$folio"), headers: {
+    "Content-Type": "aplication/json",
+    "x-api-key": apiKey,
+    "client_secret": prefs.clientSecret,
+    "Authorization": "Bearer ${prefs.token}",
+  });
+  log("${response.statusCode}");
+  if (response.statusCode == 200) {
+    log("/AuthServices <getFolio> Successfull, ${response.body}");
+    return Answer(body: jsonDecode(response.body), message: "", error: false);
+  } else {
+    log("/AuthServices <getFolio> Fail, ${response.body}");
+    return Answer(body: response, message: response.body, error: true);
   }
 }

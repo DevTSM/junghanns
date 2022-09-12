@@ -162,36 +162,6 @@ Future<Answer> getAuthorization(int idClient, int idR) async {
   // }
 }
 
-Future<Answer> getFolio(String num) async {
-  log("/StoreServices <getFolio>");
-  try {
-    var response = jsonDecode((await http.get(
-            Uri.parse("$urlBase/index.php/validate?q=folio&num=$num"),
-            headers: {
-          "Content-Type": "aplication/json",
-          "x-api-key": apiKey,
-          "client_secret": clientSecret,
-          "Authorization":
-              "Bearer " + "caf048dc9e6560d05fe75f8d00ee4c48db607654",
-        }))
-        .body);
-    if (response != null) {
-      log("/StoreServices <getFolio> Successfull");
-      return Answer(body: response, message: "", error: false);
-    } else {
-      log("/StoreServices <getFolio> Fail");
-      return Answer(
-          body: response,
-          message: "Algo salio mal, intentalo mas tarde.",
-          error: true);
-    }
-  } catch (e) {
-    log("/StoreServices <getFolio> Catch ${e.toString()}");
-    return Answer(
-        body: e, message: "Algo salio mal, intentalo mas tarde.", error: true);
-  }
-}
-
 Future<Answer> setSale(Map<String, dynamic> data) async {
   log("/StoreServices <setSale>");
   try {
@@ -384,18 +354,17 @@ Future<Answer> getDashboarRuta(int idR, DateTime date) async {
   log("/StoreServices <getDashboardRuta>");
   log("$urlBase/dashboardruta?idRuta=$idR&date=${(DateFormat('yyyyMMdd').format(date))}");
   try {
-  var response = await http.get(
-   // Uri.https("qro.jusoftdelivery.com:", "/dashboardruta?idRuta=$idR&date=${(DateFormat('yyyyMMdd').format(date))}"),
-      Uri.parse(
-          "$urlBase/dashboardruta?idRuta=$idR&date=${(DateFormat('yyyyMMdd').format(date))}"),
-      headers: {
-        HttpHeaders.contentTypeHeader: "aplication/json",
-        "x-api-key": apiKey,
-        "client_secret": prefs.clientSecret,
-        "Authorization": "Bearer ${prefs.token}",
-      });
-      log("${response.body} -----");
-  return Answer.fromService(response);
+    var response = await http.get(
+        Uri.parse(
+            "$urlBase/dashboardruta?idRuta=$idR&date=${(DateFormat('yyyyMMdd').format(date))}"),
+        headers: {
+          HttpHeaders.contentTypeHeader: "aplication/json",
+          "x-api-key": apiKey,
+          "client_secret": prefs.clientSecret,
+          "Authorization": "Bearer ${prefs.token}",
+        });
+    log("${response.body} -----");
+    return Answer.fromService(response);
   } catch (e) {
     log("/CustomerServices <getListCustomer> Catch ${e.toString()}");
     return Answer(

@@ -4,18 +4,19 @@ import 'dart:developer';
 
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:junghanns/components/loading.dart';
-import 'package:junghanns/components/modal/logout.dart';
+import 'package:junghanns/components/without_internet.dart';
 import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/models/dashboard.dart';
 import 'package:junghanns/preferences/global_variables.dart';
+import 'package:junghanns/provider/provider.dart';
 import 'package:junghanns/styles/color.dart';
 import 'package:junghanns/styles/decoration.dart';
 import 'package:junghanns/styles/text.dart';
+import 'package:provider/provider.dart';
 
 import '../../services/store.dart';
 
@@ -31,13 +32,15 @@ class _HomeState extends State<Home> {
   //
   late DashboardModel dashboardR;
   late bool isLoading;
+  //
+  late ProviderJunghanns provider;
 
   @override
   void initState() {
     super.initState();
     getPermission();
     dashboardR = DashboardModel.fromState();
-    isLoading=true;
+    isLoading = true;
     getDashboarR();
   }
 
@@ -47,68 +50,69 @@ class _HomeState extends State<Home> {
 
   getDashboarR() async {
     setState(() {
-      isLoading=true;
+      isLoading = true;
     });
     await getDashboarRuta(prefs.idRouteD, DateTime.now()).then((answer) {
       setState(() {
-      isLoading=false;
-    });
+        isLoading = false;
+      });
       if (prefs.token != "") {
-      if (answer.error) {
+        if (answer.error) {
+          Fluttertoast.showToast(
+            msg: "Sin datos de ruta",
+            timeInSecForIosWeb: 2,
+            toastLength: Toast.LENGTH_LONG,
+            gravity: ToastGravity.TOP,
+            webShowClose: true,
+          );
+        } else {
+          log("Si Dashboard ${answer.body.toString()}");
+          setState(() {
+            dashboardR = DashboardModel.fromService(answer.body);
+          });
+        }
+      } else {
         Fluttertoast.showToast(
-          msg: "Sin datos de ruta",
+          msg: "Las credenciales caducaron.",
           timeInSecForIosWeb: 2,
           toastLength: Toast.LENGTH_LONG,
           gravity: ToastGravity.TOP,
           webShowClose: true,
         );
-      } else {
-        log("Si Dashboard ${answer.body.toString()}");
-        setState(() {
-          dashboardR = DashboardModel.fromService(answer.body);
+        Timer(const Duration(milliseconds: 2000), () async {
+          Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
         });
       }
-      }else {
-            Fluttertoast.showToast(
-              msg: "Las credenciales caducaron.",
-              timeInSecForIosWeb: 2,
-              toastLength: Toast.LENGTH_LONG,
-              gravity: ToastGravity.TOP,
-              webShowClose: true,
-            );
-            Timer(const Duration(milliseconds: 2000), () async {
-              Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
-            });
-          }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    setState(() {
-      size = MediaQuery.of(context).size;
-    });
-    return 
-      Stack(
-        children: [
-          Container(
-              height: double.infinity,
-              color: ColorsJunghanns.lightBlue,
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    deliveryMenZone(),
-                    const SizedBox(
-                      height: 20,
-                    ),
-                    customersZone()
-                  ],
-                ),
-              )),
-          buttonSync(),
-          Visibility(visible: isLoading, child: const LoadingJunghanns())
-        ],
+    size = MediaQuery.of(context).size;
+    provider = Provider.of<ProviderJunghanns>(context);
+    return Stack(
+      children: [
+        Container(
+            height: double.infinity,
+            color: ColorsJunghanns.lightBlue,
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Visibility(
+                      visible: provider.connectionStatus == 4,
+                      child: const WithoutInternet()),
+                  deliveryMenZone(),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  customersZone()
+                ],
+              ),
+            )),
+        buttonSync(),
+        Visibility(visible: isLoading, child: const LoadingJunghanns())
+      ],
     );
   }
 

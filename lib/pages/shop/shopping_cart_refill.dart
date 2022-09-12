@@ -1,20 +1,20 @@
+import 'dart:async';
 import 'dart:developer';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:intl/intl.dart';
 import 'package:junghanns/components/bottom_bar.dart';
 import 'package:junghanns/components/button.dart';
 import 'package:junghanns/components/loading.dart';
+import 'package:junghanns/components/without_internet.dart';
 import 'package:junghanns/models/config.dart';
 import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/models/product.dart';
-import 'package:junghanns/models/sale.dart';
 import 'package:junghanns/preferences/global_variables.dart';
+import 'package:junghanns/provider/provider.dart';
 import 'package:junghanns/services/auth.dart';
 import 'package:junghanns/services/store.dart';
 import 'package:junghanns/styles/color.dart';
@@ -22,6 +22,7 @@ import 'package:junghanns/styles/decoration.dart';
 import 'package:junghanns/styles/text.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:junghanns/widgets/card/product_card.dart';
+import 'package:provider/provider.dart';
 
 import '../../models/method_payment.dart';
 import '../../models/shopping_basket.dart';
@@ -50,13 +51,16 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
   late int cantidad;
   late List<ConfigModel> configList;
   late double distance;
+  late NumberFormat formatMoney = NumberFormat("\$#,##0.00");
+  //
+  late ProviderJunghanns provider;
 
   @override
   void initState() {
     super.initState();
 
     totalPrice = 0;
-    isLoading = true;
+    isLoading = false;
     //
     cantidad = 0;
     distance = 0;
@@ -78,23 +82,30 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
 
   getDataRefill() async {
     log("${prefs.idRouteD}");
-    await getRefillList(prefs.idRouteD).then((answer) {
-      if (answer.error) {
-        Fluttertoast.showToast(
-          msg: "Sin recargas",
-          timeInSecForIosWeb: 2,
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.TOP,
-          webShowClose: true,
-        );
-      } else {
-        refillList.clear();
+    Timer(const Duration(milliseconds: 800), () async {
+      if (provider.connectionStatus < 4) {
+        setState(() {
+          isLoading = true;
+        });
+        await getRefillList(prefs.idRouteD).then((answer) {
+          if (answer.error) {
+            Fluttertoast.showToast(
+              msg: "Sin recargas",
+              timeInSecForIosWeb: 2,
+              toastLength: Toast.LENGTH_LONG,
+              gravity: ToastGravity.TOP,
+              webShowClose: true,
+            );
+          } else {
+            refillList.clear();
 
-        answer.body
-            .map((e) => refillList.add(ProductModel.fromServiceRefill(e)))
-            .toList();
+            answer.body
+                .map((e) => refillList.add(ProductModel.fromServiceRefill(e)))
+                .toList();
+          }
+          getDataPayment();
+        });
       }
-      getDataPayment();
     });
   }
 
@@ -185,6 +196,7 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
   @override
   Widget build(BuildContext context) {
     size = MediaQuery.of(context).size;
+    provider = Provider.of<ProviderJunghanns>(context);
     return Scaffold(
       backgroundColor: ColorsJunghanns.white,
       appBar: AppBar(
@@ -217,6 +229,11 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Visibility(
+                  visible: provider.connectionStatus == 4,
+                  child: Container(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      child: const WithoutInternet())),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -252,7 +269,7 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
                         height: 10,
                       ),
                       Text(
-                        checkDouble(totalPrice.toString()),
+                        formatMoney.format(totalPrice),
                         style: TextStyles.white40Bold,
                       )
                     ],
@@ -282,7 +299,7 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
                   height: 20,
                 ),
                 Expanded(
-                    child: Container(
+                    child: SizedBox(
                   width: size.width,
                   child: GridView.custom(
                     gridDelegate: SliverWovenGridDelegate.count(
@@ -323,26 +340,36 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
   }
 
   showConfirmSale(MethodPayment methodCurrent) {
-    showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return Center(
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              width: size.width * .75,
-              decoration: Decorations.whiteS1Card,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  textWayToPay(methodCurrent.wayToPay),
-                  textAmount(),
-                  buttomsSale(methodCurrent)
-                ],
+    if (provider.connectionStatus < 4) {
+      showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return Center(
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                width: size.width * .75,
+                decoration: Decorations.whiteS1Card,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    textWayToPay(methodCurrent.wayToPay),
+                    textAmount(),
+                    buttomsSale(methodCurrent)
+                  ],
+                ),
               ),
-            ),
-          );
-        });
+            );
+          });
+    } else {
+      Fluttertoast.showToast(
+        msg: "Sin conexión a internet",
+        timeInSecForIosWeb: 2,
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.TOP,
+        webShowClose: true,
+      );
+    }
   }
 
   Widget textWayToPay(String wayToPay) {
@@ -363,9 +390,7 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
             )),
         DefaultTextStyle(
             style: TextStyles.greenJ24Bold,
-            child: Text(
-              checkDouble(totalPrice.toString()),
-            )),
+            child: Text(formatMoney.format(totalPrice))),
       ],
     );
   }
@@ -473,46 +498,6 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
                       );
                     }
                   },
-              /*() async {
-                    Map<String, dynamic> data = {
-                      "idCliente": widget.customerCurrent.idClient,
-                      "idCatRuta": 21,
-                      "latitud": widget.customerCurrent.lat,
-                      "longitud": widget.customerCurrent.lng,
-                      "cantidad": 1,
-                      "precioUnitario": totalPrice,
-                      "idProductoServicio": 22,
-                      "idAutorizacion": 1,
-                      "tipoFormaPago": methodPayment.typeWayToPay,
-                      "idClienteOrdenVisitaRuta": widget.customerCurrent.id,
-                      "folio": "552555"
-                    };
-                    onLoading();
-                    await setSale(data).then((answer) {
-                      if (answer.error) {
-                        Navigator.pop(context);
-                        Fluttertoast.showToast(
-                          msg: answer.message,
-                          timeInSecForIosWeb: 2,
-                          toastLength: Toast.LENGTH_LONG,
-                          gravity: ToastGravity.TOP,
-                          webShowClose: true,
-                        );
-                      } else {
-                        Navigator.pop(context);
-                        Fluttertoast.showToast(
-                          msg: "Venta realizada con exito",
-                          timeInSecForIosWeb: 2,
-                          toastLength: Toast.LENGTH_LONG,
-                          gravity: ToastGravity.TOP,
-                          webShowClose: true,
-                        );
-                        Navigator.pop(context);
-                        Navigator.pop(context);
-                      }
-                    });
-                    Navigator.pop(context);
-                  },*/
               Decorations.blueBorder12),
           buttomSale(
               "No",
@@ -538,46 +523,6 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
               child: Text(
                 op,
               ))),
-    );
-  }
-
-  Widget loading() {
-    return Center(
-      child: Container(
-        margin: const EdgeInsets.only(top: 30),
-        decoration: BoxDecoration(
-          color: Colors.blue.withOpacity(0.8),
-          borderRadius: const BorderRadius.all(Radius.circular(25)),
-        ),
-        height: MediaQuery.of(context).size.width * .30,
-        width: MediaQuery.of(context).size.width * .30,
-        child: const SpinKitDualRing(
-          color: Colors.white70,
-          lineWidth: 4,
-        ),
-      ),
-    );
-  }
-
-  void onLoading() {
-    showCupertinoDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Center(
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.blue.withOpacity(0.8),
-              borderRadius: const BorderRadius.all(Radius.circular(25)),
-            ),
-            height: MediaQuery.of(context).size.width * .30,
-            width: MediaQuery.of(context).size.width * .30,
-            child: const SpinKitDualRing(
-              color: Colors.white70,
-              lineWidth: 4,
-            ),
-          ),
-        );
-      },
     );
   }
 
@@ -620,7 +565,7 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
         return false;
       }
     } else {
-      print({"permission": permission.toString()});
+      log("permission: $permission");
       return false;
     }
   }

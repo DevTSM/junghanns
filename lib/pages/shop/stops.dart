@@ -1,15 +1,14 @@
 import 'dart:developer';
 
 import 'package:auto_size_text/auto_size_text.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:junghanns/components/bottom_bar.dart';
 import 'package:junghanns/components/loading.dart';
+import 'package:junghanns/components/without_internet.dart';
 import 'package:junghanns/models/stop.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/provider/provider.dart';
@@ -74,9 +73,7 @@ class _StopsState extends State<Stops> {
 
   @override
   Widget build(BuildContext context) {
-    setState(() {
-      size = MediaQuery.of(context).size;
-    });
+    size = MediaQuery.of(context).size;
     provider = Provider.of<ProviderJunghanns>(context);
     return Scaffold(
       backgroundColor: ColorsJunghanns.white,
@@ -99,6 +96,9 @@ class _StopsState extends State<Stops> {
           child: Stack(children: [
             Column(
               children: [
+                Visibility(
+                    visible: provider.connectionStatus == 4,
+                    child: const WithoutInternet()),
                 fakeStop(),
                 typesOfStops(),
               ],
@@ -158,7 +158,17 @@ class _StopsState extends State<Stops> {
               "Si",
               () => () {
                     Navigator.pop(context);
-                    funSelectStop();
+                    if (provider.connectionStatus < 4) {
+                      funSelectStop();
+                    } else {
+                      Fluttertoast.showToast(
+                        msg: "Sin conexión a internet",
+                        timeInSecForIosWeb: 2,
+                        toastLength: Toast.LENGTH_LONG,
+                        gravity: ToastGravity.TOP,
+                        webShowClose: true,
+                      );
+                    }
                   },
               Decorations.blueBorder12),
           buttomSale(
@@ -396,45 +406,5 @@ class _StopsState extends State<Stops> {
                         return Container();
                       }
                     })));
-  }
-
-  Widget loading() {
-    return Center(
-      child: Container(
-        margin: const EdgeInsets.only(top: 30),
-        decoration: BoxDecoration(
-          color: Colors.blue.withOpacity(0.8),
-          borderRadius: const BorderRadius.all(Radius.circular(25)),
-        ),
-        height: MediaQuery.of(context).size.width * .30,
-        width: MediaQuery.of(context).size.width * .30,
-        child: const SpinKitDualRing(
-          color: Colors.white70,
-          lineWidth: 4,
-        ),
-      ),
-    );
-  }
-
-  void _onLoading() {
-    showCupertinoDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Center(
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.blue.withOpacity(0.8),
-              borderRadius: const BorderRadius.all(Radius.circular(25)),
-            ),
-            height: MediaQuery.of(context).size.width * .30,
-            width: MediaQuery.of(context).size.width * .30,
-            child: const SpinKitDualRing(
-              color: Colors.white70,
-              lineWidth: 4,
-            ),
-          ),
-        );
-      },
-    );
   }
 }

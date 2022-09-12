@@ -1,21 +1,23 @@
+import 'dart:async';
 import 'dart:developer';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:intl/intl.dart';
 import 'package:junghanns/components/bottom_bar.dart';
 import 'package:junghanns/components/button.dart';
 import 'package:junghanns/components/loading.dart';
+import 'package:junghanns/components/without_internet.dart';
 import 'package:junghanns/models/authorization.dart';
 import 'package:junghanns/models/config.dart';
 import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/models/product.dart';
-import 'package:junghanns/models/sale.dart';
 import 'package:junghanns/models/shopping_basket.dart';
 import 'package:junghanns/preferences/global_variables.dart';
+import 'package:junghanns/provider/provider.dart';
 import 'package:junghanns/services/auth.dart';
 import 'package:junghanns/services/store.dart';
 import 'package:junghanns/styles/color.dart';
@@ -24,6 +26,7 @@ import 'package:junghanns/styles/text.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:junghanns/widgets/card/product_card.dart';
 import 'package:junghanns/widgets/card/product_card_priority.dart';
+import 'package:provider/provider.dart';
 
 import '../../models/method_payment.dart';
 
@@ -61,6 +64,13 @@ class _ShoppingCartState extends State<ShoppingCart> {
   late double distance;
   //
   late SecondWayToPay secWayToPay;
+  late NumberFormat formatMoney = NumberFormat("\$#,##0.00");
+  //
+  late TextEditingController folioC = TextEditingController();
+  late bool isRequestFolio = false;
+  late String errFolio = "";
+  //
+  late ProviderJunghanns provider;
 
   @override
   void initState() {
@@ -244,6 +254,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
   @override
   Widget build(BuildContext context) {
     size = MediaQuery.of(context).size;
+    provider = Provider.of<ProviderJunghanns>(context);
     return Scaffold(
       backgroundColor: ColorsJunghanns.white,
       appBar: AppBar(
@@ -264,7 +275,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
         children: [
           header(),
           isLoading ? const LoadingJunghanns() : itemList(),
-          addCharger(),
+          Visibility(visible: isRequestFolio, child: requestFolio())
         ],
       ),
       bottomNavigationBar: bottomBar(() {}, 2, isHome: false, context: context),
@@ -286,64 +297,75 @@ class _ShoppingCartState extends State<ShoppingCart> {
   }
 
   Widget header() {
-    return Container(
-        color: ColorsJunghanns.green,
-        padding: EdgeInsets.only(
-            right: 15, left: 23, top: 38, bottom: size.height * .03),
-        child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+    return Column(
+      children: [
+        Container(
+            color: ColorsJunghanns.green,
+            padding: EdgeInsets.only(
+                right: 15, left: 23, top: 10, bottom: size.height * .023),
+            child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  GestureDetector(
-                      onTap: () => Navigator.pop(context),
-                      child: const Icon(
-                        Icons.arrow_back_ios,
-                        color: ColorsJunghanns.white,
-                      )),
-                  Expanded(
-                      child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
+                  Visibility(
+                      visible: provider.connectionStatus == 4,
+                      child: Container(
+                          margin: const EdgeInsets.only(bottom: 10),
+                          child: const WithoutInternet())),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
+                      GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: const Icon(
+                            Icons.arrow_back_ios,
+                            color: ColorsJunghanns.white,
+                          )),
+                      Expanded(
+                          child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Container(
-                            padding: const EdgeInsets.only(right: 8, top: 10),
-                            child: Text(
-                              cantidad.toString(),
-                              style: TextStyles.white24SemiBoldIt,
-                            ),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                padding:
+                                    const EdgeInsets.only(right: 8, top: 10),
+                                child: Text(
+                                  cantidad.toString(),
+                                  style: TextStyles.white24SemiBoldIt,
+                                ),
+                              ),
+                              Image.asset(
+                                "assets/icons/shoppingIcon.png",
+                                width: 60,
+                              ),
+                            ],
                           ),
-                          Image.asset(
-                            "assets/icons/shoppingIcon.png",
-                            width: 60,
+                          const SizedBox(
+                            height: 10,
                           ),
+                          Text(
+                            formatMoney.format(totalPrice),
+                            style: TextStyles.white40Bold,
+                          )
                         ],
+                      )),
+                      SizedBox(
+                        width: size.width * .1,
                       ),
-                      const SizedBox(
-                        height: 10,
-                      ),
-                      Text(
-                        checkDouble(totalPrice.toString()),
-                        style: TextStyles.white40Bold,
-                      )
                     ],
-                  )),
-                  SizedBox(
-                    width: size.width * .1,
                   ),
-                ],
-              ),
-            ]));
+                ])),
+        addCharger()
+      ],
+    );
   }
 
   Widget itemList() {
     return Container(
-      margin: EdgeInsets.only(top: size.height * .24),
+      margin: EdgeInsets.only(top: size.height * .26),
       padding: const EdgeInsets.only(left: 10, right: 10),
       width: double.infinity,
       child: productsList.isEmpty
@@ -395,12 +417,30 @@ class _ShoppingCartState extends State<ShoppingCart> {
                           decoration: Decorations.blueBorder12,
                           fun: () {
                             log("Venta check");
-                            if (paymentsList.length > 1) {
-                              selectWayToPay();
-                            } else {
-                              if (funCheckMethodPayment(paymentsList.first)) {
-                                showConfirmSale(paymentsList.first);
+                            if (provider.connectionStatus < 4) {
+                              if (paymentsList.length > 1) {
+                                selectWayToPay();
+                              } else {
+                                if (funCheckMethodPayment(paymentsList.first)) {
+                                  if (paymentsList.first.wayToPay ==
+                                      "Credito") {
+                                    log("Pedir Folio");
+                                    setState(() {
+                                      isRequestFolio = true;
+                                    });
+                                  } else {
+                                    showConfirmSale(paymentsList.first);
+                                  }
+                                }
                               }
+                            } else {
+                              Fluttertoast.showToast(
+                                msg: "Sin conexión a internet",
+                                timeInSecForIosWeb: 2,
+                                toastLength: Toast.LENGTH_LONG,
+                                gravity: ToastGravity.TOP,
+                                webShowClose: true,
+                              );
                             }
                           },
                           label: "Terminar venta",
@@ -408,6 +448,160 @@ class _ShoppingCartState extends State<ShoppingCart> {
                         )))
               ],
             ),
+    );
+  }
+
+  Widget requestFolio() {
+    return Container(
+      alignment: Alignment.center,
+      color: Colors.black.withOpacity(0.3),
+      child: Container(
+          padding: const EdgeInsets.all(18),
+          width: size.width * .75,
+          decoration: Decorations.whiteS1Card,
+          child: Stack(
+            children: [
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  //Title
+                  titleFolio(),
+                  //Field
+                  Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        folioField(),
+                        Container(
+                            padding: const EdgeInsets.only(
+                                top: 4, left: 10, bottom: 8),
+                            child: Text(
+                              errFolio,
+                              style: TextStyles.redJ13N,
+                            )),
+                      ]),
+                  //Buttom Validate
+                  buttomFolio()
+                ],
+              ),
+            ],
+          )),
+    );
+  }
+
+  Widget titleFolio() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        SizedBox(width: size.width * 0.1),
+        Container(
+            alignment: Alignment.center,
+            child: DefaultTextStyle(
+                style: TextStyles.blueJ22Bold,
+                child: const Text("Ingresa folio"))),
+        GestureDetector(
+          child: const Icon(
+            FontAwesomeIcons.times,
+            size: 24,
+            color: ColorsJunghanns.grey,
+          ),
+          onTap: () {
+            setState(() {
+              isRequestFolio = false;
+            });
+          },
+        )
+      ],
+    );
+  }
+
+  Widget folioField() {
+    return Container(
+      margin: const EdgeInsets.only(top: 18),
+      child: TextFormField(
+          controller: folioC,
+          keyboardType: TextInputType.number,
+          style: TextStyles.blueJ20Bold,
+          decoration: InputDecoration(
+            hintText: "Folio",
+            hintStyle: TextStyles.grey20Itw,
+            filled: true,
+            fillColor: ColorsJunghanns.whiteJ,
+            contentPadding: const EdgeInsets.only(left: 24),
+            border: InputBorder.none,
+            enabledBorder: OutlineInputBorder(
+              borderSide: errFolio == ""
+                  ? const BorderSide(width: 1, color: ColorsJunghanns.blueJ3)
+                  : const BorderSide(width: 1, color: Colors.red),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderSide:
+                  const BorderSide(width: 2, color: ColorsJunghanns.blueJ),
+              borderRadius: BorderRadius.circular(10),
+            ),
+          )),
+    );
+  }
+
+  Widget buttomFolio() {
+    return GestureDetector(
+      onTap: () async {
+        if (folioC.text.isNotEmpty) {
+          setState(() {
+            isLoading = true;
+            isRequestFolio = false;
+          });
+          await getFolio(folioC.text).then((answer) {
+            if (answer.error) {
+              Fluttertoast.showToast(
+                msg: answer.message,
+                timeInSecForIosWeb: 2,
+                toastLength: Toast.LENGTH_LONG,
+                gravity: ToastGravity.TOP,
+                webShowClose: true,
+              );
+              setState(() {
+                isLoading = false;
+                errFolio = "* Error";
+                isRequestFolio = true;
+              });
+            } else {
+              bool available =
+                  answer.body["estatus"] == "available" ? true : false;
+              if (available) {
+                log("Folio disponible");
+                basket.folio = int.parse(folioC.text);
+                log(basket.folio.toString());
+                MethodPayment met = paymentsList
+                    .firstWhere(((element) => element.wayToPay == "Credito"));
+                setState(() {
+                  isLoading = false;
+                });
+                showConfirmSale(met);
+              } else {
+                log("Folio no disponible");
+                setState(() {
+                  isLoading = false;
+                  isRequestFolio = true;
+                  errFolio = "* Folio no disponible";
+                });
+              }
+            }
+          });
+        } else {
+          setState(() {
+            errFolio = "* Ingresa algún folio";
+          });
+        }
+      },
+      child: Container(
+          alignment: Alignment.center,
+          width: size.width * 0.3,
+          height: size.width * 0.12,
+          decoration: Decorations.blueBorder12,
+          child: DefaultTextStyle(
+              style: TextStyles.white18SemiBold, child: const Text("Validar"))),
     );
   }
 
@@ -430,9 +624,8 @@ class _ShoppingCartState extends State<ShoppingCart> {
                     padding: const EdgeInsets.fromLTRB(45, 5, 45, 5),
                     margin: const EdgeInsets.only(top: 4),
                     child: Text(
-                      checkDouble((widget.customerCurrent.priceS *
-                              widget.customerCurrent.numberS)
-                          .toString()),
+                      formatMoney.format((widget.customerCurrent.priceS *
+                          widget.customerCurrent.numberS)),
                       style: TextStyles.blueJ20BoldIt,
                     ),
                   )
@@ -553,7 +746,14 @@ class _ShoppingCartState extends State<ShoppingCart> {
       onTap: () {
         Navigator.pop(context);
         if (funCheckMethodPayment(methodCurrent)) {
-          showConfirmSale(methodCurrent);
+          if (methodCurrent.wayToPay == "Credito") {
+            log("Pedir Folio");
+            setState(() {
+              isRequestFolio = true;
+            });
+          } else {
+            showConfirmSale(methodCurrent);
+          }
         }
       },
       child: Container(
@@ -610,10 +810,12 @@ class _ShoppingCartState extends State<ShoppingCart> {
       DefaultTextStyle(
           style: TextStyles.blueJ22Bold, child: const Text("Pago en ")),
       DefaultTextStyle(
-          style: TextStyles.blueJ18Bold, child: Text("$wayToPay - \$${cost}0")),
+          style: TextStyles.blueJ18Bold,
+          child: Text("$wayToPay - ${formatMoney.format(cost)}")),
       DefaultTextStyle(
           style: TextStyles.blueJ18Bold,
-          child: Text("${secWayToPay.wayToPay} - \$${secWayToPay.cost}0")),
+          child: Text(
+              "${secWayToPay.wayToPay} - ${formatMoney.format(secWayToPay.cost)}")),
     ]);
   }
 
@@ -635,9 +837,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
             )),
         DefaultTextStyle(
             style: TextStyles.greenJ24Bold,
-            child: Text(
-              checkDouble(totalPrice.toString()),
-            )),
+            child: Text(formatMoney.format(totalPrice))),
       ],
     );
   }
@@ -692,9 +892,6 @@ class _ShoppingCartState extends State<ShoppingCart> {
 
     if (widget.authList.isNotEmpty) {
       basket.idAuth = widget.authList.first.idAuth;
-    }
-    if (basket.waysToPay.first.type == "C") {
-      basket.folio = 1;
     }
 
     ///
@@ -803,46 +1000,6 @@ class _ShoppingCartState extends State<ShoppingCart> {
     );
   }
 
-  Widget loading() {
-    return Center(
-      child: Container(
-        margin: const EdgeInsets.only(top: 30),
-        decoration: BoxDecoration(
-          color: Colors.blue.withOpacity(0.8),
-          borderRadius: const BorderRadius.all(Radius.circular(25)),
-        ),
-        height: MediaQuery.of(context).size.width * .30,
-        width: MediaQuery.of(context).size.width * .30,
-        child: const SpinKitDualRing(
-          color: Colors.white70,
-          lineWidth: 4,
-        ),
-      ),
-    );
-  }
-
-  void onLoading() {
-    showCupertinoDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Center(
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.blue.withOpacity(0.8),
-              borderRadius: const BorderRadius.all(Radius.circular(25)),
-            ),
-            height: MediaQuery.of(context).size.width * .30,
-            width: MediaQuery.of(context).size.width * .30,
-            child: const SpinKitDualRing(
-              color: Colors.white70,
-              lineWidth: 4,
-            ),
-          ),
-        );
-      },
-    );
-  }
-
   getConfigR() async {
     await getConfig(widget.customerCurrent.idClient).then((answer) {
       if (answer.error) {
@@ -885,7 +1042,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
         return false;
       }
     } else {
-      print({"permission": permission.toString()});
+      log("permission : $permission");
       return false;
     }
   }

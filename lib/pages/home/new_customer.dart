@@ -3,7 +3,6 @@ import 'dart:developer';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_multi_formatter/flutter_multi_formatter.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -66,7 +65,7 @@ class _NewCustomerState extends State<NewCustomer> {
   void initState() {
     super.initState();
     //
-    isLoading = true;
+    isLoading = false;
     lat = lng = 0;
     typeCustomerS = "PARTICULAR";
     //

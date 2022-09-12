@@ -165,6 +165,9 @@ class TextStyles {
   static TextStyle white18SemiBoldIt = const TextStyle(
       fontSize: 18, fontFamily: 'MyriadPro-SemiBoldit', color: Colors.white);
 
+  static TextStyle white18SemiBold = const TextStyle(
+      fontSize: 18, fontFamily: 'MyriadPro-SemiBold', color: Colors.white);
+
   static TextStyle white16SemiBoldIt = const TextStyle(
       fontSize: 16, fontFamily: 'MyriadPro-SemiBoldit', color: Colors.white);
 
@@ -297,6 +300,9 @@ class TextStyles {
 
   static TextStyle grey17Itw = const TextStyle(
       fontSize: 17, fontFamily: 'MyriadPro-it', color: ColorsJunghanns.grey);
+
+  static TextStyle grey20Itw = const TextStyle(
+      fontSize: 20, fontFamily: 'MyriadPro-it', color: ColorsJunghanns.grey);
 
   static TextStyle grey15Itw = const TextStyle(
       fontSize: 15, fontFamily: 'MyriadPro-it', color: ColorsJunghanns.grey);

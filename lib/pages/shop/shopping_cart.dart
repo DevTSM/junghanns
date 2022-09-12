@@ -148,34 +148,18 @@ class _ShoppingCartState extends State<ShoppingCart> {
         );
       } else {
         paymentsList.clear();
-        bool isNotAuth = true;
+        answer.body
+            .map((e) => paymentsList.add(MethodPayment.fromService(e)))
+            .toList();
 
-        //
-        if (widget.authList.isNotEmpty) {
-          isNotAuth = false;
+        if (widget.customerCurrent.purse > 0) {
           paymentsList.add(MethodPayment(
-              wayToPay: "Credito",
-              typeWayToPay: "C",
-              type: "Autorizacion",
-              idProductService: widget.authList.first.idProduct,
-              description: widget.authList.first.description,
-              number: widget.authList.first.number));
-        }
-        //
-        if (isNotAuth) {
-          answer.body
-              .map((e) => paymentsList.add(MethodPayment.fromService(e)))
-              .toList();
-
-          if (widget.customerCurrent.purse > 0) {
-            paymentsList.add(MethodPayment(
-                wayToPay: "Monedero",
-                typeWayToPay: "M",
-                type: "Monedero",
-                idProductService: -1,
-                description: "",
-                number: -1));
-          }
+              wayToPay: "Monedero",
+              typeWayToPay: "M",
+              type: "Monedero",
+              idProductService: -1,
+              description: "",
+              number: -1));
         }
       }
       setState(() {

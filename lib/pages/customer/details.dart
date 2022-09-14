@@ -976,7 +976,11 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
           maxLines: 1,
           style: TextStyles.blue27_7,
         ),
-        Text(label, style: TextStyles.grey14_7),
+        AutoSizeText(
+          label,
+          style: TextStyles.grey14_7,
+          maxLines: 1,
+        ),
         const SizedBox(
           height: 10,
         ),

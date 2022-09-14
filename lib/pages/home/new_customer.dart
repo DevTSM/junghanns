@@ -35,6 +35,7 @@ class _NewCustomerState extends State<NewCustomer> {
   late Size size;
   late String typeCustomerS;
   late DateTime dateAux, dateBirth;
+  late bool isDate;
   //
   late TextEditingController nameC, lastNameC, companyC, contactC;
   late TextEditingController phoneC, emailC, streetC, numEc, numIc;
@@ -84,7 +85,8 @@ class _NewCustomerState extends State<NewCustomer> {
     companyC = TextEditingController();
     contactC = TextEditingController();
     //
-    dateBirth = dateAux = DateTime(1900);
+    dateBirth = dateAux = DateTime(DateTime.now().year - 50);
+    isDate = false;
     //
     errLatLng = errName = errLastN = errDateB = errCompany = errContact = "";
     errPhone = errEmail = errTypeStreet = errStreet = errNumE = "";
@@ -271,15 +273,13 @@ class _NewCustomerState extends State<NewCustomer> {
             typeCustomerS == "PARTICULAR"
                 ? buttonField(
                     "*Fecha Nacimiento",
-                    dateBirth.year == 1900
+                    !isDate
                         ? "Fecha Nacimiento"
                         : "${dateBirth.day} / ${dateBirth.month} / ${dateBirth.year}",
                     errDateB != ""
                         ? Decorations.whiteBorder10Red
                         : Decorations.whiteSblackCard,
-                    dateBirth.year == 1900
-                        ? TextStyles.grey15Itw
-                        : TextStyles.blueJ15SemiBold,
+                    !isDate ? TextStyles.grey15Itw : TextStyles.blueJ15SemiBold,
                     selectDate,
                     errDateB)
                 : Container(),
@@ -587,6 +587,7 @@ class _NewCustomerState extends State<NewCustomer> {
                     onPressed: () {
                       setState(() {
                         dateBirth = dateAux;
+                        isDate = true;
                       });
                       Navigator.pop(context);
                     },
@@ -891,7 +892,7 @@ class _NewCustomerState extends State<NewCustomer> {
       errLastN = "";
     }
 
-    if (typeCustomerS == "PARTICULAR" && dateBirth.year == 1900) {
+    if (typeCustomerS == "PARTICULAR" && !isDate) {
       errDateB = "*Campo obligatorio";
       isValid = false;
     } else {

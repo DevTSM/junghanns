@@ -224,8 +224,14 @@ class TextStyles {
   static TextStyle blueJ20It = const TextStyle(
       fontSize: 20, fontFamily: 'MyriadPro-it', color: ColorsJunghanns.blueJ);
 
+  static TextStyle blueJ18It = const TextStyle(
+      fontSize: 18, fontFamily: 'MyriadPro-it', color: ColorsJunghanns.blueJ);
+
   static TextStyle blueJ22Bold = const TextStyle(
       fontSize: 22, fontFamily: 'MyriadPro-Bold', color: ColorsJunghanns.blueJ);
+
+  static TextStyle blueJ25Bold = const TextStyle(
+      fontSize: 25, fontFamily: 'MyriadPro-Bold', color: ColorsJunghanns.blueJ);
 
   static TextStyle blueJ220Bold = const TextStyle(
       fontSize: 20,

@@ -75,7 +75,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
   @override
   void initState() {
     super.initState();
-
+    log(widget.authList.length.toString());
     totalPrice = widget.customerCurrent.priceS != 0
         ? (widget.customerCurrent.priceS * widget.customerCurrent.numberS)
         : 0;
@@ -101,7 +101,6 @@ class _ShoppingCartState extends State<ShoppingCart> {
   }
 
   getDataProducts() async {
-    log("${prefs.idRouteD}");
     await getStockList(prefs.idRouteD).then((answer) {
       if (answer.error) {
         Fluttertoast.showToast(
@@ -254,6 +253,16 @@ class _ShoppingCartState extends State<ShoppingCart> {
           onTap: () {},
         ),
         elevation: 0,
+        actions: [
+          Container(
+        alignment: Alignment.center,
+        padding: const EdgeInsets.only(right: 15),
+        child: Text(
+          "${urlBase != ipProd ? "Beta " : ""}V$version",
+          style: TextStyles.blue18SemiBoldIt,
+        ),
+      ),
+        ],
       ),
       body: Stack(
         children: [
@@ -876,6 +885,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
 
     if (widget.authList.isNotEmpty) {
       basket.idAuth = widget.authList.first.idAuth;
+      widget.authList.removeWhere((element) => element.idAuth==basket.idAuth);
     }
 
     ///
@@ -907,6 +917,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
           gravity: ToastGravity.TOP,
           webShowClose: true,
         );
+        log(widget.authList.length.toString());
       } else {
         //Navigator.pop(context);
         Fluttertoast.showToast(

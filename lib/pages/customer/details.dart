@@ -57,6 +57,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
   late Size size;
   late bool isRange;
   late bool isLoading;
+  late double distance;
   late List<ConfigModel> configList;
   late List<AuthorizationModel> authList;
   late NumberFormat formatMoney = NumberFormat("\$#,##0.00");
@@ -64,6 +65,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
   @override
   void initState() {
     super.initState();
+    distance=0;
     isRange = false;
     pickedImageFile = null;
     configList = [];
@@ -94,6 +96,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
   }
 
   getAuth() async {
+    authList.clear();
     await getAuthorization(widget.customerCurrent.idClient, prefs.idRouteD)
         .then((answer) {
       if (answer.error) {
@@ -215,8 +218,8 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
     });
   }
 
-  navigatorShopping() {
-    Navigator.pop(context);
+  navigatorShopping(){
+      Navigator.pop(context);
     Navigator.push(
         context,
         MaterialPageRoute<void>(
@@ -224,6 +227,8 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
                   customerCurrent: widget.customerCurrent,
                   authList: authList.isEmpty ? authList : [authList.first],
                 )));
+
+    
   }
 
   navigatorShoppingRefill() {
@@ -333,19 +338,14 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
         permission == LocationPermission.always) {
       provider.permission = true;
       Position _currentLocation = await Geolocator.getCurrentPosition();
-      double dif = Geolocator.distanceBetween(
+      setState(() {
+        distance= Geolocator.distanceBetween(
           widget.customerCurrent.lat,
           widget.customerCurrent.lng,
           _currentLocation.latitude,
           _currentLocation.longitude);
-      //         Fluttertoast.showToast(
-      //   msg: "distancia $dif\n configuracion: ${configList.last.valor}\n lat:${_currentLocation.latitude}\n lng:${_currentLocation.latitude}",
-      //   timeInSecForIosWeb: 16,
-      //   toastLength: Toast.LENGTH_LONG,
-      //   gravity: ToastGravity.TOP,
-      //   webShowClose: true,
-      // );
-      if (dif <= configList.last.valor) {
+      });
+      if (distance <= configList.last.valor) {
         return true;
       } else {
         return false;
@@ -417,7 +417,12 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          getBack(),
+          GestureDetector(
+        onTap: () => Navigator.pop(context),
+        child: const Icon(
+          Icons.arrow_back_ios,
+          color: ColorsJunghanns.white,
+        )),
           Expanded(
               child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -430,19 +435,15 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
           const SizedBox(
             width: 10,
           ),
-          iconPhoto()
+          GestureDetector(
+        onTap: () => _pickImage(1),
+        child: Image.asset(
+          "assets/icons/photo.png",
+          width: size.width * .13,
+        ))
         ],
       ),
     );
-  }
-
-  Widget getBack() {
-    return GestureDetector(
-        onTap: () => Navigator.pop(context),
-        child: const Icon(
-          Icons.arrow_back_ios,
-          color: ColorsJunghanns.white,
-        ));
   }
 
   Widget addressText() {
@@ -501,15 +502,6 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
         )),
       ],
     );
-  }
-
-  Widget iconPhoto() {
-    return GestureDetector(
-        onTap: () => _pickImage(1),
-        child: Image.asset(
-          "assets/icons/photo.png",
-          width: size.width * .13,
-        ));
   }
 
   Widget refreshScroll() {
@@ -760,7 +752,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
                       fun: () {},
                       decoration: Decorations.whiteBorder5Red,
                       style: TextStyles.red17_6,
-                      label: "ESTÁS MUY LEJOS DEL CLIENTE !!")),
+                      label: "ESTÁS A ${distance.ceil()} ${distance>1?"mtrs":"m"} DEL CLIENTE !!")),
           const SizedBox(
             height: 20,
           ),

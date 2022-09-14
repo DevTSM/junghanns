@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:developer';
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -276,89 +277,117 @@ class _ShoppingCartState extends State<ShoppingCart> {
   }
 
   Widget addCharger() {
-    return Visibility(
-        visible: widget.customerCurrent.priceS != 0,
-        child: Container(
-            width: double.infinity,
-            color: ColorsJunghanns.red,
-            padding: const EdgeInsets.only(top: 5, bottom: 5),
-            child: const Text(
-              "Costo adicional",
-              style: TextStyles.white17_5,
-              textAlign: TextAlign.center,
-            )));
+    return Container(
+      width: double.infinity,
+      decoration: Decorations.whiteSblackCard,
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+      child: Column(children: [
+        Row(children: [
+          Image.asset(
+            "assets/icons/exclamation.png",
+            width: size.width * 0.1,
+          ),
+          Container(
+              padding: const EdgeInsets.only(left: 18),
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Servicio especial", style: TextStyles.blueJ20BoldIt),
+                    widget.customerCurrent.priceS != 0
+                        ? Text(
+                            "Cargo extra",
+                            style: TextStyles.blueJ18It,
+                          )
+                        : Container()
+                  ])),
+          Expanded(
+              child: Text(
+            widget.customerCurrent.priceS != 0
+                ? formatMoney.format(widget.customerCurrent.priceS)
+                : "",
+            style: TextStyles.blueJ25Bold,
+            textAlign: TextAlign.end,
+          ))
+        ]),
+        Container(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              widget.customerCurrent.descServiceS,
+              style: TextStyles.grey17Itw,
+              textAlign: TextAlign.justify,
+            ))
+      ]),
+    );
   }
 
   Widget header() {
-    return Column(
-      children: [
-        Container(
-            color: ColorsJunghanns.green,
-            padding: EdgeInsets.only(
-                right: 15, left: 23, top: 10, bottom: size.height * .023),
-            child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.center,
+    return Container(
+        height: size.height * .21,
+        color: ColorsJunghanns.green,
+        padding: const EdgeInsets.only(right: 15, left: 23, top: 10),
+        child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Visibility(
+                  visible: provider.connectionStatus == 4,
+                  child: Container(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      child: const WithoutInternet())),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Visibility(
-                      visible: provider.connectionStatus == 4,
-                      child: Container(
-                          margin: const EdgeInsets.only(bottom: 10),
-                          child: const WithoutInternet())),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      GestureDetector(
-                          onTap: () => Navigator.pop(context),
-                          child: const Icon(
-                            Icons.arrow_back_ios,
-                            color: ColorsJunghanns.white,
-                          )),
-                      Expanded(
-                          child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Container(
-                                padding:
-                                    const EdgeInsets.only(right: 8, top: 10),
-                                child: Text(
-                                  cantidad.toString(),
-                                  style: TextStyles.white24SemiBoldIt,
-                                ),
-                              ),
-                              Image.asset(
-                                "assets/icons/shoppingIcon.png",
-                                width: 60,
-                              ),
-                            ],
-                          ),
-                          const SizedBox(
-                            height: 10,
-                          ),
-                          Text(
-                            formatMoney.format(totalPrice),
-                            style: TextStyles.white40Bold,
-                          )
-                        ],
+                  GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: const Icon(
+                        Icons.arrow_back_ios,
+                        color: ColorsJunghanns.white,
                       )),
-                      SizedBox(
-                        width: size.width * .1,
+                  Expanded(
+                      child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.only(right: 8, top: 10),
+                            child: Text(
+                              cantidad.toString(),
+                              style: TextStyles.white24SemiBoldIt,
+                            ),
+                          ),
+                          Image.asset(
+                            "assets/icons/shoppingIcon.png",
+                            width: 60,
+                          ),
+                        ],
                       ),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      AutoSizeText(
+                        formatMoney.format(totalPrice),
+                        style: TextStyles.white40Bold,
+                      )
                     ],
+                  )),
+                  SizedBox(
+                    width: size.width * .1,
                   ),
-                ])),
-        addCharger()
-      ],
-    );
+                ],
+              ),
+            ]));
   }
 
   Widget itemList() {
     return Container(
-      margin: EdgeInsets.only(top: size.height * .26),
+      margin: EdgeInsets.only(
+          top: widget.customerCurrent.descServiceS != ""
+              ? size.height * .20
+              : size.height * .22),
       padding: const EdgeInsets.only(left: 10, right: 10),
       width: double.infinity,
       child: productsList.isEmpty
@@ -370,7 +399,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
           : Column(
               children: [
                 widget.customerCurrent.descServiceS != ""
-                    ? extraCharge()
+                    ? addCharger()
                     : Container(),
                 ProductCardPriority(
                     productCurrent: widget.authList.isEmpty

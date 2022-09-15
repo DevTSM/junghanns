@@ -65,7 +65,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
   @override
   void initState() {
     super.initState();
-    distance=0;
+    distance = 0;
     isRange = false;
     pickedImageFile = null;
     configList = [];
@@ -218,8 +218,8 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
     });
   }
 
-  navigatorShopping(){
-      Navigator.pop(context);
+  navigatorShopping() {
+    Navigator.pop(context);
     Navigator.push(
         context,
         MaterialPageRoute<void>(
@@ -227,8 +227,6 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
                   customerCurrent: widget.customerCurrent,
                   authList: authList.isEmpty ? authList : [authList.first],
                 )));
-
-    
   }
 
   navigatorShoppingRefill() {
@@ -339,11 +337,11 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
       provider.permission = true;
       Position _currentLocation = await Geolocator.getCurrentPosition();
       setState(() {
-        distance= Geolocator.distanceBetween(
-          widget.customerCurrent.lat,
-          widget.customerCurrent.lng,
-          _currentLocation.latitude,
-          _currentLocation.longitude);
+        distance = Geolocator.distanceBetween(
+            widget.customerCurrent.lat,
+            widget.customerCurrent.lng,
+            _currentLocation.latitude,
+            _currentLocation.longitude);
       });
       if (distance <= configList.last.valor) {
         return true;
@@ -418,11 +416,11 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           GestureDetector(
-        onTap: () => Navigator.pop(context),
-        child: const Icon(
-          Icons.arrow_back_ios,
-          color: ColorsJunghanns.white,
-        )),
+              onTap: () => Navigator.pop(context),
+              child: const Icon(
+                Icons.arrow_back_ios,
+                color: ColorsJunghanns.white,
+              )),
           Expanded(
               child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -436,11 +434,11 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
             width: 10,
           ),
           GestureDetector(
-        onTap: () => _pickImage(1),
-        child: Image.asset(
-          "assets/icons/photo.png",
-          width: size.width * .13,
-        ))
+              onTap: () => _pickImage(1),
+              child: Image.asset(
+                "assets/icons/photo.png",
+                width: size.width * .13,
+              ))
         ],
       ),
     );
@@ -752,7 +750,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
                       fun: () {},
                       decoration: Decorations.whiteBorder5Red,
                       style: TextStyles.red17_6,
-                      label: "ESTÁS A ${distance.ceil()} ${distance>1?"mtrs":"m"} DEL CLIENTE !!")),
+                      label: "ESTÁS A ${distance.ceil()} M DEL CLIENTE !!")),
           const SizedBox(
             height: 20,
           ),

@@ -6,6 +6,7 @@ class ProductModel {
   String img;
   int type; //1 product 2 refill
   bool isSelect;
+  String rank;
 
   ProductModel(
       {required this.idProduct,
@@ -14,7 +15,8 @@ class ProductModel {
       required this.stock,
       required this.img,
       required this.type,
-      required this.isSelect});
+      required this.isSelect,
+      required this.rank});
 
   factory ProductModel.fromState(int id) {
     return ProductModel(
@@ -24,7 +26,8 @@ class ProductModel {
         stock: 20,
         img: "assets/images/Ceramica.JPG",
         type: 1,
-        isSelect: false);
+        isSelect: false,
+        rank: "");
   }
 
   factory ProductModel.fromServiceProduct(Map<String, dynamic> data) {
@@ -35,7 +38,8 @@ class ProductModel {
         stock: data["stock"],
         img: data["url"],
         type: 1,
-        isSelect: false);
+        isSelect: false,
+        rank: data["rank"] ?? "");
   }
 
   setSelect(bool isSelect) {
@@ -50,6 +54,7 @@ class ProductModel {
         stock: 0,
         img: "assets/icons/refill1.png",
         type: 2,
-        isSelect: false);
+        isSelect: false,
+        rank: "");
   }
 }

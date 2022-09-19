@@ -115,6 +115,15 @@ class _ShoppingCartState extends State<ShoppingCart> {
         answer.body.map((e) {
           productsList.add(ProductModel.fromServiceProduct(e));
         }).toList();
+        //
+        log("Antes");
+        log(productsList.first.description);
+        //
+        productsList.sort(((a, b) => b.rank.length.compareTo(a.rank.length)));
+        //
+        log("Despues");
+        log(productsList.first.description);
+        //
         checkPriceCvsPriceS();
       }
       getDataPayment();
@@ -148,18 +157,30 @@ class _ShoppingCartState extends State<ShoppingCart> {
         );
       } else {
         paymentsList.clear();
-        answer.body
-            .map((e) => paymentsList.add(MethodPayment.fromService(e)))
-            .toList();
-
-        if (widget.customerCurrent.purse > 0) {
+        if (widget.authList.isNotEmpty && widget.authList.first.type == "C") {
+          log("Credito **************");
           paymentsList.add(MethodPayment(
-              wayToPay: "Monedero",
-              typeWayToPay: "M",
-              type: "Monedero",
+              wayToPay: "Credito",
+              typeWayToPay: "C",
+              type: "Atributo",
               idProductService: -1,
               description: "",
               number: -1));
+        } else {
+          log("Formas de pago **************");
+          answer.body
+              .map((e) => paymentsList.add(MethodPayment.fromService(e)))
+              .toList();
+
+          if (widget.customerCurrent.purse > 0) {
+            paymentsList.add(MethodPayment(
+                wayToPay: "Monedero",
+                typeWayToPay: "M",
+                type: "Monedero",
+                idProductService: -1,
+                description: "",
+                number: -1));
+          }
         }
       }
       setState(() {
@@ -256,13 +277,13 @@ class _ShoppingCartState extends State<ShoppingCart> {
         elevation: 0,
         actions: [
           Container(
-        alignment: Alignment.center,
-        padding: const EdgeInsets.only(right: 15),
-        child: Text(
-          "${urlBase != ipProd ? "Beta " : ""}V$version",
-          style: TextStyles.blue18SemiBoldIt,
-        ),
-      ),
+            alignment: Alignment.center,
+            padding: const EdgeInsets.only(right: 15),
+            child: Text(
+              "${urlBase != ipProd ? "Beta " : ""}V$version",
+              style: TextStyles.blue18SemiBoldIt,
+            ),
+          ),
         ],
       ),
       body: Stack(
@@ -914,7 +935,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
 
     if (widget.authList.isNotEmpty) {
       basket.idAuth = widget.authList.first.idAuth;
-      widget.authList.removeWhere((element) => element.idAuth==basket.idAuth);
+      widget.authList.removeWhere((element) => element.idAuth == basket.idAuth);
     }
 
     ///

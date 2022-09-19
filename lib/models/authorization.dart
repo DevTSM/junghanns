@@ -72,6 +72,7 @@ class AuthorizationModel {
         stock: number,
         img: img,
         type: 1,
-        isSelect: false);
+        isSelect: false,
+        rank: "");
   }
 }

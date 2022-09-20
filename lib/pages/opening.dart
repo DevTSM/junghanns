@@ -15,7 +15,8 @@ import 'package:provider/provider.dart';
 import 'auth/login.dart';
 
 class Opening extends StatefulWidget {
-  const Opening({Key? key}) : super(key: key);
+  bool isLogin;
+  Opening({Key? key,this.isLogin=false}) : super(key: key);
 
   @override
   State<Opening> createState() => _OpeningState();
@@ -46,12 +47,12 @@ class _OpeningState extends State<Opening> {
     //validamos si ya se hizo la sincronizacion
     Timer(const Duration(milliseconds: 2000), () async {
       if (prefs.isLogged) {
-        if (DateTime.now()
+        if ((DateTime.now()
                 .difference(DateTime.parse(prefs.asyncLast != ""
                     ? prefs.asyncLast
                     : DateTime(2017, 9, 7, 17, 30).toString()))
                 .inDays >
-            1) {
+            1)||widget.isLogin) {
           setState(() {
             isAsync = true;
           });
@@ -110,6 +111,20 @@ class _OpeningState extends State<Opening> {
     provider.connectionStatus = result.index;
     if (result.index < 4) {
       asyncDB();
+    }else{
+      if(prefs.isLogged){
+        Navigator.pushReplacement<void, void>(
+                context,
+                MaterialPageRoute<void>(
+                    builder: (BuildContext context) => HomePrincipal()),
+              );
+      }else{
+        Navigator.pushReplacement<void, void>(
+                context,
+                MaterialPageRoute<void>(
+                    builder: (BuildContext context) => const Login()),
+              );
+      }
     }
   }
 
@@ -135,13 +150,60 @@ class _OpeningState extends State<Opening> {
   Future<void> _updateConnectionStatus(ConnectivityResult result) async {
     provider.connectionStatus = result.index;
     if (result.index != 4 && prefs.dataStop) {
-      // List<Map<String, dynamic>> dataNStops = [];
-      // List<Map<String, dynamic>> dataList =
-      //     await provider.handler.retrieveStopOff();
-      // List.generate(dataList.length, (i) {
-      //   dataNStops.add(dataList[i]);
-      // });
-      // dataNStops.map((e) => log(e.toString())).toList();
+      List<Map<String, dynamic>> dataNStops = [];
+      List<Map<String, dynamic>> dataList =
+          await handler.retrieveStopOff();
+      List.generate(dataList.length, (i) {
+        log("-----$i");
+        dataNStops.add(dataList[i]);
+      });
+      for(var e in dataNStops){
+        log(e.toString());
+      Map<String,dynamic> data={
+        "id_cliente": e["idCustomer"].toString(),
+            "id_parada": e["idStop"],
+            "lat": "${e["lat"]}",
+            "lon": "${e["lng"]}",
+            "id_data_origen": e["idOrigin"],
+            "tipo": e["type"]
+      };
+      await postStop(data).then((answer) {
+            if (!answer.error){
+              log("Parada asignada");
+              // Fluttertoast.showToast(
+              //   msg: "Parada asignada con exito",
+              //   timeInSecForIosWeb: 2,
+              //   toastLength: Toast.LENGTH_LONG,
+              //   gravity: ToastGravity.TOP,
+              //   webShowClose: true,
+              // );
+            }
+          });
+      }
+      handler.deleteStopOff().then((element){
+        prefs.dataStop=false;
+      });
+      // dataNStops.map((e) async {log(e.toString());
+      // Map<String,dynamic> data={
+      //   "id_cliente": e["idCustomer"].toString(),
+      //       "id_parada": e["idStop"],
+      //       "lat": "${e["lat"]}",
+      //       "lon": "${e["lng"]}",
+      //       "id_data_origen": e["idOrigin"],
+      //       "tipo": e["type"]
+      // };
+      // await postStop(data).then((answer) {
+      //       if (!answer.error){
+      //         log("Parada asignada");
+      //         // Fluttertoast.showToast(
+      //         //   msg: "Parada asignada con exito",
+      //         //   timeInSecForIosWeb: 2,
+      //         //   toastLength: Toast.LENGTH_LONG,
+      //         //   gravity: ToastGravity.TOP,
+      //         //   webShowClose: true,
+      //         // );
+      //       }
+      //     });}).toList();
     }
   }
 

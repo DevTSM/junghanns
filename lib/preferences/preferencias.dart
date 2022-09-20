@@ -71,7 +71,13 @@ class PreferenciasUsuario {
   set dataStop(bool dataStop) {
     prefs!.setBool("dataStop", dataStop);
   }
+  bool get isUpdateDB {
+    return prefs!.getBool("isUpdateDB") ?? false;
+  }
 
+  set isUpdateDB(bool isUpdateDB) {
+    prefs!.setBool("isUpdateDB", isUpdateDB);
+  }
   //Info DeliveryMan
   //---------------------------------------------------------
 

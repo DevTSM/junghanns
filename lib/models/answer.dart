@@ -12,12 +12,18 @@ class Answer{
     try{
       
     if(response.statusCode<400){
+      if(response.statusCode==203){
+        log("/Respuesta fallida");
+         prefs.prefs!.clear();
+         return Answer(body: {}, message: "Código de error ${response.statusCode}", error: true);
+      }else{
       log("/Respuesta exitosa");
       if(response.statusCode==204){
     return Answer(body: {[]}, message: message??"Sin datos",error: true);
       }else{
         dynamic body=jsonDecode(response.body);
         return Answer(body: body, message: message??"Respuesta Exitosa",error: false);
+      }
       }
     }else{
       log("/Respuesta fallida");

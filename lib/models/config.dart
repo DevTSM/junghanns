@@ -25,4 +25,11 @@ class ConfigModel {
         unidad: data["unidad"] ?? "Mtrs",
         description: data["descripcion"] ?? "No");
   }
+  factory ConfigModel.fromDatabase(int value) {
+    return ConfigModel(
+        parametro: "",
+        valor: value,
+        unidad: "Mtrs",
+        description: "No");
+  }
 }

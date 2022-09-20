@@ -16,7 +16,7 @@ class DataBase {
         //payment en jsonEncode
         // 1= Especial 2=Ruta, 3=vuelta, 4=llama
         await database.execute(
-          "CREATE TABLE customer(id INTEGER PRIMARY KEY AUTOINCREMENT, orden INTEGER , idCustomer INTEGER, idRoute INTEGER,type INTEGER, lat DOUBLE, lng DOUBLE, priceLiquid DOUBLE, byCollet DOUBLE, purse DOUBLE, name TEXT NOT NULL, address TEXT NOT NULL , nameRoute TEXT NOT NULL,typeVisit TEXT NOT NULL, category TEXT NOT NULL,days TEXT NOT NULL, img TEXT NOT NULL, observacion TEXT,auth TEXT,payment TEXT,color TEXT)",
+          "CREATE TABLE customer(id INTEGER PRIMARY KEY AUTOINCREMENT, orden INTEGER , idCustomer INTEGER, idRoute INTEGER,type INTEGER, lat DOUBLE, lng DOUBLE, priceLiquid DOUBLE, byCollet DOUBLE, purse DOUBLE, name TEXT NOT NULL, address TEXT NOT NULL , nameRoute TEXT NOT NULL,typeVisit TEXT NOT NULL, category TEXT NOT NULL,days TEXT NOT NULL, img TEXT NOT NULL, observacion TEXT,auth TEXT,payment TEXT,color TEXT,config INTEGER)",
         );
         //lista de paradas en falso
         await database.execute(
@@ -59,13 +59,14 @@ class DataBase {
   Future<int> insertStopOff(Map<String, dynamic> stops) async {
     int result = 0;
     final Database db = await initializeDB();
-    result = await db.insert('stop', stops);
+    result = await db.insert('stopOff', stops);
     return result;
   }
 
   deleteTable() async {
     final db = await initializeDB();
     db.delete('customer');
+    db.delete('stop');
   }
 
   deleteStops() async {

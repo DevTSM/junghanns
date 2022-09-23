@@ -36,12 +36,17 @@ class _StopsState extends State<Stops> {
   late Size size;
   late List<StopModel> stopList = [];
   late bool isLoading;
+  //
+  late double latStop, lngStop;
 
   @override
   void initState() {
     super.initState();
     stopCurrent = StopModel.fromState();
     isLoading = true;
+    //
+    latStop = lngStop = 0;
+    //
     getDataStops();
   }
 
@@ -208,6 +213,9 @@ class _StopsState extends State<Stops> {
     if (permission == LocationPermission.whileInUse ||
         permission == LocationPermission.always) {
       Position _currentLocation = await Geolocator.getCurrentPosition();
+      latStop = _currentLocation.latitude;
+      lngStop = _currentLocation.longitude;
+      log("Coordenadas : $latStop, $lngStop");
       if (Geolocator.distanceBetween(
                   _currentLocation.latitude,
                   _currentLocation.longitude,
@@ -219,8 +227,8 @@ class _StopsState extends State<Stops> {
           Map<String, dynamic> data = {
             "id_cliente": widget.customerCurrent.idClient.toString(),
             "id_parada": stopCurrent.id,
-            "lat": "${widget.customerCurrent.lat}",
-            "lon": "${widget.customerCurrent.lng}",
+            "lat": "$latStop",
+            "lon": "$lngStop",
             "id_data_origen": widget.customerCurrent.id,
             "tipo": widget.customerCurrent.typeVisit.characters.first
           };

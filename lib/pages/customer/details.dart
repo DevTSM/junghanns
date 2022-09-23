@@ -2,8 +2,9 @@
 import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
-
+import 'package:location/location.dart' as loc1;
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -61,6 +62,8 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
   late List<ConfigModel> configList;
   late List<AuthorizationModel> authList;
   late NumberFormat formatMoney = NumberFormat("\$#,##0.00");
+  //
+  late String errLocation;
 
   @override
   void initState() {
@@ -73,6 +76,9 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
     authList = [];
     //
     isLoading = false;
+    //
+    errLocation = "";
+
     getDataDetails();
   }
 
@@ -95,7 +101,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
     });
   }
 
-  getAuth() async {
+  getAuth(bool isL, bool isH) async {
     authList.clear();
     await getAuthorization(widget.customerCurrent.idClient, prefs.idRouteD)
         .then((answer) {
@@ -139,7 +145,9 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
           log("Descripción: ${authList.first.description}");
         }
       }
-      setCurrentLocation();
+      if (isL) {
+        setCurrentLocation(isH);
+      }
     });
   }
 
@@ -161,7 +169,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
     });
   }
 
-  getMoney() {
+  getMoney(bool isA, bool isL, bool isH) {
     /*setState(() {
       isLoading = true;
     });*/
@@ -183,7 +191,9 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
               .setMoney(double.parse((answer.body["saldo"] ?? 0).toString()));
         });
       }
-      getAuth();
+      if (isA) {
+        getAuth(isL, isH);
+      }
     });
   }
 
@@ -212,7 +222,7 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
                   widget.customerCurrent.id, widget.customerCurrent.type);
             });
           }
-          getMoney();
+          getMoney(true, true, true);
         });
       }
     });
@@ -244,12 +254,13 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
     setState(() {
       isLoading = true;
     });
-    bool isValid = await funCheckDistance();
+    //bool isValid = await funCheckDistance();
+    bool isValid = await funCheckDistance2();
+    setState(() {
+      isLoading = false;
+    });
     if (isValid) {
       //Navigator.pop(context);
-      setState(() {
-        isLoading = false;
-      });
       // ignore: use_build_context_synchronously
       Navigator.push(
           context,
@@ -257,28 +268,19 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
               builder: (BuildContext context) => Stops(
                   customerCurrent: widget.customerCurrent,
                   distance: configList.last.valor)));
-    } else {
-      //Navigator.pop(context);
-      setState(() {
-        isLoading = false;
-      });
-      Fluttertoast.showToast(
-        msg: "Lejos del domicilio",
-        timeInSecForIosWeb: 16,
-        toastLength: Toast.LENGTH_LONG,
-        gravity: ToastGravity.TOP,
-        webShowClose: true,
-      );
     }
   }
 
-  setCurrentLocation() async {
-    bool isValid = await funCheckDistance();
+  setCurrentLocation(bool isH) async {
+    //bool isValid = await funCheckDistance();
+    bool isValid = await funCheckDistance2();
     setState(() {
       isRange = isValid;
       isLoading = false;
     });
-    getHistory();
+    if (isH) {
+      getHistory();
+    }
   }
 
   funCurrentLocation() {
@@ -329,23 +331,132 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
     }
   }
 
+  ///
+  ///--------------------------------------------------------------------------
+
+  Future<bool> funCheckDistance2() async {
+    await getConfigR();
+    log("***LOCATION FUN***");
+    loc1.Location loc = loc1.Location();
+    bool serviceEnabled;
+    loc1.PermissionStatus permissionGranted;
+    loc1.LocationData locationData;
+
+    serviceEnabled = await loc.serviceEnabled();
+    log("Service is : $serviceEnabled");
+    if (serviceEnabled == false) {
+      serviceEnabled = await loc.requestService();
+    }
+    if (serviceEnabled) {
+      permissionGranted = await loc.hasPermission();
+      if (permissionGranted != loc1.PermissionStatus.granted) {
+        log("Request Location Permission");
+        permissionGranted = await loc.requestPermission();
+      }
+      if (permissionGranted == loc1.PermissionStatus.granted) {
+        log("Permission true");
+        loc.changeSettings(accuracy: loc1.LocationAccuracy.high);
+        try {
+          locationData =
+              await loc.getLocation().timeout(const Duration(seconds: 15));
+          distance = calculateDistance(
+                  widget.customerCurrent.lat,
+                  widget.customerCurrent.lng,
+                  locationData.latitude,
+                  locationData.longitude) *
+              1000;
+
+          log("LatL: ${locationData.latitude} and LngL: ${locationData.longitude}");
+          log("LatC: ${widget.customerCurrent.lat} and LngC: ${widget.customerCurrent.lng}");
+          log("Distance loc is $distance");
+
+          if (distance <= configList.last.valor) {
+            return true;
+          } else {
+            Fluttertoast.showToast(
+              msg: "ESTÁS A ${distance.ceil()} M DEL CLIENTE !!",
+              timeInSecForIosWeb: 16,
+              toastLength: Toast.LENGTH_LONG,
+              gravity: ToastGravity.TOP,
+              webShowClose: true,
+            );
+
+            return false;
+          }
+        } catch (e) {
+          log("***ERROR -- $e");
+          Fluttertoast.showToast(
+              msg: "Tiempo de espera superado, vuelve a intentarlo",
+              timeInSecForIosWeb: 2,
+              toastLength: Toast.LENGTH_LONG,
+              gravity: ToastGravity.TOP,
+              webShowClose: true,
+              backgroundColor: CupertinoColors.systemRed);
+          errLocation = "Vuelve a intentarlo";
+          return false;
+        }
+      } else {
+        log("Permission false");
+        Fluttertoast.showToast(
+            msg: "Debes permitir el uso de la ubicación, vuelve a intentarlo",
+            timeInSecForIosWeb: 2,
+            toastLength: Toast.LENGTH_LONG,
+            gravity: ToastGravity.TOP,
+            webShowClose: true,
+            backgroundColor: CupertinoColors.systemRed);
+        errLocation = "Debes permitir el uso de la ubicación";
+        return false;
+      }
+    } else {
+      Fluttertoast.showToast(
+          msg: "Debes activar el servicio de ubicación, vuelve a intentarlo",
+          timeInSecForIosWeb: 2,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+          backgroundColor: CupertinoColors.systemRed);
+      errLocation = "Debes activar la ubicación";
+      return false;
+    }
+  }
+
+  ///
+  ///--------------------------------------------------------------------------
+
   Future<bool> funCheckDistance() async {
     await getConfigR();
+    log("*** GEO LOCATION FUN***");
     LocationPermission permission = await Geolocator.requestPermission();
     if (permission == LocationPermission.whileInUse ||
         permission == LocationPermission.always) {
       provider.permission = true;
-      Position _currentLocation = await Geolocator.getCurrentPosition();
-      setState(() {
-        distance = Geolocator.distanceBetween(
-            widget.customerCurrent.lat,
-            widget.customerCurrent.lng,
-            _currentLocation.latitude,
-            _currentLocation.longitude);
-      });
-      if (distance <= configList.last.valor) {
-        return true;
-      } else {
+      try {
+        Position _currentLocation = await Geolocator.getCurrentPosition();
+        setState(() {
+          distance = Geolocator.distanceBetween(
+              widget.customerCurrent.lat,
+              widget.customerCurrent.lng,
+              _currentLocation.latitude,
+              _currentLocation.longitude);
+        });
+        log("LatG: ${_currentLocation.latitude} and LngG: ${_currentLocation.longitude}");
+        log("LatC: ${widget.customerCurrent.lat} and LngC: ${widget.customerCurrent.lng}");
+        log("Distance GeoL $distance");
+        if (distance <= configList.last.valor) {
+          return true;
+        } else {
+          return false;
+        }
+      } catch (e) {
+        log("***ERROR -- $e");
+        Fluttertoast.showToast(
+            msg: "Debes activar el servicio de ubicación, vuelve a intentarlo",
+            timeInSecForIosWeb: 2,
+            toastLength: Toast.LENGTH_LONG,
+            gravity: ToastGravity.TOP,
+            webShowClose: true,
+            backgroundColor: CupertinoColors.systemRed);
+        errLocation = "Debes activar la ubicación";
         return false;
       }
     } else {
@@ -523,11 +634,11 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
         ),
         onRefresh: () async {
           log("Refresh");
-          bool isvalid = await funCheckDistance();
-          getMoney();
           setState(() {
-            isRange = isvalid;
+            isLoading = true;
           });
+
+          getMoney(true, true, true);
         });
   }
 
@@ -750,7 +861,9 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
                       fun: () {},
                       decoration: Decorations.whiteBorder5Red,
                       style: TextStyles.red17_6,
-                      label: "ESTÁS A ${distance.ceil()} M DEL CLIENTE !!")),
+                      label: errLocation == ""
+                          ? "ESTÁS A ${distance.ceil()} M DEL CLIENTE !!"
+                          : errLocation)),
           const SizedBox(
             height: 20,
           ),
@@ -764,24 +877,14 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
     setState(() {
       isLoading = true;
     });
-    getMoney();
-    bool isValid = await funCheckDistance();
+    await getMoney(true, false, false);
+    //bool isValid = await funCheckDistance();
+    bool isValid = await funCheckDistance2();
+    setState(() {
+      isLoading = false;
+    });
     if (isValid) {
-      setState(() {
-        isLoading = false;
-      });
       showSelectPR();
-    } else {
-      setState(() {
-        isLoading = false;
-      });
-      Fluttertoast.showToast(
-        msg: "Lejos del domicilio",
-        timeInSecForIosWeb: 16,
-        toastLength: Toast.LENGTH_LONG,
-        gravity: ToastGravity.TOP,
-        webShowClose: true,
-      );
     }
   }
 

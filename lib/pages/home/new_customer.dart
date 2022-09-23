@@ -563,7 +563,8 @@ class _NewCustomerState extends State<NewCustomer> {
                         Expanded(
                           child: CupertinoDatePicker(
                             initialDateTime: dateBirth,
-                            maximumDate: DateTime.now(),
+                            maximumDate: DateTime(DateTime.now().year - 17),
+                            minimumDate: DateTime(DateTime.now().year - 80),
                             mode: CupertinoDatePickerMode.date,
                             onDateTimeChanged: (date) {
                               dateAux = date;

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:developer';
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:location/location.dart' as loc1;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -72,6 +73,8 @@ class _ShoppingCartState extends State<ShoppingCart> {
   late String errFolio = "";
   //
   late ProviderJunghanns provider;
+  //
+  late double latSale, lngSale;
 
   @override
   void initState() {
@@ -97,6 +100,8 @@ class _ShoppingCartState extends State<ShoppingCart> {
         typeOperation: "V");
     //
     secWayToPay = SecondWayToPay(wayToPay: "", typeWayToPay: "", cost: 0);
+    //
+    latSale = lngSale = 0;
 
     getDataProducts();
   }
@@ -116,14 +121,17 @@ class _ShoppingCartState extends State<ShoppingCart> {
           productsList.add(ProductModel.fromServiceProduct(e));
         }).toList();
         //
-        log("Antes");
-        log(productsList.first.description);
-        //
-        productsList.sort(((a, b) => b.rank.length.compareTo(a.rank.length)));
-        //
-        log("Despues");
-        log(productsList.first.description);
-        //
+        if (productsList.isNotEmpty) {
+          //
+          log("Antes");
+          log(productsList.first.description);
+          //
+          productsList.sort(((a, b) => b.rank.length.compareTo(a.rank.length)));
+          //
+          log("Despues");
+          log(productsList.first.description);
+          //
+        }
         checkPriceCvsPriceS();
       }
       getDataPayment();
@@ -942,14 +950,15 @@ class _ShoppingCartState extends State<ShoppingCart> {
     Map<String, dynamic> data = {
       "id_cliente": basket.idCustomer,
       "id_ruta": basket.idRoute,
-      "latitud": basket.lat.toString(),
-      "longitud": basket.lng.toString(),
+      "latitud": "$latSale",
+      "longitud": "$lngSale",
       "venta": List.from(listSales.toList()),
       "id_autorizacion": basket.idAuth != -1 ? basket.idAuth : null,
       "formas_de_pago": listWaysToPay,
       "id_data_origen": basket.idDataOrigin,
       "folio": basket.folio != -1 ? basket.folio : null,
-      "tipo_operacion": basket.typeOperation
+      "tipo_operacion": basket.typeOperation,
+      "version": "1.13"
     };
 
     log("LA DATA ES: $data");
@@ -997,22 +1006,27 @@ class _ShoppingCartState extends State<ShoppingCart> {
                     setState(() {
                       isLoading = true;
                     });
-                    bool isD = await funCheckDistance();
+                    //bool isD = await funCheckDistance();
+                    bool isD = await funCheckDistance2();
                     if (isD) {
-                      funSale(methodPayment);
+                      if (latSale != 0 && lngSale != 0) {
+                        funSale(methodPayment);
+                      } else {
+                        setState(() {
+                          isLoading = false;
+                        });
+                        Fluttertoast.showToast(
+                          msg: "Sin coordenadas ",
+                          timeInSecForIosWeb: 16,
+                          toastLength: Toast.LENGTH_LONG,
+                          gravity: ToastGravity.TOP,
+                          webShowClose: true,
+                        );
+                      }
                     } else {
-                      //Navigator.pop(context);
                       setState(() {
                         isLoading = false;
                       });
-                      Fluttertoast.showToast(
-                        msg:
-                            "Lejos del domicilio $distance ${distance > 1 ? "Metro" : "Metros"}",
-                        timeInSecForIosWeb: 16,
-                        toastLength: Toast.LENGTH_LONG,
-                        gravity: ToastGravity.TOP,
-                        webShowClose: true,
-                      );
                     }
                   },
               Decorations.blueBorder12),
@@ -1064,6 +1078,98 @@ class _ShoppingCartState extends State<ShoppingCart> {
     });
   }
 
+  //
+  ///--------------------------------------------------------------------------
+
+  Future<bool> funCheckDistance2() async {
+    await getConfigR();
+    log("***LOCATION FUN***");
+    loc1.Location loc = loc1.Location();
+    bool serviceEnabled;
+    loc1.PermissionStatus permissionGranted;
+    loc1.LocationData locationData;
+
+    serviceEnabled = await loc.serviceEnabled();
+    log("Service is : $serviceEnabled");
+    if (serviceEnabled == false) {
+      serviceEnabled = await loc.requestService();
+    }
+    if (serviceEnabled) {
+      permissionGranted = await loc.hasPermission();
+      if (permissionGranted != loc1.PermissionStatus.granted) {
+        log("Request Location Permission");
+        permissionGranted = await loc.requestPermission();
+      }
+      if (permissionGranted == loc1.PermissionStatus.granted) {
+        log("Permission true");
+        loc.changeSettings(accuracy: loc1.LocationAccuracy.high);
+        try {
+          locationData =
+              await loc.getLocation().timeout(const Duration(seconds: 15));
+          latSale = locationData.latitude ?? 0;
+          lngSale = locationData.longitude ?? 0;
+          log("Coordenadas : $latSale, $lngSale");
+          distance = calculateDistance(
+                  widget.customerCurrent.lat,
+                  widget.customerCurrent.lng,
+                  locationData.latitude,
+                  locationData.longitude) *
+              1000;
+
+          log("LatL: ${locationData.latitude} and LngL: ${locationData.longitude}");
+          log("LatC: ${widget.customerCurrent.lat} and LngC: ${widget.customerCurrent.lng}");
+          log("Distance loc is $distance");
+
+          if (distance <= configList.last.valor) {
+            return true;
+          } else {
+            Fluttertoast.showToast(
+              msg:
+                  "Lejos del domicilio $distance ${distance > 1 ? "Metro" : "Metros"}",
+              timeInSecForIosWeb: 16,
+              toastLength: Toast.LENGTH_LONG,
+              gravity: ToastGravity.TOP,
+              webShowClose: true,
+            );
+            return false;
+          }
+        } catch (e) {
+          log("***ERROR -- $e");
+          Fluttertoast.showToast(
+              msg: "Tiempo de espera superado, vuelve a intentarlo",
+              timeInSecForIosWeb: 2,
+              toastLength: Toast.LENGTH_LONG,
+              gravity: ToastGravity.TOP,
+              webShowClose: true,
+              backgroundColor: CupertinoColors.systemRed);
+          return false;
+        }
+      } else {
+        log("Permission false");
+        Fluttertoast.showToast(
+            msg: "Debes permitir el uso de la ubicación, vuelve a intentarlo",
+            timeInSecForIosWeb: 2,
+            toastLength: Toast.LENGTH_LONG,
+            gravity: ToastGravity.TOP,
+            webShowClose: true,
+            backgroundColor: CupertinoColors.systemRed);
+        return false;
+      }
+    } else {
+      Fluttertoast.showToast(
+          msg: "Debes activar el servicio de ubicación, vuelve a intentarlo",
+          timeInSecForIosWeb: 2,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+          backgroundColor: CupertinoColors.systemRed);
+      return false;
+    }
+  }
+
+  ///
+  ///--------------------------------------------------------------------------
+
   Future<bool> funCheckDistance() async {
     await getConfigR();
     //
@@ -1075,7 +1181,11 @@ class _ShoppingCartState extends State<ShoppingCart> {
     LocationPermission permission = await Geolocator.requestPermission();
     if (permission == LocationPermission.whileInUse ||
         permission == LocationPermission.always) {
-      Position _currentLocation = await Geolocator.getCurrentPosition();
+      Position _currentLocation = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.bestForNavigation);
+      latSale = _currentLocation.latitude;
+      lngSale = _currentLocation.longitude;
+      log("Coordenadas : $latSale, $lngSale");
       distance = Geolocator.distanceBetween(
           _currentLocation.latitude,
           _currentLocation.longitude,

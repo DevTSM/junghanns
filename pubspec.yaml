@@ -36,6 +36,7 @@ dependencies:
   flutter_multi_formatter: ^2.5.8
   pin_code_text_field: ^1.8.0
   flutter_speedtest: ^0.0.2+2
+  location: ^4.4.0
   
 dev_dependencies:
   flutter_test:

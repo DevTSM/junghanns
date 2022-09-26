@@ -1,13 +1,14 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:developer';
 import 'package:auto_size_text/auto_size_text.dart';
-import 'package:location/location.dart' as loc1;
+import 'package:junghanns/widgets/card/product.dart';
+import 'package:location/location.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:junghanns/components/bottom_bar.dart';
 import 'package:junghanns/components/button.dart';
@@ -26,8 +27,6 @@ import 'package:junghanns/styles/color.dart';
 import 'package:junghanns/styles/decoration.dart';
 import 'package:junghanns/styles/text.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
-import 'package:junghanns/widgets/card/product_card.dart';
-import 'package:junghanns/widgets/card/product_card_priority.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/method_payment.dart';
@@ -55,86 +54,83 @@ class ShoppingCart extends StatefulWidget {
 class _ShoppingCartState extends State<ShoppingCart> {
   late Size size;
   late List<ProductModel> productsList = [];
-  late List<MethodPayment> paymentsList = [];
-
-  late double totalPrice;
-  late bool isLoading;
-  //
-  late BasketModel basket;
-  late int cantidad;
+  late bool isLoading, isRange;
   late List<ConfigModel> configList = [];
   late double distance;
-  //
   late SecondWayToPay secWayToPay;
   late NumberFormat formatMoney = NumberFormat("\$#,##0.00");
-  //
   late TextEditingController folioC = TextEditingController();
   late bool isRequestFolio = false;
   late String errFolio = "";
-  //
   late ProviderJunghanns provider;
-  //
   late double latSale, lngSale;
 
   @override
   void initState() {
     super.initState();
-    log(widget.authList.length.toString());
-    totalPrice = widget.customerCurrent.priceS != 0
-        ? (widget.customerCurrent.priceS * widget.customerCurrent.numberS)
-        : 0;
-    isLoading = true;
-    //
-    cantidad = 0;
+    isLoading = false;
+    isRange = false;
     distance = 0;
-    basket = BasketModel(
-        idCustomer: widget.customerCurrent.idClient,
-        idRoute: prefs.idRouteD,
-        lat: widget.customerCurrent.lat,
-        lng: widget.customerCurrent.lng,
-        sales: [],
-        idAuth: -1,
-        waysToPay: [],
-        idDataOrigin: widget.customerCurrent.id,
-        folio: -1,
-        typeOperation: "V");
-    //
     secWayToPay = SecondWayToPay(wayToPay: "", typeWayToPay: "", cost: 0);
-    //
     latSale = lngSale = 0;
 
     getDataProducts();
   }
+  @override
+  void dispose(){
+    super.dispose();
+    provider.initShopping(CustomerModel.fromState());
+  }
 
   getDataProducts() async {
-    await getStockList(prefs.idRouteD).then((answer) {
-      if (answer.error) {
-        Fluttertoast.showToast(
-          msg: "Sin productos",
-          timeInSecForIosWeb: 2,
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.TOP,
-          webShowClose: true,
-        );
+    Timer(const Duration(milliseconds: 1000), () async {
+       provider.initShopping(widget.customerCurrent);
+      if (provider.connectionStatus < 4) {
+        setState(() {
+          isLoading = true;
+        });
+        await getStockList(prefs.idRouteD).then((answer) {
+          setState(() {
+            isLoading = false;
+          });
+          if (answer.error) {
+            Fluttertoast.showToast(
+              msg: "Sin productos",
+              timeInSecForIosWeb: 2,
+              toastLength: Toast.LENGTH_LONG,
+              gravity: ToastGravity.TOP,
+              webShowClose: true,
+            );
+          } else {
+            prefs.stock = jsonEncode(answer.body);
+            answer.body.map((e) {
+              productsList.add(ProductModel.fromServiceProduct(e));
+            }).toList();
+            //
+            if (productsList.isNotEmpty) {
+              productsList
+                  .sort(((a, b) => b.rank.length.compareTo(a.rank.length)));
+            }
+            checkPriceCvsPriceS();
+          }
+          getDataPayment();
+        });
       } else {
-        answer.body.map((e) {
+        dynamic data = jsonDecode(prefs.stock);
+        data.map((e) {
           productsList.add(ProductModel.fromServiceProduct(e));
         }).toList();
         //
         if (productsList.isNotEmpty) {
-          //
-          log("Antes");
-          log(productsList.first.description);
-          //
-          productsList.sort(((a, b) => b.rank.length.compareTo(a.rank.length)));
-          //
-          log("Despues");
-          log(productsList.first.description);
-          //
+          setState(() {
+            productsList
+                .sort(((a, b) => b.rank.length.compareTo(a.rank.length)));
+          });
         }
         checkPriceCvsPriceS();
+        widget.customerCurrent
+            .setPayment([MethodPayment.fromWhitOutConnection()]);
       }
-      getDataPayment();
     });
   }
 
@@ -151,8 +147,6 @@ class _ShoppingCartState extends State<ShoppingCart> {
   }
 
   getDataPayment() async {
-    log("Cliente: ${widget.customerCurrent.idClient}");
-    log("Ruta: ${prefs.idRouteD}");
     await getPaymentMethods(widget.customerCurrent.idClient, prefs.idRouteD)
         .then((answer) {
       if (answer.error) {
@@ -164,9 +158,8 @@ class _ShoppingCartState extends State<ShoppingCart> {
           webShowClose: true,
         );
       } else {
-        paymentsList.clear();
+        List<MethodPayment> paymentsList = [];
         if (widget.authList.isNotEmpty && widget.authList.first.type == "C") {
-          log("Credito **************");
           paymentsList.add(MethodPayment(
               wayToPay: "Credito",
               typeWayToPay: "C",
@@ -174,12 +167,12 @@ class _ShoppingCartState extends State<ShoppingCart> {
               idProductService: -1,
               description: "",
               number: -1));
+              widget.customerCurrent.setPayment(paymentsList);
         } else {
-          log("Formas de pago **************");
           answer.body
               .map((e) => paymentsList.add(MethodPayment.fromService(e)))
               .toList();
-
+              log(widget.customerCurrent.purse.toString());
           if (widget.customerCurrent.purse > 0) {
             paymentsList.add(MethodPayment(
                 wayToPay: "Monedero",
@@ -189,6 +182,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
                 description: "",
                 number: -1));
           }
+          widget.customerCurrent.setPayment(paymentsList);
         }
       }
       setState(() {
@@ -197,71 +191,365 @@ class _ShoppingCartState extends State<ShoppingCart> {
     });
   }
 
-  updateTotal(int id, double price, bool isAdd) {
-    if (widget.authList.isEmpty) {
-      for (var e in productsList) {
-        if (e.idProduct == id) {
-          isAdd ? updateShoppingAdd(e) : updateShoppingSubtraction(e);
+  selectWayToPay() async {
+    await showCupertinoModalPopup<int>(
+        context: context,
+        builder: (context) {
+          return CupertinoActionSheet(
+              actionScrollController: ScrollController(
+                  initialScrollOffset: 1.0, keepScrollOffset: true),
+              title: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Tipo de pago", style: TextStyles.blueJ22Bold),
+            const Text(
+              "Una vez registrado no podrá corregirlo",
+              style: TextStyles.redJ13,
+            )
+          ],
+        ),
+        GestureDetector(
+          child: const Icon(
+            Icons.clear_rounded,
+            color: ColorsJunghanns.red,
+            size: 30,
+          ),
+          onTap: () {
+            Navigator.pop(context);
+          },
+        )
+      ],
+    ),
+              actions: widget.customerCurrent.payment.map((item) {
+                return showItem(item, FontAwesomeIcons.coins);
+              }).toList());
+        });
+  }
+
+  bool funCheckMethodPayment(MethodPayment methodCurrent) {
+    //TODO: esta funcion no es util
+    bool isTrue = false;
+    log("TIPO DE PAGO - ${methodCurrent.wayToPay}");
+    switch (methodCurrent.wayToPay) {
+      case "Efectivo":
+        isTrue = true;
+        secWayToPay = SecondWayToPay(wayToPay: "", typeWayToPay: "", cost: 0);
+        break;
+      case "Credito":
+        isTrue = true;
+        secWayToPay = SecondWayToPay(wayToPay: "", typeWayToPay: "", cost: 0);
+        break;
+      case "Monedero":
+        if (provider.basketCurrent.totalPrice > widget.customerCurrent.purse) {
+          secWayToPay.wayToPay = "Efectivo";
+          secWayToPay.typeWayToPay = "E";
+          secWayToPay.cost =
+              provider.basketCurrent.totalPrice - widget.customerCurrent.purse;
+          isTrue = true;
+        } else {
+          isTrue = true;
         }
+        break;
+    }
+    log("ISTRUE - $isTrue");
+    return isTrue;
+  }
+  
+  showConfirmSale(MethodPayment methodCurrent) {
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return Center(
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              width: size.width * .75,
+              decoration: Decorations.whiteS1Card,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  secWayToPay.wayToPay.isEmpty
+                      ? DefaultTextStyle(
+            style: TextStyles.blueJ22Bold,
+            child: Text("¿Pago en ${methodCurrent.wayToPay} ?"))
+                      : textTwoWayToPay(
+                          methodCurrent.wayToPay, widget.customerCurrent.purse),
+        DefaultTextStyle(
+            style: TextStyles.blueJ215R,
+            child: const Text(
+              "Deseas registrar la venta de:",
+            )),
+        DefaultTextStyle(
+            style: TextStyles.greenJ24Bold,
+            child: Text(formatMoney.format(provider.basketCurrent.totalPrice))),
+                  Material(child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          Expanded(child:ButtonJunghanns(fun: () async {
+                    Navigator.pop(context);
+                    //onLoading();
+                    setState(() {
+                      isLoading = true;
+                    });
+                    await setCurrentLocation();
+                    if (isRange) {
+                      if (latSale != 0 && lngSale != 0) {
+                        funSale(methodCurrent);
+                      } else {
+                        setState(() {
+                          isLoading = false;
+                        });
+                        Fluttertoast.showToast(
+                          msg: "Sin coordenadas ",
+                          timeInSecForIosWeb: 16,
+                          toastLength: Toast.LENGTH_LONG,
+                          gravity: ToastGravity.TOP,
+                          webShowClose: true,
+                        );
+                      }
+                    } else {
+                      setState(() {
+                        isLoading = false;
+                      });
+                    }
+                  }, decoration: Decorations.blueBorder12, style: TextStyles.white18SemiBoldIt, label: "Si")),
+                  const SizedBox(width: 25,),
+           Expanded(child:ButtonJunghanns(
+              fun:() {
+                    secWayToPay =
+                        SecondWayToPay(wayToPay: "", typeWayToPay: "", cost: 0);
+                    Navigator.pop(context);
+                  },
+                   decoration: Decorations.redCard, style: TextStyles.white18SemiBoldIt, label: 
+                   "No",)),
+        ],
+      ))
+                ],
+              ),
+            ),
+          );
+        });
+  }
+  
+  setCurrentLocation() async {
+    try {
+      Location locationInstance = Location();
+      PermissionStatus permission = await locationInstance.hasPermission();
+      if (permission == PermissionStatus.granted) {
+        provider.permission = true;
+        locationInstance.changeSettings(accuracy: LocationAccuracy.high);
+        if (await locationInstance.serviceEnabled()) {
+          provider.permission = true;
+          LocationData currentLocation = await locationInstance
+              .getLocation()
+              .timeout(const Duration(seconds: 15));
+              latSale=currentLocation.latitude!;
+              lngSale=currentLocation.longitude!;
+          await funCheckDistance(currentLocation);
+        } else {
+          provider.permission = false;
+          Fluttertoast.showToast(
+              msg: "Activa el servicio de Ubicacion e intentalo de nuevo.",
+              timeInSecForIosWeb: 2,
+              toastLength: Toast.LENGTH_LONG,
+              gravity: ToastGravity.TOP,
+              webShowClose: true,
+              backgroundColor: ColorsJunghanns.red);
+        }
+      } else {
+        print({"permission": permission.toString()});
+        provider.permission = false;
+        isRange = false;
       }
+    } catch (e) {
+      log("***ERROR -- $e");
+      Fluttertoast.showToast(
+          msg: "Tiempo de espera superado, vuelve a intentarlo",
+          timeInSecForIosWeb: 2,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+          backgroundColor: ColorsJunghanns.red);
+      return false;
+    }
+  }
+
+  funCheckDistance(LocationData currentLocation) async {
+    try {
+      if (provider.connectionStatus < 4) {
+        await getConfig(widget.customerCurrent.idClient).then((answer) {
+          if (answer.error) {
+            Fluttertoast.showToast(
+              msg: answer.message,
+              timeInSecForIosWeb: 2,
+              toastLength: Toast.LENGTH_LONG,
+              gravity: ToastGravity.TOP,
+              webShowClose: true,
+            );
+          } else {
+            for (var item in answer.body) {
+              configList.add(ConfigModel.fromService(item));
+            }
+            setState(() {
+              distance = calculateDistance(
+                      widget.customerCurrent.lat,
+                      widget.customerCurrent.lng,
+                      currentLocation.latitude,
+                      currentLocation.longitude) *
+                  1000;
+              isRange = distance <= configList.last.valor;
+              log(" distance $distance isRange $isRange");
+            });
+          }
+        });
+      } else {
+        setState(() {
+          distance = calculateDistance(
+                  widget.customerCurrent.lat,
+                  widget.customerCurrent.lng,
+                  currentLocation.latitude,
+                  currentLocation.longitude) *
+              1000;
+          isRange = distance <=
+              (widget.customerCurrent.configList.isNotEmpty
+                  ? widget.customerCurrent.configList.first.valor
+                  : 0);
+        });
+      }
+    } catch (e) {
+      log("***ERROR -- $e");
+      Fluttertoast.showToast(
+          msg: "Tiempo de espera superado, vuelve a intentarlo",
+          timeInSecForIosWeb: 2,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+          backgroundColor: ColorsJunghanns.red);
+      return false;
+    }
+  }
+  
+  funSale(MethodPayment methodPayment) async {
+    if (secWayToPay.wayToPay.isEmpty) {
+      provider.basketCurrent.waysToPay.add(WayToPay(
+          type: methodPayment.typeWayToPay,
+          cost: provider.basketCurrent.totalPrice));
     } else {
-      for (var e in widget.authList) {
-        if (e.idProduct == id) {
-          isAdd
-              ? updateShoppingAdd(e.getProduct())
-              : updateShoppingSubtraction(e.getProduct());
-        }
-      }
+      provider.basketCurrent.waysToPay.add(WayToPay(
+          type: methodPayment.typeWayToPay,
+          cost: widget.customerCurrent.purse));
+      provider.basketCurrent.waysToPay.add(
+          WayToPay(type: secWayToPay.typeWayToPay, cost: secWayToPay.cost));
     }
 
-    setState(() {
-      if (isAdd) {
-        cantidad = cantidad + 1;
-        totalPrice = totalPrice + price;
+    ///
+    List<Map> listSales = [];
+    for (var element in provider.basketCurrent.sales) {
+      listSales.add({
+        "cantidad": element.number,
+        "id_producto": element.idProduct,
+        "precio_unitario": element.price
+      });
+    }
+
+    if (widget.customerCurrent.priceS != 0) {
+      listSales.add({
+        "cantidad": widget.customerCurrent.numberS,
+        "id_producto": widget.customerCurrent.idProdServS,
+        "precio_unitario": widget.customerCurrent.priceS
+      });
+    }
+
+    List<Map> listWaysToPay = [];
+    for (var ele in provider.basketCurrent.waysToPay) {
+      listWaysToPay.add({
+        "tipo": ele.type,
+        "importe": ele.cost,
+      });
+    }
+
+    if (widget.authList.isNotEmpty) {
+      provider.basketCurrent.idAuth = widget.authList.first.idAuth;
+      widget.authList.removeWhere(
+          (element) => element.idAuth == provider.basketCurrent.idAuth);
+    }
+
+    ///
+    Map<String, dynamic> data = {
+      "id_cliente": provider.basketCurrent.idCustomer,
+      "id_ruta": provider.basketCurrent.idRoute,
+      "latitud": "$latSale",
+      "longitud": "$lngSale",
+      "venta": List.from(listSales.toList()),
+      "id_autorizacion": provider.basketCurrent.idAuth != -1
+          ? provider.basketCurrent.idAuth
+          : null,
+      "formas_de_pago": listWaysToPay,
+      "id_data_origen": provider.basketCurrent.idDataOrigin,
+      "folio": provider.basketCurrent.folio != -1
+          ? provider.basketCurrent.folio
+          : null,
+      "tipo_operacion": provider.basketCurrent.typeOperation,
+      "version": "1.13"
+    };
+    if(provider.connectionStatus<4){
+    await postSale(data).then((answer) {
+      setState(() {
+        isLoading = false;
+      });
+      if (answer.error) {
+        //Navigator.pop(context);
+        Fluttertoast.showToast(
+          msg: answer.message,
+          timeInSecForIosWeb: 2,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+        );
       } else {
-        cantidad = cantidad - 1;
-        totalPrice = totalPrice - price;
+        //Navigator.pop(context);
+        Fluttertoast.showToast(
+          msg: "Venta realizada con exito",
+          timeInSecForIosWeb: 2,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+        );
+
+        Navigator.pop(context);
       }
     });
+  }else{
+    Map<String, dynamic> data = {
+      "idCustomer": provider.basketCurrent.idCustomer,
+      "idRoute": provider.basketCurrent.idRoute,
+      "lat": "$latSale",
+      "lng": "$lngSale",
+      "saleItems": jsonEncode(List.from(listSales.toList())),
+      "idAuth": provider.basketCurrent.idAuth != -1
+          ? provider.basketCurrent.idAuth
+          : null,
+      "paymentMethod": jsonEncode(listWaysToPay),
+      "idOrigin": provider.basketCurrent.idDataOrigin,
+      "folio": provider.basketCurrent.folio != -1
+          ? provider.basketCurrent.folio
+          : null,
+      "type": provider.basketCurrent.typeOperation,
+    };
+    handler.insertSale(data);
+    prefs.dataSale=true;
+    Fluttertoast.showToast(
+            msg: "Guardado de forma local",
+            timeInSecForIosWeb: 16,
+            toastLength: Toast.LENGTH_LONG,
+            gravity: ToastGravity.TOP,
+            webShowClose: true,
+          );
+          Navigator.pop(context);
   }
-
-  updateShoppingAdd(ProductModel prod) {
-    if (basket.sales.isEmpty) {
-      basket.sales.add(ProductB(
-          number: 1, idProduct: prod.idProduct, unitPrice: prod.price));
-      log("FIRST ADD ID: ${basket.sales.first.idProduct}, CANTIDAD: ${basket.sales.first.number}");
-    } else {
-      int index = basket.sales
-          .indexWhere((element) => element.idProduct == prod.idProduct);
-      if (index != -1) {
-        basket.sales[index].number = basket.sales[index].number + 1;
-        log("ADD ONE TO ID: ${basket.sales[index].idProduct} -- CANTIDA: ${basket.sales[index].number}");
-      } else {
-        basket.sales.add(ProductB(
-            number: 1, idProduct: prod.idProduct, unitPrice: prod.price));
-        log("NEW ADD ID: ${basket.sales.last.idProduct}");
-      }
-    }
-  }
-
-  updateShoppingSubtraction(ProductModel prod) {
-    if (basket.sales.isNotEmpty) {
-      int index = basket.sales
-          .indexWhere((element) => element.idProduct == prod.idProduct);
-      if (index != -1) {
-        if (basket.sales[index].number > 1) {
-          basket.sales[index].number = basket.sales[index].number - 1;
-          log("SUBTRACTION TO ID: ${basket.sales[index].idProduct} -- CANTIDA: ${basket.sales[index].number}");
-        } else {
-          log("REMOVE ID: ${basket.sales[index].idProduct}");
-          basket.sales.removeAt(index);
-        }
-      } else {
-        log("RESTA -- SIN PRODUCTO");
-      }
-    } else {
-      log("RESTA -- LISTA SIN PRODUCTOS");
-    }
   }
 
   @override
@@ -303,6 +591,158 @@ class _ShoppingCartState extends State<ShoppingCart> {
       ),
       bottomNavigationBar: bottomBar(() {}, 2, isHome: false, context: context),
     );
+  }
+  
+  Widget itemList() {
+    return Container(
+      margin: EdgeInsets.only(
+          top: widget.customerCurrent.descServiceS != ""
+              ? size.height * .20
+              : size.height * .22),
+      padding: const EdgeInsets.only(left: 10, right: 10),
+      width: double.infinity,
+      child: productsList.isEmpty
+          ? Center(
+              child: Text(
+              "Sin productos",
+              style: TextStyles.blue18SemiBoldIt,
+            ))
+          : Column(
+              children: [
+                Visibility(
+                  visible: widget.customerCurrent.descServiceS != "",
+                  child: addCharger()),
+                ProductSaleCardPriority(
+                    productCurrent: productsList.first,
+                    update: (ProductModel productCurrent, bool isAdd) {
+                      setState(() {
+                        provider.updateProductShopping(productCurrent, isAdd);
+                      });
+                    }),
+                Expanded(
+                  child: widget.authList.isEmpty
+                      ? GridView.custom(
+                          gridDelegate: SliverWovenGridDelegate.count(
+                            crossAxisCount: 2,
+                            mainAxisSpacing: 13,
+                            crossAxisSpacing: 13,
+                            pattern: [
+                              const WovenGridTile(.85),
+                              const WovenGridTile(.85),
+                            ],
+                          ),
+                          childrenDelegate: SliverChildBuilderDelegate(
+                              (context, index) => ProductSaleCard(
+                                    update: (ProductModel productCurrent,
+                                        bool isAdd) {
+                                      provider.updateProductShopping(
+                                          productCurrent, isAdd);
+                                      setState(() {});
+                                    },
+                                    productCurrent: productsList[index + 1],
+                                  ),
+                              childCount: productsList.length - 1),
+                        )
+                      : Container(),
+                ),
+                Visibility(
+                    visible: provider.basketCurrent.sales.isNotEmpty,
+                    child: Container(
+                        margin: const EdgeInsets.only(
+                            left: 15, right: 15, bottom: 10, top: 10),
+                        width: double.infinity,
+                        height: 40,
+                        alignment: Alignment.center,
+                        child: ButtonJunghanns(
+                          decoration: Decorations.blueBorder12,
+                          fun: () {
+                            if (widget.customerCurrent.payment.length > 1) {
+                              //modal para seleccionar metodo de pago
+                              selectWayToPay();
+                            } else {
+                              if (funCheckMethodPayment(
+                                  widget.customerCurrent.payment.first)) {
+                                if (widget.customerCurrent.payment.first
+                                        .wayToPay ==
+                                    "Credito") {
+                                  setState(() {
+                                    //habilitamos el modal para folio
+                                    isRequestFolio = true;
+                                  });
+                                } else {
+                                  showConfirmSale(
+                                      widget.customerCurrent.payment.first);
+                                }
+                              }
+                            }
+                          },
+                          label: "Terminar venta",
+                          style: TextStyles.white17_5,
+                        )))
+              ],
+            ),
+    );
+  }
+
+  Widget header() {
+    return Container(
+        height: size.height * .21,
+        color: ColorsJunghanns.green,
+        padding: const EdgeInsets.only(right: 15, left: 23, top: 10),
+        child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Visibility(
+                  visible: provider.connectionStatus == 4,
+                  child: Container(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      child: const WithoutInternet())),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: const Icon(
+                        Icons.arrow_back_ios,
+                        color: ColorsJunghanns.white,
+                      )),
+                  Expanded(
+                      child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.only(right: 8, top: 10),
+                            child: Text(
+                             provider.basketCurrent.sales.isNotEmpty?(provider.basketCurrent.sales.map((e) => e.number).toList()).reduce((value, element) => value+element).toString():"0",
+                              style: TextStyles.white24SemiBoldIt,
+                            ),
+                          ),
+                          Image.asset(
+                            "assets/icons/shoppingIcon.png",
+                            width: 60,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      AutoSizeText(
+                        formatMoney.format(provider.basketCurrent.totalPrice),
+                        style: TextStyles.white40Bold,
+                      )
+                    ],
+                  )),
+                  SizedBox(
+                    width: size.width * .1,
+                  ),
+                ],
+              ),
+            ]));
   }
 
   Widget addCharger() {
@@ -347,158 +787,6 @@ class _ShoppingCartState extends State<ShoppingCart> {
               textAlign: TextAlign.justify,
             ))
       ]),
-    );
-  }
-
-  Widget header() {
-    return Container(
-        height: size.height * .21,
-        color: ColorsJunghanns.green,
-        padding: const EdgeInsets.only(right: 15, left: 23, top: 10),
-        child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Visibility(
-                  visible: provider.connectionStatus == 4,
-                  child: Container(
-                      margin: const EdgeInsets.only(bottom: 10),
-                      child: const WithoutInternet())),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  GestureDetector(
-                      onTap: () => Navigator.pop(context),
-                      child: const Icon(
-                        Icons.arrow_back_ios,
-                        color: ColorsJunghanns.white,
-                      )),
-                  Expanded(
-                      child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.only(right: 8, top: 10),
-                            child: Text(
-                              cantidad.toString(),
-                              style: TextStyles.white24SemiBoldIt,
-                            ),
-                          ),
-                          Image.asset(
-                            "assets/icons/shoppingIcon.png",
-                            width: 60,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(
-                        height: 10,
-                      ),
-                      AutoSizeText(
-                        formatMoney.format(totalPrice),
-                        style: TextStyles.white40Bold,
-                      )
-                    ],
-                  )),
-                  SizedBox(
-                    width: size.width * .1,
-                  ),
-                ],
-              ),
-            ]));
-  }
-
-  Widget itemList() {
-    return Container(
-      margin: EdgeInsets.only(
-          top: widget.customerCurrent.descServiceS != ""
-              ? size.height * .20
-              : size.height * .22),
-      padding: const EdgeInsets.only(left: 10, right: 10),
-      width: double.infinity,
-      child: productsList.isEmpty
-          ? Center(
-              child: Text(
-              "Sin productos",
-              style: TextStyles.blue18SemiBoldIt,
-            ))
-          : Column(
-              children: [
-                widget.customerCurrent.descServiceS != ""
-                    ? addCharger()
-                    : Container(),
-                ProductCardPriority(
-                    productCurrent: widget.authList.isEmpty
-                        ? productsList.first
-                        : widget.authList.first.getProduct(),
-                    update: updateTotal),
-                Expanded(
-                  child: widget.authList.isEmpty
-                      ? GridView.custom(
-                          gridDelegate: SliverWovenGridDelegate.count(
-                            crossAxisCount: 2,
-                            mainAxisSpacing: 13,
-                            crossAxisSpacing: 13,
-                            pattern: [
-                              const WovenGridTile(.85),
-                              const WovenGridTile(.85),
-                            ],
-                          ),
-                          childrenDelegate: SliverChildBuilderDelegate(
-                              (context, index) => ProductCard(
-                                  update: updateTotal,
-                                  isPR: true,
-                                  productCurrent: productsList[index + 1]),
-                              childCount: productsList.length - 1),
-                        )
-                      : Container(),
-                ),
-                Visibility(
-                    visible: cantidad > 0,
-                    child: Container(
-                        margin: const EdgeInsets.only(
-                            left: 15, right: 15, bottom: 10, top: 10),
-                        width: double.infinity,
-                        height: 40,
-                        alignment: Alignment.center,
-                        child: ButtonJunghanns(
-                          decoration: Decorations.blueBorder12,
-                          fun: () {
-                            log("Venta check");
-                            if (provider.connectionStatus < 4) {
-                              if (paymentsList.length > 1) {
-                                selectWayToPay();
-                              } else {
-                                if (funCheckMethodPayment(paymentsList.first)) {
-                                  if (paymentsList.first.wayToPay ==
-                                      "Credito") {
-                                    log("Pedir Folio");
-                                    setState(() {
-                                      isRequestFolio = true;
-                                    });
-                                  } else {
-                                    showConfirmSale(paymentsList.first);
-                                  }
-                                }
-                              }
-                            } else {
-                              Fluttertoast.showToast(
-                                msg: "Sin conexión a internet",
-                                timeInSecForIosWeb: 2,
-                                toastLength: Toast.LENGTH_LONG,
-                                gravity: ToastGravity.TOP,
-                                webShowClose: true,
-                              );
-                            }
-                          },
-                          label: "Terminar venta",
-                          style: TextStyles.white17_5,
-                        )))
-              ],
-            ),
     );
   }
 
@@ -622,9 +910,8 @@ class _ShoppingCartState extends State<ShoppingCart> {
                   answer.body["estatus"] == "available" ? true : false;
               if (available) {
                 log("Folio disponible");
-                basket.folio = int.parse(folioC.text);
-                log(basket.folio.toString());
-                MethodPayment met = paymentsList
+                provider.basketCurrent.folio = int.parse(folioC.text);
+                MethodPayment met = widget.customerCurrent.payment
                     .firstWhere(((element) => element.wayToPay == "Credito"));
                 setState(() {
                   isLoading = false;
@@ -685,113 +972,6 @@ class _ShoppingCartState extends State<ShoppingCart> {
         ));
   }
 
-  void selectWayToPay() async {
-    await showCupertinoModalPopup<int>(
-        context: context,
-        builder: (context) {
-          return CupertinoActionSheet(
-              actionScrollController: ScrollController(
-                  initialScrollOffset: 1.0, keepScrollOffset: true),
-              title: showTitle(),
-              actions: paymentsList.map((item) {
-                return showItem(item, FontAwesomeIcons.coins);
-              }).toList());
-        });
-  }
-
-  Widget showTitle() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text("Tipo de pago", style: TextStyles.blueJ22Bold),
-            const Text(
-              "Una vez registrado no podrá corregirlo",
-              style: TextStyles.redJ13,
-            )
-          ],
-        ),
-        GestureDetector(
-          child: const Icon(
-            Icons.clear_rounded,
-            color: ColorsJunghanns.red,
-            size: 30,
-          ),
-          onTap: () {
-            Navigator.pop(context);
-          },
-        )
-      ],
-    );
-  }
-
-  bool funCheckMethodPayment(MethodPayment methodCurrent) {
-    bool isTrue = false;
-    log("TIPO DE PAGO - ${methodCurrent.wayToPay}");
-    switch (methodCurrent.wayToPay) {
-      case "Efectivo":
-        isTrue = true;
-        secWayToPay = SecondWayToPay(wayToPay: "", typeWayToPay: "", cost: 0);
-        break;
-      case "Credito":
-        isTrue = true;
-        secWayToPay = SecondWayToPay(wayToPay: "", typeWayToPay: "", cost: 0);
-        /*if (methodCurrent.idProductService != -1 &&
-            methodCurrent.number != -1) {
-          if (basket.sales.length > 1) {
-            isTrue = false;
-            Fluttertoast.showToast(
-              msg: "Productos no válidos",
-              timeInSecForIosWeb: 2,
-              toastLength: Toast.LENGTH_LONG,
-              gravity: ToastGravity.TOP,
-              webShowClose: true,
-            );
-          } else {
-            if (methodCurrent.idProductService ==
-                basket.sales.first.idProduct) {
-              if (basket.sales.first.number <= methodCurrent.number) {
-                isTrue = true;
-              } else {
-                Fluttertoast.showToast(
-                  msg: "Cantidad no válida",
-                  timeInSecForIosWeb: 2,
-                  toastLength: Toast.LENGTH_LONG,
-                  gravity: ToastGravity.TOP,
-                  webShowClose: true,
-                );
-              }
-            } else {
-              Fluttertoast.showToast(
-                msg: "Producto no válido",
-                timeInSecForIosWeb: 2,
-                toastLength: Toast.LENGTH_LONG,
-                gravity: ToastGravity.TOP,
-                webShowClose: true,
-              );
-            }
-          }
-        } else {
-          isTrue = false;
-        }*/
-        break;
-      case "Monedero":
-        if (totalPrice > widget.customerCurrent.purse) {
-          secWayToPay.wayToPay = "Efectivo";
-          secWayToPay.typeWayToPay = "E";
-          secWayToPay.cost = totalPrice - widget.customerCurrent.purse;
-          isTrue = true;
-        } else {
-          isTrue = true;
-        }
-        break;
-    }
-    log("ISTRUE - $isTrue");
-    return isTrue;
-  }
-
   Widget showItem(MethodPayment methodCurrent, IconData icon) {
     return GestureDetector(
       onTap: () {
@@ -830,32 +1010,6 @@ class _ShoppingCartState extends State<ShoppingCart> {
     );
   }
 
-  showConfirmSale(MethodPayment methodCurrent) {
-    showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return Center(
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              width: size.width * .75,
-              decoration: Decorations.whiteS1Card,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  secWayToPay.wayToPay.isEmpty
-                      ? textWayToPay(methodCurrent.wayToPay)
-                      : textTwoWayToPay(
-                          methodCurrent.wayToPay, widget.customerCurrent.purse),
-                  textAmount(),
-                  buttomsSale(methodCurrent)
-                ],
-              ),
-            ),
-          );
-        });
-  }
-
   Widget textTwoWayToPay(String wayToPay, double cost) {
     return Column(children: [
       DefaultTextStyle(
@@ -868,337 +1022,5 @@ class _ShoppingCartState extends State<ShoppingCart> {
           child: Text(
               "${secWayToPay.wayToPay} - ${formatMoney.format(secWayToPay.cost)}")),
     ]);
-  }
-
-  Widget textWayToPay(String wayToPay) {
-    return Container(
-        alignment: Alignment.center,
-        child: DefaultTextStyle(
-            style: TextStyles.blueJ22Bold,
-            child: Text("¿Pago en $wayToPay ?")));
-  }
-
-  Widget textAmount() {
-    return Column(
-      children: [
-        DefaultTextStyle(
-            style: TextStyles.blueJ215R,
-            child: const Text(
-              "Deseas registrar la venta de:",
-            )),
-        DefaultTextStyle(
-            style: TextStyles.greenJ24Bold,
-            child: Text(formatMoney.format(totalPrice))),
-      ],
-    );
-  }
-
-  funSale(MethodPayment methodPayment) async {
-    log("FUNCIÓN DE VENTA");
-    if (secWayToPay.wayToPay.isEmpty) {
-      log("FORMA DE PAGO - ${methodPayment.wayToPay}");
-      basket.waysToPay
-          .add(WayToPay(type: methodPayment.typeWayToPay, cost: totalPrice));
-      log("FORMA DE PAGO - ${basket.waysToPay.first.type}");
-      log("TOTAL - ${basket.waysToPay.first.cost}");
-    } else {
-      log("1.- FORMA DE PAGO - ${methodPayment.wayToPay}");
-      log("2.- FORMA DE PAGO - ${secWayToPay.wayToPay}");
-      basket.waysToPay.add(WayToPay(
-          type: methodPayment.typeWayToPay,
-          cost: widget.customerCurrent.purse));
-      basket.waysToPay.add(
-          WayToPay(type: secWayToPay.typeWayToPay, cost: secWayToPay.cost));
-      log("1.-FORMA DE PAGO - ${basket.waysToPay[0].type}");
-      log("1.-IMPORTE - ${basket.waysToPay[0].cost}");
-      log("2.-FORMA DE PAGO - ${basket.waysToPay[1].type}");
-      log("2.-IMPORTE - ${basket.waysToPay[1].cost}");
-    }
-
-    ///
-    List<Map> listSales = [];
-    for (var element in basket.sales) {
-      listSales.add({
-        "cantidad": element.number,
-        "id_producto": element.idProduct,
-        "precio_unitario": element.unitPrice
-      });
-    }
-
-    if (widget.customerCurrent.priceS != 0) {
-      listSales.add({
-        "cantidad": widget.customerCurrent.numberS,
-        "id_producto": widget.customerCurrent.idProdServS,
-        "precio_unitario": widget.customerCurrent.priceS
-      });
-    }
-
-    List<Map> listWaysToPay = [];
-    for (var ele in basket.waysToPay) {
-      listWaysToPay.add({
-        "tipo": ele.type,
-        "importe": ele.cost,
-      });
-    }
-
-    if (widget.authList.isNotEmpty) {
-      basket.idAuth = widget.authList.first.idAuth;
-      widget.authList.removeWhere((element) => element.idAuth == basket.idAuth);
-    }
-
-    ///
-    Map<String, dynamic> data = {
-      "id_cliente": basket.idCustomer,
-      "id_ruta": basket.idRoute,
-      "latitud": "$latSale",
-      "longitud": "$lngSale",
-      "venta": List.from(listSales.toList()),
-      "id_autorizacion": basket.idAuth != -1 ? basket.idAuth : null,
-      "formas_de_pago": listWaysToPay,
-      "id_data_origen": basket.idDataOrigin,
-      "folio": basket.folio != -1 ? basket.folio : null,
-      "tipo_operacion": basket.typeOperation,
-      "version": "1.13"
-    };
-
-    log("LA DATA ES: $data");
-
-    await postSale(data).then((answer) {
-      setState(() {
-        isLoading = false;
-      });
-      if (answer.error) {
-        //Navigator.pop(context);
-        Fluttertoast.showToast(
-          msg: answer.message,
-          timeInSecForIosWeb: 2,
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.TOP,
-          webShowClose: true,
-        );
-        log(widget.authList.length.toString());
-      } else {
-        //Navigator.pop(context);
-        Fluttertoast.showToast(
-          msg: "Venta realizada con exito",
-          timeInSecForIosWeb: 2,
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.TOP,
-          webShowClose: true,
-        );
-
-        Navigator.pop(context);
-      }
-    });
-  }
-
-  Widget buttomsSale(MethodPayment methodPayment) {
-    return Container(
-      alignment: Alignment.center,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          buttomSale(
-              "Si",
-              () => () async {
-                    Navigator.pop(context);
-                    //onLoading();
-                    setState(() {
-                      isLoading = true;
-                    });
-                    //bool isD = await funCheckDistance();
-                    bool isD = await funCheckDistance2();
-                    if (isD) {
-                      if (latSale != 0 && lngSale != 0) {
-                        funSale(methodPayment);
-                      } else {
-                        setState(() {
-                          isLoading = false;
-                        });
-                        Fluttertoast.showToast(
-                          msg: "Sin coordenadas ",
-                          timeInSecForIosWeb: 16,
-                          toastLength: Toast.LENGTH_LONG,
-                          gravity: ToastGravity.TOP,
-                          webShowClose: true,
-                        );
-                      }
-                    } else {
-                      setState(() {
-                        isLoading = false;
-                      });
-                    }
-                  },
-              Decorations.blueBorder12),
-          buttomSale(
-              "No",
-              () => () {
-                    secWayToPay =
-                        SecondWayToPay(wayToPay: "", typeWayToPay: "", cost: 0);
-                    Navigator.pop(context);
-                  },
-              Decorations.redCard),
-        ],
-      ),
-    );
-  }
-
-  Widget buttomSale(String op, Function fun, BoxDecoration deco) {
-    return GestureDetector(
-      onTap: fun(),
-      child: Container(
-          alignment: Alignment.center,
-          width: size.width * 0.22,
-          height: size.width * 0.11,
-          decoration: deco,
-          child: DefaultTextStyle(
-              style: TextStyles.white18SemiBoldIt,
-              child: Text(
-                op,
-              ))),
-    );
-  }
-
-  getConfigR() async {
-    await getConfig(widget.customerCurrent.idClient).then((answer) {
-      if (answer.error) {
-        Fluttertoast.showToast(
-          msg: answer.message,
-          timeInSecForIosWeb: 2,
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.TOP,
-          webShowClose: true,
-        );
-      } else {
-        log("Config yes");
-        answer.body
-            .map((e) => configList.add(ConfigModel.fromService(e)))
-            .toList();
-      }
-    });
-  }
-
-  //
-  ///--------------------------------------------------------------------------
-
-  Future<bool> funCheckDistance2() async {
-    await getConfigR();
-    log("***LOCATION FUN***");
-    loc1.Location loc = loc1.Location();
-    bool serviceEnabled;
-    loc1.PermissionStatus permissionGranted;
-    loc1.LocationData locationData;
-
-    serviceEnabled = await loc.serviceEnabled();
-    log("Service is : $serviceEnabled");
-    if (serviceEnabled == false) {
-      serviceEnabled = await loc.requestService();
-    }
-    if (serviceEnabled) {
-      permissionGranted = await loc.hasPermission();
-      if (permissionGranted != loc1.PermissionStatus.granted) {
-        log("Request Location Permission");
-        permissionGranted = await loc.requestPermission();
-      }
-      if (permissionGranted == loc1.PermissionStatus.granted) {
-        log("Permission true");
-        loc.changeSettings(accuracy: loc1.LocationAccuracy.high);
-        try {
-          locationData =
-              await loc.getLocation().timeout(const Duration(seconds: 15));
-          latSale = locationData.latitude ?? 0;
-          lngSale = locationData.longitude ?? 0;
-          log("Coordenadas : $latSale, $lngSale");
-          distance = calculateDistance(
-                  widget.customerCurrent.lat,
-                  widget.customerCurrent.lng,
-                  locationData.latitude,
-                  locationData.longitude) *
-              1000;
-
-          log("LatL: ${locationData.latitude} and LngL: ${locationData.longitude}");
-          log("LatC: ${widget.customerCurrent.lat} and LngC: ${widget.customerCurrent.lng}");
-          log("Distance loc is $distance");
-
-          if (distance <= configList.last.valor) {
-            return true;
-          } else {
-            Fluttertoast.showToast(
-              msg:
-                  "Lejos del domicilio $distance ${distance > 1 ? "Metro" : "Metros"}",
-              timeInSecForIosWeb: 16,
-              toastLength: Toast.LENGTH_LONG,
-              gravity: ToastGravity.TOP,
-              webShowClose: true,
-            );
-            return false;
-          }
-        } catch (e) {
-          log("***ERROR -- $e");
-          Fluttertoast.showToast(
-              msg: "Tiempo de espera superado, vuelve a intentarlo",
-              timeInSecForIosWeb: 2,
-              toastLength: Toast.LENGTH_LONG,
-              gravity: ToastGravity.TOP,
-              webShowClose: true,
-              backgroundColor: CupertinoColors.systemRed);
-          return false;
-        }
-      } else {
-        log("Permission false");
-        Fluttertoast.showToast(
-            msg: "Debes permitir el uso de la ubicación, vuelve a intentarlo",
-            timeInSecForIosWeb: 2,
-            toastLength: Toast.LENGTH_LONG,
-            gravity: ToastGravity.TOP,
-            webShowClose: true,
-            backgroundColor: CupertinoColors.systemRed);
-        return false;
-      }
-    } else {
-      Fluttertoast.showToast(
-          msg: "Debes activar el servicio de ubicación, vuelve a intentarlo",
-          timeInSecForIosWeb: 2,
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.TOP,
-          webShowClose: true,
-          backgroundColor: CupertinoColors.systemRed);
-      return false;
-    }
-  }
-
-  ///
-  ///--------------------------------------------------------------------------
-
-  Future<bool> funCheckDistance() async {
-    await getConfigR();
-    //
-    /*int distanConfig = widget.authList.isEmpty
-        ? configList.last.valor
-        : configList.first.valor;*/
-    int distanConfig = configList.last.valor;
-    //
-    LocationPermission permission = await Geolocator.requestPermission();
-    if (permission == LocationPermission.whileInUse ||
-        permission == LocationPermission.always) {
-      Position _currentLocation = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.bestForNavigation);
-      latSale = _currentLocation.latitude;
-      lngSale = _currentLocation.longitude;
-      log("Coordenadas : $latSale, $lngSale");
-      distance = Geolocator.distanceBetween(
-          _currentLocation.latitude,
-          _currentLocation.longitude,
-          widget.customerCurrent.lat,
-          widget.customerCurrent.lng);
-      if (distance <= distanConfig) {
-        return true;
-      } else {
-        return false;
-      }
-    } else {
-      log("permission : $permission");
-      return false;
-    }
   }
 }

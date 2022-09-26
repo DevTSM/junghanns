@@ -77,7 +77,8 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
         waysToPay: [],
         idDataOrigin: widget.customerCurrent.id,
         folio: -1,
-        typeOperation: "R");
+        typeOperation: "R",
+        totalPrice: 0);
     configList = [];
     latSale = lngSale = 0;
 
@@ -160,8 +161,7 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
 
   updateShoppingAdd(ProductModel prod) {
     if (basket.sales.isEmpty) {
-      basket.sales.add(ProductB(
-          number: 1, idProduct: prod.idProduct, unitPrice: prod.price));
+      basket.sales.add(prod);
       log("FIRST ADD ID: ${basket.sales.first.idProduct}, CANTIDAD: ${basket.sales.first.number}");
     } else {
       int index = basket.sales
@@ -170,8 +170,7 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
         basket.sales[index].number = basket.sales[index].number + 1;
         log("ADD ONE TO ID: ${basket.sales[index].idProduct} -- CANTIDA: ${basket.sales[index].number}");
       } else {
-        basket.sales.add(ProductB(
-            number: 1, idProduct: prod.idProduct, unitPrice: prod.price));
+        basket.sales.add(prod);
         log("NEW ADD ID: ${basket.sales.last.idProduct}");
       }
     }
@@ -414,7 +413,7 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
       listSales.add({
         "cantidad": element.number,
         "id_producto": element.idProduct,
-        "precio_unitario": element.unitPrice
+        "precio_unitario": element.price
       });
     }
 

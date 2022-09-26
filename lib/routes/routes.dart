@@ -6,7 +6,7 @@ import 'package:junghanns/pages/home/specials.dart';
 import 'package:junghanns/pages/opening.dart';
 
 Map<String, WidgetBuilder> getApplicationRoutes() => <String, WidgetBuilder>{
-  "/": (context) => const Opening(),
+  "/": (context) => Opening(),
   '/Home': (context) => const Home(),
   '/Specials': (context) => const Specials(),
   '/Routes': (context) => const Routes(),

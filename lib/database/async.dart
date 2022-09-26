@@ -1,26 +1,33 @@
 import 'dart:developer';
 
+import 'package:junghanns/models/config.dart';
 import 'package:junghanns/models/customer.dart';
+import 'package:junghanns/models/stop.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/provider/provider.dart';
+import 'package:junghanns/services/auth.dart';
 import 'package:junghanns/services/customer.dart';
+import 'package:junghanns/services/store.dart';
 
 class Async {
   ProviderJunghanns provider;
   Async({required this.provider});
   Future<bool>init() async {
     provider.labelAsync="Sincronizando datos, no cierres la app.";
-   return  await handler.deleteTable().then((value){
+   return  await handler.deleteTable().then((value) async {
     provider.labelAsync="Limpiando base de datos";
+    provider.labelAsync="Sincronizando servicios especiales";
       return getDataCustomerList("E", 1).then((value1) async {
-        provider.labelAsync="Sincronizando servicios especiales";
+        provider.labelAsync="Sincronizando ruta";
           return getDataCustomerList("R", 2).then((value2){
-            provider.labelAsync="Sincronizando ruta";
-          return getDataCustomerList("S", 3).then((value3){
             provider.labelAsync="Sincronizando segunda vuelta";
+          return getDataCustomerList("S", 3).then((value3){
+            provider.labelAsync="Sincronizando clientes llama";
             return getDataCustomerList("C", 4).then((value4){
-              provider.labelAsync="Sincronizando clientes llama";
-          return true;
+              provider.labelAsync="Sincronizando paradas";
+              return getDataStops().then((value5){
+                return true;
+              });
               });
           });
         });
@@ -41,7 +48,14 @@ class Async {
               if (!answer.error) {
                 item =
                     CustomerModel.fromService(answer.body, item.id, item.type);
-                list.add(item);
+                    await getConfig(item.id).then((answer){
+                      if(!answer.error){
+                        for(var e in answer.body){
+                          item.setConfig([ConfigModel.fromDatabase(int.parse((e["valor"] ?? 99).toString()))]);
+                        }
+                        list.add(item);
+                      }
+                    });
               }
             });
           }
@@ -53,6 +67,20 @@ class Async {
         }
       } else {
         //retornamos para cerrar la sesion
+        return false;
+      }
+    });
+  }
+  Future<bool> getDataStops()async{
+    return await getStopsList().then((answer){
+      List<StopModel> stopList = [];
+      if(!answer.error){
+        for(var item in answer.body){
+          stopList.add(StopModel.fromService(item));
+        }
+        handler.insertStop(stopList);
+        return true;
+      }else{
         return false;
       }
     });

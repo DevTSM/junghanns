@@ -30,6 +30,7 @@ class CustomerModel {
   List<MethodPayment> payment;
   List<SaleModel> history;
   List<AuthorizationModel> auth;
+  List<ConfigModel> configList;
   String referenceAddress;
   String color;
   //
@@ -42,6 +43,7 @@ class CustomerModel {
 
   CustomerModel(
       {required this.auth,
+      required this.configList,
       required this.payment,
       required this.invoice,
       required this.id,
@@ -78,6 +80,7 @@ class CustomerModel {
     return CustomerModel(
         auth: [],
         payment: [],
+        configList: [],
         invoice: true,
         id: 0,
         orden: 0,
@@ -134,6 +137,7 @@ class CustomerModel {
         observation: "",
         history: [],
         auth: [],
+        configList: [],
         payment: [],
         referenceAddress: "",
         color: data["color"] ?? "FF000000",
@@ -171,6 +175,7 @@ class CustomerModel {
             : data["observacion"] ?? "",
         history: [],
         auth: [],
+        configList: [],
         payment: [],
         referenceAddress: data["referenciaDomicilio"] ?? "",
         color: data["color"] ?? "FF000000",
@@ -217,6 +222,7 @@ class CustomerModel {
             : data["observacion"] ?? "",
         history: [],
         auth: [],
+        configList: [ConfigModel.fromDatabase(data["config"]??0)],
         payment: [],
         referenceAddress: data["referenceAddress"] ?? "",
         color: data["color"] ?? "000000",
@@ -226,7 +232,7 @@ class CustomerModel {
         idProdServS: 0,
         descriptionS: "",
         priceS: 0,
-        notifS: "");
+        notifS: "",);
   }
   Map<String, dynamic> getMap() {
     return {
@@ -250,7 +256,8 @@ class CustomerModel {
       'observacion': observation,
       'auth': "",
       'payment': "",
-      'color': color
+      'color': color,
+      'config':configList.isNotEmpty?configList.first.valor:0
     };
   }
 
@@ -265,9 +272,14 @@ class CustomerModel {
     this.purse = purse;
   }
 
-  setPayment(Map<String, dynamic> data) {}
+  setPayment(List<MethodPayment> payment) {
+    this.payment=payment;
+  }
   setAuth(List<AuthorizationModel> auth) {
     this.auth = auth;
+  }
+  setConfig(List<ConfigModel> configList){
+    this.configList=configList;
   }
 }
 

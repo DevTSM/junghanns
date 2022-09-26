@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:developer';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
@@ -15,7 +16,8 @@ import 'package:provider/provider.dart';
 import 'auth/login.dart';
 
 class Opening extends StatefulWidget {
-  const Opening({Key? key}) : super(key: key);
+  bool isLogin;
+  Opening({Key? key,this.isLogin=false}) : super(key: key);
 
   @override
   State<Opening> createState() => _OpeningState();
@@ -46,12 +48,12 @@ class _OpeningState extends State<Opening> {
     //validamos si ya se hizo la sincronizacion
     Timer(const Duration(milliseconds: 2000), () async {
       if (prefs.isLogged) {
-        if (DateTime.now()
+        if ((DateTime.now()
                 .difference(DateTime.parse(prefs.asyncLast != ""
                     ? prefs.asyncLast
                     : DateTime(2017, 9, 7, 17, 30).toString()))
                 .inDays >
-            1) {
+            1)||widget.isLogin) {
           setState(() {
             isAsync = true;
           });
@@ -110,6 +112,20 @@ class _OpeningState extends State<Opening> {
     provider.connectionStatus = result.index;
     if (result.index < 4) {
       asyncDB();
+    }else{
+      if(prefs.isLogged){
+        Navigator.pushReplacement<void, void>(
+                context,
+                MaterialPageRoute<void>(
+                    builder: (BuildContext context) => HomePrincipal()),
+              );
+      }else{
+        Navigator.pushReplacement<void, void>(
+                context,
+                MaterialPageRoute<void>(
+                    builder: (BuildContext context) => const Login()),
+              );
+      }
     }
   }
 
@@ -135,13 +151,64 @@ class _OpeningState extends State<Opening> {
   Future<void> _updateConnectionStatus(ConnectivityResult result) async {
     provider.connectionStatus = result.index;
     if (result.index != 4 && prefs.dataStop) {
-      // List<Map<String, dynamic>> dataNStops = [];
-      // List<Map<String, dynamic>> dataList =
-      //     await provider.handler.retrieveStopOff();
-      // List.generate(dataList.length, (i) {
-      //   dataNStops.add(dataList[i]);
-      // });
-      // dataNStops.map((e) => log(e.toString())).toList();
+      List<Map<String, dynamic>> dataNStops = [];
+      List<Map<String, dynamic>> dataList =
+          await handler.retrieveStopOff();
+      List.generate(dataList.length, (i) {
+        dataNStops.add(dataList[i]);
+      });
+      for(var e in dataList){
+        log(e.toString());
+      Map<String,dynamic> data={
+        "id_cliente": e["idCustomer"].toString(),
+            "id_parada": e["idStop"],
+            "lat": "${e["lat"]}",
+            "lon": "${e["lng"]}",
+            "id_data_origen": e["idOrigin"],
+            "tipo": e["type"]
+      };
+      await postStop(data).then((answer) {
+            if (!answer.error){
+              log("Parada asignada");
+              log(answer.body.toString());
+            }
+          });
+      }
+      handler.deleteStopOff().then((element){
+        prefs.dataStop=false;
+      });
+    }
+    if (result.index != 4 && prefs.dataSale) {
+      List<Map<String, dynamic>> dataNSale = [];
+      List<Map<String, dynamic>> dataList =
+          await handler.retrieveSales();
+      List.generate(dataList.length, (i) {
+        dataNSale.add(dataList[i]);
+      });
+      for(var e in dataList){
+      Map<String,dynamic> data={
+       "id_cliente": e["idCustomer"],
+      "id_ruta": e["idRoute"],
+      "latitud":e["lat"].toString(),
+      "longitud":e["lng"].toString(),
+      "venta":List.from(jsonDecode(e["saleItems"]).toList()),
+      "id_autorizacion":e["idAuth"],
+      "formas_de_pago": List.from(jsonDecode(e["paymentMethod"]).toList()),
+      "id_data_origen":e["idOrigin"],
+      "folio":e["folio"],
+      "tipo_operacion":e["type"],
+      "version": "1.13"
+      };
+      await postSale(data).then((answer) {
+            if (!answer.error){
+              log("venta asignada");
+              log(answer.body.toString());
+            }
+          });
+      }
+      handler.deleteSale().then((element){
+        prefs.dataSale=false;
+      });
     }
   }
 

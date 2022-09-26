@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:junghanns/components/without_internet.dart';
 import 'package:junghanns/pages/home/home_principal.dart';
+import 'package:junghanns/pages/opening.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/provider/provider.dart';
 import 'package:junghanns/services/auth.dart';
@@ -238,7 +239,7 @@ class _LoginState extends State<Login> {
                         context,
                         MaterialPageRoute<void>(
                             builder: (BuildContext context) =>
-                                HomePrincipal()));
+                                Opening(isLogin: true,)));
                   }
                 });
               }

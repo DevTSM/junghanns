@@ -1116,3 +1116,4 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
     }
   }
 }
+

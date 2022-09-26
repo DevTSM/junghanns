@@ -15,6 +15,13 @@ class PreferenciasUsuario {
   initPrefs() async {
     prefs = await SharedPreferences.getInstance();
   }
+  String get stock {
+    return prefs!.getString("stock") ?? "";
+  }
+
+  set stock(String stock) {
+    prefs!.setString("stock", stock);
+  }
 
   String get ipUrl {
     return prefs!.getString("ipUrl") ?? "";
@@ -72,6 +79,21 @@ class PreferenciasUsuario {
     prefs!.setBool("dataStop", dataStop);
   }
 
+  bool get dataSale {
+    return prefs!.getBool("dataSale") ?? false;
+  }
+
+  set dataSale(bool dataSale) {
+    prefs!.setBool("dataSale", dataSale);
+  }
+
+  bool get isUpdateDB {
+    return prefs!.getBool("isUpdateDB") ?? false;
+  }
+
+  set isUpdateDB(bool isUpdateDB) {
+    prefs!.setBool("isUpdateDB", isUpdateDB);
+  }
   //Info DeliveryMan
   //---------------------------------------------------------
 

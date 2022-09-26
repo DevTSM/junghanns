@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/pages/customer/details.dart';
+import 'package:junghanns/pages/customer/details2.dart';
 import 'package:junghanns/styles/text.dart';
 
 class RoutesCard extends StatelessWidget {
@@ -17,7 +18,7 @@ class RoutesCard extends StatelessWidget {
         onTap: () => Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (context) => DetailsCustomer(
+                builder: (context) => DetailsCustomer2(
                       indexHome: customerCurrent.type,
                       customerCurrent: customerCurrent,
                       type: customerCurrent.type == 1

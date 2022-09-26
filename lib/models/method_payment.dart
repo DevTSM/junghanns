@@ -23,6 +23,10 @@ class MethodPayment {
         description: "",
         number: -1);
   }
+  factory MethodPayment.fromWhitOutConnection(){
+    return MethodPayment(
+      wayToPay: "Efectivo", typeWayToPay: "E", type: "Atributo", idProductService: -1, description: "", number: -1);
+  } 
   factory MethodPayment.fromService(Map<String, dynamic> data) {
     return MethodPayment(
         wayToPay: data["formaPago"] ?? "",

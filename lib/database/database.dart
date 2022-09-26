@@ -16,7 +16,7 @@ class DataBase {
         //payment en jsonEncode
         // 1= Especial 2=Ruta, 3=vuelta, 4=llama
         await database.execute(
-          "CREATE TABLE customer(id INTEGER PRIMARY KEY AUTOINCREMENT, orden INTEGER , idCustomer INTEGER, idRoute INTEGER,type INTEGER, lat DOUBLE, lng DOUBLE, priceLiquid DOUBLE, byCollet DOUBLE, purse DOUBLE, name TEXT NOT NULL, address TEXT NOT NULL , nameRoute TEXT NOT NULL,typeVisit TEXT NOT NULL, category TEXT NOT NULL,days TEXT NOT NULL, img TEXT NOT NULL, observacion TEXT,auth TEXT,payment TEXT,color TEXT)",
+          "CREATE TABLE customer(id INTEGER PRIMARY KEY AUTOINCREMENT, orden INTEGER , idCustomer INTEGER, idRoute INTEGER,type INTEGER, lat DOUBLE, lng DOUBLE, priceLiquid DOUBLE, byCollet DOUBLE, purse DOUBLE, name TEXT NOT NULL, address TEXT NOT NULL , nameRoute TEXT NOT NULL,typeVisit TEXT NOT NULL, category TEXT NOT NULL,days TEXT NOT NULL, img TEXT NOT NULL, observacion TEXT,auth TEXT,payment TEXT,color TEXT,config INTEGER)",
         );
         //lista de paradas en falso
         await database.execute(
@@ -59,13 +59,22 @@ class DataBase {
   Future<int> insertStopOff(Map<String, dynamic> stops) async {
     int result = 0;
     final Database db = await initializeDB();
-    result = await db.insert('stop', stops);
+    result = await db.insert('stopOff', stops);
+    return result;
+  }
+  
+  Future<int> insertSale(Map<String, dynamic> sale) async {
+    int result = 0;
+    final Database db = await initializeDB();
+    result = await db.insert('sale', sale);
+    log("se inserto la venta");
     return result;
   }
 
   deleteTable() async {
     final db = await initializeDB();
     db.delete('customer');
+    db.delete('stop');
   }
 
   deleteStops() async {
@@ -76,6 +85,10 @@ class DataBase {
   deleteStopOff() async {
     final db = await initializeDB();
     db.delete('stopOff');
+  }
+  deleteSale() async {
+    final db = await initializeDB();
+    db.delete('sale');
   }
 
   addColumn() async {
@@ -88,6 +101,7 @@ class DataBase {
     final List<Map<String, Object?>> queryResult = await db.query('customer');
     return queryResult.map((e) => CustomerModel.fromDataBase(e)).toList();
   }
+  
   Future<List<CustomerModel>> retrieveUsersType(int type) async {
     final Database db = await initializeDB();
     final List<Map<String, Object?>> queryResult = await db.query('customer',where: "type = ? ",whereArgs: [type]);
@@ -105,6 +119,11 @@ class DataBase {
   Future<List<Map<String, dynamic>>> retrieveStopOff() async {
     final Database db = await initializeDB();
     return await db.query('stopOff');
+  }
+
+  Future<List<Map<String, dynamic>>> retrieveSales() async {
+    final Database db = await initializeDB();
+    return await db.query('sale');
   }
 
   Future<void> deleteUser(int id) async {

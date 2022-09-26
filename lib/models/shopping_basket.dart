@@ -1,3 +1,7 @@
+import 'package:junghanns/models/customer.dart';
+import 'package:junghanns/models/product.dart';
+import 'package:junghanns/preferences/global_variables.dart';
+
 class WayToPay {
   String type;
   double cost;
@@ -17,14 +21,15 @@ class ProductB {
 class BasketModel {
   int idCustomer;
   int idRoute;
-  double lat;
-  double lng;
-  List<ProductB> sales;
   int idAuth;
-  List<WayToPay> waysToPay;
   int idDataOrigin;
   int folio;
+  double lat;
+  double lng;
+  double totalPrice;
   String typeOperation;
+  List<ProductModel> sales;
+  List<WayToPay> waysToPay;
 
   BasketModel(
       {required this.idCustomer,
@@ -36,7 +41,8 @@ class BasketModel {
       required this.waysToPay,
       required this.idDataOrigin,
       required this.folio,
-      required this.typeOperation});
+      required this.typeOperation,
+      required this.totalPrice});
 
   factory BasketModel.fromState() {
     return BasketModel(
@@ -49,6 +55,24 @@ class BasketModel {
         waysToPay: [],
         idDataOrigin: -1,
         folio: -1,
-        typeOperation: "V");
+        typeOperation: "V",
+        totalPrice: 0);
+  }
+  factory BasketModel.fromInit(CustomerModel customerCurrent) {
+    return BasketModel(
+        idCustomer: customerCurrent.idClient,
+        idRoute: prefs.idRouteD,
+        lat: customerCurrent.lat,
+        lng: customerCurrent.lng,
+        sales: [],
+        idAuth: -1,
+        waysToPay: [],
+        idDataOrigin: customerCurrent.id,
+        folio: -1,
+        typeOperation: "V",
+        totalPrice: customerCurrent.priceS != 0
+        ? (customerCurrent.priceS * customerCurrent.numberS)
+        : 0
+        );
   }
 }

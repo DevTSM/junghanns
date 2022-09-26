@@ -3,6 +3,7 @@ class ProductModel {
   String description;
   double price;
   int stock;
+  int number;
   String img;
   int type; //1 product 2 refill
   bool isSelect;
@@ -13,6 +14,7 @@ class ProductModel {
       required this.description,
       required this.price,
       required this.stock,
+      required this.number,
       required this.img,
       required this.type,
       required this.isSelect,
@@ -24,6 +26,7 @@ class ProductModel {
         description: "Cerámica M12 Bco",
         price: 200.00,
         stock: 20,
+        number: 0,
         img: "assets/images/Ceramica.JPG",
         type: 1,
         isSelect: false,
@@ -36,6 +39,7 @@ class ProductModel {
         description: data["descripcion"],
         price: double.parse((data["precio"] ?? "0").toString()),
         stock: data["stock"],
+        number: 0,
         img: data["url"],
         type: 1,
         isSelect: false,
@@ -52,6 +56,7 @@ class ProductModel {
         description: data["descripcion"],
         price: double.parse((data["precio"] ?? "0").toString()),
         stock: 0,
+        number: 0,
         img: "assets/icons/refill1.png",
         type: 2,
         isSelect: false,

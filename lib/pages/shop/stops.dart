@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:developer';
 
 import 'package:auto_size_text/auto_size_text.dart';
@@ -51,7 +52,12 @@ class _StopsState extends State<Stops> {
   }
 
   getDataStops() async {
+    Timer(const Duration(milliseconds: 1000), () async {
+      if (provider.connectionStatus < 4) {
     await getStopsList().then((answer) {
+      setState(() {
+        isLoading = false;
+      });
       if (answer.error) {
         Fluttertoast.showToast(
           msg: "Sin paradas",
@@ -62,56 +68,17 @@ class _StopsState extends State<Stops> {
         );
       } else {
         stopList.clear();
-        handler.deleteStops();
-
         answer.body.map((e) {
           stopList.add(StopModel.fromService(e));
         }).toList();
-
-        stopList.map((e) => handler.insertStop([e])).toList();
       }
-      setState(() {
+    });
+      }else{
+        setState(() {
         isLoading = false;
       });
+      }
     });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    size = MediaQuery.of(context).size;
-    provider = Provider.of<ProviderJunghanns>(context);
-    return Scaffold(
-      backgroundColor: ColorsJunghanns.white,
-      appBar: AppBar(
-        backgroundColor: ColorsJunghanns.whiteJ,
-        systemOverlayStyle: const SystemUiOverlayStyle(
-            statusBarColor: ColorsJunghanns.whiteJ,
-            statusBarIconBrightness: Brightness.dark,
-            statusBarBrightness: Brightness.dark),
-        leading: GestureDetector(
-          child: Container(
-              padding: const EdgeInsets.only(left: 24),
-              child: Image.asset("assets/icons/menu.png")),
-          onTap: () {},
-        ),
-        elevation: 0,
-      ),
-      body: Container(
-          color: ColorsJunghanns.whiteJ,
-          child: Stack(children: [
-            Column(
-              children: [
-                Visibility(
-                    visible: provider.connectionStatus == 4,
-                    child: const WithoutInternet()),
-                fakeStop(),
-                typesOfStops(),
-              ],
-            ),
-            Visibility(visible: isLoading, child: const LoadingJunghanns())
-          ])),
-      bottomNavigationBar: bottomBar(() {}, 2, isHome: false, context: context),
-    );
   }
 
   showConfirmStop() {
@@ -135,74 +102,6 @@ class _StopsState extends State<Stops> {
             ),
           );
         });
-  }
-
-  Widget textConfirmWayToStop() {
-    return Container(
-        alignment: Alignment.center,
-        child: DefaultTextStyle(
-            style: TextStyles.blueJ22Bold, child: const Text("Confirmación")));
-  }
-
-  Widget textWayToStop() {
-    return Container(
-        padding: const EdgeInsets.only(top: 8, bottom: 12),
-        alignment: Alignment.center,
-        child: DefaultTextStyle(
-            style: TextStyles.greenJ15Bold,
-            child: Text("${stopCurrent.id} | ${stopCurrent.description}")));
-  }
-
-  Widget buttomsSale() {
-    return Container(
-      alignment: Alignment.center,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          buttomSale(
-              "Si",
-              () => () {
-                    Navigator.pop(context);
-                    if (provider.connectionStatus < 4) {
-                      funSelectStop();
-                    } else {
-                      Fluttertoast.showToast(
-                        msg: "Sin conexión a internet",
-                        timeInSecForIosWeb: 2,
-                        toastLength: Toast.LENGTH_LONG,
-                        gravity: ToastGravity.TOP,
-                        webShowClose: true,
-                      );
-                    }
-                  },
-              Decorations.blueBorder12),
-          buttomSale(
-              "No",
-              () => () {
-                    stopCurrent = StopModel.fromState();
-                    log("Stop ID: ${stopCurrent.id}");
-                    Navigator.pop(context);
-                  },
-              Decorations.redCard),
-        ],
-      ),
-    );
-  }
-
-  Widget buttomSale(String op, Function fun, BoxDecoration deco) {
-    return GestureDetector(
-      onTap: fun(),
-      child: Container(
-          alignment: Alignment.center,
-          width: size.width * 0.22,
-          height: size.width * 0.11,
-          decoration: deco,
-          child: DefaultTextStyle(
-              style: TextStyles.white18SemiBoldIt,
-              child: Text(
-                op,
-              ))),
-    );
   }
 
   funSelectStop() async {
@@ -299,6 +198,102 @@ class _StopsState extends State<Stops> {
       Navigator.pop(context);
       log("permission $permission");
     }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    size = MediaQuery.of(context).size;
+    provider = Provider.of<ProviderJunghanns>(context);
+    return Scaffold(
+      backgroundColor: ColorsJunghanns.white,
+      appBar: AppBar(
+        backgroundColor: ColorsJunghanns.whiteJ,
+        systemOverlayStyle: const SystemUiOverlayStyle(
+            statusBarColor: ColorsJunghanns.whiteJ,
+            statusBarIconBrightness: Brightness.dark,
+            statusBarBrightness: Brightness.dark),
+        leading: GestureDetector(
+          child: Container(
+              padding: const EdgeInsets.only(left: 24),
+              child: Image.asset("assets/icons/menu.png")),
+          onTap: () {},
+        ),
+        elevation: 0,
+      ),
+      body: Container(
+          color: ColorsJunghanns.whiteJ,
+          child: Stack(children: [
+            Column(
+              children: [
+                Visibility(
+                    visible: provider.connectionStatus == 4,
+                    child: const WithoutInternet()),
+                fakeStop(),
+                typesOfStops(),
+              ],
+            ),
+            Visibility(visible: isLoading, child: const LoadingJunghanns())
+          ])),
+      bottomNavigationBar: bottomBar(() {}, 2, isHome: false, context: context),
+    );
+  }
+
+  Widget textConfirmWayToStop() {
+    return Container(
+        alignment: Alignment.center,
+        child: DefaultTextStyle(
+            style: TextStyles.blueJ22Bold, child: const Text("Confirmación")));
+  }
+
+  Widget textWayToStop() {
+    return Container(
+        padding: const EdgeInsets.only(top: 8, bottom: 12),
+        alignment: Alignment.center,
+        child: DefaultTextStyle(
+            style: TextStyles.greenJ15Bold,
+            child: Text("${stopCurrent.id} | ${stopCurrent.description}")));
+  }
+
+  Widget buttomsSale() {
+    return Container(
+      alignment: Alignment.center,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          buttomSale(
+              "Si",
+              () => () {
+                    Navigator.pop(context);
+                      funSelectStop();
+                  },
+              Decorations.blueBorder12),
+          buttomSale(
+              "No",
+              () => () {
+                    stopCurrent = StopModel.fromState();
+                    log("Stop ID: ${stopCurrent.id}");
+                    Navigator.pop(context);
+                  },
+              Decorations.redCard),
+        ],
+      ),
+    );
+  }
+
+  Widget buttomSale(String op, Function fun, BoxDecoration deco) {
+    return GestureDetector(
+      onTap: fun(),
+      child: Container(
+          alignment: Alignment.center,
+          width: size.width * 0.22,
+          height: size.width * 0.11,
+          decoration: deco,
+          child: DefaultTextStyle(
+              style: TextStyles.white18SemiBoldIt,
+              child: Text(
+                op,
+              ))),
+    );
   }
 
   Widget fakeStop() {

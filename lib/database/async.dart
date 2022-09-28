@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:junghanns/models/config.dart';
 import 'package:junghanns/models/customer.dart';
+import 'package:junghanns/models/refill.dart';
 import 'package:junghanns/models/stop.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/provider/provider.dart';
@@ -26,7 +27,10 @@ class Async {
             return getDataCustomerList("C", 4).then((value4){
               provider.labelAsync="Sincronizando paradas";
               return getDataStops().then((value5){
-                return true;
+                provider.labelAsync="Sincronizando recargas";
+                return getDataRefill().then((value6){
+                  return true;
+                });
               });
               });
           });
@@ -79,6 +83,20 @@ class Async {
           stopList.add(StopModel.fromService(item));
         }
         handler.insertStop(stopList);
+        return true;
+      }else{
+        return false;
+      }
+    });
+  }
+  Future<bool> getDataRefill()async{
+    return await getRefillList(prefs.idRouteD).then((answer){
+      List<RefillModel> refillList = [];
+      if(!answer.error){
+        for(var item in answer.body){
+          refillList.add(RefillModel.fromService(item));
+        }
+        handler.insertRefill(refillList);
         return true;
       }else{
         return false;

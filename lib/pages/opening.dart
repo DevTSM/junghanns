@@ -197,7 +197,7 @@ class _OpeningState extends State<Opening> {
       "id_data_origen":e["idOrigin"],
       "folio":e["folio"],
       "tipo_operacion":e["type"],
-      "version": "1.13"
+      "version": "1.1.4"
       };
       await postSale(data).then((answer) {
             if (!answer.error){

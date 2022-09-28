@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:junghanns/models/customer.dart';
+import 'package:junghanns/models/refill.dart';
 import 'package:junghanns/models/stop.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
@@ -21,6 +22,10 @@ class DataBase {
         //lista de paradas en falso
         await database.execute(
           "CREATE TABLE stop(id INTEGER PRIMARY KEY AUTOINCREMENT, description TEXT NOT NULL, icon TEXT NOT NULL , color TEXT NOT NULL)",
+        );
+        //lista de recargas
+        await database.execute(
+          "CREATE TABLE refill(idProduct INTEGER, description TEXT, price DOUBLE)",
         );
         //paradas en falso offLine
         await database.execute(
@@ -52,6 +57,14 @@ class DataBase {
     final Database db = await initializeDB();
     for (var stop in stops) {
       result = await db.insert('stop', stop.getMap());
+    }
+    return result;
+  }
+  Future<int> insertRefill(List<RefillModel> refillList) async {
+    int result = 0;
+    final Database db = await initializeDB();
+    for (var refill in refillList) {
+      result = await db.insert('refill', refill.getMap());
     }
     return result;
   }

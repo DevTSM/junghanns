@@ -24,8 +24,8 @@ class StopModel {
     return StopModel(
         id: int.parse((data["id"] ?? 0).toString()),
         description: data["descripcion"] ?? "",
-        icon: data["icon"],
-        color: data["color"],
+        icon: data["icon"]??"",
+        color: data["color"]??"",
         isSelect: false);
   }
   factory StopModel.fromDatabase(Map<String, dynamic> data) {

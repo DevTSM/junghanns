@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'dart:developer';
+import 'dart:developer' as prefix;
 import 'dart:math';
 
 import 'package:junghanns/models/authorization.dart';
@@ -158,8 +158,8 @@ class CustomerModel {
         idClient: data["idCliente"] ?? 0,
         idRoute: data["idRuta"] ?? 0,
         type: type,
-        lat: double.parse(data["latitud"] != "" ? data["latitud"] : "0"),
-        lng: double.parse(data["longitud"] != "" ? data["longitud"] : "0"),
+        lat: double.parse((data["latitud"]??"0") != "" ? (data["latitud"]??"0").replaceAll(",", "") : "0"),
+        lng: double.parse((data["longitud"]??"0") != "" ? (data["latitud"]??"0").replaceAll(",", ""):"0"),
         priceLiquid: double.parse((data["precioLiquido"] ?? "0").toString()),
         byCollect: double.parse((data["porCobrar"] ?? 0).toString()),
         purse: double.parse((data["monedero"] ?? 0).toString()),

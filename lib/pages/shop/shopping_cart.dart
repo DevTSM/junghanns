@@ -493,7 +493,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
           ? provider.basketCurrent.folio
           : null,
       "tipo_operacion": provider.basketCurrent.typeOperation,
-      "version": "1.13"
+      "version": "1.1.4"
     };
     if(provider.connectionStatus<4){
     await postSale(data).then((answer) {

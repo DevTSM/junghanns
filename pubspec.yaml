@@ -37,6 +37,7 @@ dependencies:
   pin_code_text_field: ^1.8.0
   flutter_speedtest: ^0.0.2+2
   location: ^4.4.0
+  linear_progress_bar: "^1.1.0"
   
 dev_dependencies:
   flutter_test:

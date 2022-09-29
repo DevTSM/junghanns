@@ -41,11 +41,15 @@ class Async {
 
   Future<bool> getDataCustomerList(String type, int typeInt) async {
     List<CustomerModel> list = [];
+    provider.currentAsync=0;
+    provider.totalAsync=1;
     return await getListCustomer(prefs.idRouteD, DateTime.now(), type)
         .then((answer) async {
       if (prefs.token != "") {
         if (!answer.error) {
+          provider.totalAsync=answer.body.length>0?answer.body.length:1;
           for (var e in answer.body) {
+            provider.currentAsync++;
             CustomerModel item = CustomerModel.fromState();
             item = CustomerModel.fromList(e, prefs.idRouteD, typeInt);
             await getDetailsCustomer(item.id, type).then((answer) async {
@@ -97,6 +101,7 @@ class Async {
           refillList.add(RefillModel.fromService(item));
         }
         handler.insertRefill(refillList);
+        log("-----------------------${refillList.length.toString()}");
         return true;
       }else{
         return false;

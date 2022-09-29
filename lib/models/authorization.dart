@@ -2,25 +2,17 @@ import 'package:junghanns/models/product.dart';
 
 class AuthorizationModel {
   int idAuth;
-  int idProduct;
-  String description;
-  double price;
-  int number;
   int idClient;
   int idCatAuth;
   String authText;
-  String type;
   String observation;
+  String type;
   int idReasonAuth;
   String reason;
-  String img;
+  ProductModel product;
 
   AuthorizationModel(
       {required this.idAuth,
-      required this.idProduct,
-      required this.description,
-      required this.price,
-      required this.number,
       required this.idClient,
       required this.idCatAuth,
       required this.authText,
@@ -28,52 +20,44 @@ class AuthorizationModel {
       required this.observation,
       required this.idReasonAuth,
       required this.reason,
-      required this.img});
+      required this.product});
 
   factory AuthorizationModel.fromState() {
     return AuthorizationModel(
         idAuth: 0,
-        idProduct: 0,
-        description: "TEST",
-        price: 0.0,
-        number: 0,
+        product: ProductModel.fromState(0),
         idClient: 0,
         idCatAuth: 0,
         authText: "TEST",
         type: "0",
         observation: "",
         idReasonAuth: 0,
-        reason: "TEST",
-        img: "https://jnsc.mx/img/garrafon.png");
+        reason: "TEST");
   }
 
   factory AuthorizationModel.fromService(Map<String, dynamic> data) {
     return AuthorizationModel(
         idAuth: data["id"],
-        idProduct: int.parse((data["idProductoServicio"] ?? 0).toString()),
-        description: data["descripcion"] ?? "",
-        price: double.parse((data["precio"] ?? "0.0").toString()),
-        number: int.parse((data["cantidad"] ?? "0").toString()),
+        product: ProductModel.fromServiceProduct(data),
         idClient: data["idCliente"] ?? 0,
+        type: data["tipo"] ?? "",
         idCatAuth: data["idCatAutorizacion"] ?? 0,
         authText: data["autorizacion"] ?? "",
-        type: data["tipo"] ?? "",
         observation: data["observacion"] ?? "",
         idReasonAuth: data["idMotivoAutorizacion"] ?? 0,
-        reason: data["Motivo"] ?? "",
-        img: data["url"] ?? "");
+        reason: data["Motivo"] ?? "");
   }
 
-  ProductModel getProduct() {
-    return ProductModel(
-        idProduct: idProduct,
-        description: description,
-        price: price,
-        stock: number,
-        img: img,
-        type: 1,
-        number: 1,
-        isSelect: false,
-        rank: "");
-  }
+  // ProductModel getProduct() {
+  //   return ProductModel(
+  //       idProduct: idProduct,
+  //       description: description,
+  //       price: price,
+  //       stock: number,
+  //       img: img,
+  //       type: 1,
+  //       number: 1,
+  //       isSelect: false,
+  //       rank: "");
+  // }
 }

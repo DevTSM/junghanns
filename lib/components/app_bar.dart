@@ -23,7 +23,7 @@ PreferredSizeWidget appBarJunghanns(BuildContext context, Size size) {
         alignment: Alignment.center,
         padding: const EdgeInsets.only(right: 15),
         child: Text(
-          "${urlBase != ipProd ? "Beta " : ""}V$version",
+          "${urlBase == ipStage ? "Beta " : ""}V$version",
           style: TextStyles.blue18SemiBoldIt,
         ),
       ),

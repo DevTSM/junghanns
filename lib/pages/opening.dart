@@ -11,6 +11,7 @@ import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/provider/provider.dart';
 import 'package:junghanns/services/store.dart';
 import 'package:junghanns/styles/color.dart';
+import 'package:linear_progress_bar/linear_progress_bar.dart';
 import 'package:provider/provider.dart';
 
 import 'auth/login.dart';
@@ -248,7 +249,20 @@ class _OpeningState extends State<Opening> {
                 )),
             Visibility(
                 visible: isAsync,
-                child:Text(provider.labelAsync))
+                child:Text(provider.labelAsync)),
+            const SizedBox(height: 10,),
+                Visibility(
+                  visible: isAsync,
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 40,right: 40),
+                    child:LinearProgressBar(
+                      minHeight: 7,
+      maxSteps: provider.totalAsync,
+      progressType: LinearProgressBar.progressTypeLinear, // Use Linear progress
+      currentStep: provider.currentAsync,
+      progressColor: ColorsJunghanns.green,
+      backgroundColor: ColorsJunghanns.grey,
+    )))
           ]),
         ),
       ],

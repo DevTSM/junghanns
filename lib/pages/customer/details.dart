@@ -106,35 +106,6 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
     await getAuthorization(widget.customerCurrent.idClient, prefs.idRouteD)
         .then((answer) {
       if (answer.error) {
-        /*Prueba*/
-        /*authList.add(AuthorizationModel(
-            idAuth: 13706,
-            idProduct: 21,
-            description: "GARRAFON ETIQUETADO 20 LTS",
-            price: 0.0,
-            number: 5,
-            idClient: 9631,
-            idCatAuth: 9,
-            authText: "CORTESIA",
-            type: "V",
-            observation: "4",
-            idReasonAuth: -1,
-            reason: "ASISTENCIA SOCIAL",
-            img: "https://jnsc.mx/img/vacio.jpg"));
-        authList.add(AuthorizationModel(
-            idAuth: 13704,
-            idProduct: 22,
-            description: "LIQUIDO DE RECAMBIO 20 LTS",
-            price: 1.0,
-            number: 3,
-            idClient: 9631,
-            idCatAuth: 4,
-            authText: "GARRAFON A LA PAR",
-            type: "V",
-            observation: "Prueba garrafon a la par",
-            idReasonAuth: 6,
-            reason: "ASISTENCIA SOCIAL",
-            img: "https://jnsc.mx/img/garrafon.png"));*/
         log("Sin Autorizaciones");
       } else {
         log("Auth yes");
@@ -142,7 +113,6 @@ class _DetailsCustomerState extends State<DetailsCustomer> {
             .map((e) => authList.add(AuthorizationModel.fromService(e)))
             .toList();
         if (authList.isNotEmpty) {
-          log("Descripción: ${authList.first.description}");
         }
       }
       if (isL) {

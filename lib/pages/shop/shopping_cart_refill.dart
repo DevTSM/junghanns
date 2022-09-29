@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'dart:developer';
-import 'package:flutter/cupertino.dart';
-import 'package:location/location.dart' as loc1;
+import 'package:junghanns/models/refill.dart';
+import 'package:junghanns/widgets/card/product.dart';
+import 'package:location/location.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:junghanns/components/bottom_bar.dart';
 import 'package:junghanns/components/button.dart';
@@ -22,15 +22,11 @@ import 'package:junghanns/styles/color.dart';
 import 'package:junghanns/styles/decoration.dart';
 import 'package:junghanns/styles/text.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
-import 'package:junghanns/widgets/card/product_card.dart';
 import 'package:provider/provider.dart';
-
 import '../../models/method_payment.dart';
-import '../../models/shopping_basket.dart';
 
 class ShoppingCartRefill extends StatefulWidget {
   CustomerModel customerCurrent;
-
   ShoppingCartRefill({
     Key? key,
     required this.customerCurrent,
@@ -42,57 +38,42 @@ class ShoppingCartRefill extends StatefulWidget {
 
 class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
   late Size size;
-  late List<ProductModel> refillList = [];
-  late List<MethodPayment> paymentsList = [];
-
-  late double totalPrice;
-  late bool isLoading;
-  //
-  late BasketModel basket;
-  late int cantidad;
-  late List<ConfigModel> configList;
-  late double distance;
   late NumberFormat formatMoney = NumberFormat("\$#,##0.00");
-  //
   late ProviderJunghanns provider;
-  //
-  late double latSale, lngSale;
+  late List<ProductModel> refillList;
+  late List<ConfigModel> configList;
+  late bool isLoading, isRange;
+  late double latSale, lngSale,distance;
 
   @override
   void initState() {
     super.initState();
-
-    totalPrice = 0;
+    configList=[];
+    refillList=[];
     isLoading = false;
-    //
-    cantidad = 0;
+    isRange = false;
     distance = 0;
-    basket = BasketModel(
-        idCustomer: widget.customerCurrent.idClient,
-        idRoute: prefs.idRouteD,
-        lat: widget.customerCurrent.lat,
-        lng: widget.customerCurrent.lng,
-        sales: [],
-        idAuth: -1,
-        waysToPay: [],
-        idDataOrigin: widget.customerCurrent.id,
-        folio: -1,
-        typeOperation: "R",
-        totalPrice: 0);
-    configList = [];
-    latSale = lngSale = 0;
-
+    latSale = 0;
+    lngSale = 0;
     getDataRefill();
+  }
+  @override
+  void dispose(){
+    super.dispose();
+    provider.initShopping(CustomerModel.fromState());
   }
 
   getDataRefill() async {
-    log("${prefs.idRouteD}");
     Timer(const Duration(milliseconds: 800), () async {
+      provider.initShopping(widget.customerCurrent);
       if (provider.connectionStatus < 4) {
         setState(() {
           isLoading = true;
         });
         await getRefillList(prefs.idRouteD).then((answer) {
+          setState(() {
+          isLoading = false;
+        });
           if (answer.error) {
             Fluttertoast.showToast(
               msg: "Sin recargas",
@@ -103,96 +84,253 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
             );
           } else {
             refillList.clear();
-
             answer.body
                 .map((e) => refillList.add(ProductModel.fromServiceRefill(e)))
                 .toList();
           }
-          getDataPayment();
         });
       }
     });
   }
+  
+  showConfirmSale() {
+    if (provider.connectionStatus < 4) {
+      showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return Center(
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                width: size.width * .75,
+                decoration: Decorations.whiteS1Card,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    DefaultTextStyle(
+            style: TextStyles.blueJ22Bold,
+            child: const Text("¿Pago en Efectivo?")),
+                    DefaultTextStyle(
+            style: TextStyles.blueJ215R,
+            child: const Text(
+              "Deseas registrar la venta de:",
+            )),
+        DefaultTextStyle(
+            style: TextStyles.greenJ24Bold,
+            child: Text(formatMoney.format(provider.basketCurrent.totalPrice))),
+                  Material(child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          Expanded(child:ButtonJunghanns(fun: () async {
+                    Navigator.pop(context);
+                    //onLoading();
+                    setState(() {
+                      isLoading = true;
+                    });
+                    await setCurrentLocation();
+                    if (isRange) {
+                      if (latSale != 0 && lngSale != 0) {
+                        funSale();
+                      } else {
+                        setState(() {
+                          isLoading = false;
+                        });
+                        Fluttertoast.showToast(
+                          msg: "Sin coordenadas ",
+                          timeInSecForIosWeb: 16,
+                          toastLength: Toast.LENGTH_LONG,
+                          gravity: ToastGravity.TOP,
+                          webShowClose: true,
+                        );
+                      }
+                    } else {
+                      setState(() {
+                        isLoading = false;
+                      });
+                    }
+                  }, decoration: Decorations.blueBorder12, style: TextStyles.white18SemiBoldIt, label: "Si")),
+                  const SizedBox(width: 25,),
+           Expanded(child:ButtonJunghanns(
+              fun:() {
+                    Navigator.pop(context);
+                  },
+                   decoration: Decorations.redCard, style: TextStyles.white18SemiBoldIt, label: 
+                   "No",)),
+        ],
+      ))
+                  ],
+                ),
+              ),
+            );
+          });
+    } else {
+      Fluttertoast.showToast(
+        msg: "Sin conexión a internet",
+        timeInSecForIosWeb: 2,
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.TOP,
+        webShowClose: true,
+      );
+    }
+  }
 
-  getDataPayment() async {
-    log("Cliente: ${widget.customerCurrent.idClient}");
-    log("Ruta: ${prefs.idRouteD}");
-    await getPaymentMethods(widget.customerCurrent.idClient, prefs.idRouteD)
-        .then((answer) {
+  setCurrentLocation() async {
+    try {
+      Location locationInstance = Location();
+      PermissionStatus permission = await locationInstance.hasPermission();
+      if (permission == PermissionStatus.granted) {
+        provider.permission = true;
+        locationInstance.changeSettings(accuracy: LocationAccuracy.high);
+        if (await locationInstance.serviceEnabled()) {
+          provider.permission = true;
+          LocationData currentLocation = await locationInstance
+              .getLocation()
+              .timeout(const Duration(seconds: 15));
+              latSale=currentLocation.latitude!;
+              lngSale=currentLocation.longitude!;
+          await funCheckDistance(currentLocation);
+        } else {
+          provider.permission = false;
+          Fluttertoast.showToast(
+              msg: "Activa el servicio de Ubicacion e intentalo de nuevo.",
+              timeInSecForIosWeb: 2,
+              toastLength: Toast.LENGTH_LONG,
+              gravity: ToastGravity.TOP,
+              webShowClose: true,
+              backgroundColor: ColorsJunghanns.red);
+        }
+      } else {
+        print({"permission": permission.toString()});
+        provider.permission = false;
+        isRange = false;
+      }
+    } catch (e) {
+      log("***ERROR -- $e");
+      Fluttertoast.showToast(
+          msg: "Tiempo de espera superado, vuelve a intentarlo",
+          timeInSecForIosWeb: 2,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+          backgroundColor: ColorsJunghanns.red);
+      return false;
+    }
+  }
+  
+  funCheckDistance(LocationData currentLocation) async {
+    try {
+      if (provider.connectionStatus < 4) {
+        await getConfig(widget.customerCurrent.idClient).then((answer) {
+          if (answer.error) {
+            Fluttertoast.showToast(
+              msg: answer.message,
+              timeInSecForIosWeb: 2,
+              toastLength: Toast.LENGTH_LONG,
+              gravity: ToastGravity.TOP,
+              webShowClose: true,
+            );
+          } else {
+            for (var item in answer.body) {
+              configList.add(ConfigModel.fromService(item));
+            }
+            setState(() {
+              distance = calculateDistance(
+                      widget.customerCurrent.lat,
+                      widget.customerCurrent.lng,
+                      currentLocation.latitude,
+                      currentLocation.longitude) *
+                  1000;
+              isRange = distance <= configList.last.valor;
+              log(" distance $distance isRange $isRange");
+            });
+          }
+        });
+      } else {
+        setState(() {
+          distance = calculateDistance(
+                  widget.customerCurrent.lat,
+                  widget.customerCurrent.lng,
+                  currentLocation.latitude,
+                  currentLocation.longitude) *
+              1000;
+          isRange = distance <=
+              (widget.customerCurrent.configList.isNotEmpty
+                  ? widget.customerCurrent.configList.first.valor
+                  : 0);
+        });
+      }
+    } catch (e) {
+      log("***ERROR -- $e");
+      Fluttertoast.showToast(
+          msg: "Tiempo de espera superado, vuelve a intentarlo",
+          timeInSecForIosWeb: 2,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+          backgroundColor: ColorsJunghanns.red);
+      return false;
+    }
+  }
+  
+  funSale() async {
+    Map<String, dynamic> data = {
+      "id_cliente": provider.basketCurrent.idCustomer,
+      "id_ruta": provider.basketCurrent.idRoute,
+      "latitud": "$latSale",
+      "longitud": "$lngSale",
+      "venta": List.from(provider.basketCurrent.sales.map((element) => {"cantidad": element.number,
+        "id_producto": element.idProduct,
+        "precio_unitario": element.price
+      }).toList()),
+      "id_autorizacion": null,
+      "formas_de_pago": [{
+        "tipo": "E",
+        "importe": (provider.basketCurrent.sales.map((e) => e.price).toList()).reduce((value, element) => value+element),
+      }],
+      "id_data_origen": provider.basketCurrent.idDataOrigin,
+      "folio": null,
+      "tipo_operacion": "R",
+      "version": "1.13"
+    };
+    log("LA DATA ES: $data");
+    if(provider.connectionStatus<4){
+    await postSale(data).then((answer) {
+      setState(() {
+        isLoading = false;
+      });
       if (answer.error) {
+        //Navigator.pop(context);
         Fluttertoast.showToast(
-          msg: "Sin formas de pago",
+          msg: answer.message,
           timeInSecForIosWeb: 2,
           toastLength: Toast.LENGTH_LONG,
           gravity: ToastGravity.TOP,
           webShowClose: true,
         );
       } else {
-        paymentsList.clear();
-        answer.body.map((e) {
-          if (e["formaPago"] == "Efectivo") {
-            paymentsList.add(MethodPayment.fromService(e));
-          }
-        }).toList();
-      }
-      setState(() {
-        isLoading = false;
-      });
-    });
-  }
+        //Navigator.pop(context);
+        Fluttertoast.showToast(
+          msg: "Venta realizada con exito",
+          timeInSecForIosWeb: 2,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+        );
 
-  updateTotal(int id, double price, bool isAdd) {
-    for (var e in refillList) {
-      if (e.idProduct == id) {
-        isAdd ? updateShoppingAdd(e) : updateShoppingSubtraction(e);
-      }
-    }
-
-    setState(() {
-      if (isAdd) {
-        cantidad = cantidad + 1;
-        totalPrice = totalPrice + price;
-      } else {
-        cantidad = cantidad - 1;
-        totalPrice = totalPrice - price;
+        Navigator.pop(context);
       }
     });
-  }
-
-  updateShoppingAdd(ProductModel prod) {
-    if (basket.sales.isEmpty) {
-      basket.sales.add(prod);
-      log("FIRST ADD ID: ${basket.sales.first.idProduct}, CANTIDAD: ${basket.sales.first.number}");
-    } else {
-      int index = basket.sales
-          .indexWhere((element) => element.idProduct == prod.idProduct);
-      if (index != -1) {
-        basket.sales[index].number = basket.sales[index].number + 1;
-        log("ADD ONE TO ID: ${basket.sales[index].idProduct} -- CANTIDA: ${basket.sales[index].number}");
-      } else {
-        basket.sales.add(prod);
-        log("NEW ADD ID: ${basket.sales.last.idProduct}");
-      }
-    }
-  }
-
-  updateShoppingSubtraction(ProductModel prod) {
-    if (basket.sales.isNotEmpty) {
-      int index = basket.sales
-          .indexWhere((element) => element.idProduct == prod.idProduct);
-      if (index != -1) {
-        if (basket.sales[index].number > 1) {
-          basket.sales[index].number = basket.sales[index].number - 1;
-          log("SUBTRACTION TO ID: ${basket.sales[index].idProduct} -- CANTIDA: ${basket.sales[index].number}");
-        } else {
-          log("REMOVE ID: ${basket.sales[index].idProduct}");
-          basket.sales.removeAt(index);
-        }
-      } else {
-        log("RESTA -- SIN PRODUCTO");
-      }
-    } else {
-      log("RESTA -- LISTA SIN PRODUCTOS");
+    }else{
+      handler.insertSale(data);
+    prefs.dataSale=true;
+    Fluttertoast.showToast(
+            msg: "Guardado de forma local",
+            timeInSecForIosWeb: 16,
+            toastLength: Toast.LENGTH_LONG,
+            gravity: ToastGravity.TOP,
+            webShowClose: true,
+          );
+          Navigator.pop(context);
     }
   }
 
@@ -258,7 +396,7 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
                             padding: const EdgeInsets.only(right: 8, top: 10),
                             child: Text(
                               //shoppingBasket.length.toString(),
-                              cantidad.toString(),
+                              provider.basketCurrent.sales.isNotEmpty? (provider.basketCurrent.sales.map((e) => e.number).toList()).reduce((value, element) => value+element).toString():"0",
                               style: TextStyles.white24SemiBoldIt,
                             ),
                           ),
@@ -272,7 +410,7 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
                         height: 10,
                       ),
                       Text(
-                        formatMoney.format(totalPrice),
+                        formatMoney.format(provider.basketCurrent.sales.isNotEmpty?(provider.basketCurrent.sales.map((e) => e.price*e.number).toList()).reduce((value, element) => value+element):0.0),
                         style: TextStyles.white40Bold,
                       )
                     ],
@@ -290,7 +428,8 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
       margin: EdgeInsets.only(top: size.height * .22),
       padding: const EdgeInsets.only(left: 10, right: 10),
       width: double.infinity,
-      child: refillList.isEmpty
+      child: provider.connectionStatus < 4
+                    ?refillList.isEmpty
           ? Center(
               child: Text(
               "Sin recargas",
@@ -315,16 +454,21 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
                       ],
                     ),
                     childrenDelegate: SliverChildBuilderDelegate(
-                        (context, index) => ProductCard(
-                              update: updateTotal,
-                              isPR: false,
-                              productCurrent: refillList[index],
-                            ),
+                        (context, index) => ProductSaleCard(
+                          isRefill: true,
+                                    update: (ProductModel productCurrent,
+                                        bool isAdd) {
+                                      provider.updateProductShopping(
+                                          productCurrent, isAdd);
+                                      setState(() {});
+                                    },
+                                    productCurrent: refillList[index],
+                                  ),
                         childCount: refillList.length),
                   ),
                 )),
                 Visibility(
-                    visible: cantidad > 0,
+                    visible: provider.basketCurrent.sales.isNotEmpty,
                     child: Container(
                         margin: const EdgeInsets.only(
                             left: 15, right: 15, bottom: 30, top: 30),
@@ -333,344 +477,71 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
                         alignment: Alignment.center,
                         child: ButtonJunghanns(
                           decoration: Decorations.blueBorder12,
-                          fun: () => showConfirmSale(paymentsList.first),
+                          fun: () => showConfirmSale(),
+                          label: "Terminar venta",
+                          style: TextStyles.white17_5,
+                        )))
+              ],
+            ):Column(
+              children: [
+                const SizedBox(
+                  height: 20,
+                ),
+                Expanded(
+                    child: SizedBox(
+                  width: size.width,
+                  child: FutureBuilder(
+                    future: handler.retrieveRefill(),
+                    builder: (BuildContext context,
+                        AsyncSnapshot<List<ProductModel>> snapshot) {
+                      if (snapshot.hasData) {
+                        log("mira -------- ${snapshot.data!.length}");
+                        return GridView.custom(
+                    gridDelegate: SliverWovenGridDelegate.count(
+                      crossAxisCount: 2,
+                      mainAxisSpacing: 13,
+                      crossAxisSpacing: 13,
+                      pattern: [
+                        const WovenGridTile(.85),
+                        const WovenGridTile(.85),
+                      ],
+                    ),
+                    childrenDelegate: SliverChildBuilderDelegate(
+                        (context, index) => 
+                        ProductSaleCard(
+                          isRefill: true,
+                                    update: (ProductModel productCurrent,
+                                        bool isAdd) {
+                                      provider.updateProductShopping(
+                                          productCurrent, isAdd);
+                                      setState(() {});
+                                    },
+                                    productCurrent: snapshot.data![index],
+                                  ),
+                        childCount: snapshot.data?.length
+                        ),
+                  );}else{
+                    return Container(
+                      child: Text("Sin datos"),
+                    );
+                  }}),
+                )),
+                Visibility(
+                    visible: provider.basketCurrent.sales.isNotEmpty,
+                    child: Container(
+                        margin: const EdgeInsets.only(
+                            left: 15, right: 15, bottom: 30, top: 30),
+                        width: double.infinity,
+                        height: 40,
+                        alignment: Alignment.center,
+                        child: ButtonJunghanns(
+                          decoration: Decorations.blueBorder12,
+                          fun: () => showConfirmSale(),
                           label: "Terminar venta",
                           style: TextStyles.white17_5,
                         )))
               ],
             ),
     );
-  }
-
-  showConfirmSale(MethodPayment methodCurrent) {
-    if (provider.connectionStatus < 4) {
-      showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return Center(
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                width: size.width * .75,
-                decoration: Decorations.whiteS1Card,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    textWayToPay(methodCurrent.wayToPay),
-                    textAmount(),
-                    buttomsSale(methodCurrent)
-                  ],
-                ),
-              ),
-            );
-          });
-    } else {
-      Fluttertoast.showToast(
-        msg: "Sin conexión a internet",
-        timeInSecForIosWeb: 2,
-        toastLength: Toast.LENGTH_LONG,
-        gravity: ToastGravity.TOP,
-        webShowClose: true,
-      );
-    }
-  }
-
-  Widget textWayToPay(String wayToPay) {
-    return Container(
-        alignment: Alignment.center,
-        child: DefaultTextStyle(
-            style: TextStyles.blueJ22Bold,
-            child: Text("¿Pago en $wayToPay ?")));
-  }
-
-  Widget textAmount() {
-    return Column(
-      children: [
-        DefaultTextStyle(
-            style: TextStyles.blueJ215R,
-            child: const Text(
-              "Deseas registrar la venta de:",
-            )),
-        DefaultTextStyle(
-            style: TextStyles.greenJ24Bold,
-            child: Text(formatMoney.format(totalPrice))),
-      ],
-    );
-  }
-
-  funSale(MethodPayment methodPayment) async {
-    log("FUNCIÓN DE VENTA");
-    log("FORMA DE PAGO - ${methodPayment.wayToPay}");
-
-    basket.waysToPay
-        .add(WayToPay(type: methodPayment.typeWayToPay, cost: totalPrice));
-    log("FORMA DE PAGO - ${basket.waysToPay.first.type}");
-    log("TOTAL - ${basket.waysToPay.first.cost}");
-
-    ///
-    List<Map> listSales = [];
-    for (var element in basket.sales) {
-      listSales.add({
-        "cantidad": element.number,
-        "id_producto": element.idProduct,
-        "precio_unitario": element.price
-      });
-    }
-
-    List<Map> listWaysToPay = [];
-    for (var ele in basket.waysToPay) {
-      listWaysToPay.add({
-        "tipo": ele.type,
-        "importe": ele.cost,
-      });
-    }
-
-    ///
-    Map<String, dynamic> data = {
-      "id_cliente": basket.idCustomer,
-      "id_ruta": basket.idRoute,
-      "latitud": latSale.toString(),
-      "longitud": lngSale.toString(),
-      "venta": listSales,
-      "id_autorizacion": basket.idAuth != -1 ? basket.idAuth : null,
-      "formas_de_pago": listWaysToPay,
-      "id_data_origen": basket.idDataOrigin,
-      "folio": basket.folio != -1 ? basket.folio : null,
-      "tipo_operacion": basket.typeOperation,
-      "version": "1.13"
-    };
-
-    log("LA DATA ES: $data");
-
-    await postSale(data).then((answer) {
-      setState(() {
-        isLoading = false;
-      });
-      if (answer.error) {
-        //Navigator.pop(context);
-        Fluttertoast.showToast(
-          msg: answer.message,
-          timeInSecForIosWeb: 2,
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.TOP,
-          webShowClose: true,
-        );
-      } else {
-        //Navigator.pop(context);
-        Fluttertoast.showToast(
-          msg: "Venta realizada con exito",
-          timeInSecForIosWeb: 2,
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.TOP,
-          webShowClose: true,
-        );
-
-        Navigator.pop(context);
-      }
-    });
-  }
-
-  Widget buttomsSale(MethodPayment methodPayment) {
-    return Container(
-      alignment: Alignment.center,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          buttomSale(
-              "Si",
-              () => () async {
-                    Navigator.pop(context);
-                    //onLoading();
-                    setState(() {
-                      isLoading = true;
-                    });
-                    //bool isD = await funCheckDistance();
-                    bool isD = await funCheckDistance2();
-                    if (isD) {
-                      if (latSale != 0 && lngSale != 0) {
-                        funSale(methodPayment);
-                      } else {
-                        setState(() {
-                          isLoading = false;
-                        });
-                        Fluttertoast.showToast(
-                          msg: "Sin coordenadas ",
-                          timeInSecForIosWeb: 16,
-                          toastLength: Toast.LENGTH_LONG,
-                          gravity: ToastGravity.TOP,
-                          webShowClose: true,
-                        );
-                      }
-                    } else {
-                      //Navigator.pop(context);
-                      setState(() {
-                        isLoading = false;
-                      });
-                    }
-                  },
-              Decorations.blueBorder12),
-          buttomSale(
-              "No",
-              () => () {
-                    Navigator.pop(context);
-                  },
-              Decorations.redCard),
-        ],
-      ),
-    );
-  }
-
-  Widget buttomSale(String op, Function fun, BoxDecoration deco) {
-    return GestureDetector(
-      onTap: fun(),
-      child: Container(
-          alignment: Alignment.center,
-          width: size.width * 0.22,
-          height: size.width * 0.11,
-          decoration: deco,
-          child: DefaultTextStyle(
-              style: TextStyles.white18SemiBoldIt,
-              child: Text(
-                op,
-              ))),
-    );
-  }
-
-  getConfigR() async {
-    await getConfig(widget.customerCurrent.idClient).then((answer) {
-      if (answer.error) {
-        Fluttertoast.showToast(
-          msg: answer.message,
-          timeInSecForIosWeb: 2,
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.TOP,
-          webShowClose: true,
-        );
-      } else {
-        log("Config yes");
-        answer.body
-            .map((e) => configList.add(ConfigModel.fromService(e)))
-            .toList();
-      }
-    });
-  }
-  //
-  ///--------------------------------------------------------------------------
-
-  Future<bool> funCheckDistance2() async {
-    await getConfigR();
-    log("***LOCATION FUN***");
-    loc1.Location loc = loc1.Location();
-    bool serviceEnabled;
-    loc1.PermissionStatus permissionGranted;
-    loc1.LocationData locationData;
-
-    serviceEnabled = await loc.serviceEnabled();
-    log("Service is : $serviceEnabled");
-    if (serviceEnabled == false) {
-      serviceEnabled = await loc.requestService();
-    }
-    if (serviceEnabled) {
-      permissionGranted = await loc.hasPermission();
-      if (permissionGranted != loc1.PermissionStatus.granted) {
-        log("Request Location Permission");
-        permissionGranted = await loc.requestPermission();
-      }
-      if (permissionGranted == loc1.PermissionStatus.granted) {
-        log("Permission true");
-        loc.changeSettings(accuracy: loc1.LocationAccuracy.high);
-        try {
-          locationData =
-              await loc.getLocation().timeout(const Duration(seconds: 15));
-          latSale = locationData.latitude ?? 0;
-          lngSale = locationData.longitude ?? 0;
-          log("Coordenadas : $latSale, $lngSale");
-          distance = calculateDistance(
-                  widget.customerCurrent.lat,
-                  widget.customerCurrent.lng,
-                  locationData.latitude,
-                  locationData.longitude) *
-              1000;
-
-          log("LatL: ${locationData.latitude} and LngL: ${locationData.longitude}");
-          log("LatC: ${widget.customerCurrent.lat} and LngC: ${widget.customerCurrent.lng}");
-          log("Distance loc is $distance");
-
-          if (distance <= configList.last.valor) {
-            return true;
-          } else {
-            Fluttertoast.showToast(
-              msg:
-                  "Lejos del domicilio $distance ${distance > 1 ? "Metro" : "Metros"}",
-              timeInSecForIosWeb: 16,
-              toastLength: Toast.LENGTH_LONG,
-              gravity: ToastGravity.TOP,
-              webShowClose: true,
-            );
-            return false;
-          }
-        } catch (e) {
-          log("***ERROR -- $e");
-          Fluttertoast.showToast(
-              msg: "Tiempo de espera superado, vuelve a intentarlo",
-              timeInSecForIosWeb: 2,
-              toastLength: Toast.LENGTH_LONG,
-              gravity: ToastGravity.TOP,
-              webShowClose: true,
-              backgroundColor: CupertinoColors.systemRed);
-          return false;
-        }
-      } else {
-        log("Permission false");
-        Fluttertoast.showToast(
-            msg: "Debes permitir el uso de la ubicación, vuelve a intentarlo",
-            timeInSecForIosWeb: 2,
-            toastLength: Toast.LENGTH_LONG,
-            gravity: ToastGravity.TOP,
-            webShowClose: true,
-            backgroundColor: CupertinoColors.systemRed);
-        return false;
-      }
-    } else {
-      Fluttertoast.showToast(
-          msg: "Debes activar el servicio de ubicación, vuelve a intentarlo",
-          timeInSecForIosWeb: 2,
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.TOP,
-          webShowClose: true,
-          backgroundColor: CupertinoColors.systemRed);
-      return false;
-    }
-  }
-
-  ///
-  ///--------------------------------------------------------------------------
-
-  Future<bool> funCheckDistance() async {
-    await getConfigR();
-    //
-    int distanConfig = configList.last.valor;
-    //
-    LocationPermission permission = await Geolocator.requestPermission();
-    if (permission == LocationPermission.whileInUse ||
-        permission == LocationPermission.always) {
-      Position _currentLocation = await Geolocator.getCurrentPosition();
-      latSale = _currentLocation.latitude;
-      lngSale = _currentLocation.longitude;
-      log("Coordenadas : $latSale, $lngSale");
-      distance = Geolocator.distanceBetween(
-          _currentLocation.latitude,
-          _currentLocation.longitude,
-          widget.customerCurrent.lat,
-          widget.customerCurrent.lng);
-      if (distance <= distanConfig) {
-        return true;
-      } else {
-        return false;
-      }
-    } else {
-      log("permission: $permission");
-      return false;
-    }
   }
 }

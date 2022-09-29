@@ -9,7 +9,7 @@ class RefillModel{
     return RefillModel(name: "", img: "assets/icons/refill1.png", price: 0, id: 0,isSelect: false);
   }
   factory RefillModel.fromService(Map<String,dynamic> data){
-    return RefillModel(name: data["descripcion"]??"", img: "assets/icons/refill1.png", price: double.parse((data["precio"]??"0").toString()), id: data["isProductoServicio"]??0,isSelect: false);
+    return RefillModel(name: data["descripcion"]??"", img: "assets/icons/refill1.png", price: double.parse((data["precio"]??"0").toString()), id: data["idProductoServicio"]??0,isSelect: false);
   }
   setSelect(isSelect){
     this.isSelect=isSelect;

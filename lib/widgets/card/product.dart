@@ -12,7 +12,6 @@ import '../../styles/text.dart';
 class ProductSaleCardPriority extends StatefulWidget {
   ProductModel productCurrent;
   Function update;
-
   ProductSaleCardPriority(
       {Key? key, required this.productCurrent, required this.update})
       : super(key: key);
@@ -172,6 +171,11 @@ class ProductSaleCardPriorityState extends State<ProductSaleCardPriority> {
 
                                 //BOTON DE MAS
                                 GestureDetector(
+                                    onTap: widget.productCurrent.stock!=widget.productCurrent.number||widget.productCurrent.type==2? () {
+                                      setState(()=>
+                                      widget.update(
+                                          widget.productCurrent, true));
+                                    }:(){},
                                     child: Container(
                                         padding: const EdgeInsets.fromLTRB(
                                             22, 12, 22, 12),
@@ -179,12 +183,7 @@ class ProductSaleCardPriorityState extends State<ProductSaleCardPriority> {
                                           FontAwesomeIcons.plus,
                                           size: 35,
                                           color: ColorsJunghanns.greenJ,
-                                        )),
-                                    onTap: () {
-                                      setState(()=>
-                                      widget.update(
-                                          widget.productCurrent, true));
-                                    })
+                                        )))
                               ],
                             )),
 
@@ -213,9 +212,9 @@ class ProductSaleCardPriorityState extends State<ProductSaleCardPriority> {
 class ProductSaleCard extends StatefulWidget {
   ProductModel productCurrent;
   Function update;
-
+  bool isRefill;
   ProductSaleCard(
-      {Key? key, required this.productCurrent, required this.update})
+      {Key? key, required this.productCurrent, required this.update,this.isRefill=false})
       : super(key: key);
 
   @override
@@ -251,6 +250,9 @@ class ProductSaleCardState extends State<ProductSaleCard> {
                     style: TextStyles.blueJ20BoldIt,
                   ),
                 ),
+                Visibility(
+                  visible: !widget.isRefill,
+                  child: 
                 Expanded(
                     flex: 2,
                     child: Container(
@@ -261,7 +263,7 @@ class ProductSaleCardState extends State<ProductSaleCard> {
                         child: AutoSizeText(
                           "Stock: ${widget.productCurrent.stock - widget.productCurrent.number}",
                           style: TextStyles.white15Itw,
-                        ))),
+                        )))),
                 Expanded(
                   flex: 4,
                   child: Container(
@@ -300,7 +302,7 @@ class ProductSaleCardState extends State<ProductSaleCard> {
                       fit: BoxFit.contain,
                     ),
                   ),
-            widget.productCurrent.number > 0
+            widget.productCurrent.number > 0 && !widget.isRefill
                 ? Align(
                     alignment: Alignment.topRight,
                     child: Container(
@@ -376,6 +378,11 @@ class ProductSaleCardState extends State<ProductSaleCard> {
 
                                 //BOTON DE MAS
                                 GestureDetector(
+                                    onTap: widget.productCurrent.stock!=widget.productCurrent.number||widget.productCurrent.type==2? () {
+                                      setState(()=>
+                                        widget.update(
+                                            widget.productCurrent, true));
+                                    }:(){},
                                     child: Container(
                                         padding: const EdgeInsets.fromLTRB(
                                             22, 12, 22, 12),
@@ -383,12 +390,7 @@ class ProductSaleCardState extends State<ProductSaleCard> {
                                           FontAwesomeIcons.plus,
                                           size: 35,
                                           color: ColorsJunghanns.greenJ,
-                                        )),
-                                    onTap: () {
-                                      setState(()=>
-                                        widget.update(
-                                            widget.productCurrent, true));
-                                    })
+                                        )))
                               ],
                             )),
 

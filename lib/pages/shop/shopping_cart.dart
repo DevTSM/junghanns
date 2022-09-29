@@ -89,6 +89,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
         setState(() {
           isLoading = true;
         });
+        if(widget.authList.isEmpty){
         await getStockList(prefs.idRouteD).then((answer) {
           setState(() {
             isLoading = false;
@@ -106,7 +107,6 @@ class _ShoppingCartState extends State<ShoppingCart> {
             answer.body.map((e) {
               productsList.add(ProductModel.fromServiceProduct(e));
             }).toList();
-            //
             if (productsList.isNotEmpty) {
               productsList
                   .sort(((a, b) => b.rank.length.compareTo(a.rank.length)));
@@ -115,6 +115,12 @@ class _ShoppingCartState extends State<ShoppingCart> {
           }
           getDataPayment();
         });
+        }else{
+          setState(() {
+            productsList.add(ProductModel.fromProduct(widget.authList.first.product));
+            isLoading=false;
+          });
+        }
       } else {
         dynamic data = jsonDecode(prefs.stock);
         data.map((e) {
@@ -576,7 +582,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
             alignment: Alignment.center,
             padding: const EdgeInsets.only(right: 15),
             child: Text(
-              "${urlBase != ipProd ? "Beta " : ""}V$version",
+              "${urlBase == ipStage ? "Beta " : ""}V$version",
               style: TextStyles.blue18SemiBoldIt,
             ),
           ),

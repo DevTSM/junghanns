@@ -32,13 +32,24 @@ class ProductModel {
         isSelect: false,
         rank: "");
   }
-
+  factory ProductModel.fromProduct(ProductModel productCurrent) {
+    return ProductModel(
+        idProduct: productCurrent.idProduct,
+        description: productCurrent.description,
+        price: productCurrent.price,
+        stock: productCurrent.stock,
+        number: 0,
+        img: productCurrent.img,
+        type: productCurrent.type,
+        isSelect: false,
+        rank: productCurrent.rank);
+  }
   factory ProductModel.fromServiceProduct(Map<String, dynamic> data) {
     return ProductModel(
         idProduct: data["idProductoServicio"] ?? 0,
         description: data["descripcion"],
         price: double.parse((data["precio"] ?? "0").toString()),
-        stock: data["stock"],
+        stock: int.parse((data["stock"]??(data["cantidad"] ?? 0)).toString()),
         number: 0,
         img: data["url"],
         type: 1,
@@ -55,6 +66,18 @@ class ProductModel {
         idProduct: data["idProductoServicio"] ?? 0,
         description: data["descripcion"],
         price: double.parse((data["precio"] ?? "0").toString()),
+        stock: 0,
+        number: 0,
+        img: "assets/icons/refill1.png",
+        type: 2,
+        isSelect: false,
+        rank: "");
+  }
+  factory ProductModel.fromServiceRefillDatabase(Map<String, dynamic> data) {
+    return ProductModel(
+        idProduct: data["idProduct"] ?? 0,
+        description: data["description"],
+        price: data["precio"],
         stock: 0,
         number: 0,
         img: "assets/icons/refill1.png",

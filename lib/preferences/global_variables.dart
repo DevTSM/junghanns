@@ -13,7 +13,7 @@ String apiKeyStage = "76b2f0a4784e47d5d3ff89b1fd110984ea9f02bf";
 String clientSecretStage = "baea25384fe9c8e5140aa49e72a6a841";
 String version = "1.1.4";
 
-String urlBase = ipProd;
-//String urlBase = ipCDMX;
+//String urlBase = ipStage;
+String urlBase = ipCDMX;
 String apiKey = apiKeyStage;
 String clientSecret = clientSecretStage;

@@ -13,6 +13,8 @@ class ProviderJunghanns with ChangeNotifier {
   String _labelAsync="Sincronizando datos, no cierres la app";
   int _connectionStatus = 100;
   double _downloadRate = 0;
+  int _totalAsync=1;
+  int _currentAsync=0;
   bool get permission=> _permission;
   bool _permission=true;
   initShopping(CustomerModel customerCurrent){
@@ -49,6 +51,19 @@ class ProviderJunghanns with ChangeNotifier {
     _permission=permissionCurrent;
     notifyListeners();
   }
+  set totalAsync(int totalAsync){
+    _totalAsync=totalAsync;
+    notifyListeners();
+  }
+  int get totalAsync=> _totalAsync;
+
+  set currentAsync(int currentAsync){
+    _currentAsync=currentAsync;
+    notifyListeners();
+  }
+  int get currentAsync=> _currentAsync;
+
+
   int get connectionStatus=> _connectionStatus;
 
   set downloadRate(double downloadRate){

@@ -308,7 +308,7 @@ class _LoginState extends State<Login> {
       alignment: Alignment.topRight,
       margin: const EdgeInsets.only(top: 44, right: 12),
       child: Text(
-        "${urlBase != ipProd ? "Beta " : ""}V$version",
+        "${urlBase == ipStage ? "Beta " : ""}V$version",
         style: TextStyles.blue18SemiBoldIt,
       ),
     );

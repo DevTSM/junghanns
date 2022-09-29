@@ -145,7 +145,6 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
             .map((e) => authList.add(AuthorizationModel.fromService(e)))
             .toList();
         if (authList.isNotEmpty) {
-          log("Descripción: ${authList.first.description}");
         }
       }
     });

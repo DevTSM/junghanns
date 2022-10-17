@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:junghanns/components/modal/logout.dart';
 import 'package:junghanns/preferences/global_variables.dart';
+import 'package:junghanns/provider/provider.dart';
 import 'package:junghanns/styles/color.dart';
 import 'package:junghanns/styles/text.dart';
 
-PreferredSizeWidget appBarJunghanns(BuildContext context, Size size) {
+PreferredSizeWidget appBarJunghanns(BuildContext context, Size size,ProviderJunghanns provider) {
   return AppBar(
     backgroundColor: ColorsJunghanns.whiteJ,
     systemOverlayStyle: const SystemUiOverlayStyle(
@@ -18,7 +20,19 @@ PreferredSizeWidget appBarJunghanns(BuildContext context, Size size) {
           child: Image.asset("assets/icons/menu.png")),
       onTap: () {},
     ),
-    actions: [
+    actions: provider.asyncProcess?[
+      Container(
+        alignment: Alignment.center,
+        padding: const EdgeInsets.only(right: 15),
+        child: Text(
+          "${urlBase == ipStage ? "Beta " : ""}V$version Sincronizando",
+          style: TextStyles.blue18SemiBoldIt,
+        ),
+      ),
+      const SpinKitCircle(
+        color: ColorsJunghanns.blue,
+      )
+    ]:[
       Container(
         alignment: Alignment.center,
         padding: const EdgeInsets.only(right: 15),

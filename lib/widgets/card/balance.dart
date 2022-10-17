@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:junghanns/models/sale.dart';
 import 'package:junghanns/styles/text.dart';
 
 Widget itemBalance(String image, String label, double count,double width) {
+  NumberFormat formatMoney = NumberFormat("\$#,##0.00");
     return Card(
       elevation: 1,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.0)),
@@ -22,7 +24,7 @@ Widget itemBalance(String image, String label, double count,double width) {
           height: 5,
         ),
         Text(
-          checkDouble(count.toString()),
+          formatMoney.format(count),
           style: TextStyles.blue27_7,
         ),
         Text(label, style: TextStyles.grey14_7),

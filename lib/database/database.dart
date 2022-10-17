@@ -102,10 +102,12 @@ class DataBase {
     final db = await initializeDB();
     db.delete('stopOff');
   }
+  
   deleteSale() async {
     final db = await initializeDB();
     db.delete('sale');
   }
+  
   deleteRefill() async {
     final db = await initializeDB();
     db.delete('refill');
@@ -135,10 +137,13 @@ class DataBase {
     final List<Map<String, Object?>> queryResult = await db.query('stop');
     return queryResult.map((e) => StopModel.fromDatabase(e)).toList();
   }
+  
   Future<List<ProductModel>> retrieveRefill() async {
     final Database db = await initializeDB();
     final List<Map<String, Object?>> queryResult = await db.query('refill');
-    return queryResult.map((e) => ProductModel.fromServiceRefillDatabase(e)).toList();
+    return queryResult.map((e){
+      
+      return ProductModel.fromServiceRefillDatabase(e);}).toList();
   }
 
   Future<List<Map<String, dynamic>>> retrieveStopOff() async {

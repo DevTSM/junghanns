@@ -10,6 +10,7 @@ import 'package:junghanns/models/shopping_basket.dart';
 class ProviderJunghanns with ChangeNotifier {
   BasketModel basketCurrent=BasketModel.fromState();
   List<CustomerModel> _customerList=[];
+  String _path="";
   String _labelAsync="Sincronizando datos, no cierres la app";
   int _connectionStatus = 100;
   double _downloadRate = 0;
@@ -17,6 +18,7 @@ class ProviderJunghanns with ChangeNotifier {
   int _currentAsync=0;
   bool get permission=> _permission;
   bool _permission=true;
+  bool _asyncProcess=false;
   initShopping(CustomerModel customerCurrent){
     basketCurrent=BasketModel.fromInit(customerCurrent);
   }
@@ -47,6 +49,18 @@ class ProviderJunghanns with ChangeNotifier {
     }
     notifyListeners();
   }
+  
+  bool get asyncProcess=> _asyncProcess;
+  
+  set asyncProcess(bool asyncProcess){
+    _asyncProcess=asyncProcess;
+    notifyListeners();
+  }
+  set path(String path){
+    _path=path;
+    notifyListeners();
+  }
+  String get path=>_path;
   set permission(bool permissionCurrent){
     _permission=permissionCurrent;
     notifyListeners();

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:developer';
 
 import 'package:auto_size_text/auto_size_text.dart';
@@ -221,10 +222,12 @@ class _LoginState extends State<Login> {
                     prefs.idProfileD =
                         int.parse((answer2.body["id_perfil"] ?? 0).toString());
                     prefs.nameUserD = answer2.body["nombre_usuario"] ?? "";
+
                     prefs.nameD = answer2.body["nombre"] ?? "";
                     prefs.idRouteD =
                         int.parse((answer2.body["id_ruta"] ?? 0).toString());
                     prefs.nameRouteD = answer2.body["nombre_ruta"] ?? "";
+
                     prefs.dayWorkD = answer2.body["dia_trabajo"] ?? "T";
                     prefs.dayWorkTextD =
                         answer2.body["dia_trabajo_texto"] ?? "TEST";
@@ -232,14 +235,25 @@ class _LoginState extends State<Login> {
                     log(prefs.nameD);
                     //-----------------------------------------
                     //Navigator.pop(context);
+
+                    prefs.credentials = jsonEncode({
+                      "user": userC.text,
+                      "pass": passC.text,
+                      "clientSecret": prefs.clientSecret,
+                      "token": prefs.token,
+                      "nameD": prefs.nameD,
+                      "idRouteD": prefs.idRouteD,
+                      "nameRouteD": prefs.nameRouteD
+                    });
                     setState(() {
                       isLoading = false;
                     });
                     Navigator.pushReplacement(
                         context,
                         MaterialPageRoute<void>(
-                            builder: (BuildContext context) =>
-                                Opening(isLogin: true,)));
+                            builder: (BuildContext context) => Opening(
+                                  isLogin: true,
+                                )));
                   }
                 });
               }
@@ -260,13 +274,38 @@ class _LoginState extends State<Login> {
         );
       }
     } else {
-      Fluttertoast.showToast(
+      
+      Map<String, dynamic> data = jsonDecode(prefs.credentials);
+      if ((data["user"] ?? "-1") == userC.text &&
+          (data["pass"] ?? "-1") == passC.text) {
+        prefs.clientSecret = data["clientSecret"] ?? "";
+        prefs.token = data["token"] ?? "";
+        prefs.nameD = data["nameD"] ?? "";
+        prefs.idRouteD = data["idRouteD"] ?? "";
+        prefs.nameRouteD = data["nameRouteD"] ?? "";
+        prefs.isLogged=true;
+        Fluttertoast.showToast(
         msg: "Sin conexión a internet",
         timeInSecForIosWeb: 2,
         toastLength: Toast.LENGTH_LONG,
         gravity: ToastGravity.TOP,
         webShowClose: true,
       );
+        Navigator.pushReplacement(
+            context,
+            MaterialPageRoute<void>(
+                builder: (BuildContext context) => Opening(
+                      isLogin: true,
+                    )));
+      }else{
+      Fluttertoast.showToast(
+        msg: "Los datos no coinciden.",
+        timeInSecForIosWeb: 2,
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.TOP,
+        webShowClose: true,
+      );
+      }
     }
   }
 

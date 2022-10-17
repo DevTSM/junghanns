@@ -55,7 +55,6 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
   late dynamic pickedImageFile;
   late List<ConfigModel> configList;
   late List<AuthorizationModel> authList;
-  late NumberFormat formatMoney = NumberFormat("\$#,##0.00");
   late Size size;
   late double dif;
   late bool isRange;
@@ -101,7 +100,6 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
             });
           }
           getMoney();
-          getAuth();
           setCurrentLocation();
           getHistory();
         });
@@ -135,6 +133,7 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
 
   getAuth() async {
     authList.clear();
+    if(provider.connectionStatus< 4){
     await getAuthorization(widget.customerCurrent.idClient, prefs.idRouteD)
         .then((answer) {
       if (answer.error) {
@@ -148,20 +147,7 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
         }
       }
     });
-  }
-
-  setCurrentLocation2() async {
-    // LocationPermission permission = await Geolocator.requestPermission();
-    // if (permission == LocationPermission.whileInUse ||
-    //     permission == LocationPermission.always) {
-    //   provider.permission = true;
-    //   Position currentLocation = await Geolocator.getCurrentPosition();
-    //   funCheckDistance(currentLocation);
-    // } else {
-    //   print({"permission": permission.toString()});
-    //   provider.permission = false;
-    //   isRange = false;
-    // }
+    }
   }
   setCurrentLocation() async {
     try{
@@ -223,7 +209,7 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
               widget.customerCurrent.lat,
               widget.customerCurrent.lng,
               currentLocation.latitude,
-              currentLocation.longitude);
+              currentLocation.longitude)*1000;
           isRange = dif <= configList.last.valor;
         });
       }
@@ -234,7 +220,7 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
               widget.customerCurrent.lat,
               widget.customerCurrent.lng,
               currentLocation.latitude,
-              currentLocation.longitude);
+              currentLocation.longitude)*1000;
           isRange = dif <= (widget.customerCurrent.configList.isNotEmpty?widget.customerCurrent.configList.first.valor:0);
         });
     }
@@ -320,15 +306,19 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
         });
   }
   
-  navigatorShopping() {
+  navigatorShopping() async {
     Navigator.pop(context);
-    Navigator.push(
+    try{
+  Navigator.push(
         context,
         MaterialPageRoute<void>(
             builder: (BuildContext context) => ShoppingCart(
                   customerCurrent: widget.customerCurrent,
                   authList: authList.isEmpty ? authList : [authList.first],
-                )));
+                ))).then((value)=>provider.connectionStatus<4? getMoney():null);
+    }catch(e){
+      log(e.toString());
+    }
   }
 
   navigatorShoppingRefill() {
@@ -338,7 +328,7 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
         MaterialPageRoute<void>(
             builder: (BuildContext context) => ShoppingCartRefill(
                   customerCurrent: widget.customerCurrent,
-                )));
+                ))).then((value) => provider.connectionStatus<4? getMoney():null);
   }
 
   funCheckDistanceSale(bool isSale) async {
@@ -346,6 +336,7 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
       isLoading=true;
     });
     await setCurrentLocation();
+    await getAuth();
     setState(() {
       isLoading=false;
     });
@@ -427,6 +418,7 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
       log("Go Maps Yes");
       var map = await MapLauncher.isMapAvailable(MapType.google);
       if (map ?? false) {
+        log(" lat ->${widget.customerCurrent.lat} long ->${widget.customerCurrent.lng}");
         await MapLauncher.showMarker(
           mapType: MapType.google,
           coords:

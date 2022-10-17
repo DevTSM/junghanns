@@ -15,6 +15,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
   await prefs.initPrefs();
+  
   HttpOverrides.global = new MyHttpOverrides();
   await handler.initializeDB();
   runApp(const MyApp());

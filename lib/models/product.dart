@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 class ProductModel {
   int idProduct;
   String description;
@@ -46,7 +48,7 @@ class ProductModel {
   }
   factory ProductModel.fromServiceProduct(Map<String, dynamic> data) {
     return ProductModel(
-        idProduct: data["idProductoServicio"] ?? 0,
+        idProduct: int.parse((data["idProductoServicio"] ?? 0).toString()),
         description: data["descripcion"],
         price: double.parse((data["precio"] ?? "0").toString()),
         stock: int.parse((data["stock"]??(data["cantidad"] ?? 0)).toString()),
@@ -77,7 +79,7 @@ class ProductModel {
     return ProductModel(
         idProduct: data["idProduct"] ?? 0,
         description: data["description"],
-        price: data["precio"],
+        price: data["price"]??-1,
         stock: 0,
         number: 0,
         img: "assets/icons/refill1.png",

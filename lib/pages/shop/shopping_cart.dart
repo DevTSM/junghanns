@@ -113,7 +113,6 @@ class _ShoppingCartState extends State<ShoppingCart> {
             }
             checkPriceCvsPriceS();
           }
-          getDataPayment();
         });
         }else{
           setState(() {
@@ -121,6 +120,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
             isLoading=false;
           });
         }
+        getDataPayment();
       } else {
         dynamic data = jsonDecode(prefs.stock);
         data.map((e) {
@@ -165,7 +165,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
         );
       } else {
         List<MethodPayment> paymentsList = [];
-        if (widget.authList.isNotEmpty && widget.authList.first.type == "C") {
+        if (widget.authList.isNotEmpty&&widget.authList.first.type == "C") {
           paymentsList.add(MethodPayment(
               wayToPay: "Credito",
               typeWayToPay: "C",
@@ -525,7 +525,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
           webShowClose: true,
         );
 
-        Navigator.pop(context);
+        Navigator.pop(context,true);
       }
     });
   }else{

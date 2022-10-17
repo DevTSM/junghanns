@@ -1,6 +1,7 @@
+// ignore_for_file: must_be_immutable
+
 import 'dart:async';
 import 'dart:developer';
-import 'package:junghanns/models/refill.dart';
 import 'package:junghanns/widgets/card/product.dart';
 import 'package:location/location.dart';
 import 'package:flutter/material.dart';
@@ -23,7 +24,6 @@ import 'package:junghanns/styles/decoration.dart';
 import 'package:junghanns/styles/text.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:provider/provider.dart';
-import '../../models/method_payment.dart';
 
 class ShoppingCartRefill extends StatefulWidget {
   CustomerModel customerCurrent;
@@ -89,13 +89,17 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
                 .toList();
           }
         });
+      }else{
+      List<ProductModel> data=await handler.retrieveRefill();
+      setState(() {
+        data.map((e) => refillList.add(e)).toList();
+      });
       }
     });
   }
   
   showConfirmSale() {
-    if (provider.connectionStatus < 4) {
-      showDialog(
+    showDialog(
           context: context,
           builder: (BuildContext context) {
             return Center(
@@ -163,15 +167,6 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
               ),
             );
           });
-    } else {
-      Fluttertoast.showToast(
-        msg: "Sin conexión a internet",
-        timeInSecForIosWeb: 2,
-        toastLength: Toast.LENGTH_LONG,
-        gravity: ToastGravity.TOP,
-        webShowClose: true,
-      );
-    }
   }
 
   setCurrentLocation() async {
@@ -317,7 +312,7 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
           webShowClose: true,
         );
 
-        Navigator.pop(context);
+        Navigator.pop(context,true);
       }
     });
     }else{
@@ -428,8 +423,7 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
       margin: EdgeInsets.only(top: size.height * .22),
       padding: const EdgeInsets.only(left: 10, right: 10),
       width: double.infinity,
-      child: provider.connectionStatus < 4
-                    ?refillList.isEmpty
+      child: refillList.isEmpty
           ? Center(
               child: Text(
               "Sin recargas",
@@ -466,65 +460,6 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
                                   ),
                         childCount: refillList.length),
                   ),
-                )),
-                Visibility(
-                    visible: provider.basketCurrent.sales.isNotEmpty,
-                    child: Container(
-                        margin: const EdgeInsets.only(
-                            left: 15, right: 15, bottom: 30, top: 30),
-                        width: double.infinity,
-                        height: 40,
-                        alignment: Alignment.center,
-                        child: ButtonJunghanns(
-                          decoration: Decorations.blueBorder12,
-                          fun: () => showConfirmSale(),
-                          label: "Terminar venta",
-                          style: TextStyles.white17_5,
-                        )))
-              ],
-            ):Column(
-              children: [
-                const SizedBox(
-                  height: 20,
-                ),
-                Expanded(
-                    child: SizedBox(
-                  width: size.width,
-                  child: FutureBuilder(
-                    future: handler.retrieveRefill(),
-                    builder: (BuildContext context,
-                        AsyncSnapshot<List<ProductModel>> snapshot) {
-                      if (snapshot.hasData) {
-                        log("mira -------- ${snapshot.data!.length}");
-                        return GridView.custom(
-                    gridDelegate: SliverWovenGridDelegate.count(
-                      crossAxisCount: 2,
-                      mainAxisSpacing: 13,
-                      crossAxisSpacing: 13,
-                      pattern: [
-                        const WovenGridTile(.85),
-                        const WovenGridTile(.85),
-                      ],
-                    ),
-                    childrenDelegate: SliverChildBuilderDelegate(
-                        (context, index) => 
-                        ProductSaleCard(
-                          isRefill: true,
-                                    update: (ProductModel productCurrent,
-                                        bool isAdd) {
-                                      provider.updateProductShopping(
-                                          productCurrent, isAdd);
-                                      setState(() {});
-                                    },
-                                    productCurrent: snapshot.data![index],
-                                  ),
-                        childCount: snapshot.data?.length
-                        ),
-                  );}else{
-                    return Container(
-                      child: Text("Sin datos"),
-                    );
-                  }}),
                 )),
                 Visibility(
                     visible: provider.basketCurrent.sales.isNotEmpty,

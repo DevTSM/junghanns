@@ -3,7 +3,101 @@ import 'dart:developer';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:junghanns/models/answer.dart';
+import 'package:junghanns/models/authorization.dart';
 import 'package:junghanns/preferences/global_variables.dart';
+
+Future<Answer> getTokenKernel(String user, String cedis) async {
+  log("/AuthServices <getTokenKernel>");
+  try {
+    var responseAwait = await http.post (
+      Uri.parse("https://junghannskernel.com/token"),
+      headers: {
+        "Content-Type": "aplication/json",
+        "x-api-key": apiKey,
+      },
+      body: jsonEncode({
+    "telefono": user,
+    "cedis": cedis,
+    "app": "APP JUNGHANNS DELIVERY"
+})
+    );
+    log(responseAwait.body);
+    var response=jsonDecode(responseAwait.body);
+    if (response["code"] != null) {
+      log("/AuthServices <getTokenKernel> Successfull ${response.toString()}");
+      return Answer(body: response, message: "", error: false);
+    } else {
+      log("/AuthServices <getTokenKernel> Fail ${response.toString()}");
+      return Answer(body: response, message: response.toString(), error: true);
+    }
+  } catch (e) {
+    log("/AuthServices <getTokenKernel> Catch ${e.toString()}");
+    return Answer(body: e, message: e.toString(), error: true);
+  }
+}
+
+Future<Answer> tokenKernelActive(String token,double lat,double lng) async {
+  log("/AuthServices <tokenKernelActive>");
+  try {
+    var responseAwait = await http.put(
+      Uri.parse("https://junghannskernel.com/activacion"),
+      headers: {
+        HttpHeaders.contentTypeHeader:
+                      'application/json; charset=UTF-8',
+        "x-api-key": "4c190588c5f7dd27369308c1c1c4545924ddd02d",
+        "Authorization": "Bearer $token"
+      },
+      body: jsonEncode({
+    "lat" : "19.30008262123766",
+    "lon": "-99.11182636452587"
+})
+    );
+    log("lat: $lat,lon: $lng,");
+    log(responseAwait.body);
+    var response=jsonDecode(responseAwait.body);
+    if (responseAwait.statusCode==200) {
+      log("/AuthServices <tokenKernelActive> Successfull");
+      return Answer(body: response, message: "", error: false);
+    } else {
+      log("/AuthServices <tokenKernelActive> Fail ${response.toString()}");
+      return Answer(body: response, message: response.toString(), error: true);
+    }
+  } catch (e) {
+    log("/AuthServices <tokenKernelActive> Catch ${e.toString()}");
+    return Answer(body: e, message: e.toString(), error: true);
+  }
+}
+
+Future<Answer> validateOTP(String token,String code,double lat,double lng) async {
+  log("/AuthServices <validateOTP>");
+  try {
+    var responseAwait = await http.put(
+      Uri.parse("https://junghannskernel.com/otp"),
+      headers: {
+        "Content-Type": "aplication/json",
+        "x-api-key": apiKey,
+        "Authorization": "Bearer $token"
+      },
+      body: jsonEncode({
+        "code":code,
+    "lat": lat.toString(),
+    "lon": lng.toString(),
+})
+    );
+    log(responseAwait.body);
+    var response=jsonDecode(responseAwait.body);
+    if (responseAwait.statusCode==200) {
+      log("/AuthServices <validateOTP> Successfull");
+      return Answer(body: response, message: "", error: false);
+    } else {
+      log("/AuthServices <validateOTP> Fail ${response.toString()}");
+      return Answer(body: response, message: response.toString(), error: true);
+    }
+  } catch (e) {
+    log("/AuthServices <validateOTP> Catch ${e.toString()}");
+    return Answer(body: e, message: e.toString(), error: true);
+  }
+}
 
 Future<Answer> getClientSecret(String user, String password) async {
   log("/AuthServices <getClientSecret>");

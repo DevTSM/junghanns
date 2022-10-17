@@ -1,4 +1,4 @@
-package com.example.junghanns
+package com.devts.junghanns
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:junghanns/database/async.dart';
+import 'package:junghanns/pages/auth/get_branch.dart';
 import 'package:junghanns/pages/home/home_principal.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/provider/provider.dart';
@@ -13,6 +14,7 @@ import 'package:junghanns/services/store.dart';
 import 'package:junghanns/styles/color.dart';
 import 'package:linear_progress_bar/linear_progress_bar.dart';
 import 'package:provider/provider.dart';
+import 'package:sqflite/sqflite.dart';
 
 import 'auth/login.dart';
 
@@ -35,6 +37,7 @@ class _OpeningState extends State<Opening> {
     super.initState();
     _connectivity = Connectivity();
     isAsync = false;
+    
     log("token de acceso =====> ${prefs.token}");
     if (prefs.version != version || urlBase != prefs.ipUrl) {
       prefs.prefs!.clear();
@@ -49,12 +52,11 @@ class _OpeningState extends State<Opening> {
     //validamos si ya se hizo la sincronizacion
     Timer(const Duration(milliseconds: 2000), () async {
       if (prefs.isLogged) {
-        if ((DateTime.now()
-                .difference(DateTime.parse(prefs.asyncLast != ""
+        DateTime dateLast=DateTime.parse(prefs.asyncLast != ""
                     ? prefs.asyncLast
-                    : DateTime(2017, 9, 7, 17, 30).toString()))
-                .inDays >
-            1)||widget.isLogin) {
+                    : DateTime(2017, 9, 7, 17, 30).toString());
+       // if (DateTime.now().day!=dateLast.day||DateTime.now().month!=dateLast.month|| prefs.isAsyncCurrent) {
+          if (false) {
           setState(() {
             isAsync = true;
           });
@@ -111,6 +113,12 @@ class _OpeningState extends State<Opening> {
       return Future.value(null);
     }
     provider.connectionStatus = result.index;
+    provider.path=await getDatabasesPath();
+    // parche para queretaro
+  prefs.urlBase=ipProd;
+    log("url base ###############${prefs.urlBase}");
+    
+    if(prefs.urlBase!=""){
     if (result.index < 4) {
       asyncDB();
     }else{
@@ -128,6 +136,13 @@ class _OpeningState extends State<Opening> {
               );
       }
     }
+  }else{
+    Navigator.pushReplacement<void, void>(
+                context,
+                MaterialPageRoute<void>(
+                    builder: (BuildContext context) => const GetBranch()),
+              );
+  }
   }
 
   setDataStops(Map<String, dynamic> data) async {
@@ -152,14 +167,11 @@ class _OpeningState extends State<Opening> {
   Future<void> _updateConnectionStatus(ConnectivityResult result) async {
     provider.connectionStatus = result.index;
     if (result.index != 4 && prefs.dataStop) {
+      provider.asyncProcess=true;
       List<Map<String, dynamic>> dataNStops = [];
       List<Map<String, dynamic>> dataList =
           await handler.retrieveStopOff();
-      List.generate(dataList.length, (i) {
-        dataNStops.add(dataList[i]);
-      });
       for(var e in dataList){
-        log(e.toString());
       Map<String,dynamic> data={
         "id_cliente": e["idCustomer"].toString(),
             "id_parada": e["idStop"],
@@ -175,11 +187,13 @@ class _OpeningState extends State<Opening> {
             }
           });
       }
+      provider.asyncProcess=false;
       handler.deleteStopOff().then((element){
         prefs.dataStop=false;
       });
     }
     if (result.index != 4 && prefs.dataSale) {
+      provider.asyncProcess=true;
       List<Map<String, dynamic>> dataNSale = [];
       List<Map<String, dynamic>> dataList =
           await handler.retrieveSales();
@@ -207,6 +221,7 @@ class _OpeningState extends State<Opening> {
             }
           });
       }
+      provider.asyncProcess=false;
       handler.deleteSale().then((element){
         prefs.dataSale=false;
       });
@@ -241,11 +256,6 @@ class _OpeningState extends State<Opening> {
                 visible: isAsync,
                 child: const SizedBox(
                   height: 10,
-                )),
-            Visibility(
-                visible: isAsync,
-                child: const SpinKitFadingCircle(
-                  color: ColorsJunghanns.blue,
                 )),
             Visibility(
                 visible: isAsync,

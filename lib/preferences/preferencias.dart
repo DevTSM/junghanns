@@ -15,6 +15,21 @@ class PreferenciasUsuario {
   initPrefs() async {
     prefs = await SharedPreferences.getInstance();
   }
+  String get urlBase {
+    return prefs!.getString("urlBase") ?? "";
+  }
+
+  set urlBase(String urlBase) {
+    prefs!.setString("urlBase", urlBase);
+  }
+  
+  String get credentials {
+    return prefs!.getString("credentials") ?? "";
+  }
+
+  set credentials(String credentials) {
+    prefs!.setString("credentials", credentials);
+  }
   String get stock {
     return prefs!.getString("stock") ?? "";
   }
@@ -61,6 +76,13 @@ class PreferenciasUsuario {
 
   set asyncLast(String asyncLast) {
     prefs!.setString("asyncLast", asyncLast);
+  }
+  bool get isAsyncCurrent {
+    return prefs!.getBool("isAsyncCurrent") ?? true;
+  }
+
+  set isAsyncCurrent(bool isAsyncCurrent) {
+    prefs!.setBool("isAsyncCurrent", isAsyncCurrent);
   }
 
   bool get isLogged {

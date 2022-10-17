@@ -159,7 +159,7 @@ class CustomerModel {
         idRoute: data["idRuta"] ?? 0,
         type: type,
         lat: double.parse((data["latitud"]??"0") != "" ? (data["latitud"]??"0").replaceAll(",", "") : "0"),
-        lng: double.parse((data["longitud"]??"0") != "" ? (data["latitud"]??"0").replaceAll(",", ""):"0"),
+        lng: double.parse((data["longitud"]??"0") != "" ? (data["longitud"]??"0").replaceAll(",", ""):"0"),
         priceLiquid: double.parse((data["precioLiquido"] ?? "0").toString()),
         byCollect: double.parse((data["porCobrar"] ?? 0).toString()),
         purse: double.parse((data["monedero"] ?? 0).toString()),

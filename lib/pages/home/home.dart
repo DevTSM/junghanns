@@ -122,8 +122,8 @@ class _HomeState extends State<Home> {
         padding:
             const EdgeInsets.only(left: 30, right: 30, top: 10, bottom: 10),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text(
-            "Bienvenido",
+          Text(
+            "Bienvenido ${provider.path}",
             style: TextStyles.green22_4,
           ),
           Text(

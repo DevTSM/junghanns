@@ -7,6 +7,8 @@ import 'package:junghanns/pages/home/new_customer.dart';
 import 'package:junghanns/pages/home/routes.dart';
 import 'package:junghanns/pages/home/second.dart';
 import 'package:junghanns/pages/home/specials.dart';
+import 'package:junghanns/provider/provider.dart';
+import 'package:provider/provider.dart';
 
 const List<Widget> pages = [
   Home(),
@@ -27,6 +29,7 @@ class HomePrincipal extends StatefulWidget {
 
 class _HomePrincipalState extends State<HomePrincipal> {
   late Size size;
+  late ProviderJunghanns provider;
   late int indexCurrent;
   @override
   void initState() {
@@ -49,9 +52,10 @@ class _HomePrincipalState extends State<HomePrincipal> {
   Widget build(BuildContext context) {
     setState(() {
       size = MediaQuery.of(context).size;
+       provider = Provider.of<ProviderJunghanns>(context);
     });
     return Scaffold(
-      appBar: appBarJunghanns(context, size),
+      appBar: appBarJunghanns(context, size,provider),
       body: pages[indexCurrent],
       bottomNavigationBar: bottomBar(setIndexCurrent, indexCurrent),
     );

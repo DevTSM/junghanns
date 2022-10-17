@@ -15,6 +15,7 @@ class Async {
   Async({required this.provider});
   Future<bool>init() async {
     provider.labelAsync="Sincronizando datos, no cierres la app.";
+    prefs.isAsyncCurrent=true;
    return  await handler.deleteTable().then((value) async {
     provider.labelAsync="Limpiando base de datos";
     provider.labelAsync="Sincronizando servicios especiales";
@@ -29,6 +30,7 @@ class Async {
               return getDataStops().then((value5){
                 provider.labelAsync="Sincronizando recargas";
                 return getDataRefill().then((value6){
+                  prefs.isAsyncCurrent=false;
                   return true;
                 });
               });

@@ -22,6 +22,13 @@ class PreferenciasUsuario {
   set urlBase(String urlBase) {
     prefs!.setString("urlBase", urlBase);
   }
+  String get labelCedis {
+    return prefs!.getString("labelCedis") ?? "";
+  }
+
+  set labelCedis(String labelCedis) {
+    prefs!.setString("labelCedis", labelCedis);
+  }
   
   String get credentials {
     return prefs!.getString("credentials") ?? "";

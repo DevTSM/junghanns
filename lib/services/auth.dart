@@ -74,8 +74,9 @@ Future<Answer> validateOTP(String token,String code,double lat,double lng) async
     var responseAwait = await http.put(
       Uri.parse("https://junghannskernel.com/otp"),
       headers: {
-        "Content-Type": "aplication/json",
-        "x-api-key": apiKey,
+        HttpHeaders.contentTypeHeader:
+                      'application/json; charset=UTF-8',
+        "x-api-key": "4c190588c5f7dd27369308c1c1c4545924ddd02d",
         "Authorization": "Bearer $token"
       },
       body: jsonEncode({

@@ -115,8 +115,8 @@ class _OpeningState extends State<Opening> {
     provider.connectionStatus = result.index;
     provider.path=await getDatabasesPath();
     // parche para queretaro
-  prefs.urlBase=ipProd;
-    log("url base ###############${prefs.urlBase}");
+  // prefs.urlBase=ipStage;
+  //   log("url base ###############${prefs.urlBase}");
     
     if(prefs.urlBase!=""){
     if (result.index < 4) {

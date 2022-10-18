@@ -25,7 +25,7 @@ PreferredSizeWidget appBarJunghanns(BuildContext context, Size size,ProviderJung
         alignment: Alignment.center,
         padding: const EdgeInsets.only(right: 15),
         child: Text(
-          "${urlBase == ipStage ? "Beta " : ""}V$version Sincronizando",
+          "${prefs.labelCedis}V$version Sincronizando",
           style: TextStyles.blue18SemiBoldIt,
         ),
       ),
@@ -37,7 +37,7 @@ PreferredSizeWidget appBarJunghanns(BuildContext context, Size size,ProviderJung
         alignment: Alignment.center,
         padding: const EdgeInsets.only(right: 15),
         child: Text(
-          "${urlBase == ipStage ? "Beta " : ""}V$version",
+          "${prefs.labelCedis} V$version",
           style: TextStyles.blue18SemiBoldIt,
         ),
       ),

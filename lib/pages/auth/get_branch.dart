@@ -42,6 +42,7 @@ class _GetBranchState extends State<GetBranch> {
     super.initState();
     pinC = TextEditingController();
     token = TextEditingController();
+    currentLocation=LocationData.fromMap({});
     isLoading=false;
     isValitedOtp=false;
   }
@@ -68,6 +69,8 @@ class _GetBranchState extends State<GetBranch> {
       }
     } else {
       provider.permission = false;
+      await locationInstance.requestPermission().then((value) => setCurrentLocation());
+      
     }
     } catch (e) {
           log("***ERROR -- $e");
@@ -86,8 +89,8 @@ class _GetBranchState extends State<GetBranch> {
     setState(() {
       isLoading=true;
     });
-        await setCurrentLocation();
-        await tokenKernelActive(token.text, currentLocation.latitude!, currentLocation.longitude!).then((answer){
+        await setCurrentLocation().then((value) async {
+          await tokenKernelActive(token.text, currentLocation.latitude!, currentLocation.longitude!).then((answer){
           setState(() {
             isLoading=false;
           });
@@ -105,10 +108,18 @@ class _GetBranchState extends State<GetBranch> {
             });
           }
         });
+        });
+        
   }
 
   funValidateOtp() async {
+    setState(() {
+      isLoading=true;
+    });
     await validateOTP(token.text,pinC.text,currentLocation.latitude!, currentLocation.longitude!).then((answer){
+      setState(() {
+      isLoading=false;
+    });
       if(answer.error){
         Fluttertoast.showToast(
           msg: answer.message,
@@ -119,6 +130,7 @@ class _GetBranchState extends State<GetBranch> {
         );
       }else{
         prefs.urlBase=answer.body["endpoint"];
+        prefs.labelCedis=answer.body["claveCedis"];
         Navigator.pushReplacement<void, void>(
                 context,
                 MaterialPageRoute<void>(
@@ -143,7 +155,7 @@ class _GetBranchState extends State<GetBranch> {
               ),
               fit: BoxFit.cover),
         ),
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(15),
           child: Column(
             children: [
@@ -178,7 +190,7 @@ class _GetBranchState extends State<GetBranch> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          textField(token, "Codigo", Image.asset(
+          textField(token, "Código", Image.asset(
                     "assets/icons/user.png"), false),
                     const SizedBox(height: 15,),
           button(),
@@ -280,7 +292,7 @@ class _GetBranchState extends State<GetBranch> {
                 hasTextBorderColor: ColorsJunghanns.blueJ,
                 onDone: (value) {
                   log("Fun OTP");
-                  //funCheckOTP(value);
+                  funValidateOtp();
 
                 },
               ),
@@ -292,7 +304,7 @@ class _GetBranchState extends State<GetBranch> {
                         child: ButtonJunghanns(
                             fun: () {
                               log("RESEND CODE");
-                              //funResendCode();
+                              fungetToken();
                             },
                             decoration: Decorations.blueJ2Card,
                             style: TextStyles.white15R,

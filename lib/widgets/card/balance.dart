@@ -1,3 +1,4 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:junghanns/models/sale.dart';
@@ -17,17 +18,24 @@ Widget itemBalance(String image, String label, double count,double width) {
         const SizedBox(
           height: 10,
         ),
-        Expanded(child:Image.asset(
+        Image.asset(
           "assets/icons/$image",
-        )),
+          width: (width)/7,
+          height: (width)/7,
+        ),
         const SizedBox(
           height: 5,
         ),
-        Text(
+        Expanded(
+          flex:2,
+          child: AutoSizeText(
           formatMoney.format(count),
           style: TextStyles.blue27_7,
-        ),
-        Text(label, style: TextStyles.grey14_7),
+          maxLines: 1,
+        )),
+        Expanded(
+          flex:1,
+          child:AutoSizeText(label, style: TextStyles.grey14_7)),
         const SizedBox(
           height: 10,
         ),

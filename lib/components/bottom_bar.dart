@@ -29,7 +29,7 @@ Widget bottomBar(Function setIndexCurrent, int indexCurrent,{BuildContext? conte
           width: 24,
           height: 24,
         ),
-        label: 'Especial',
+        label: 'Entregas',
       ),
       BottomNavigationBarItem(
         icon: Image.asset(
@@ -56,19 +56,6 @@ Widget bottomBar(Function setIndexCurrent, int indexCurrent,{BuildContext? conte
           height: 24,
         ),
         label: '2° Vuelta',
-      ),
-      BottomNavigationBarItem(
-        icon: Image.asset(
-          "assets/icons/menuOp5W.png",
-          width: 25,
-          height: 25,
-        ),
-        activeIcon: Image.asset(
-          "assets/icons/menuOp5B.png",
-          width: 24,
-          height: 24,
-        ),
-        label: 'LLamadas',
       ),
       BottomNavigationBarItem(
         icon: Image.asset(

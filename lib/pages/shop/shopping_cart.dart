@@ -2,6 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:junghanns/database/async.dart';
+import 'package:junghanns/services/customer.dart';
 import 'package:junghanns/widgets/card/product.dart';
 import 'package:location/location.dart';
 import 'package:flutter/cupertino.dart';
@@ -28,6 +31,7 @@ import 'package:junghanns/styles/decoration.dart';
 import 'package:junghanns/styles/text.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:provider/provider.dart';
+import 'package:speed_test_dart/speed_test_dart.dart';
 
 import '../../models/method_payment.dart';
 
@@ -53,7 +57,7 @@ class ShoppingCart extends StatefulWidget {
 
 class _ShoppingCartState extends State<ShoppingCart> {
   late Size size;
-  late List<ProductModel> productsList = [];
+  late List<ProductModel> productsList, productListOther;
   late bool isLoading, isRange;
   late List<ConfigModel> configList = [];
   late double distance;
@@ -64,32 +68,36 @@ class _ShoppingCartState extends State<ShoppingCart> {
   late String errFolio = "";
   late ProviderJunghanns provider;
   late double latSale, lngSale;
-
+  late bool isOtherProduct;
+  late int idLocal;
   @override
   void initState() {
     super.initState();
+    productsList = [];
+    productListOther = [];
     isLoading = false;
     isRange = false;
+    isOtherProduct = false;
     distance = 0;
     secWayToPay = SecondWayToPay(wayToPay: "", typeWayToPay: "", cost: 0);
     latSale = lngSale = 0;
-
+    idLocal=0;
     getDataProducts();
   }
+
   @override
-  void dispose(){
+  void dispose() {
     super.dispose();
     provider.initShopping(CustomerModel.fromState());
   }
 
   getDataProducts() async {
     Timer(const Duration(milliseconds: 1000), () async {
-       provider.initShopping(widget.customerCurrent);
+      provider.initShopping(widget.customerCurrent);
       if (provider.connectionStatus < 4) {
         setState(() {
           isLoading = true;
         });
-        if(widget.authList.isEmpty){
         await getStockList(prefs.idRouteD).then((answer) {
           setState(() {
             isLoading = false;
@@ -105,37 +113,69 @@ class _ShoppingCartState extends State<ShoppingCart> {
           } else {
             prefs.stock = jsonEncode(answer.body);
             answer.body.map((e) {
-              productsList.add(ProductModel.fromServiceProduct(e));
+              if (widget.authList.isEmpty) {
+                productsList.add(ProductModel.fromServiceProduct(e));
+              } else {
+                if (ProductModel.fromServiceProduct(e).idProduct ==
+                    widget.authList.first.product.idProduct) {
+                  productsList.add(
+                      ProductModel.fromProduct(widget.authList.first.product));
+                }
+              }
             }).toList();
-            if (productsList.isNotEmpty) {
-              productsList
-                  .sort(((a, b) => b.rank.length.compareTo(a.rank.length)));
-            }
+            //TODO:pruebas
+            //     setState(() {
+            //   productsList=[ProductModel.fromState(10),ProductModel.fromState(0)];
+            //    log("${productsList.length} ---.-----.-------");
+            // });
+            setState(() {
+              productListOther =
+                  productsList.where((element) => element.rank == "").toList();
+            });
             checkPriceCvsPriceS();
           }
         });
-        }else{
-          setState(() {
-            productsList.add(ProductModel.fromProduct(widget.authList.first.product));
-            isLoading=false;
-          });
-        }
         getDataPayment();
       } else {
-        dynamic data = jsonDecode(prefs.stock);
-        data.map((e) {
-          productsList.add(ProductModel.fromServiceProduct(e));
-        }).toList();
-        //
-        if (productsList.isNotEmpty) {
+        try {
+          if (widget.authList.isEmpty) {
+            dynamic data = jsonDecode(prefs.stock);
+            data.map((e) {
+              productsList.add(ProductModel.fromServiceProduct(e));
+            }).toList();
+            //
+            if (productsList.isNotEmpty) {
+              setState(() {
+                productsList
+                    .sort(((a, b) => b.rank.length.compareTo(a.rank.length)));
+              });
+            }
+            checkPriceCvsPriceS();
+          } else {
+            setState(() {
+              productsList
+                  .add(ProductModel.fromProduct(widget.authList.first.product));
+              isLoading = false;
+            });
+          }
           setState(() {
-            productsList
-                .sort(((a, b) => b.rank.length.compareTo(a.rank.length)));
+            if (widget.customerCurrent.purse > 0) {
+              widget.customerCurrent.setPaymentAdd(MethodPayment(
+                  wayToPay: "Monedero",
+                  typeWayToPay: "M",
+                  type: "Monedero",
+                  idProductService: -1,
+                  description: "",
+                  number: -1));
+            } else {
+              widget.customerCurrent.setPayment(widget.customerCurrent.payment
+                  .where((element) => element.typeWayToPay != "M")
+                  .toList());
+            }
           });
+        } catch (e) {
+          log("-------- error $e");
         }
-        checkPriceCvsPriceS();
-        widget.customerCurrent
-            .setPayment([MethodPayment.fromWhitOutConnection()]);
       }
     });
   }
@@ -165,20 +205,34 @@ class _ShoppingCartState extends State<ShoppingCart> {
         );
       } else {
         List<MethodPayment> paymentsList = [];
-        if (widget.authList.isNotEmpty&&widget.authList.first.type == "C") {
-          paymentsList.add(MethodPayment(
-              wayToPay: "Credito",
-              typeWayToPay: "C",
-              type: "Atributo",
-              idProductService: -1,
-              description: "",
-              number: -1));
-              widget.customerCurrent.setPayment(paymentsList);
+        //Aqui se valida si existe la autorizacion para como dato para filtrar los metodos de pago
+        if (widget.authList.isNotEmpty) {
+          switch (widget.authList.first.type) {
+            case "C":
+              paymentsList.add(MethodPayment(
+                  wayToPay: "Credito",
+                  typeWayToPay: "C",
+                  type: "Atributo",
+                  idProductService: -1,
+                  description: "",
+                  number: -1));
+              break;
+            case "V":
+              answer.body.map((e) {
+                MethodPayment method = MethodPayment.fromService(e);
+                if (method.idAuth == widget.authList.first.idAuth) {
+                  paymentsList.add(method);
+                }
+              }).toList();
+              break;
+            default:
+          }
         } else {
+          //Se agregan todos lo metodos de pago si no hay autorizacion
           answer.body
               .map((e) => paymentsList.add(MethodPayment.fromService(e)))
               .toList();
-              log(widget.customerCurrent.purse.toString());
+          //Se agrega metodo de pago "Monedero"
           if (widget.customerCurrent.purse > 0) {
             paymentsList.add(MethodPayment(
                 wayToPay: "Monedero",
@@ -188,8 +242,10 @@ class _ShoppingCartState extends State<ShoppingCart> {
                 description: "",
                 number: -1));
           }
-          widget.customerCurrent.setPayment(paymentsList);
         }
+        setState(() {
+          widget.customerCurrent.setPayment(paymentsList);
+        });
       }
       setState(() {
         isLoading = false;
@@ -205,30 +261,30 @@ class _ShoppingCartState extends State<ShoppingCart> {
               actionScrollController: ScrollController(
                   initialScrollOffset: 1.0, keepScrollOffset: true),
               title: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text("Tipo de pago", style: TextStyles.blueJ22Bold),
-            const Text(
-              "Una vez registrado no podrá corregirlo",
-              style: TextStyles.redJ13,
-            )
-          ],
-        ),
-        GestureDetector(
-          child: const Icon(
-            Icons.clear_rounded,
-            color: ColorsJunghanns.red,
-            size: 30,
-          ),
-          onTap: () {
-            Navigator.pop(context);
-          },
-        )
-      ],
-    ),
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("Tipo de pago", style: TextStyles.blueJ22Bold),
+                      const Text(
+                        "Una vez registrado no podrá corregirlo",
+                        style: TextStyles.redJ13,
+                      )
+                    ],
+                  ),
+                  GestureDetector(
+                    child: const Icon(
+                      Icons.clear_rounded,
+                      color: ColorsJunghanns.red,
+                      size: 30,
+                    ),
+                    onTap: () {
+                      Navigator.pop(context);
+                    },
+                  )
+                ],
+              ),
               actions: widget.customerCurrent.payment.map((item) {
                 return showItem(item, FontAwesomeIcons.coins);
               }).toList());
@@ -237,33 +293,42 @@ class _ShoppingCartState extends State<ShoppingCart> {
 
   bool funCheckMethodPayment(MethodPayment methodCurrent) {
     //TODO: esta funcion no es util
-    bool isTrue = false;
-    log("TIPO DE PAGO - ${methodCurrent.wayToPay}");
-    switch (methodCurrent.wayToPay) {
-      case "Efectivo":
-        isTrue = true;
-        secWayToPay = SecondWayToPay(wayToPay: "", typeWayToPay: "", cost: 0);
-        break;
-      case "Credito":
-        isTrue = true;
-        secWayToPay = SecondWayToPay(wayToPay: "", typeWayToPay: "", cost: 0);
-        break;
-      case "Monedero":
-        if (provider.basketCurrent.totalPrice > widget.customerCurrent.purse) {
-          secWayToPay.wayToPay = "Efectivo";
-          secWayToPay.typeWayToPay = "E";
-          secWayToPay.cost =
-              provider.basketCurrent.totalPrice - widget.customerCurrent.purse;
-          isTrue = true;
-        } else {
-          isTrue = true;
-        }
-        break;
+    if (methodCurrent.wayToPay == "Monedero") {
+      if (provider.basketCurrent.totalPrice > widget.customerCurrent.purse) {
+        secWayToPay.wayToPay = "Efectivo";
+        secWayToPay.typeWayToPay = "E";
+        secWayToPay.cost =
+            provider.basketCurrent.totalPrice - widget.customerCurrent.purse;
+      }
+      return true;
+    } else {
+      secWayToPay = SecondWayToPay(wayToPay: "", typeWayToPay: "", cost: 0);
+      return true;
     }
-    log("ISTRUE - $isTrue");
-    return isTrue;
+
+    // switch (methodCurrent.wayToPay) {
+    //   case "Efectivo":
+    //     isTrue = true;
+    //     secWayToPay = SecondWayToPay(wayToPay: "", typeWayToPay: "", cost: 0);
+    //     break;
+    //   case "Credito":
+    //     isTrue = true;
+    //     secWayToPay = SecondWayToPay(wayToPay: "", typeWayToPay: "", cost: 0);
+    //     break;
+    //   case "Monedero":
+    //     if (provider.basketCurrent.totalPrice > widget.customerCurrent.purse) {
+    //       secWayToPay.wayToPay = "Efectivo";
+    //       secWayToPay.typeWayToPay = "E";
+    //       secWayToPay.cost =
+    //           provider.basketCurrent.totalPrice - widget.customerCurrent.purse;
+    //       isTrue = true;
+    //     } else {
+    //       isTrue = true;
+    //     }
+    //     break;
+    // }
   }
-  
+
   showConfirmSale(MethodPayment methodCurrent) {
     showDialog(
         context: context,
@@ -279,67 +344,305 @@ class _ShoppingCartState extends State<ShoppingCart> {
                 children: [
                   secWayToPay.wayToPay.isEmpty
                       ? DefaultTextStyle(
-            style: TextStyles.blueJ22Bold,
-            child: Text("¿Pago en ${methodCurrent.wayToPay} ?"))
+                          style: TextStyles.blueJ22Bold,
+                          child: Text("¿Pago en ${methodCurrent.wayToPay} ?"))
                       : textTwoWayToPay(
                           methodCurrent.wayToPay, widget.customerCurrent.purse),
-        DefaultTextStyle(
-            style: TextStyles.blueJ215R,
-            child: const Text(
-              "Deseas registrar la venta de:",
-            )),
-        DefaultTextStyle(
-            style: TextStyles.greenJ24Bold,
-            child: Text(formatMoney.format(provider.basketCurrent.totalPrice))),
-                  Material(child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          Expanded(child:ButtonJunghanns(fun: () async {
-                    Navigator.pop(context);
-                    //onLoading();
-                    setState(() {
-                      isLoading = true;
-                    });
-                    await setCurrentLocation();
-                    if (isRange) {
-                      if (latSale != 0 && lngSale != 0) {
-                        funSale(methodCurrent);
-                      } else {
-                        setState(() {
-                          isLoading = false;
-                        });
-                        Fluttertoast.showToast(
-                          msg: "Sin coordenadas ",
-                          timeInSecForIosWeb: 16,
-                          toastLength: Toast.LENGTH_LONG,
-                          gravity: ToastGravity.TOP,
-                          webShowClose: true,
-                        );
-                      }
-                    } else {
-                      setState(() {
-                        isLoading = false;
-                      });
-                    }
-                  }, decoration: Decorations.blueBorder12, style: TextStyles.white18SemiBoldIt, label: "Si")),
-                  const SizedBox(width: 25,),
-           Expanded(child:ButtonJunghanns(
-              fun:() {
-                    secWayToPay =
-                        SecondWayToPay(wayToPay: "", typeWayToPay: "", cost: 0);
-                    Navigator.pop(context);
-                  },
-                   decoration: Decorations.redCard, style: TextStyles.white18SemiBoldIt, label: 
-                   "No",)),
-        ],
-      ))
+                  DefaultTextStyle(
+                      style: TextStyles.blueJ215R,
+                      child: const Text(
+                        "Deseas registrar la venta de:",
+                      )),
+                  DefaultTextStyle(
+                      style: TextStyles.greenJ24Bold,
+                      child: Text(formatMoney
+                          .format(provider.basketCurrent.totalPrice))),
+                  Material(
+                      child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Expanded(
+                          child: ButtonJunghanns(
+                              fun: () async {
+                                Navigator.pop(context);
+                                //onLoading();
+                                setState(() {
+                                  isLoading = true;
+                                });
+                                await setCurrentLocation();
+                                if (isRange) {
+                                  if (latSale != 0 && lngSale != 0) {
+                                    //se valida si es comodato
+                                    if (methodCurrent.wayToPay == "Comodato") {
+                                      getPhonesCustomer(
+                                              widget.customerCurrent.idClient)
+                                          .then((answer) {
+                                        setState(() {
+                                          isLoading = false;
+                                        });
+                                        if (answer.error) {
+                                          Fluttertoast.showToast(
+                                            msg:
+                                                "Ocurrio un error al obtener lo numeros de telefono",
+                                            timeInSecForIosWeb: 4,
+                                            toastLength: Toast.LENGTH_LONG,
+                                            gravity: ToastGravity.TOP,
+                                            webShowClose: true,
+                                          );
+                                        } else {
+                                          widget.customerCurrent.setPhones(
+                                              (answer.body["telefonos"] ?? [])
+                                                  .map((e) => e["telefono"])
+                                                  .toList());
+                                          showComodato(methodCurrent);
+                                        }
+                                      });
+                                    } else {
+                                      funSale(methodCurrent);
+                                    }
+                                  } else {
+                                    setState(() {
+                                      isLoading = false;
+                                    });
+                                    Fluttertoast.showToast(
+                                      msg: "Sin coordenadas ",
+                                      timeInSecForIosWeb: 16,
+                                      toastLength: Toast.LENGTH_LONG,
+                                      gravity: ToastGravity.TOP,
+                                      webShowClose: true,
+                                    );
+                                  }
+                                } else {
+                                  setState(() {
+                                    isLoading = false;
+                                  });
+                                  Fluttertoast.showToast(
+                                    msg: "Fuera de rango",
+                                    timeInSecForIosWeb: 16,
+                                    toastLength: Toast.LENGTH_LONG,
+                                    gravity: ToastGravity.TOP,
+                                    webShowClose: true,
+                                  );
+                                }
+                              },
+                              decoration: Decorations.blueBorder12,
+                              style: TextStyles.white18SemiBoldIt,
+                              label: "Si")),
+                      const SizedBox(
+                        width: 25,
+                      ),
+                      Expanded(
+                          child: ButtonJunghanns(
+                        fun: () {
+                          secWayToPay = SecondWayToPay(
+                              wayToPay: "", typeWayToPay: "", cost: 0);
+                          Navigator.pop(context);
+                        },
+                        decoration: Decorations.redCard,
+                        style: TextStyles.white18SemiBoldIt,
+                        label: "No",
+                      )),
+                    ],
+                  ))
                 ],
               ),
             ),
           );
         });
   }
-  
+
+  showComodatoVerifi(int id, MethodPayment methodCurrent) {
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return Center(
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              width: size.width * .75,
+              decoration: Decorations.whiteS1Card,
+              child: Material(
+                  child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  DefaultTextStyle(
+                      style: TextStyles.blueJ22Bold,
+                      child: const Text("Esperando Autorizacion")),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  const SpinKitCircle(
+                    color: ColorsJunghanns.blue,
+                  ),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Expanded(
+                          child: ButtonJunghanns(
+                              fun: () async {
+                                Fluttertoast.showToast(
+                                  msg: "Verificando autorización",
+                                  timeInSecForIosWeb: 2,
+                                  toastLength: Toast.LENGTH_LONG,
+                                  gravity: ToastGravity.TOP,
+                                  webShowClose: true,
+                                );
+                                await getStatusComodato(id).then((answer) {
+                                  if (answer.error) {
+                                    Fluttertoast.showToast(
+                                      msg: "No se pudo verificar",
+                                      timeInSecForIosWeb: 2,
+                                      toastLength: Toast.LENGTH_LONG,
+                                      gravity: ToastGravity.TOP,
+                                      webShowClose: true,
+                                    );
+                                  } else {
+                                    Fluttertoast.showToast(
+                                      msg: "Autorización verificada",
+                                      timeInSecForIosWeb: 2,
+                                      toastLength: Toast.LENGTH_LONG,
+                                      gravity: ToastGravity.TOP,
+                                      webShowClose: true,
+                                    );
+                                    Navigator.pop(context);
+                                    funSale(methodCurrent);
+                                  }
+                                });
+                              },
+                              decoration: Decorations.blueBorder12,
+                              style: TextStyles.white18SemiBoldIt,
+                              label: "Verificar")),
+                      const SizedBox(
+                        width: 25,
+                      ),
+                      Expanded(
+                          child: ButtonJunghanns(
+                        fun: () {
+                          Navigator.pop(context);
+                        },
+                        decoration: Decorations.redCard,
+                        style: TextStyles.white18SemiBoldIt,
+                        label: "Cancelar",
+                      )),
+                    ],
+                  )
+                ],
+              )),
+            ),
+          );
+        });
+  }
+
+  showComodato(MethodPayment methodCurrent) {
+    String phoneCurrent = widget.customerCurrent.phones.isNotEmpty
+        ? widget.customerCurrent.phones.first
+        : "1234";
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return Center(
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              width: size.width * .75,
+              decoration: Decorations.whiteS1Card,
+              child: Material(
+                  child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  DefaultTextStyle(
+                      style: TextStyles.blueJ22Bold,
+                      child: const Text("¿Enviar confirmación a:?")),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text("* * * * * *"),
+                      const SizedBox(
+                        width: 10,
+                      ),
+                      DropdownButton<String>(
+                        value: phoneCurrent,
+                        icon: const Icon(Icons.arrow_drop_down_sharp),
+                        elevation: 5,
+                        onChanged: (String? value) {
+                          setState(() {
+                            phoneCurrent = value!;
+                          });
+                        },
+                        items: (widget.customerCurrent.phones.isNotEmpty
+                                ? widget.customerCurrent.phones
+                                    .map((e) => e.substring(6, e.length))
+                                    .toList()
+                                : ["1234"])
+                            .map<DropdownMenuItem<String>>((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
+                      )
+                    ],
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Expanded(
+                          child: ButtonJunghanns(
+                              fun: () async {
+                                Navigator.pop(context);
+                                setComodato(widget.customerCurrent.idClient,
+                                        latSale, lngSale, phoneCurrent)
+                                    .then((answer) {
+                                  if (answer.error) {
+                                    Fluttertoast.showToast(
+                                      msg:
+                                          "Ocurrio un error al enviar la solicitud",
+                                      timeInSecForIosWeb: 2,
+                                      toastLength: Toast.LENGTH_LONG,
+                                      gravity: ToastGravity.TOP,
+                                      webShowClose: true,
+                                    );
+                                  } else {
+                                    Fluttertoast.showToast(
+                                      msg: "Se envio la solicitud",
+                                      timeInSecForIosWeb: 2,
+                                      toastLength: Toast.LENGTH_LONG,
+                                      gravity: ToastGravity.TOP,
+                                      webShowClose: true,
+                                    );
+                                    showComodatoVerifi(
+                                        answer.body["id_solicitud"] ?? 0,
+                                        methodCurrent);
+                                  }
+                                });
+                              },
+                              decoration: Decorations.blueBorder12,
+                              style: TextStyles.white18SemiBoldIt,
+                              label: "Enviar")),
+                      const SizedBox(
+                        width: 25,
+                      ),
+                      Expanded(
+                          child: ButtonJunghanns(
+                        fun: () {
+                          Navigator.pop(context);
+                        },
+                        decoration: Decorations.redCard,
+                        style: TextStyles.white18SemiBoldIt,
+                        label: "Cancelar",
+                      )),
+                    ],
+                  )
+                ],
+              )),
+            ),
+          );
+        });
+  }
+
   setCurrentLocation() async {
     try {
       Location locationInstance = Location();
@@ -352,8 +655,8 @@ class _ShoppingCartState extends State<ShoppingCart> {
           LocationData currentLocation = await locationInstance
               .getLocation()
               .timeout(const Duration(seconds: 15));
-              latSale=currentLocation.latitude!;
-              lngSale=currentLocation.longitude!;
+          latSale = currentLocation.latitude!;
+          lngSale = currentLocation.longitude!;
           await funCheckDistance(currentLocation);
         } else {
           provider.permission = false;
@@ -371,7 +674,6 @@ class _ShoppingCartState extends State<ShoppingCart> {
         isRange = false;
       }
     } catch (e) {
-      log("***ERROR -- $e");
       Fluttertoast.showToast(
           msg: "Tiempo de espera superado, vuelve a intentarlo",
           timeInSecForIosWeb: 2,
@@ -437,21 +739,19 @@ class _ShoppingCartState extends State<ShoppingCart> {
       return false;
     }
   }
-  
-  funSale(MethodPayment methodPayment) async {
+
+  setLocalSale({bool isConexion=false}) async {
     if (secWayToPay.wayToPay.isEmpty) {
       provider.basketCurrent.waysToPay.add(WayToPay(
-          type: methodPayment.typeWayToPay,
+          type: widget.customerCurrent.payment.first.typeWayToPay,
           cost: provider.basketCurrent.totalPrice));
     } else {
       provider.basketCurrent.waysToPay.add(WayToPay(
-          type: methodPayment.typeWayToPay,
+          type: widget.customerCurrent.payment.first.typeWayToPay,
           cost: widget.customerCurrent.purse));
       provider.basketCurrent.waysToPay.add(
           WayToPay(type: secWayToPay.typeWayToPay, cost: secWayToPay.cost));
     }
-
-    ///
     List<Map> listSales = [];
     for (var element in provider.basketCurrent.sales) {
       listSales.add({
@@ -482,53 +782,6 @@ class _ShoppingCartState extends State<ShoppingCart> {
       widget.authList.removeWhere(
           (element) => element.idAuth == provider.basketCurrent.idAuth);
     }
-
-    ///
-    Map<String, dynamic> data = {
-      "id_cliente": provider.basketCurrent.idCustomer,
-      "id_ruta": provider.basketCurrent.idRoute,
-      "latitud": "$latSale",
-      "longitud": "$lngSale",
-      "venta": List.from(listSales.toList()),
-      "id_autorizacion": provider.basketCurrent.idAuth != -1
-          ? provider.basketCurrent.idAuth
-          : null,
-      "formas_de_pago": listWaysToPay,
-      "id_data_origen": provider.basketCurrent.idDataOrigin,
-      "folio": provider.basketCurrent.folio != -1
-          ? provider.basketCurrent.folio
-          : null,
-      "tipo_operacion": provider.basketCurrent.typeOperation,
-      "version": "1.1.4"
-    };
-    if(provider.connectionStatus<4){
-    await postSale(data).then((answer) {
-      setState(() {
-        isLoading = false;
-      });
-      if (answer.error) {
-        //Navigator.pop(context);
-        Fluttertoast.showToast(
-          msg: answer.message,
-          timeInSecForIosWeb: 2,
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.TOP,
-          webShowClose: true,
-        );
-      } else {
-        //Navigator.pop(context);
-        Fluttertoast.showToast(
-          msg: "Venta realizada con exito",
-          timeInSecForIosWeb: 2,
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.TOP,
-          webShowClose: true,
-        );
-
-        Navigator.pop(context,true);
-      }
-    });
-  }else{
     Map<String, dynamic> data = {
       "idCustomer": provider.basketCurrent.idCustomer,
       "idRoute": provider.basketCurrent.idRoute,
@@ -544,18 +797,132 @@ class _ShoppingCartState extends State<ShoppingCart> {
           ? provider.basketCurrent.folio
           : null,
       "type": provider.basketCurrent.typeOperation,
+      "isUpdate":0
     };
-    handler.insertSale(data);
-    prefs.dataSale=true;
+    idLocal= await handler.insertSale(data);
+    log("confirmacion de insercion con $idLocal");
+    widget.customerCurrent.setType(0);
+    var exits = provider.basketCurrent.waysToPay
+        .where((element) => element.type == "M");
+    if (exits.isNotEmpty) {
+      widget.customerCurrent
+          .setMoney(widget.customerCurrent.purse - exits.first.cost);
+    }
+    for (var e in provider.basketCurrent.sales) {
+      var exits2 =
+          productsList.where((element) => element.idProduct == e.idProduct);
+      if (exits2.isNotEmpty) {
+        exits2.first.stock -= e.number;
+      }
+    }
+    prefs.stock = jsonEncode(productsList.map((e) => e.getMap()).toList());
+    prefs.dataSale = true;
     Fluttertoast.showToast(
-            msg: "Guardado de forma local",
-            timeInSecForIosWeb: 16,
+      msg: "Guardado solo de forma local",
+      timeInSecForIosWeb: 16,
+      toastLength: Toast.LENGTH_LONG,
+      gravity: ToastGravity.TOP,
+      webShowClose: true,
+    );
+    if(!isConexion){
+    Navigator.pop(context);
+    }
+  }
+
+  funSale(MethodPayment methodPayment) async {
+    int idLocal=0;
+    if (provider.connectionStatus < 4) {
+      if (secWayToPay.wayToPay.isEmpty) {
+        provider.basketCurrent.waysToPay.add(WayToPay(
+            type: methodPayment.typeWayToPay,
+            cost: provider.basketCurrent.totalPrice));
+      } else {
+        provider.basketCurrent.waysToPay.add(WayToPay(
+            type: methodPayment.typeWayToPay,
+            cost: widget.customerCurrent.purse));
+        provider.basketCurrent.waysToPay.add(
+            WayToPay(type: secWayToPay.typeWayToPay, cost: secWayToPay.cost));
+      }
+      List<Map> listSales = [];
+      for (var element in provider.basketCurrent.sales) {
+        listSales.add({
+          "cantidad": element.number,
+          "id_producto": element.idProduct,
+          "precio_unitario": element.price
+        });
+      }
+      if (widget.customerCurrent.priceS != 0) {
+        listSales.add({
+          "cantidad": widget.customerCurrent.numberS,
+          "id_producto": widget.customerCurrent.idProdServS,
+          "precio_unitario": widget.customerCurrent.priceS
+        });
+      }
+      List<Map> listWaysToPay = [];
+      for (var ele in provider.basketCurrent.waysToPay) {
+        listWaysToPay.add({
+          "tipo": ele.type,
+          "importe": ele.cost,
+        });
+      }
+      if (widget.authList.isNotEmpty) {
+        provider.basketCurrent.idAuth = widget.authList.first.idAuth;
+        widget.authList.removeWhere(
+            (element) => element.idAuth == provider.basketCurrent.idAuth);
+      }
+      Map<String, dynamic> data = {
+        "id_cliente": provider.basketCurrent.idCustomer,
+        "id_ruta": provider.basketCurrent.idRoute,
+        "latitud": "$latSale",
+        "longitud": "$lngSale",
+        "venta": List.from(listSales.toList()),
+        "id_autorizacion": provider.basketCurrent.idAuth != -1
+            ? provider.basketCurrent.idAuth
+            : null,
+        "formas_de_pago": listWaysToPay,
+        "id_data_origen": provider.basketCurrent.idDataOrigin,
+        "folio": provider.basketCurrent.folio != -1
+            ? provider.basketCurrent.folio
+            : null,
+        "tipo_operacion": provider.basketCurrent.typeOperation,
+        "version": "1.1.4"
+      };
+      
+      // Connection connection=Connection();
+      // await connection.init();
+      // if(connection.stableConnection){
+        await setLocalSale(isConexion: true).then((value) async {
+          await postSale(data).then((answer) async {
+        setState(() {
+          isLoading = false;
+        });
+        if (answer.error) {
+          Fluttertoast.showToast(
+            msg: answer.message,
+            timeInSecForIosWeb: 2,
             toastLength: Toast.LENGTH_LONG,
             gravity: ToastGravity.TOP,
             webShowClose: true,
           );
-          Navigator.pop(context);
-  }
+          Navigator.pop(context, true);
+        } else {
+          Fluttertoast.showToast(
+            msg: "Venta realizada con exito",
+            timeInSecForIosWeb: 2,
+            toastLength: Toast.LENGTH_LONG,
+            gravity: ToastGravity.TOP,
+            webShowClose: true,
+          );
+          Async async=
+          Async(provider: provider);
+          async.setDataSales().then((value) => async.setDataStop());
+          Navigator.pop(context, true);
+        }
+      });
+        });
+    } else {
+      setLocalSale();
+    }
   }
 
   @override
@@ -570,12 +937,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
             statusBarColor: ColorsJunghanns.greenJ,
             statusBarIconBrightness: Brightness.light,
             statusBarBrightness: Brightness.light),
-        leading: GestureDetector(
-          child: Container(
-              padding: const EdgeInsets.only(left: 24),
-              child: Image.asset("assets/icons/menuWhite.png")),
-          onTap: () {},
-        ),
+        leading: Container(),
         elevation: 0,
         actions: [
           Container(
@@ -598,14 +960,15 @@ class _ShoppingCartState extends State<ShoppingCart> {
       bottomNavigationBar: bottomBar(() {}, 2, isHome: false, context: context),
     );
   }
-  
+
   Widget itemList() {
     return Container(
       margin: EdgeInsets.only(
           top: widget.customerCurrent.descServiceS != ""
               ? size.height * .20
               : size.height * .22),
-      padding: const EdgeInsets.only(left: 10, right: 10),
+      padding: EdgeInsets.only(
+          left: 10, right: 10, top: provider.connectionStatus != 4 ? 0 : 20),
       width: double.infinity,
       child: productsList.isEmpty
           ? Center(
@@ -616,18 +979,11 @@ class _ShoppingCartState extends State<ShoppingCart> {
           : Column(
               children: [
                 Visibility(
-                  visible: widget.customerCurrent.descServiceS != "",
-                  child: addCharger()),
-                ProductSaleCardPriority(
-                    productCurrent: productsList.first,
-                    update: (ProductModel productCurrent, bool isAdd) {
-                      setState(() {
-                        provider.updateProductShopping(productCurrent, isAdd);
-                      });
-                    }),
-                Expanded(
-                  child: widget.authList.isEmpty
-                      ? GridView.custom(
+                    visible: widget.customerCurrent.descServiceS != "",
+                    child: addCharger()),
+                isOtherProduct
+                    ? Expanded(
+                        child: GridView.custom(
                           gridDelegate: SliverWovenGridDelegate.count(
                             crossAxisCount: 2,
                             mainAxisSpacing: 13,
@@ -645,11 +1001,48 @@ class _ShoppingCartState extends State<ShoppingCart> {
                                           productCurrent, isAdd);
                                       setState(() {});
                                     },
-                                    productCurrent: productsList[index + 1],
+                                    productCurrent: productListOther[index],
                                   ),
-                              childCount: productsList.length - 1),
-                        )
-                      : Container(),
+                              childCount: productListOther.length),
+                        ),
+                      )
+                    : Expanded(
+                        child: SingleChildScrollView(
+                        child: Column(
+                          children: productsList
+                              .where((element) => element.rank != "")
+                              .map((e) => ProductSaleCardPriority(
+                                  productCurrent: e,
+                                  update: (ProductModel productCurrent,
+                                      bool isAdd) {
+                                    setState(() {
+                                      provider.updateProductShopping(
+                                          productCurrent, isAdd);
+                                    });
+                                  }))
+                              .toList(),
+                        ),
+                      )),
+                const SizedBox(
+                  height: 10,
+                ),
+                Container(
+                    margin: const EdgeInsets.only(
+                        left: 15, right: 15, bottom: 10, top: 10),
+                    child: ButtonJunghanns(
+                        fun: () {
+                          setState(() {
+                            isOtherProduct = !isOtherProduct;
+                          });
+                        },
+                        decoration: isOtherProduct
+                            ? Decorations.redCardB30
+                            : Decorations.blueBorder12,
+                        style: TextStyles.white17_5,
+                        label:
+                            isOtherProduct ? "Regresar" : "Otros Productos")),
+                const SizedBox(
+                  height: 10,
                 ),
                 Visibility(
                     visible: provider.basketCurrent.sales.isNotEmpty,
@@ -663,22 +1056,33 @@ class _ShoppingCartState extends State<ShoppingCart> {
                           decoration: Decorations.blueBorder12,
                           fun: () {
                             if (widget.customerCurrent.payment.length > 1) {
-                              //modal para seleccionar metodo de pago
                               selectWayToPay();
                             } else {
-                              if (funCheckMethodPayment(
-                                  widget.customerCurrent.payment.first)) {
-                                if (widget.customerCurrent.payment.first
-                                        .wayToPay ==
-                                    "Credito") {
-                                  setState(() {
-                                    //habilitamos el modal para folio
-                                    isRequestFolio = true;
-                                  });
-                                } else {
-                                  showConfirmSale(
-                                      widget.customerCurrent.payment.first);
+                              //validamos que existan metodos de pago
+                              if (widget.customerCurrent.payment.isNotEmpty) {
+                                if (funCheckMethodPayment(
+                                    widget.customerCurrent.payment.first)) {
+                                  if (widget.customerCurrent.payment.first
+                                          .wayToPay ==
+                                      "Credito") {
+                                    setState(() {
+                                      //habilitamos el modal para folio
+                                      isRequestFolio = true;
+                                    });
+                                  } else {
+                                    showConfirmSale(
+                                        widget.customerCurrent.payment.first);
+                                  }
                                 }
+                              } else {
+                                Fluttertoast.showToast(
+                                  msg:
+                                      "No se encontraron metodos de pago ${widget.authList.isNotEmpty ? "para la autorización ${widget.authList.first.idAuth}" : ""}",
+                                  timeInSecForIosWeb: 2,
+                                  toastLength: Toast.LENGTH_LONG,
+                                  gravity: ToastGravity.TOP,
+                                  webShowClose: true,
+                                );
                               }
                             }
                           },
@@ -692,7 +1096,9 @@ class _ShoppingCartState extends State<ShoppingCart> {
 
   Widget header() {
     return Container(
-        height: size.height * .21,
+        height: provider.connectionStatus != 4
+            ? size.height * .21
+            : size.height * .23,
         color: ColorsJunghanns.green,
         padding: const EdgeInsets.only(right: 15, left: 23, top: 10),
         child: Column(
@@ -724,7 +1130,14 @@ class _ShoppingCartState extends State<ShoppingCart> {
                           Container(
                             padding: const EdgeInsets.only(right: 8, top: 10),
                             child: Text(
-                             provider.basketCurrent.sales.isNotEmpty?(provider.basketCurrent.sales.map((e) => e.number).toList()).reduce((value, element) => value+element).toString():"0",
+                              provider.basketCurrent.sales.isNotEmpty
+                                  ? (provider.basketCurrent.sales
+                                          .map((e) => e.number)
+                                          .toList())
+                                      .reduce(
+                                          (value, element) => value + element)
+                                      .toString()
+                                  : "0",
                               style: TextStyles.white24SemiBoldIt,
                             ),
                           ),
@@ -897,7 +1310,9 @@ class _ShoppingCartState extends State<ShoppingCart> {
             isLoading = true;
             isRequestFolio = false;
           });
-          await getFolio(folioC.text).then((answer) {
+          await getFolio(folioC.text,
+                  provider.basketCurrent.sales.first.idProduct, prefs.idRouteD)
+              .then((answer) {
             if (answer.error) {
               Fluttertoast.showToast(
                 msg: answer.message,

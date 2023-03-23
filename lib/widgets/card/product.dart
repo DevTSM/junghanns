@@ -1,8 +1,11 @@
 // ignore_for_file: must_be_immutable
+import 'dart:developer';
+
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:junghanns/components/textfield/text_field.text.dart';
 import 'package:junghanns/models/product.dart';
 import 'package:junghanns/styles/color.dart';
 
@@ -23,28 +26,43 @@ class ProductSaleCardPriority extends StatefulWidget {
 class ProductSaleCardPriorityState extends State<ProductSaleCardPriority> {
   late Size size;
   late NumberFormat formatMoney = NumberFormat("\$#,##0.00");
+  late TextEditingController count;
 
   @override
   void initState() {
     super.initState();
+    count=TextEditingController();
   }
-  
 
   @override
   Widget build(BuildContext context) {
     size = MediaQuery.of(context).size;
     return GestureDetector(
         child: Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(10),
             margin: const EdgeInsets.only(bottom: 8),
             width: double.infinity,
-            height: size.height * 0.17,
-            decoration:widget.productCurrent.number>0
+            height: size.height * 0.18,
+            decoration: widget.productCurrent.number > 0
                 ? Decorations.blueCard
                 : Decorations.whiteJCard,
             child: Row(
               children: [
-                Expanded(flex: 5, child: imageProduct()),
+                Expanded(flex: 5, 
+                child: Column(
+                  children: [
+                    imageProduct(),
+                    const SizedBox(height: 5,),
+                    Container(
+                margin: const EdgeInsets.only(bottom: 2, left: 28, right: 28),
+                padding: const EdgeInsets.only(top: 2, bottom: 2),
+                alignment: Alignment.center,
+                decoration: Decorations.greenJCardB30,
+                child: AutoSizeText(
+                  "Stock: ${widget.productCurrent.stock - widget.productCurrent.number}",
+                  style: TextStyles.white15Itw,
+                )),
+                    ])),
                 Expanded(flex: 7, child: info()),
               ],
             )),
@@ -59,24 +77,25 @@ class ProductSaleCardPriorityState extends State<ProductSaleCardPriority> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
+            Visibility(
+              visible: widget.productCurrent.count!="",
+              child: Flexible(flex: 3,
+              child:RichText(text: TextSpan(
+                  children: [
+                    TextSpan(text: widget.productCurrent.count,style:TextStyles.blueJ50BoldIt ),
+                    TextSpan(text: " LTS",style:TextStyles.blueJ20BoldIt)
+                  ]
+                )))),
             Flexible(
                 child: AutoSizeText(
               widget.productCurrent.description,
               maxLines: 1,
               style: TextStyles.blueJ20BoldIt,
             )),
-            Container(
-                margin: const EdgeInsets.only(bottom: 2, left: 28, right: 28),
-                padding: const EdgeInsets.only(top: 2, bottom: 2),
-                alignment: Alignment.center,
-                decoration: Decorations.greenJCardB30,
-                child: AutoSizeText(
-                  "Stock: ${widget.productCurrent.stock - widget.productCurrent.number}",
-                  style: TextStyles.white15Itw,
-                )),
+            
             Container(
               alignment: Alignment.center,
-              padding: const EdgeInsets.only(top: 5, bottom: 5),
+              padding: const EdgeInsets.only(top: 5),
               decoration: Decorations.white2Card,
               child: Text(
                 formatMoney.format(widget.productCurrent.price),
@@ -90,7 +109,8 @@ class ProductSaleCardPriorityState extends State<ProductSaleCardPriority> {
 
   Widget imageProduct() {
     return Container(
-        width: double.infinity,
+        width: size.height * 0.1,
+        height: size.height * 0.1,
         decoration: Decorations.white2Card,
         child: Stack(
           children: [
@@ -156,26 +176,44 @@ class ProductSaleCardPriorityState extends State<ProductSaleCardPriority> {
                                           color: ColorsJunghanns.red,
                                         )),
                                     onTap: () {
-                                      setState(()=>
-                                      widget.update(
+                                      setState(() => widget.update(
                                           widget.productCurrent, false));
+                                          count.text= widget.productCurrent.number.toString();
                                     }),
-
+                                    const SizedBox(width: 10,),
                                 //CANTIDAD
-                                DefaultTextStyle(
-                                  style: TextStyles.greenJ30Bold,
-                                  child: Text(
-                                    widget.productCurrent.number.toString(),
-                                  ),
-                                ),
+                                Expanded(child:textField2(
+                                  ontap: (){
+                                    count.text= widget.productCurrent.number.toString();
+                                  },
+                                  (String value){
+                                  if(value!=""){
+                                    int? number=int.tryParse(value);
+                                    if((number??1)<widget.productCurrent.stock&&(number??1)>0){
+                                    setState(() => widget.productCurrent.setCount((number??1)));
+                                    widget.update(
+                                          widget.productCurrent, false);
+                                  }else{
+                                     setState(() => widget.productCurrent.setCount(widget.productCurrent.stock));
+                                    widget.update(
+                                          widget.productCurrent, false);
+                                  }
+                                  
+                                  }
+                                },count, "",type: TextInputType.number)),
+                                const SizedBox(width: 10,),
 
                                 //BOTON DE MAS
                                 GestureDetector(
-                                    onTap: widget.productCurrent.stock!=widget.productCurrent.number||widget.productCurrent.type==2? () {
-                                      setState(()=>
-                                      widget.update(
-                                          widget.productCurrent, true));
-                                    }:(){},
+                                    onTap: widget.productCurrent.stock !=
+                                                widget.productCurrent.number ||
+                                            widget.productCurrent.type == 2
+                                        ? () {
+                                            setState(() => widget.update(
+                                                widget.productCurrent, true));
+                                                count.text= widget.productCurrent.number.toString();
+                                          }
+                                        : () {},
                                     child: Container(
                                         padding: const EdgeInsets.fromLTRB(
                                             22, 12, 22, 12),
@@ -214,7 +252,10 @@ class ProductSaleCard extends StatefulWidget {
   Function update;
   bool isRefill;
   ProductSaleCard(
-      {Key? key, required this.productCurrent, required this.update,this.isRefill=false})
+      {Key? key,
+      required this.productCurrent,
+      required this.update,
+      this.isRefill = false})
       : super(key: key);
 
   @override
@@ -235,7 +276,7 @@ class ProductSaleCardState extends State<ProductSaleCard> {
     return GestureDetector(
         child: Container(
             padding: const EdgeInsets.all(13),
-            decoration: widget.productCurrent.number>0
+            decoration: widget.productCurrent.number > 0
                 ? Decorations.blueCard
                 : Decorations.whiteJCard,
             child: Column(
@@ -251,19 +292,18 @@ class ProductSaleCardState extends State<ProductSaleCard> {
                   ),
                 ),
                 Visibility(
-                  visible: !widget.isRefill,
-                  child: 
-                Expanded(
-                    flex: 2,
-                    child: Container(
-                        margin: const EdgeInsets.only(
-                            bottom: 2, left: 24, right: 24),
-                        alignment: Alignment.center,
-                        decoration: Decorations.greenJCardB30,
-                        child: AutoSizeText(
-                          "Stock: ${widget.productCurrent.stock - widget.productCurrent.number}",
-                          style: TextStyles.white15Itw,
-                        )))),
+                    visible: !widget.isRefill,
+                    child: Expanded(
+                        flex: 2,
+                        child: Container(
+                            margin: const EdgeInsets.only(
+                                bottom: 2, left: 24, right: 24),
+                            alignment: Alignment.center,
+                            decoration: Decorations.greenJCardB30,
+                            child: AutoSizeText(
+                              "Stock: ${widget.productCurrent.stock - widget.productCurrent.number}",
+                              style: TextStyles.white15Itw,
+                            )))),
                 Expanded(
                   flex: 4,
                   child: Container(
@@ -363,26 +403,28 @@ class ProductSaleCardState extends State<ProductSaleCard> {
                                           color: ColorsJunghanns.red,
                                         )),
                                     onTap: () {
-                                      setState(()=>
-                                        widget.update(
-                                            widget.productCurrent, false));
+                                      setState(() => widget.update(
+                                          widget.productCurrent, false));
                                     }),
 
                                 //CANTIDAD
                                 DefaultTextStyle(
                                   style: TextStyles.greenJ30Bold,
                                   child: Text(
-                                     widget.productCurrent.number.toString(),
+                                    widget.productCurrent.number.toString(),
                                   ),
                                 ),
 
                                 //BOTON DE MAS
                                 GestureDetector(
-                                    onTap: widget.productCurrent.stock!=widget.productCurrent.number||widget.productCurrent.type==2? () {
-                                      setState(()=>
-                                        widget.update(
-                                            widget.productCurrent, true));
-                                    }:(){},
+                                    onTap: widget.productCurrent.stock !=
+                                                widget.productCurrent.number ||
+                                            widget.productCurrent.type == 2
+                                        ? () {
+                                            setState(() => widget.update(
+                                                widget.productCurrent, true));
+                                          }
+                                        : () {},
                                     child: Container(
                                         padding: const EdgeInsets.fromLTRB(
                                             22, 12, 22, 12),

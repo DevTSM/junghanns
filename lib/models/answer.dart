@@ -14,7 +14,10 @@ class Answer {
     if(response.statusCode<400){
       if(response.statusCode==203){
         log("/Respuesta fallida");
-         prefs.prefs!.clear();
+          String urlBase=prefs.urlBase;
+      prefs.prefs!.clear();
+      prefs.version = version;
+      prefs.urlBase=urlBase;
          return Answer(body: {}, message: "Código de error ${response.statusCode}", error: true);
       }else{
       log("/Respuesta exitosa");
@@ -28,7 +31,10 @@ class Answer {
     }else{
       log("/Respuesta fallida");
       if(response.statusCode==403|| response.statusCode == 401){
-        prefs.prefs!.clear();
+        String urlBase=prefs.urlBase;
+      prefs.prefs!.clear();
+      prefs.version = version;
+      prefs.urlBase=urlBase;
       }
        dynamic body=jsonDecode(response.body);
       return Answer(body: body, message: body["message"]??"Código de error ${response.statusCode}", error: true);

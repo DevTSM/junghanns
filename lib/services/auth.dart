@@ -32,7 +32,7 @@ Future<Answer> getTokenKernel(String user, String cedis) async {
     }
   } catch (e) {
     log("/AuthServices <getTokenKernel> Catch ${e.toString()}");
-    return Answer(body: e, message: e.toString(), error: true);
+    return Answer(body: e, message:"Algo salio mal, revisa tu conexion a internet.", error: true);
   }
 }
 
@@ -48,23 +48,21 @@ Future<Answer> tokenKernelActive(String token,double lat,double lng) async {
         "Authorization": "Bearer $token"
       },
       body: jsonEncode({
-    "lat" : "19.30008262123766",
-    "lon": "-99.11182636452587"
+    "lat" : lat,
+    "lon": lng
 })
     );
-    log("lat: $lat,lon: $lng,");
-    log(responseAwait.body);
     var response=jsonDecode(responseAwait.body);
     if (responseAwait.statusCode==200) {
       log("/AuthServices <tokenKernelActive> Successfull");
       return Answer(body: response, message: "", error: false);
     } else {
-      log("/AuthServices <tokenKernelActive> Fail ${response.toString()}");
-      return Answer(body: response, message: response.toString(), error: true);
+      log("/AuthServices <tokenKernelActive> Fail");
+      return Answer(body: response, message: response["message"]??"", error: true);
     }
   } catch (e) {
     log("/AuthServices <tokenKernelActive> Catch ${e.toString()}");
-    return Answer(body: e, message: e.toString(), error: true);
+    return Answer(body: e, message: "Algo salio mal, revisa tu conexion a internet.", error: true);
   }
 }
 
@@ -96,7 +94,7 @@ Future<Answer> validateOTP(String token,String code,double lat,double lng) async
     }
   } catch (e) {
     log("/AuthServices <validateOTP> Catch ${e.toString()}");
-    return Answer(body: e, message: e.toString(), error: true);
+    return Answer(body: e, message:"Algo salio mal, revisa tu conexion a internet.", error: true);
   }
 }
 
@@ -104,7 +102,7 @@ Future<Answer> getClientSecret(String user, String password) async {
   log("/AuthServices <getClientSecret>");
   try {
     var response = jsonDecode((await http.get(
-      Uri.parse("$urlBase/token?q=secret&u=$user&p=$password"),
+      Uri.parse("${prefs.urlBase}token?q=secret&u=$user&p=$password"),
       headers: {
         "Content-Type": "aplication/json",
         "x-api-key": apiKey,
@@ -120,7 +118,7 @@ Future<Answer> getClientSecret(String user, String password) async {
     }
   } catch (e) {
     log("/AuthServices <getClientSecret> Catch ${e.toString()}");
-    return Answer(body: e, message: e.toString(), error: true);
+    return Answer(body: e, message: "Algo salio mal, revisa tu conexion a internet.", error: true);
   }
 }
 
@@ -128,7 +126,7 @@ Future<Answer> getToken(String user) async {
   log("/AuthServices <getToken>");
   try {
     var response = jsonDecode((await http.get(
-      Uri.parse("$urlBase/token?q=token&u=$user"),
+      Uri.parse("${prefs.urlBase}token?q=token&u=$user"),
       headers: {
         "Content-Type": "aplication/json",
         "x-api-key": apiKey,
@@ -149,14 +147,14 @@ Future<Answer> getToken(String user) async {
   } catch (e) {
     log("/AuthServices <getToken> Catch ${e.toString()}");
     return Answer(
-        body: e, message: "Algo salio mal, intentalo mas tarde.", error: true);
+        body: e, message: "Algo salio mal, revisa tu conexion a internet.", error: true);
   }
 }
 
 Future<Answer> login(Map<String, dynamic> data) async {
   log("/AuthServices <login>");
   try {
-    var response = jsonDecode((await http.post(Uri.parse("$urlBase/loginruta"),
+    var response = jsonDecode((await http.post(Uri.parse("${prefs.urlBase}loginruta"),
             headers: {
               HttpHeaders.contentTypeHeader: 'application/json; charset=UTF-8',
               "x-api-key": apiKey,
@@ -178,7 +176,34 @@ Future<Answer> login(Map<String, dynamic> data) async {
   } catch (e) {
     log("/AuthServices <login> Catch ${e.toString()}");
     return Answer(
-        body: e, message: "Algo salio mal, intentalo mas tarde.", error: true);
+        body: e, message: "Algo salio mal, revisa tu conexion a internet.", error: true);
+  }
+}
+Future<Answer> updateToken(String toke) async {
+  log("/AuthServices <updateToken>");
+  try {
+    var response = await http.put(Uri.parse("${prefs.urlBase}notifymobile"),
+            headers: {
+              HttpHeaders.contentTypeHeader: 'application/json; charset=UTF-8',
+              "x-api-key": apiKey,
+              "client_secret": prefs.clientSecret,
+              "Authorization": "Bearer ${prefs.token}"
+            },
+            body: jsonEncode({"token":toke}));
+    if (response.statusCode==200) {
+      log("/AuthServices <updateToken> Successfull ${response.body.toString()}");
+      return Answer(body: response, message: "", error: false);
+    } else {
+      log("/AuthServices <updateToken> Fail ${response.body.toString()}");
+      return Answer(
+          body: response,
+          message: "Algo salio mal, intentalo mas tarde.",
+          error: true);
+    }
+  } catch (e) {
+    log("/AuthServices <updateToken> Catch ${e.toString()}");
+    return Answer(
+        body: e, message: "Algo salio mal, revisa tu conexion a internet.", error: true);
   }
 }
 
@@ -186,7 +211,7 @@ Future<Answer> getConfig(int id) async {
   log("/AuthServices <getConfig>");
   try {
     var response = jsonDecode((await http.get(
-            Uri.parse("$urlBase/configruta?id_cliente=$id&q=distancia_km"),
+            Uri.parse("${prefs.urlBase}configruta?id_cliente=$id&q=distancia_km"),
             headers: {
           "Content-Type": "aplication/json",
           "x-api-key": apiKey,
@@ -207,14 +232,16 @@ Future<Answer> getConfig(int id) async {
   } catch (e) {
     log("/AuthServices <getConfig> Catch ${e.toString()}");
     return Answer(
-        body: e, message: "Algo salio mal, intentalo mas tarde.", error: true);
+        body: e, message: "Algo salio mal, revisa tu conexion a internet.", error: true);
   }
 }
 
-Future<Answer> getFolio(String folio) async {
+Future<Answer> getFolio(String folio,int idProduct,int idRoute) async {
   log("/AuthServices <getFolio>");
+  log("id ruta $idRoute id Producto $idProduct folio $folio");
+  try{
   var response = await http
-      .get(Uri.parse("$urlBase/validate?q=folio&num=$folio"), headers: {
+      .get(Uri.parse("${prefs.urlBase}validate?q=folio_ruta&num=$folio&id_ruta=$idRoute&id_ps=$idProduct"), headers: {
     "Content-Type": "aplication/json",
     "x-api-key": apiKey,
     "client_secret": prefs.clientSecret,
@@ -227,5 +254,8 @@ Future<Answer> getFolio(String folio) async {
   } else {
     log("/AuthServices <getFolio> Fail, ${response.body}");
     return Answer(body: response, message: response.body, error: true);
+  }
+  }catch(e){
+    return Answer(body: {"error":e}, message: "Algo salio mal, revisa tu conexion a internet.", error: true);
   }
 }

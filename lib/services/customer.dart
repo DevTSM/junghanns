@@ -11,7 +11,7 @@ Future<Answer> getListCustomer(int idR, DateTime date, String type) async {
   try {
     var response = await http.get(
         Uri.parse(
-            "$urlBase/visita?idRuta=$idR&date=${(DateFormat('yyyyMMdd').format(date))}&tipo=$type"),
+            "${prefs.urlBase}visita?idRuta=$idR&date=${(DateFormat('yyyyMMdd').format(date))}&tipo=$type"),
         headers: {
           "Content-Type": "aplication/json",
           "x-api-key": apiKey,
@@ -23,7 +23,7 @@ Future<Answer> getListCustomer(int idR, DateTime date, String type) async {
   } catch (e) {
     log("/CustomerServices <getListCustomer> Catch ${e.toString()}");
     return Answer(
-        body: e, message: "Algo salio mal, intentalo mas tarde.", error: true);
+        body: e, message: "Algo salio mal, revisa tu conexion a internet.", error: true);
   }
 }
 
@@ -31,7 +31,7 @@ Future<Answer> getDetailsCustomer(int id, String type) async {
   log("/CustomerServices <getDetailsCustomer>");
   try {
     var response = await http.get(
-        Uri.parse("$urlBase/index.php/cliente?q=dashboard&tipo=$type&id=$id"),
+        Uri.parse("${prefs.urlBase}cliente?q=dashboard&tipo=$type&id=$id"),
         headers: {
           "Content-Type": "aplication/json",
           "x-api-key": apiKey,
@@ -42,7 +42,25 @@ Future<Answer> getDetailsCustomer(int id, String type) async {
     return Answer.fromService(response);
   } catch (e) {
     log("/CustomerServices <getDetailsCustomer> Catch");
-    return Answer(body: e, message: "error: ${e.toString()}", error: true);
+    return Answer(body: e, message:"Algo salio mal, revisa tu conexion a internet.", error: true);
+  }
+}
+Future<Answer> getPhonesCustomer(int id) async {
+  log("/CustomerServices <getPhonesCustomer>");
+  try {
+    var response = await http.get(
+        Uri.parse("${prefs.urlBase}cliente?q=tel&id=$id"),
+        headers: {
+          "Content-Type": "aplication/json",
+          "x-api-key": apiKey,
+          "client_secret": prefs.clientSecret,
+          "Authorization": "Bearer ${prefs.token}",
+        });
+    log("/CustomerServices <getPhonesCustomer> ${response.body}");
+    return Answer.fromService(response);
+  } catch (e) {
+    log("/CustomerServices <getPhonesCustomer> Catch");
+    return Answer(body: e, message:"Algo salio mal, revisa tu conexion a internet.", error: true);
   }
 }
 
@@ -50,7 +68,7 @@ Future<Answer> getHistoryCustomer(int id) async {
   log("/CustomerServices <getHistoryCustomer>");
   try {
     var response = await http
-        .get(Uri.parse("$urlBase/cliente?q=history&id=$id"), headers: {
+        .get(Uri.parse("${prefs.urlBase}cliente?q=history&id=$id"), headers: {
       "Content-Type": "aplication/json",
       "x-api-key": apiKey,
       "client_secret": prefs.clientSecret,
@@ -69,7 +87,7 @@ Future<Answer> getHistoryCustomer(int id) async {
   } catch (e) {
     log("/CustomerServices <getHistoryCustomer> Catch");
     return Answer(
-        body: e, message: "Algo salio mal, intentalo mas tarde.", error: true);
+        body: e, message: "Algo salio mal, revisa tu conexion a internet.", error: true);
   }
 }
 
@@ -77,7 +95,7 @@ Future<Answer> getMoneyCustomer(int id) async {
   log("/CustomerServices <getMoneyCustomer>");
   try {
     var response =
-        await http.get(Uri.parse("$urlBase/cliente?q=money&id=$id"), headers: {
+        await http.get(Uri.parse("${prefs.urlBase}cliente?q=money&id=$id"), headers: {
       "Content-Type": "aplication/json",
       "x-api-key": apiKey,
       "client_secret": prefs.clientSecret,
@@ -96,6 +114,6 @@ Future<Answer> getMoneyCustomer(int id) async {
   } catch (e) {
     log("/CustomerServices <getMoneyCustomer> Catch");
     return Answer(
-        body: e, message: "Algo salio mal, intentalo mas tarde.", error: true);
+        body: e, message: "Algo salio mal, revisa tu conexion a internet.", error: true);
   }
 }

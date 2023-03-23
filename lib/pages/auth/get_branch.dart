@@ -7,10 +7,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:junghanns/components/button.dart';
 import 'package:junghanns/components/textfield/text_field.text.dart';
 import 'package:junghanns/components/without_internet.dart';
-import 'package:junghanns/models/answer.dart';
 import 'package:junghanns/pages/auth/login.dart';
-import 'package:junghanns/pages/home/home_principal.dart';
-import 'package:junghanns/pages/opening.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/provider/provider.dart';
 import 'package:junghanns/services/auth.dart';
@@ -191,10 +188,9 @@ class _GetBranchState extends State<GetBranch> {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           textField(token, "Código", Image.asset(
-                    "assets/icons/user.png"), false),
+                    "assets/icons/user.png"), false,max: 8),
                     const SizedBox(height: 15,),
           button(),
-          
         ],
       ),
     );

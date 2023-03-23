@@ -6,12 +6,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:junghanns/database/async.dart';
+import 'package:junghanns/pages/async/openingAsync.dart';
 import 'package:junghanns/pages/auth/get_branch.dart';
 import 'package:junghanns/pages/home/home_principal.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/provider/provider.dart';
 import 'package:junghanns/services/store.dart';
 import 'package:junghanns/styles/color.dart';
+import 'package:junghanns/util/connection.dart';
 import 'package:linear_progress_bar/linear_progress_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:sqflite/sqflite.dart';
@@ -39,10 +41,11 @@ class _OpeningState extends State<Opening> {
     isAsync = false;
     
     log("token de acceso =====> ${prefs.token}");
-    if (prefs.version != version || urlBase != prefs.ipUrl) {
+    if (prefs.version != version ) {
+      String urlBaseSafe=prefs.urlBase;
       prefs.prefs!.clear();
       prefs.version = version;
-      prefs.ipUrl = urlBase;
+      prefs.urlBase=urlBaseSafe;
       log("limpiando cache =====>");
     }
     initConnectivity();
@@ -55,8 +58,8 @@ class _OpeningState extends State<Opening> {
         DateTime dateLast=DateTime.parse(prefs.asyncLast != ""
                     ? prefs.asyncLast
                     : DateTime(2017, 9, 7, 17, 30).toString());
-       // if (DateTime.now().day!=dateLast.day||DateTime.now().month!=dateLast.month|| prefs.isAsyncCurrent) {
-          if (false) {
+       //if (DateTime.now().day!=dateLast.day||DateTime.now().month!=dateLast.month|| prefs.isAsyncCurrent) {
+        if (true) {
           setState(() {
             isAsync = true;
           });
@@ -114,9 +117,7 @@ class _OpeningState extends State<Opening> {
     }
     provider.connectionStatus = result.index;
     provider.path=await getDatabasesPath();
-    // parche para queretaro
-  // prefs.urlBase=ipStage;
-  //   log("url base ###############${prefs.urlBase}");
+    log("url base: ${prefs.urlBase}");
     
     if(prefs.urlBase!=""){
     if (result.index < 4) {
@@ -145,87 +146,8 @@ class _OpeningState extends State<Opening> {
   }
   }
 
-  setDataStops(Map<String, dynamic> data) async {
-    await setStop(data).then((answer) {
-      if (answer.error) {
-        log("Parada asignada 2");
-        Fluttertoast.showToast(
-          msg: answer.message,
-          timeInSecForIosWeb: 2,
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.TOP,
-          webShowClose: true,
-        );
-      } else {
-        //
-        log("Parada asignada");
-        //
-      }
-    });
-  }
-
   Future<void> _updateConnectionStatus(ConnectivityResult result) async {
     provider.connectionStatus = result.index;
-    if (result.index != 4 && prefs.dataStop) {
-      provider.asyncProcess=true;
-      List<Map<String, dynamic>> dataNStops = [];
-      List<Map<String, dynamic>> dataList =
-          await handler.retrieveStopOff();
-      for(var e in dataList){
-      Map<String,dynamic> data={
-        "id_cliente": e["idCustomer"].toString(),
-            "id_parada": e["idStop"],
-            "lat": "${e["lat"]}",
-            "lon": "${e["lng"]}",
-            "id_data_origen": e["idOrigin"],
-            "tipo": e["type"]
-      };
-      await postStop(data).then((answer) {
-            if (!answer.error){
-              log("Parada asignada");
-              log(answer.body.toString());
-            }
-          });
-      }
-      provider.asyncProcess=false;
-      handler.deleteStopOff().then((element){
-        prefs.dataStop=false;
-      });
-    }
-    if (result.index != 4 && prefs.dataSale) {
-      provider.asyncProcess=true;
-      List<Map<String, dynamic>> dataNSale = [];
-      List<Map<String, dynamic>> dataList =
-          await handler.retrieveSales();
-      List.generate(dataList.length, (i) {
-        dataNSale.add(dataList[i]);
-      });
-      for(var e in dataList){
-      Map<String,dynamic> data={
-       "id_cliente": e["idCustomer"],
-      "id_ruta": e["idRoute"],
-      "latitud":e["lat"].toString(),
-      "longitud":e["lng"].toString(),
-      "venta":List.from(jsonDecode(e["saleItems"]).toList()),
-      "id_autorizacion":e["idAuth"],
-      "formas_de_pago": List.from(jsonDecode(e["paymentMethod"]).toList()),
-      "id_data_origen":e["idOrigin"],
-      "folio":e["folio"],
-      "tipo_operacion":e["type"],
-      "version": "1.1.4"
-      };
-      await postSale(data).then((answer) {
-            if (!answer.error){
-              log("venta asignada");
-              log(answer.body.toString());
-            }
-          });
-      }
-      provider.asyncProcess=false;
-      handler.deleteSale().then((element){
-        prefs.dataSale=false;
-      });
-    }
   }
 
   @override

@@ -35,25 +35,54 @@ class _RoutesState extends State<Routes> {
   @override
   void initState() {
     super.initState();
-    isLoading = false;
+    isLoading = true;
     customerList = [];
-    //
     buscadorC = TextEditingController();
     searchList = [];
-    //
-    getDataCustomerList();
+    getCustomerListDB();
   }
 
-  getPermission() async {
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.whileInUse ||
-        permission == LocationPermission.always) {
-      provider.permission = true;
-    } else {
-      provider.permission = false;
-    }
+  getCustomerListDB() async {
+    List<Map<String, dynamic>> dataList = await handler.retrieveUsersType2(2);
+    setState(() {
+      dataList.map((e) {
+        customerList.add(CustomerModel.fromDataBase(e));
+      }).toList();
+      customerList.sort((a, b) => a.orden.compareTo(b.orden));
+      searchList = customerList;
+      getCheckToken();
+    });
   }
 
+  getCheckToken() {
+    Timer(const Duration(milliseconds: 800), () async {
+      await getListCustomer(prefs.idRouteD, DateTime.now(), "R").then((answer) {
+        if (prefs.token == "") {
+          Fluttertoast.showToast(
+            msg: "Las credenciales caducaron.",
+            timeInSecForIosWeb: 2,
+            toastLength: Toast.LENGTH_LONG,
+            gravity: ToastGravity.TOP,
+            webShowClose: true,
+          );
+        }else{
+          Fluttertoast.showToast(
+            msg: "Successfull",
+            timeInSecForIosWeb: 2,
+            toastLength: Toast.LENGTH_LONG,
+            gravity: ToastGravity.TOP,
+            webShowClose: true,
+          );
+        }
+      });
+      getPermission();
+      setState(() {
+        isLoading = false;
+      });
+    });
+  }
+
+  //deshabilitado
   getDataCustomerList() async {
     Timer(const Duration(milliseconds: 800), () async {
       if (provider.connectionStatus < 4) {
@@ -98,8 +127,30 @@ class _RoutesState extends State<Routes> {
             });
           }
         });
+      } else {
+        List<Map<String, dynamic>> dataList =
+            await handler.retrieveUsersType2(2);
+        setState(() {
+          dataList.map((e) {
+            customerList.add(CustomerModel.fromDataBase(e));
+            log("estas son las autorizaciones ######${customerList.last.auth.length}   ${e["auth"]}");
+          }).toList();
+          customerList.sort((a, b) => a.orden.compareTo(b.orden));
+          searchList = customerList;
+        });
       }
     });
+  }
+
+  //-------
+  getPermission() async {
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.whileInUse ||
+        permission == LocationPermission.always) {
+      provider.permission = true;
+    } else {
+      provider.permission = false;
+    }
   }
 
   funRefreshList() async {
@@ -151,104 +202,50 @@ class _RoutesState extends State<Routes> {
                 const SizedBox(
                   height: 15,
                 ),
-                Visibility(
-                    visible: provider.connectionStatus < 4 &&
-                        customerList.isNotEmpty,
-                    child: buscador()),
-                provider.connectionStatus < 4
-                    ? customerList.isNotEmpty
-                        ? Expanded(
-                            child: SingleChildScrollView(
-                                child: Column(
-                            children: searchList.map((e) {
-                              return Column(children: [
-                                RoutesCard(
-                                    icon: Container(
-                                      decoration: BoxDecoration(
-                                        color: Color(int.parse(
-                                            e.color
-                                                .toUpperCase()
-                                                .replaceAll("#", "FF"),
-                                            radix: 16)),
-                                        borderRadius: const BorderRadius.all(
-                                          Radius.circular(30),
-                                        ),
-                                      ),
-                                      padding: const EdgeInsets.all(10),
-                                      height: size.width * .14,
-                                      width: size.width * .14,
-                                      child: Image.asset(
-                                          "assets/icons/userIcon.png"),
+                buscador(),
+                customerList.isNotEmpty
+                    ? Expanded(
+                        child: SingleChildScrollView(
+                            child: Column(
+                        children: searchList.map((e) {
+                          return Column(children: [
+                            RoutesCard(
+                                icon: Container(
+                                  decoration: BoxDecoration(
+                                    color: Color(int.parse(
+                                        e.color
+                                            .toUpperCase()
+                                            .replaceAll("#", "FF"),
+                                        radix: 16)),
+                                    borderRadius: const BorderRadius.all(
+                                      Radius.circular(30),
                                     ),
-                                    customerCurrent: e),
-                                Row(children: [
-                                  Container(
-                                    margin: EdgeInsets.only(
-                                        left: (size.width * .07) + 15),
-                                    color: ColorsJunghanns.grey,
-                                    width: .5,
-                                    height: 15,
-                                  )
-                                ])
-                              ]);
-                            }).toList(),
-                          )))
-                        : Expanded(
-                            child: Center(
-                                child: Text(
-                            "Sin clientes en ruta",
-                            style: TextStyles.blue18SemiBoldIt,
-                          )))
+                                  ),
+                                  padding: const EdgeInsets.all(10),
+                                  height: size.width * .14,
+                                  width: size.width * .14,
+                                  child:
+                                      Image.asset("assets/icons/userIcon.png"),
+                                ),
+                                customerCurrent: e),
+                            Row(children: [
+                              Container(
+                                margin: EdgeInsets.only(
+                                    left: (size.width * .07) + 15),
+                                color: ColorsJunghanns.grey,
+                                width: .5,
+                                height: 15,
+                              )
+                            ])
+                          ]);
+                        }).toList(),
+                      )))
                     : Expanded(
-                        child: FutureBuilder(
-                            future: handler.retrieveUsersType(2),
-                            builder: (BuildContext context,
-                                AsyncSnapshot<List<CustomerModel>> snapshot) {
-                              if (snapshot.hasData) {
-                                return ListView.builder(
-                                    itemCount: snapshot.data?.length,
-                                    itemBuilder:
-                                        (BuildContext context, int index) {
-                                      return Column(children: [
-                                        RoutesCard(
-                                            icon: Container(
-                                              decoration: BoxDecoration(
-                                                color: Color(int.parse(
-                                                    snapshot.data?[index]
-                                                            .color ??
-                                                        ""
-                                                            .toUpperCase()
-                                                            .replaceAll(
-                                                                "#", "FF"),
-                                                    radix: 16)),
-                                                borderRadius:
-                                                    const BorderRadius.all(
-                                                  Radius.circular(30),
-                                                ),
-                                              ),
-                                              padding: const EdgeInsets.all(10),
-                                              height: size.width * .14,
-                                              width: size.width * .14,
-                                              child: Image.asset(
-                                                  "assets/icons/userIcon.png"),
-                                            ),
-                                            customerCurrent:
-                                                snapshot.data![index]),
-                                        Row(children: [
-                                          Container(
-                                            margin: EdgeInsets.only(
-                                                left: (size.width * .07) + 15),
-                                            color: ColorsJunghanns.grey,
-                                            width: .5,
-                                            height: 15,
-                                          )
-                                        ])
-                                      ]);
-                                    });
-                              } else {
-                                return Container();
-                              }
-                            }))
+                        child: Center(
+                            child: Text(
+                        "Sin clientes en ruta",
+                        style: TextStyles.blue18SemiBoldIt,
+                      )))
               ],
             ),
           )),
@@ -321,8 +318,7 @@ class _RoutesState extends State<Routes> {
         margin: const EdgeInsets.only(left: 15, right: 15, top: 5, bottom: 5),
         child: TextFormField(
             controller: buscadorC,
-            onEditingComplete: funSearch,
-            onChanged: (value) => funEmpty(value),
+            onChanged: (value) => funSearch(value),
             textAlignVertical: TextAlignVertical.center,
             style: TextStyles.blueJ15SemiBold,
             decoration: InputDecoration(
@@ -348,17 +344,7 @@ class _RoutesState extends State<Routes> {
             )));
   }
 
-  funEmpty(String value) {
-    if (value == "") {
-      setState(() {
-        searchList = customerList;
-      });
-    }
-  }
-
-  funSearch() {
-    log("Cliente : ${buscadorC.text}");
-
+  funSearch(String value) {
     if (buscadorC.text != "") {
       searchList = [];
       setState(() {

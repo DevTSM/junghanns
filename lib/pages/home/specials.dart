@@ -220,14 +220,15 @@ class _SpecialsState extends State<Specials> {
                                         RoutesCard(
                                             icon: Container(
                                               decoration: BoxDecoration(
-                                                color: Color(int.parse(
-                                                    snapshot.data?[index]
+                                                color: Color((snapshot.data?[index]
+                                                            .color??"") !=""?int.parse(
+                                                    (snapshot.data?[index]
                                                             .color ??
                                                         ""
-                                                            .toUpperCase()
+                                                           ) .toUpperCase()
                                                             .replaceAll(
                                                                 "#", "FF"),
-                                                    radix: 16)),
+                                                    radix:  16):0xFF0434a4),
                                                 borderRadius:
                                                     const BorderRadius.all(
                                                   Radius.circular(30),

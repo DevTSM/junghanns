@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 class ConfigModel {
   String parametro;
   int valor;

@@ -15,6 +15,13 @@ class PreferenciasUsuario {
   initPrefs() async {
     prefs = await SharedPreferences.getInstance();
   }
+  String get statusRoute {
+    return prefs!.getString("statusRoute") ?? "";
+  }
+  set statusRoute(String statusRoute) {
+    prefs!.setString("statusRoute", statusRoute);
+  }
+
   String get urlBase {
     return prefs!.getString("urlBase") ?? "";
   }
@@ -43,6 +50,13 @@ class PreferenciasUsuario {
 
   set stock(String stock) {
     prefs!.setString("stock", stock);
+  }
+  String get dashboard {
+    return prefs!.getString("dashboard") ?? "{}";
+  }
+
+  set dashboard(String dashboard) {
+    prefs!.setString("dashboard", dashboard);
   }
 
   String get ipUrl {

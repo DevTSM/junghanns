@@ -1,8 +1,11 @@
+import 'dart:developer';
+
 class MethodPayment {
   String wayToPay;
   String typeWayToPay;
   String type;
   int idProductService;
+  int idAuth;
   String description;
   int number;
 
@@ -12,6 +15,7 @@ class MethodPayment {
       required this.type,
       required this.idProductService,
       required this.description,
+      this.idAuth=0,
       required this.number});
 
   factory MethodPayment.fromState() {
@@ -33,7 +37,18 @@ class MethodPayment {
         typeWayToPay: data["tipoFormaPago"],
         type: data["type"],
         idProductService: data["idProductoServicio"] ?? -1,
+        idAuth: data["idAutorizaion"]??0,
         description: data["descripcion"] ?? "",
         number: int.parse((data["cantidad"]??-1).toString()));
+  }
+  getMap(){
+    return {
+      "formaPago":wayToPay,
+      "tipoFormaPago":typeWayToPay,
+      "type":type,
+      "idProductoServicio":idProductService,
+      "descripcion":description,
+      "cantidad":number
+    };
   }
 }

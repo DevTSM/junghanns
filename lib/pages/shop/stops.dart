@@ -174,6 +174,7 @@ class _StopsState extends State<Stops> {
           };
           Navigator.pop(context);
           handler.insertStopOff(data);
+            widget.customerCurrent.setType(stopCurrent.id==7||stopCurrent.id==9?0:3);
           Fluttertoast.showToast(
             msg: "Guardado de forma local",
             timeInSecForIosWeb: 16,

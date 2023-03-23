@@ -1,11 +1,12 @@
 import 'dart:convert';
-import 'dart:developer' as prefix;
-import 'dart:math';
+import 'dart:developer';
+import 'dart:math' as prefix;
 
 import 'package:junghanns/models/authorization.dart';
 import 'package:junghanns/models/config.dart';
 import 'package:junghanns/models/method_payment.dart';
 import 'package:junghanns/models/sale.dart';
+import 'package:junghanns/preferences/global_variables.dart';
 
 class CustomerModel {
   bool invoice;
@@ -27,6 +28,7 @@ class CustomerModel {
   String days;
   String img;
   String observation;
+  List<String> phones;
   List<MethodPayment> payment;
   List<SaleModel> history;
   List<AuthorizationModel> auth;
@@ -42,7 +44,8 @@ class CustomerModel {
   String notifS;
 
   CustomerModel(
-      {required this.auth,
+      {required this.phones,
+        required this.auth,
       required this.configList,
       required this.payment,
       required this.invoice,
@@ -78,6 +81,7 @@ class CustomerModel {
 
   factory CustomerModel.fromState() {
     return CustomerModel(
+      phones: [],
         auth: [],
         payment: [],
         configList: [],
@@ -87,8 +91,8 @@ class CustomerModel {
         idClient: 0,
         idRoute: 0,
         type: 0,
-        lat: 0,
-        lng: 0,
+        lat: 37.4220,
+        lng: -122.0840,
         priceLiquid: 0.0,
         byCollect: 0.0,
         purse: 0.0,
@@ -116,6 +120,7 @@ class CustomerModel {
   factory CustomerModel.fromList(
       Map<String, dynamic> data, int idRoute, int type) {
     return CustomerModel(
+      phones: [],
         invoice: false,
         id: data["id"],
         orden: data["orden"] ?? 0,
@@ -152,6 +157,7 @@ class CustomerModel {
   factory CustomerModel.fromService(
       Map<String, dynamic> data, int id, int type) {
     return CustomerModel(
+      phones: [],
         invoice: false,
         id: id,
         orden: data["orden"] ?? 0,
@@ -199,6 +205,7 @@ class CustomerModel {
   }
   factory CustomerModel.fromDataBase(Map<String, dynamic> data) {
     return CustomerModel(
+      phones: [],
         invoice: false,
         id: data["id"],
         orden: data["orden"] ?? 0,
@@ -221,9 +228,11 @@ class CustomerModel {
             ? "Sin observaciones"
             : data["observacion"] ?? "",
         history: [],
-        auth: [],
+        auth: data["auth"]!=""?List.from(jsonDecode(data["auth"]).map((e)=>AuthorizationModel.fromDataBase(e)).toList()):[],
+        //auth: [],
         configList: [ConfigModel.fromDatabase(data["config"]??0)],
-        payment: [],
+        payment: data["payment"]!=""?List.from(jsonDecode(data["payment"]).map((e)=>MethodPayment.fromService(e)).toList()):[],
+        //payment: [],
         referenceAddress: data["referenceAddress"] ?? "",
         color: data["color"] ?? "000000",
         //
@@ -233,6 +242,53 @@ class CustomerModel {
         descriptionS: "",
         priceS: 0,
         notifS: "",);
+  }
+  factory CustomerModel.fromPayload(Map<String,dynamic>data){
+    return CustomerModel(
+      phones: [],
+      auth: List.from(data["auth"]).map((e)=>AuthorizationModel.fromService(e)).toList(), 
+      configList: [ConfigModel.fromService(data["config"]??0)], 
+      payment: data["payment"]!=""?List.from(data["payment"]).map((e)=>MethodPayment.fromService(e)).toList():[], 
+      invoice: false, 
+      id: data["id"], 
+      orden: data["orden"] ?? 0, 
+      idClient:  data["id_client"] ?? 0, 
+      idRoute: int.parse((data["id_route"] ?? 0).toString()), 
+      type: data["type"] ?? 0, 
+      lat:  double.parse((data["lat"]??0).toString()), 
+      lng:  double.parse((data["lng"]??0).toString()), 
+      priceLiquid: double.parse((data["price"]??0).toString()), 
+      byCollect:  double.parse((data["por_cobrar"]??0).toString()), 
+      purse:  double.parse((data["purse"]??0).toString()), 
+      name: data["name"]??"", 
+      address: data["address"]??"", 
+      nameRoute: data["nameRoute"]??"", 
+      typeVisit: data["typeVisit"]??"", 
+      category: data["category"]??"", 
+      days: data["days"]??"", 
+      img: data["img"]??"",
+      observation: (data["observacion"] ?? "") == ""
+            ? "Sin observaciones"
+            : data["observacion"] ?? "",
+      history: [], 
+      referenceAddress: data["referenciaDomicilio"] ?? "",
+      color: data["color"] ?? "FF000000", 
+      numberS: data["cargosFijos"] != null
+            ? int.parse((data["cargosFijos"]["cantidad"] ?? 0).toString())
+            : 0, 
+      idProdServS: data["cargosFijos"] != null
+            ? int.parse(
+                (data["cargosFijos"]["idProductoServicio"] ?? 0).toString())
+            : 0, 
+      descriptionS: data["cargosFijos"] != null
+            ? data["cargosFijos"]["descripcion"] ?? ""
+            : "", 
+      priceS: data["cargosFijos"] != null
+            ? double.parse(
+                (data["cargosFijos"]["precioUnitario"] ?? 10).toString())
+            : 0,
+      notifS: data["notificacion"] ?? "", 
+      descServiceS: data["descServicio"] ?? "");
   }
   Map<String, dynamic> getMap() {
     return {
@@ -254,10 +310,11 @@ class CustomerModel {
       'days': days,
       'img': img,
       'observacion': observation,
-      'auth': "",
-      'payment': "",
+      'auth': auth.isNotEmpty?jsonEncode(auth.map((e) => e.getMap()).toList()):"",
+      'payment': payment.isNotEmpty?jsonEncode(payment.map((e) => e.getMap()).toList()):"",
       'color': color,
-      'config':configList.isNotEmpty?configList.first.valor:0
+      'config':configList.isNotEmpty?configList.last.valor:0,
+      'history':history.isNotEmpty?jsonEncode(history.map((e) => e.getMap).toList()):""
     };
   }
 
@@ -268,18 +325,67 @@ class CustomerModel {
         : [];
   }
 
-  setMoney(double purse) {
+  setMoney(double purse,{bool isOffline=false,int type=0}) async {
     this.purse = purse;
+    if(isOffline){
+      this.type=type;
+      await handler.updateUser(this);
+    }
   }
-
+  setType(int type) async {
+    this.type=type;
+     await handler.updateUser(this);
+  }
   setPayment(List<MethodPayment> payment) {
     this.payment=payment;
+  }
+  setPaymentAdd(MethodPayment payment){
+    this.payment.add(payment);
   }
   setAuth(List<AuthorizationModel> auth) {
     this.auth = auth;
   }
   setConfig(List<ConfigModel> configList){
     this.configList=configList;
+  }
+  setPhones(List<String> phones){
+    this.phones=phones;
+  }
+  set setData(Map<String,dynamic> data){
+        invoice= false;
+        lat= double.parse((data["latitud"]??"0") != "" ? (data["latitud"]??"0").replaceAll(",", "") : "0");
+        lng= double.parse((data["longitud"]??"0") != "" ? (data["longitud"]??"0").replaceAll(",", ""):"0");
+        priceLiquid= double.parse((data["precioLiquido"] ?? "0").toString());
+        byCollect= double.parse((data["porCobrar"] ?? 0).toString());
+        purse= double.parse((data["monedero"] ?? 0).toString());
+        name= data["nombre"] ?? "";
+        address= data["domicilio"] ?? "";
+        typeVisit= data["tipoVisita"] ?? "";
+        category= (data["categoria"] ?? "C") == "C" ? "Cliente" : "Empresa";
+        days= data["diasVisita"] ?? "";
+        img= data["url"] ?? "";
+        observation= (data["observacion"] ?? "") == ""
+            ? "Sin observaciones"
+            : data["observacion"] ?? "";
+        referenceAddress= data["referenciaDomicilio"] ?? "";
+        color= data["color"] ?? "FF000000";
+        //
+        descServiceS= data["descServicio"] ?? "";
+        numberS= data["cargosFijos"] != null
+            ? int.parse((data["cargosFijos"]["cantidad"] ?? 0).toString())
+            : 0;
+        idProdServS= data["cargosFijos"] != null
+            ? int.parse(
+                (data["cargosFijos"]["idProductoServicio"] ?? 0).toString())
+            : 0;
+        descriptionS= data["cargosFijos"] != null
+            ? data["cargosFijos"]["descripcion"] ?? ""
+            : "";
+        priceS= data["cargosFijos"] != null
+            ? double.parse(
+                (data["cargosFijos"]["precioUnitario"] ?? 10).toString())
+            : 0;
+        notifS= data["notificacion"] ?? "";
   }
 }
 
@@ -364,7 +470,7 @@ List<String> getNameRouteRich(String name) {
 double calculateDistance(lat1, lon1, lat2, lon2) {
   var p = 0.017453292519943295;
   var a = 0.5 -
-      cos((lat2 - lat1) * p) / 2 +
-      cos(lat1 * p) * cos(lat2 * p) * (1 - cos((lon2 - lon1) * p)) / 2;
-  return 12742 * asin(sqrt(a));
+      prefix.cos((lat2 - lat1) * p) / 2 +
+      prefix.cos(lat1 * p) * prefix.cos(lat2 * p) * (1 - prefix.cos((lon2 - lon1) * p)) / 2;
+  return 12742 * prefix.asin(prefix.sqrt(a));
 }

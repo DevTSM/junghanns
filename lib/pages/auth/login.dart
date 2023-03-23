@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:developer';
 
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:junghanns/components/without_internet.dart';
@@ -248,6 +249,22 @@ class _LoginState extends State<Login> {
                     setState(() {
                       isLoading = false;
                     });
+                    FirebaseMessaging messaging = FirebaseMessaging.instance;
+                    messaging.getToken().then((value) async {
+                      log("Token Messaging =======> ${value.toString()}");
+                      await updateToken(value.toString()).then((answer) {
+                        if (answer.error) {
+                          Fluttertoast.showToast(
+                            msg: "No fue posible actualizar el servicio de notificaciones",
+                            timeInSecForIosWeb: 2,
+                            toastLength: Toast.LENGTH_LONG,
+                            gravity: ToastGravity.TOP,
+                            webShowClose: true,
+                          );
+                          
+                        }
+                      });
+                    });
                     Navigator.pushReplacement(
                         context,
                         MaterialPageRoute<void>(
@@ -274,7 +291,6 @@ class _LoginState extends State<Login> {
         );
       }
     } else {
-      
       Map<String, dynamic> data = jsonDecode(prefs.credentials);
       if ((data["user"] ?? "-1") == userC.text &&
           (data["pass"] ?? "-1") == passC.text) {
@@ -283,28 +299,28 @@ class _LoginState extends State<Login> {
         prefs.nameD = data["nameD"] ?? "";
         prefs.idRouteD = data["idRouteD"] ?? "";
         prefs.nameRouteD = data["nameRouteD"] ?? "";
-        prefs.isLogged=true;
+        prefs.isLogged = true;
         Fluttertoast.showToast(
-        msg: "Sin conexión a internet",
-        timeInSecForIosWeb: 2,
-        toastLength: Toast.LENGTH_LONG,
-        gravity: ToastGravity.TOP,
-        webShowClose: true,
-      );
+          msg: "Sin conexión a internet",
+          timeInSecForIosWeb: 2,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+        );
         Navigator.pushReplacement(
             context,
             MaterialPageRoute<void>(
                 builder: (BuildContext context) => Opening(
                       isLogin: true,
                     )));
-      }else{
-      Fluttertoast.showToast(
-        msg: "Los datos no coinciden.",
-        timeInSecForIosWeb: 2,
-        toastLength: Toast.LENGTH_LONG,
-        gravity: ToastGravity.TOP,
-        webShowClose: true,
-      );
+      } else {
+        Fluttertoast.showToast(
+          msg: "Los datos no coinciden.",
+          timeInSecForIosWeb: 2,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+        );
       }
     }
   }

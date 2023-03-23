@@ -47,7 +47,28 @@ class AuthorizationModel {
         idReasonAuth: data["idMotivoAutorizacion"] ?? 0,
         reason: data["Motivo"] ?? "");
   }
-
+  factory AuthorizationModel.fromDataBase(Map<String, dynamic> data) {
+    return AuthorizationModel(
+        idAuth: data["id"],
+        product: ProductModel.fromServiceProduct(data["product"]),
+        idClient: data["idCliente"] ?? 0,
+        type: data["tipo"] ?? "",
+        idCatAuth: data["idCatAutorizacion"] ?? 0,
+        authText: data["autorizacion"] ?? "",
+        observation: data["observacion"] ?? "",
+        idReasonAuth: data["idMotivoAutorizacion"] ?? 0,
+        reason: data["Motivo"] ?? "");
+  }
+getMap(){
+  return {
+    "id":idAuth,
+    "product":product.getMap(),
+    "idCliente":idClient,
+    "tipo":type,
+    "idCatAutorizacion":idCatAuth,
+    "autorizacion":authText
+  };
+}
   // ProductModel getProduct() {
   //   return ProductModel(
   //       idProduct: idProduct,

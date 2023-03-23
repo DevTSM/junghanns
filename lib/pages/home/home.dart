@@ -1,16 +1,19 @@
 // ignore_for_file: avoid_unnecessary_containers
 import 'dart:async';
+import 'dart:convert';
 import 'dart:developer';
-
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:junghanns/components/loading.dart';
 import 'package:junghanns/components/without_internet.dart';
+import 'package:junghanns/database/async.dart';
 import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/models/dashboard.dart';
+import 'package:junghanns/models/product.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/provider/provider.dart';
 import 'package:junghanns/styles/color.dart';
@@ -29,62 +32,117 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   late Size size;
-  //
   late DashboardModel dashboardR;
   late bool isLoading;
-  //
+  late bool isAsync, isLoadingAsync;
   late ProviderJunghanns provider;
 
   @override
   void initState() {
     super.initState();
     getPermission();
-    dashboardR = DashboardModel.fromState();
-    isLoading = true;
-    getDashboarR();
+    dashboardR = DashboardModel.fromPrefs();
+    isLoading = false;
+    isAsync = false;
+    isLoadingAsync = false;
+    //getDashboarR();
+    getAsync();
   }
-
   getPermission() async {
     await Geolocator.requestPermission();
   }
-
+  
   getDashboarR() async {
-    setState(() {
-      isLoading = true;
-    });
-    await getDashboarRuta(prefs.idRouteD, DateTime.now()).then((answer) {
-      setState(() {
-        isLoading = false;
-      });
-      if (prefs.token != "") {
-        if (answer.error) {
-          Fluttertoast.showToast(
-            msg: "Sin datos de ruta",
-            timeInSecForIosWeb: 2,
-            toastLength: Toast.LENGTH_LONG,
-            gravity: ToastGravity.TOP,
-            webShowClose: true,
-          );
-        } else {
-          log("Si Dashboard ${answer.body.toString()}");
+    Timer(const Duration(milliseconds: 1000), () async {
+      if (provider.connectionStatus < 4) {
+        setState(() {
+          isLoading = true;
+        });
+        await getDashboarRuta(prefs.idRouteD, DateTime.now()).then((answer) {
           setState(() {
-            dashboardR = DashboardModel.fromService(answer.body);
+            isLoading = false;
           });
-        }
+          if (prefs.token != "") {
+            if (answer.error) {
+              Fluttertoast.showToast(
+                msg: "Sin datos de ruta",
+                timeInSecForIosWeb: 2,
+                toastLength: Toast.LENGTH_LONG,
+                gravity: ToastGravity.TOP,
+                webShowClose: true,
+              );
+            } else {
+              setState(() {
+                dashboardR = DashboardModel.fromService(answer.body);
+                prefs.statusRoute = answer.body["paro_de_ruta"] ?? "";
+              });
+            }
+          } else {
+            Fluttertoast.showToast(
+              msg: "Las credenciales caducaron.",
+              timeInSecForIosWeb: 2,
+              toastLength: Toast.LENGTH_LONG,
+              gravity: ToastGravity.TOP,
+              webShowClose: true,
+            );
+            Timer(const Duration(milliseconds: 2000), () async {
+              Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+            });
+          }
+        });
       } else {
-        Fluttertoast.showToast(
-          msg: "Las credenciales caducaron.",
-          timeInSecForIosWeb: 2,
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.TOP,
-          webShowClose: true,
-        );
-        Timer(const Duration(milliseconds: 2000), () async {
-          Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+        setState(() {
+          isLoading = false;
         });
       }
     });
   }
+
+  getAsync() async {
+    List<Map<String, dynamic>> dataList = await handler.retrieveSales();
+    List<Map<String, dynamic>> dataList2 = await handler.retrieveStopOff();
+    prefs.dataSale = true;
+    setState(() {
+      isAsync = dataList2.isEmpty && dataList.isEmpty ? false : true;
+    });
+    log('${isAsync ? 'listo para sincronizar' : 'Sin datos para sincronizar'} =>');
+  }
+
+  // getStock() async {
+  //   Timer(const Duration(milliseconds: 1000), () async {
+  //     if (provider.connectionStatus < 4) {
+  //       await getStockList(prefs.idRouteD).then((answer) {
+  //         setState(() {
+  //           isLoading = false;
+  //         });
+  //         if (answer.error) {
+  //           Fluttertoast.showToast(
+  //             msg: "Sin productos",
+  //             timeInSecForIosWeb: 2,
+  //             toastLength: Toast.LENGTH_LONG,
+  //             gravity: ToastGravity.TOP,
+  //             webShowClose: true,
+  //           );
+  //         } else {
+  //           prefs.stock = jsonEncode(answer.body);
+  //           List<ProductModel> productsList = [];
+  //           answer.body.map((e) {
+  //             productsList.add(ProductModel.fromServiceProduct(e));
+  //           }).toList();
+  //           if (productsList.isNotEmpty) {
+  //             productsList
+  //                 .sort(((a, b) => b.rank.length.compareTo(a.rank.length)));
+  //           }
+  //         }
+  //       });
+  //     } else {
+  //       setState(() {
+  //         isLoading = false;
+  //       });
+  //     }
+  //   });
+  // }
+
 
   @override
   Widget build(BuildContext context) {
@@ -110,7 +168,13 @@ class _HomeState extends State<Home> {
                 ],
               ),
             )),
-        buttonSync(),
+        isLoadingAsync
+            ? const Align(
+                alignment: Alignment.bottomCenter,
+                child: SpinKitCircle(
+                  color: ColorsJunghanns.blue,
+                ))
+            : Visibility(visible: isAsync, child: buttonSync()),
         Visibility(visible: isLoading, child: const LoadingJunghanns())
       ],
     );
@@ -122,8 +186,8 @@ class _HomeState extends State<Home> {
         padding:
             const EdgeInsets.only(left: 30, right: 30, top: 10, bottom: 10),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(
-            "Bienvenido ${provider.path}",
+          const Text(
+            "Bienvenido",
             style: TextStyles.green22_4,
           ),
           Text(
@@ -335,7 +399,16 @@ class _HomeState extends State<Home> {
               ],
             ),
           ),
-          onTap: () {},
+          onTap: () {
+            setState(() {
+              isLoadingAsync = true;
+            });
+            Async async = Async(provider: provider);
+            async.setDataSales().then(
+                (value) => async.setDataStop().then((value) => setState(() {
+                      isLoadingAsync = false;
+                    })));
+          },
         ));
   }
 }

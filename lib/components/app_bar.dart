@@ -14,12 +14,14 @@ PreferredSizeWidget appBarJunghanns(BuildContext context, Size size,ProviderJung
         statusBarColor: ColorsJunghanns.whiteJ,
         statusBarIconBrightness: Brightness.dark,
         statusBarBrightness: Brightness.dark),
-    leading: GestureDetector(
+    leading: Builder(
+          builder: (context) => GestureDetector(
       child: Container(
           padding: const EdgeInsets.only(left: 24),
           child: Image.asset("assets/icons/menu.png")),
-      onTap: () {},
-    ),
+      onTap: () =>Scaffold.of(context).openDrawer(),
+    )
+        ),
     actions: provider.asyncProcess?[
       Container(
         alignment: Alignment.center,

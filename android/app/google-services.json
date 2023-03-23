@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "894317123298",
+    "project_id": "junny-c274e",
+    "storage_bucket": "junny-c274e.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:894317123298:android:e23d3f56cf073b06cdf0bb",
+        "android_client_info": {
+          "package_name": "com.devts.junghanns"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "894317123298-0o8ss4jlpcr1fut9e0cnr82nnhtbpqg2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDEjh_Essligq-XR-cfNkdtUehEdDTD6II"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "894317123298-0o8ss4jlpcr1fut9e0cnr82nnhtbpqg2.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -2,6 +2,8 @@
 import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:linear_progress_bar/linear_progress_bar.dart';
 import 'package:location/location.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
@@ -55,10 +57,11 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
   late dynamic pickedImageFile;
   late List<ConfigModel> configList;
   late List<AuthorizationModel> authList;
+  late LocationData currentLocation;
   late Size size;
   late double dif;
   late bool isRange;
-  late bool isLoading, isLoadingHistory;
+  late bool isLoading, isLoadingHistory, isLoadingRange;
 
   @override
   void initState() {
@@ -70,10 +73,29 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
     isRange = false;
     isLoading = true;
     isLoadingHistory = false;
-    getDataDetails();
+    isLoadingRange = false;
+    currentLocation = LocationData.fromMap({});
+    checkToken();
   }
 
-  //getAuth(); se llama cuando se intente vender
+  checkToken() async {
+    await getDetailsCustomer(widget.customerCurrent.id, widget.type)
+        .then((answer) async {
+      setState(() {
+        isLoading = false;
+      });
+      if (!answer.error) {
+        setState(() {
+          widget.customerCurrent.setData=answer.body;
+          handler.updateUser(widget.customerCurrent);
+        });
+      }
+    });
+    setCurrentLocation();
+    getHistory();
+  }
+
+  //deshabilitado
   getDataDetails() async {
     Timer(const Duration(milliseconds: 1000), () async {
       if (provider.connectionStatus < 4) {
@@ -103,9 +125,9 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
           setCurrentLocation();
           getHistory();
         });
-      }else{
+      } else {
         setState(() {
-          isLoading=false;
+          isLoading = false;
         });
         setCurrentLocation();
       }
@@ -130,135 +152,140 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
       }
     });
   }
-
-  getAuth() async {
-    authList.clear();
-    if(provider.connectionStatus< 4){
-    await getAuthorization(widget.customerCurrent.idClient, prefs.idRouteD)
-        .then((answer) {
-      if (answer.error) {
-        log("Sin Autorizaciones");
-      } else {
-        log("Auth yes");
-        answer.body
-            .map((e) => authList.add(AuthorizationModel.fromService(e)))
-            .toList();
-        if (authList.isNotEmpty) {
-        }
-      }
-    });
-    }
-  }
+  // ---------
   setCurrentLocation() async {
-    try{
-    Location locationInstance=Location();
-    PermissionStatus permission = await locationInstance.hasPermission();
-    if (permission == PermissionStatus.granted) {
-      provider.permission = true;
-      locationInstance.changeSettings(accuracy: LocationAccuracy.high);
-      if(await locationInstance.serviceEnabled()){
+    try {
+      setState(() {
+        isLoadingRange = true;
+      });
+      Location locationInstance = Location();
+      PermissionStatus permission = await locationInstance.hasPermission();
+      if (permission == PermissionStatus.granted) {
         provider.permission = true;
-      LocationData currentLocation = await locationInstance.getLocation().timeout(const Duration(seconds: 15));
-      await funCheckDistance(currentLocation);
-      }else{
-        provider.permission = false;
-        Fluttertoast.showToast(
+        locationInstance.changeSettings(accuracy: LocationAccuracy.high);
+        if (await locationInstance.serviceEnabled()) {
+          provider.permission = true;
+          currentLocation = await locationInstance
+              .getLocation()
+              .timeout(const Duration(seconds: 15));
+          await funCheckDistance(currentLocation);
+        } else {
+          provider.permission = false;
+          Fluttertoast.showToast(
               msg: "Activa el servicio de Ubicacion e intentalo de nuevo.",
               timeInSecForIosWeb: 2,
               toastLength: Toast.LENGTH_LONG,
               gravity: ToastGravity.TOP,
               webShowClose: true,
-              backgroundColor:ColorsJunghanns.red);
-      }
-    } else {
-      print({"permission": permission.toString()});
-      provider.permission = false;
-      isRange = false;
-    }
-    } catch (e) {
-          log("***ERROR -- $e");
-          Fluttertoast.showToast(
-              msg: "Tiempo de espera superado, vuelve a intentarlo",
-              timeInSecForIosWeb: 2,
-              toastLength: Toast.LENGTH_LONG,
-              gravity: ToastGravity.TOP,
-              webShowClose: true,
-              backgroundColor:ColorsJunghanns.red);
-          return false;
+              backgroundColor: ColorsJunghanns.red);
         }
-  }
-
-  funCheckDistance(LocationData currentLocation) async {
-    try{
-    if (provider.connectionStatus < 4) {
-    await getConfig(widget.customerCurrent.idClient).then((answer) {
-      if (answer.error) {
-        Fluttertoast.showToast(
-          msg: answer.message,
+      } else {
+        log("permission ${permission.toString()}");
+        provider.permission = false;
+        isRange = false;
+      }
+      setState(() {
+        isLoadingRange = false;
+      });
+    } catch (e) {
+      setState(() {
+        isLoadingRange = false;
+      });
+      Fluttertoast.showToast(
+          msg: "Tiempo de espera superado, vuelve a intentarlo",
           timeInSecForIosWeb: 2,
           toastLength: Toast.LENGTH_LONG,
           gravity: ToastGravity.TOP,
           webShowClose: true,
-        );
-      } else {
-        for (var item in answer.body) {
-          configList.add(ConfigModel.fromService(item));
-        }
-        setState(() {
-          dif = calculateDistance(
-              widget.customerCurrent.lat,
-              widget.customerCurrent.lng,
-              currentLocation.latitude,
-              currentLocation.longitude)*1000;
-          isRange = dif <= configList.last.valor;
-        });
-      }
-    });
-    }else{
-      setState(() {
-          dif = calculateDistance(
-              widget.customerCurrent.lat,
-              widget.customerCurrent.lng,
-              currentLocation.latitude,
-              currentLocation.longitude)*1000;
-          isRange = dif <= (widget.customerCurrent.configList.isNotEmpty?widget.customerCurrent.configList.first.valor:0);
-        });
+          backgroundColor: ColorsJunghanns.red);
+      return false;
     }
-    } catch (e) {
-          log("***ERROR -- $e");
-          Fluttertoast.showToast(
-              msg: "Tiempo de espera superado, vuelve a intentarlo",
+  }
+  
+  funCheckDistance(LocationData currentLocation) async {
+    try {
+      if (provider.connectionStatus < 4) {
+        await getConfig(widget.customerCurrent.idClient).then((answer) {
+          if (answer.error) {
+            Fluttertoast.showToast(
+              msg: answer.message,
               timeInSecForIosWeb: 2,
               toastLength: Toast.LENGTH_LONG,
               gravity: ToastGravity.TOP,
               webShowClose: true,
-              backgroundColor:ColorsJunghanns.red);
-          return false;
-        }
+            );
+          } else {
+            for (var item in answer.body) {
+              configList.add(ConfigModel.fromService(item));
+              //log("-------- ${configList.length} ");
+            }
+            setState(() {
+              dif = calculateDistance(
+                      widget.customerCurrent.lat,
+                      widget.customerCurrent.lng,
+                      currentLocation.latitude,
+                      currentLocation.longitude) *
+                  1000;
+              isRange = dif <= configList.last.valor;
+            });
+          }
+        });
+      } else {
+        setState(() {
+          dif = calculateDistance(
+                  widget.customerCurrent.lat,
+                  widget.customerCurrent.lng,
+                  currentLocation.latitude,
+                  currentLocation.longitude) *
+              1000;
+          isRange = dif <=
+              (widget.customerCurrent.configList.isNotEmpty
+                  ? widget.customerCurrent.configList.last.valor
+                  : 0);
+        });
+      }
+    } catch (e) {
+      log("***ERROR -- $e");
+      Fluttertoast.showToast(
+          msg: "Tiempo de espera superado, vuelve a intentarlo",
+          timeInSecForIosWeb: 2,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+          backgroundColor: ColorsJunghanns.red);
+      return false;
+    }
   }
-
+  
   getHistory() async {
     setState(() {
-      isLoadingHistory=true;
+      isLoadingHistory = true;
     });
     await getHistoryCustomer(widget.customerCurrent.idClient).then((answer) {
+      log("---------History ${answer.body}");
       setState(() {
-        isLoadingHistory=false;
+        isLoadingHistory = false;
       });
-      if (answer.error) {
-        Fluttertoast.showToast(
-          msg: answer.message,
-          timeInSecForIosWeb: 2,
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.TOP,
-          webShowClose: true,
-        );
-      } else {
+      if (!answer.error) {
         setState(() {
           widget.customerCurrent.setHistory(answer.body);
+          handler.updateUser(widget.customerCurrent);
         });
       }
     });
+  }
+
+  getAuth() async {
+    authList.clear();
+      await getAuthorization(widget.customerCurrent.idClient, prefs.idRouteD)
+          .then((answer) {
+        if (!answer.error){
+          answer.body
+              .map((e) => authList.add(AuthorizationModel.fromService(e)))
+              .toList();
+        }
+      });
+      widget.customerCurrent.auth.map((e) => authList.add(e)).toList();
   }
 
   showSelectPR() {
@@ -305,18 +332,21 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
           );
         });
   }
-  
+
   navigatorShopping() async {
     Navigator.pop(context);
-    try{
-  Navigator.push(
-        context,
-        MaterialPageRoute<void>(
-            builder: (BuildContext context) => ShoppingCart(
-                  customerCurrent: widget.customerCurrent,
-                  authList: authList.isEmpty ? authList : [authList.first],
-                ))).then((value)=>provider.connectionStatus<4? getMoney():null);
-    }catch(e){
+    try {
+      Navigator.push(
+          context,
+          MaterialPageRoute<void>(
+              builder: (BuildContext context) => ShoppingCart(
+                    customerCurrent: widget.customerCurrent,
+                    authList: authList.isEmpty ? authList : [authList.first],
+                  ))).then(
+          (value) => setState((){
+            widget.customerCurrent;
+          }));
+    } catch (e) {
       log(e.toString());
     }
   }
@@ -328,32 +358,35 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
         MaterialPageRoute<void>(
             builder: (BuildContext context) => ShoppingCartRefill(
                   customerCurrent: widget.customerCurrent,
-                ))).then((value) => provider.connectionStatus<4? getMoney():null);
+                ))).then((value) =>setState(() {}));
   }
 
   funCheckDistanceSale(bool isSale) async {
     setState(() {
-      isLoading=true;
+      isLoading = true;
     });
     await setCurrentLocation();
     await getAuth();
     setState(() {
-      isLoading=false;
+      isLoading = false;
     });
-    if(isRange){
-      if(isSale){
-      showSelectPR();
-      }else{
-        if(mounted){
-        Navigator.push(
-            context,
-            MaterialPageRoute<void>(
-                builder: (BuildContext context) => Stops(
-                    customerCurrent: widget.customerCurrent,
-                    distance: (configList.isNotEmpty? configList.last.valor:0))));
+    if (isRange) {
+      //TODO:pruebas if(true){
+      if (isSale) {
+        showSelectPR();
+      } else {
+        if (mounted) {
+          Navigator.push(
+              context,
+              MaterialPageRoute<void>(
+                  builder: (BuildContext context) => Stops(
+                      customerCurrent: widget.customerCurrent,
+                      distance: (configList.isNotEmpty
+                          ? configList.last.valor
+                          : 0))));
         }
       }
-    }else{
+    } else {
       Fluttertoast.showToast(
         msg: "Estás a ${dif.ceil()} mtrs del domicilio",
         timeInSecForIosWeb: 16,
@@ -454,29 +487,69 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
       size = MediaQuery.of(context).size;
     });
     provider = Provider.of<ProviderJunghanns>(context);
-    return Stack(children: [
-      Scaffold(
-        appBar: AppBar(
-          backgroundColor: ColorsJunghanns.blueJ,
-          systemOverlayStyle: const SystemUiOverlayStyle(
-              statusBarColor: ColorsJunghanns.blueJ,
-              statusBarIconBrightness: Brightness.light,
-              statusBarBrightness: Brightness.light),
-          leading: GestureDetector(
-            child: Container(
-                padding: const EdgeInsets.only(left: 24),
-                child: Image.asset("assets/icons/menuWhite.png")),
-            onTap: () {},
-          ),
-          elevation: 0,
-        ),
-        backgroundColor: ColorsJunghanns.lightBlue,
-        body: refreshScroll(),
-        bottomNavigationBar:
-            bottomBar(() {}, widget.indexHome, isHome: false, context: context),
-      ),
-      Visibility(visible: isLoading, child: const LoadingJunghanns())
-    ]);
+    return !provider.asyncProcess
+        ? Stack(children: [
+            Scaffold(
+              appBar: AppBar(
+                leadingWidth: 30,
+                backgroundColor: ColorsJunghanns.blueJ,
+                systemOverlayStyle: const SystemUiOverlayStyle(
+                    statusBarColor: ColorsJunghanns.blueJ,
+                    statusBarIconBrightness: Brightness.light,
+                    statusBarBrightness: Brightness.light),
+                leading: Container(),
+                elevation: 0,
+              ),
+              backgroundColor: ColorsJunghanns.lightBlue,
+              body: refreshScroll(),
+              bottomNavigationBar: bottomBar(() {}, widget.indexHome,
+                  isHome: false, context: context),
+            ),
+            Visibility(visible: isLoading, child: const LoadingJunghanns())
+          ])
+        : Scaffold(
+            body: Stack(
+            children: [
+              Container(
+                  decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                          colors: [
+                    Color.fromARGB(255, 244, 252, 253),
+                    Color.fromARGB(255, 206, 240, 255)
+                  ],
+                          stops: [
+                    0.2,
+                    0.8
+                  ],
+                          begin: FractionalOffset.topCenter,
+                          end: FractionalOffset.bottomCenter))),
+              Center(
+                child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Image.asset("assets/images/junghannsLogo.png"),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      Text(provider.labelAsync),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      Padding(
+                          padding: const EdgeInsets.only(left: 40, right: 40),
+                          child: LinearProgressBar(
+                            minHeight: 7,
+                            maxSteps: provider.totalAsync,
+                            progressType: LinearProgressBar
+                                .progressTypeLinear, // Use Linear progress
+                            currentStep: provider.currentAsync,
+                            progressColor: ColorsJunghanns.green,
+                            backgroundColor: ColorsJunghanns.grey,
+                          ))
+                    ]),
+              ),
+            ],
+          ));
   }
 
   Widget refreshScroll() {
@@ -694,8 +767,8 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
             height: widget.customerCurrent.descServiceS != "" ? 15 : 0,
           ),
           Visibility(
-            visible: widget.customerCurrent.descServiceS != "",
-            child: observation("Descripción de servicio",
+              visible: widget.customerCurrent.descServiceS != "",
+              child: observation("Descripción de servicio",
                   widget.customerCurrent.descServiceS)),
           const SizedBox(
             height: 10,
@@ -712,64 +785,149 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
                 children: [
                   Expanded(
                       child: itemBalance("liquitIcon.png", "Precio Liquido",
-                          widget.customerCurrent.priceLiquid,size.width-40)),
+                          widget.customerCurrent.priceLiquid, size.width - 40)),
                   Expanded(
                       child: itemBalance("cashIcon.png", "Monedero",
-                          widget.customerCurrent.purse,size.width-40)),
+                          widget.customerCurrent.purse, size.width - 40)),
                   Expanded(
                       child: itemBalance("creditIcon.png", "Por cobrar",
-                          widget.customerCurrent.byCollect,size.width-40))
+                          widget.customerCurrent.byCollect, size.width - 40))
                 ],
               )),
           const SizedBox(
             height: 15,
           ),
           Visibility(
-            visible: widget.customerCurrent.notifS != "",
-            child: observation(
+              visible: widget.customerCurrent.notifS != "",
+              child: observation(
                   "Notificación de servicio", widget.customerCurrent.notifS)),
           SizedBox(
             height: widget.customerCurrent.notifS != "" ? 15 : 0,
           ),
           Container(
               padding: const EdgeInsets.only(left: 15, right: 15),
-              child: isRange
-                  ? Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        Expanded(
-                            child: ButtonJunghanns(
-                                decoration: Decorations.greenBorder5,
-                                style: TextStyles.white17_5,
-                                fun: (){funCheckDistanceSale(true);},
-                                isIcon: true,
-                                icon: Image.asset(
-                                  "assets/icons/shoppingCardWhiteIcon.png",
-                                  height: 30,
-                                ),
-                                label: "Venta")),
-                        const SizedBox(
-                          width: 10,
-                        ),
-                        Expanded(
-                            child: ButtonJunghanns(
-                                decoration: Decorations.whiteBorder5Red,
-                                style: TextStyles.red17_6,
-                                fun: (){
-                                  funCheckDistanceSale(false);},
-                                isIcon: true,
-                                icon: Container(
-                                  width: 0,
-                                  height: 30,
-                                ),
-                                label: "Parada"))
-                      ],
+              child: isLoadingRange
+                  ? const SpinKitCircle(
+                      color: ColorsJunghanns.blue,
                     )
-                  : ButtonJunghanns(
-                      fun: () {},
-                      decoration: Decorations.whiteBorder5Red,
-                      style: TextStyles.red17_6,
-                      label: "ESTÁS A ${dif.ceil()} mtrs DEL CLIENTE !!")),
+                  : isRange
+                      ? prefs.statusRoute == "INRT" ||
+                              prefs.statusRoute == "FNCM"
+                          ? Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: [
+                                Expanded(
+                                    child: ButtonJunghanns(
+                                        decoration: Decorations.greenBorder5,
+                                        style: TextStyles.white17_5,
+                                        fun: () {
+                                          funCheckDistanceSale(true);
+                                        },
+                                        isIcon: true,
+                                        icon: Image.asset(
+                                          "assets/icons/shoppingCardWhiteIcon.png",
+                                          height: 30,
+                                        ),
+                                        label: "Venta")),
+                                const SizedBox(
+                                  width: 10,
+                                ),
+                                Expanded(
+                                    child: ButtonJunghanns(
+                                        decoration: Decorations.whiteBorder5Red,
+                                        style: TextStyles.red17_6,
+                                        fun: () {
+                                          funCheckDistanceSale(false);
+                                        },
+                                        isIcon: true,
+                                        icon: Container(
+                                          width: 0,
+                                          height: 30,
+                                        ),
+                                        label: "Parada"))
+                              ],
+                            )
+                          : prefs.statusRoute == "INCM"
+                              ? ButtonJunghanns(
+                                  fun: () async {
+                                    if (provider.connectionStatus < 4) {
+                                      setState(() {
+                                        isLoading = true;
+                                      });
+                                      await setInitRoute(
+                                              currentLocation.latitude!,
+                                              currentLocation.longitude!,
+                                              status: "fin_comida")
+                                          .then((answer) {
+                                        setState(() {
+                                          isLoading = false;
+                                        });
+                                        if (answer.error) {
+                                          Fluttertoast.showToast(
+                                            msg:
+                                                "No fue posible continuar la ruta, revisa tu conexion a internet",
+                                            timeInSecForIosWeb: 2,
+                                            toastLength: Toast.LENGTH_LONG,
+                                            gravity: ToastGravity.TOP,
+                                            webShowClose: true,
+                                          );
+                                        } else {
+                                          setState(() {
+                                            prefs.statusRoute = "FNCM";
+                                          });
+                                        }
+                                      });
+                                    } else {
+                                      setState(() {
+                                        prefs.statusRoute = "FNCM";
+                                      });
+                                    }
+                                  },
+                                  decoration: Decorations.greenBorder5,
+                                  style: TextStyles.white17_6,
+                                  label: "Continuar ruta")
+                              : ButtonJunghanns(
+                                  fun: () async {
+                                    if (provider.connectionStatus < 4) {
+                                      setState(() {
+                                        isLoading = true;
+                                      });
+                                      await setInitRoute(
+                                              currentLocation.latitude!,
+                                              currentLocation.longitude!)
+                                          .then((answer) {
+                                        setState(() {
+                                          isLoading = false;
+                                        });
+                                        if (answer.error) {
+                                          Fluttertoast.showToast(
+                                            msg:
+                                                "No fue posible iniciar la ruta, revisa tu conexion a internet",
+                                            timeInSecForIosWeb: 2,
+                                            toastLength: Toast.LENGTH_LONG,
+                                            gravity: ToastGravity.TOP,
+                                            webShowClose: true,
+                                          );
+                                        } else {
+                                          setState(() {
+                                            prefs.statusRoute = "INRT";
+                                          });
+                                        }
+                                      });
+                                    } else {
+                                      setState(() {
+                                        prefs.statusRoute = "INRT";
+                                      });
+                                    }
+                                  },
+                                  decoration: Decorations.greenBorder5,
+                                  style: TextStyles.white17_6,
+                                  label: "Iniciar ruta")
+                      : ButtonJunghanns(
+                          fun: () {},
+                          decoration: Decorations.whiteBorder5Red,
+                          style: TextStyles.red17_6,
+                          label: "ESTÁS A ${dif.ceil()} mtrs DEL CLIENTE !!")),
           const SizedBox(
             height: 20,
           ),
@@ -842,7 +1000,7 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
               )),
         ));
   }
-  
+
   Widget photoCard() {
     return Container(
         width: double.infinity,
@@ -936,5 +1094,4 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
           ],
         ));
   }
-
 }

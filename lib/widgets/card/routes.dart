@@ -2,7 +2,6 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:junghanns/models/customer.dart';
-import 'package:junghanns/pages/customer/details.dart';
 import 'package:junghanns/pages/customer/details2.dart';
 import 'package:junghanns/styles/text.dart';
 

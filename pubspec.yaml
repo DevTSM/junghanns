@@ -28,17 +28,25 @@ dependencies:
   sqflite: ^2.0.3
   shared_preferences: ^2.0.6
   connectivity_plus: ^2.3.6
-  provider:
+  provider: ^6.0.2
   url_launcher: ^6.0.20
   flutter_spinkit: ^5.1.0
   google_maps_flutter: ^2.1.10
   map_launcher: ^2.2.0
   flutter_multi_formatter: ^2.5.8
   pin_code_text_field: ^1.8.0
-  flutter_speedtest: ^0.0.2+2
   location: ^4.4.0
   linear_progress_bar: "^1.1.0"
-  
+  path_provider: ^2.0.9
+  speed_test_dart: ^1.0.0
+  flutter_internet_speed_test: ^1.2.0
+  firebase_analytics: ^9.1.2
+  firebase_core: ^1.13.1
+  firebase_messaging: ^11.2.11
+  flutter_local_notifications: ^9.4.0
+dependency_overrides:
+  firebase_core_platform_interface: 4.5.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

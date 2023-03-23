@@ -1145,25 +1145,42 @@ class _NewCustomerState extends State<NewCustomer> {
               //Buttons Resend and Cancel
               Container(
                   padding: const EdgeInsets.only(top: 15),
-                  child: Row(
+                  child: Column(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.only(left: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          SizedBox(
                         width: size.width * 0.33,
                         height: 35,
                         child: ButtonJunghanns(
                             fun: () {
                               log("RESEND CODE");
-                              funResendCode();
+                              funResendCode(true);
+                            },
+                            decoration: Decorations.greenJCard,
+                            style: TextStyles.white15R,
+                            label: "WhatsApp"),
+                      ),
+                      SizedBox(
+                        width: size.width * 0.33,
+                        height: 35,
+                        child: ButtonJunghanns(
+                            fun: () {
+                              log("CANCEL CODE");
+                              funResendCode(false);
                             },
                             decoration: Decorations.blueJ2Card,
                             style: TextStyles.white15R,
-                            label: "Reenviar código"),
+                            label: "SMS"),
                       ),
-                      Container(
-                        padding: const EdgeInsets.only(right: 8),
-                        width: size.width * 0.33,
+                        ],
+                      ),
+                      const SizedBox(
+                        height: 15,
+                      ),
+                      SizedBox(
                         height: 35,
                         child: ButtonJunghanns(
                             fun: () {
@@ -1267,7 +1284,7 @@ class _NewCustomerState extends State<NewCustomer> {
         });
   }
 
-  funResendCode() async {
+  funResendCode(bool isW) async {
     log("FUN RESEND CODE");
 
     Map<String, dynamic> data = {
@@ -1275,7 +1292,8 @@ class _NewCustomerState extends State<NewCustomer> {
       "id_ruta": prefs.idRouteD,
       "lat": lat.toString(),
       "lon": lng.toString(),
-      "envio_sms": true
+      "envio_sms": true,
+      "canal":isW?"whatsapp":"sms"
     };
 
     log("INFO RESEND: $data");

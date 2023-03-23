@@ -199,6 +199,10 @@ class TextStyles {
       fontSize: 20,
       fontFamily: 'MyriadPro-BoldCondit',
       color: ColorsJunghanns.blueJ);
+       static TextStyle blueJ50BoldIt = const TextStyle(
+      fontSize: 50,
+      fontFamily: 'MyriadPro-BoldCondit',
+      color: ColorsJunghanns.blueJ);
 
   static TextStyle blueJ20Bold = const TextStyle(
       fontSize: 20, fontFamily: 'MyriadPro-Bold', color: ColorsJunghanns.blueJ);

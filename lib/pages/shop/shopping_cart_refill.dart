@@ -1,6 +1,7 @@
 // ignore_for_file: must_be_immutable
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:developer';
 import 'package:junghanns/widgets/card/product.dart';
 import 'package:location/location.dart';
@@ -287,7 +288,6 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
       "tipo_operacion": "R",
       "version": "1.13"
     };
-    log("LA DATA ES: $data");
     if(provider.connectionStatus<4){
     await postSale(data).then((answer) {
       setState(() {
@@ -316,8 +316,27 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
       }
     });
     }else{
+      Map<String, dynamic> data = {
+      "idCustomer": provider.basketCurrent.idCustomer,
+      "idRoute": provider.basketCurrent.idRoute,
+      "lat": "$latSale",
+      "lng": "$lngSale",
+      "saleItems": jsonEncode(List.from(provider.basketCurrent.sales.map((element) => {"cantidad": element.number,
+        "id_producto": element.idProduct,
+        "precio_unitario": element.price
+      }).toList())),
+      "idAuth": null,
+      "paymentMethod": jsonEncode([{
+        "tipo": "E",
+        "importe": (provider.basketCurrent.sales.map((e) => e.price).toList()).reduce((value, element) => value+element),
+      }]),
+      "idOrigin": provider.basketCurrent.idDataOrigin,
+      "folio": null,
+      "type": "R",
+    };
       handler.insertSale(data);
     prefs.dataSale=true;
+    widget.customerCurrent.setMoney(((provider.basketCurrent.sales.map((element) => element.price*element.number).toList()).reduce((value, element) => value+element))+widget.customerCurrent.purse,isOffline:true,type:0);
     Fluttertoast.showToast(
             msg: "Guardado de forma local",
             timeInSecForIosWeb: 16,

@@ -1,8 +1,10 @@
+import 'dart:convert';
 import 'dart:developer';
 
 import 'package:junghanns/models/authorization.dart';
 import 'package:junghanns/models/config.dart';
 import 'package:junghanns/models/customer.dart';
+import 'package:junghanns/models/folio.dart';
 import 'package:junghanns/models/method_payment.dart';
 import 'package:junghanns/models/refill.dart';
 import 'package:junghanns/models/stop.dart';
@@ -11,6 +13,7 @@ import 'package:junghanns/provider/provider.dart';
 import 'package:junghanns/services/auth.dart';
 import 'package:junghanns/services/customer.dart';
 import 'package:junghanns/services/store.dart';
+import 'package:junghanns/util/connection.dart';
 
 class Async {
   ProviderJunghanns provider;
@@ -20,26 +23,40 @@ class Async {
     prefs.isAsyncCurrent = true;
     return await handler.deleteTable().then((value) async {
       provider.labelAsync = "Limpiando base de datos";
-      provider.labelAsync = "Sincronizando servicios especiales";
-      return getDataCustomerList("E", 1).then((value1) async {
-        provider.labelAsync = "Sincronizando ruta";
-        return getDataCustomerList("R", 2).then((value2) {
-          provider.labelAsync = "Sincronizando segunda vuelta";
-          return getDataCustomerList("S", 3).then((value3) {
-            provider.labelAsync = "Sincronizando clientes llama";
-            return getDataCustomerList("C", 4).then((value4) {
-              provider.labelAsync = "Sincronizando paradas";
-              return getDataStops().then((value5) {
-                provider.labelAsync = "Sincronizando recargas";
-                return getDataRefill().then((value6) {
-                  prefs.isAsyncCurrent = false;
-                  return true;
-                });
-              });
+      provider.labelAsync = "Sincronizando clientes";
+      return getDataCustomers().then((value4) {
+        provider.labelAsync = "Sincronizando paradas";
+        return getDataStops().then((value5) {
+          provider.labelAsync = "Sincronizando recargas";
+          return getDataRefill().then((value6) {
+            provider.labelAsync = "Sincronizando folios";
+            return getDataFolios().then((value6) {
+              prefs.isAsyncCurrent = false;
+              return true;
             });
           });
         });
       });
+    });
+  }
+
+  Future<bool> getDataCustomers() async {
+    List<CustomerModel> list = [];
+    provider.currentAsync = 1;
+    provider.totalAsync = 2;
+    return await getCustomers().then((answer) async {
+      if (answer.error) {
+        log("error ${answer.body.toString()}");
+        return true;
+      } else {
+        for (var item in answer.body) {
+          list.add(CustomerModel.fromPayload(item));
+        }
+        provider.currentAsync = 2;
+        return await handler.insertUser(list).then((value) {
+          return true;
+        });
+      }
     });
   }
 
@@ -84,47 +101,47 @@ class Async {
                             if (authList.isNotEmpty) {
                               item.setAuth(authList);
                             }
-
-                            await getPaymentMethods(item.idClient, prefs.idRouteD)
-                                .then((answer) async {
-                              if (!answer.error) {
-                                List<MethodPayment> paymentsList = [];
-                                if (item.auth.isNotEmpty &&
-                                    item.auth.first.type == "C") {
+                          }
+                          await getPaymentMethods(item.idClient, prefs.idRouteD)
+                              .then((answer) async {
+                            if (!answer.error) {
+                              List<MethodPayment> paymentsList = [];
+                              if (item.auth.isNotEmpty &&
+                                  item.auth.first.type == "C") {
+                                paymentsList.add(MethodPayment(
+                                    wayToPay: "Credito",
+                                    typeWayToPay: "C",
+                                    type: "Atributo",
+                                    idProductService: -1,
+                                    description: "",
+                                    number: -1));
+                                item.setPayment(paymentsList);
+                              } else {
+                                for (var e in answer.body) {
+                                  paymentsList
+                                      .add(MethodPayment.fromService(e));
+                                }
+                                if (item.purse > 0) {
                                   paymentsList.add(MethodPayment(
-                                      wayToPay: "Credito",
-                                      typeWayToPay: "C",
-                                      type: "Atributo",
+                                      wayToPay: "Monedero",
+                                      typeWayToPay: "M",
+                                      type: "Monedero",
                                       idProductService: -1,
                                       description: "",
                                       number: -1));
-                                  item.setPayment(paymentsList);
-                                } else {
-                                  for (var e in answer.body) {
-                                    paymentsList
-                                        .add(MethodPayment.fromService(e));
-                                  }
-                                  if (item.purse > 0) {
-                                    paymentsList.add(MethodPayment(
-                                        wayToPay: "Monedero",
-                                        typeWayToPay: "M",
-                                        type: "Monedero",
-                                        idProductService: -1,
-                                        description: "",
-                                        number: -1));
-                                  }
-                                  item.setPayment(paymentsList);
                                 }
-                                await getHistoryCustomer(item.idClient)
-                                    .then((answer) {
-                                  if (!answer.error) {
-                                    item.setHistory(answer.body);
-                                  }
-                                  list.add(item);
-                                });
+                                item.setPayment(paymentsList);
                               }
-                            });
-                          }
+                              await getHistoryCustomer(item.idClient)
+                                  .then((answer) {
+                                if (!answer.error) {
+                                  item.setHistory(answer.body);
+                                  list.add(item);
+                                  log("insertando sgregando a la lista de ${list.length}");
+                                }
+                              });
+                            }
+                          });
                         });
                       }
                     });
@@ -176,5 +193,114 @@ class Async {
         return false;
       }
     });
+  }
+  Future<bool> getDataFolios() async {
+    return await getFolios().then((answer) {
+      List<FolioModel> folioList = [];
+      if (!answer.error) {
+        for (var item in answer.body) {
+          for(var item2 in item["folios"]){
+            for(var item3 in item2["remision"]){
+              folioList.add(FolioModel.fromService(item3,item["serie"]));
+            }
+            for(var itemC in item2["comodato"]){
+              folioList.add(FolioModel.fromService(itemC,item["serie"]));
+            }
+            for(var itemCI in item2["comodato_inst"]){
+              folioList.add(FolioModel.fromService(itemCI,item["serie"]));
+            }
+          }
+          
+        }
+        handler.insertFolios(folioList);
+        log("-----------------------${folioList.length.toString()}");
+        return true;
+      } else {
+        return false;
+      }
+    });
+  }
+
+  Future<void> setDataSales() async {
+    if (provider.connectionStatus != 4) {
+      Connection connection = Connection();
+      await connection.init();
+      log("Verificando conexion Ventas ${connection.stableConnection}");
+     // if (connection.stableConnection) {
+      if(true){
+        provider.asyncProcess = true;
+        provider.labelAsync = "Sincronizando Ventas, no cierres la app.";
+        List<Map<String, dynamic>> dataList = await handler.retrieveSales();
+        provider.totalAsync = dataList.length;
+        provider.currentAsync = 0;
+        log("-------%%${dataList.length.toString()}");
+        for (var e in dataList) {
+          provider.currentAsync++;
+          Map<String, dynamic> data = {
+            "id_cliente": e["idCustomer"],
+            "id_ruta": e["idRoute"],
+            "latitud": e["lat"].toString(),
+            "longitud": e["lng"].toString(),
+            "venta": List.from(jsonDecode(e["saleItems"]).toList()),
+            "id_autorizacion": e["idAuth"],
+            "formas_de_pago":
+                List.from(jsonDecode(e["paymentMethod"]).toList()),
+            "id_data_origen": e["idOrigin"],
+            "folio": e["folio"],
+            "tipo_operacion": e["type"],
+            "version": "1.1.4"
+          };
+          await postSale(data).then((answer) async {
+            if (!answer.error) {
+              log("venta asignada");
+              await handler.updateSale(1,e["id"]);
+            }
+          });
+        }
+        prefs.dataSale = !(dataList.length == provider.currentAsync);
+        provider.asyncProcess = false;
+        log("Sincronizacion completa Ventas");
+      }
+    }
+  }
+
+  Future<void> setDataStop() async {
+    if (provider.connectionStatus != 4) {
+      Connection connection=Connection();
+    await connection.init();
+    log("latencia  ${connection.latency}");
+    log("Verificando conexion Paradas${connection.stableConnection}");
+//if(connection.stableConnection){
+  if(true){
+      provider.asyncProcess=true;
+      provider.labelAsync="Sincronizando Ventas, no cierres la app.";
+      List<Map<String, dynamic>> dataList =
+          await handler.retrieveStopOff();
+      provider.totalAsync=dataList.length;
+      provider.currentAsync=0;
+      log("-------%%${dataList.length.toString()}");
+      for(var e in dataList){
+        log("recorriendo el arreglo");
+        provider.currentAsync++;
+      Map<String,dynamic> data={
+        "id_cliente": e["idCustomer"].toString(),
+            "id_parada": e["idStop"],
+            "lat": "${e["lat"]}",
+            "lon": "${e["lng"]}",
+            "id_data_origen": e["idOrigin"],
+            "tipo": e["type"]
+      };
+      await postStop(data).then((answer) async {
+            if (!answer.error){
+              await handler.deleteStopId(data["id_cliente"]);
+            }
+          });
+      
+      }
+      prefs.dataStop=!(dataList.length==provider.currentAsync);
+      provider.asyncProcess=false;
+      log("Sincronizacion completa Paradas");
+    }
+    }
   }
 }

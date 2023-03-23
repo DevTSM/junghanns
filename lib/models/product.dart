@@ -7,6 +7,7 @@ class ProductModel {
   int stock;
   int number;
   String img;
+  String count;
   int type; //1 product 2 refill
   bool isSelect;
   String rank;
@@ -19,20 +20,22 @@ class ProductModel {
       required this.number,
       required this.img,
       required this.type,
+      required this.count,
       required this.isSelect,
       required this.rank});
 
   factory ProductModel.fromState(int id) {
     return ProductModel(
         idProduct: id,
-        description: "Cerámica M12 Bco",
+        description: "Liquido de recambio 20 LTS",
         price: 200.00,
         stock: 20,
         number: 0,
-        img: "assets/images/Ceramica.JPG",
+        img: "https://img77.uenicdn.com/image/upload/v1573695379/business/d3d540b1-1c2e-4895-90d6-eb749f17f808.jpg",
         type: 1,
+        count: "20",
         isSelect: false,
-        rank: "");
+        rank: id==0?"":"1");
   }
   factory ProductModel.fromProduct(ProductModel productCurrent) {
     return ProductModel(
@@ -42,6 +45,7 @@ class ProductModel {
         stock: productCurrent.stock,
         number: 0,
         img: productCurrent.img,
+        count: productCurrent.count,
         type: productCurrent.type,
         isSelect: false,
         rank: productCurrent.rank);
@@ -55,6 +59,7 @@ class ProductModel {
         number: 0,
         img: data["url"],
         type: 1,
+        count: data["data"]??"",
         isSelect: false,
         rank: data["rank"] ?? "");
   }
@@ -62,7 +67,19 @@ class ProductModel {
   setSelect(bool isSelect) {
     this.isSelect = isSelect;
   }
-
+  getMap(){
+    return {
+      "idProductoServicio":idProduct,
+      "descripcion":description,
+      "precio":price,
+      "stock":stock,
+      "url":img,
+      "rank":rank
+    };
+  }
+  setCount(int number){
+    this.number=number;
+  }
   factory ProductModel.fromServiceRefill(Map<String, dynamic> data) {
     return ProductModel(
         idProduct: data["idProductoServicio"] ?? 0,
@@ -72,6 +89,7 @@ class ProductModel {
         number: 0,
         img: "assets/icons/refill1.png",
         type: 2,
+        count: "",
         isSelect: false,
         rank: "");
   }
@@ -82,6 +100,7 @@ class ProductModel {
         price: data["price"]??-1,
         stock: 0,
         number: 0,
+        count: "",
         img: "assets/icons/refill1.png",
         type: 2,
         isSelect: false,

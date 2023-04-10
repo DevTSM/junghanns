@@ -6,9 +6,11 @@ import 'package:junghanns/pages/customer/details2.dart';
 import 'package:junghanns/styles/text.dart';
 
 class RoutesCard extends StatelessWidget {
+  Function updateList;
   Widget icon;
   CustomerModel customerCurrent;
-  RoutesCard({Key? key, required this.icon, required this.customerCurrent})
+  int indexHome;
+  RoutesCard({Key? key, required this.updateList,required this.icon, required this.customerCurrent, this.indexHome=1})
       : super(key: key);
 
   @override
@@ -18,16 +20,9 @@ class RoutesCard extends StatelessWidget {
             context,
             MaterialPageRoute(
                 builder: (context) => DetailsCustomer2(
-                      indexHome: customerCurrent.type,
+                      indexHome: indexHome,
                       customerCurrent: customerCurrent,
-                      type: customerCurrent.type == 1
-                          ? "E"
-                          : customerCurrent.type == 2
-                              ? "R"
-                              : customerCurrent.type == 3
-                                  ? "S"
-                                  : "C",
-                    ))),
+                    ),)).whenComplete(()=>updateList()),
         child: Container(
           padding:
               const EdgeInsets.only(left: 15, right: 15, top: 12, bottom: 12),

@@ -254,9 +254,9 @@ class CustomerModel {
       orden: data["orden"] ?? 0, 
       idClient:  data["id_client"] ?? 0, 
       idRoute: int.parse((data["id_route"] ?? 0).toString()), 
-      type: data["type"] ?? 0, 
+      type: getType(data["clue"]??"CR"), 
       lat:  double.parse((data["lat"]??0).toString()), 
-      lng:  double.parse((data["lng"]??0).toString()), 
+      lng:  double.parse((data["lon"]??0).toString()), 
       priceLiquid: double.parse((data["price"]??0).toString()), 
       byCollect:  double.parse((data["por_cobrar"]??0).toString()), 
       purse:  double.parse((data["purse"]??0).toString()), 
@@ -315,6 +315,7 @@ class CustomerModel {
       'color': color,
       'config':configList.isNotEmpty?configList.last.valor:0,
       'history':history.isNotEmpty?jsonEncode(history.map((e) => e.getMap).toList()):""
+
     };
   }
 
@@ -387,8 +388,25 @@ class CustomerModel {
             : 0;
         notifS= data["notificacion"] ?? "";
   }
+  
 }
+int getType(type){
+  switch (type) {
+    case "ES":
+      return 2;
+    case "SV":
+    return 3;
+    case "LC":
+    return 4;
+    case "ET":
+    return 5;
+    case "CL":
+    return 6;
+    default: 
+    return 1;
+  }
 
+  }
 String checkDate(DateTime time) {
   String date = "";
   switch (time.weekday) {

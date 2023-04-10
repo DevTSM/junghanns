@@ -67,35 +67,10 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
   getDataRefill() async {
     Timer(const Duration(milliseconds: 800), () async {
       provider.initShopping(widget.customerCurrent);
-      if (provider.connectionStatus < 4) {
-        setState(() {
-          isLoading = true;
-        });
-        await getRefillList(prefs.idRouteD).then((answer) {
-          setState(() {
-          isLoading = false;
-        });
-          if (answer.error) {
-            Fluttertoast.showToast(
-              msg: "Sin recargas",
-              timeInSecForIosWeb: 2,
-              toastLength: Toast.LENGTH_LONG,
-              gravity: ToastGravity.TOP,
-              webShowClose: true,
-            );
-          } else {
-            refillList.clear();
-            answer.body
-                .map((e) => refillList.add(ProductModel.fromServiceRefill(e)))
-                .toList();
-          }
-        });
-      }else{
       List<ProductModel> data=await handler.retrieveRefill();
       setState(() {
         data.map((e) => refillList.add(e)).toList();
       });
-      }
     });
   }
   
@@ -288,35 +263,7 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
       "tipo_operacion": "R",
       "version": "1.13"
     };
-    if(provider.connectionStatus<4){
-    await postSale(data).then((answer) {
-      setState(() {
-        isLoading = false;
-      });
-      if (answer.error) {
-        //Navigator.pop(context);
-        Fluttertoast.showToast(
-          msg: answer.message,
-          timeInSecForIosWeb: 2,
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.TOP,
-          webShowClose: true,
-        );
-      } else {
-        //Navigator.pop(context);
-        Fluttertoast.showToast(
-          msg: "Venta realizada con exito",
-          timeInSecForIosWeb: 2,
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.TOP,
-          webShowClose: true,
-        );
-
-        Navigator.pop(context,true);
-      }
-    });
-    }else{
-      Map<String, dynamic> data = {
+    Map<String, dynamic> dataLocal = {
       "idCustomer": provider.basketCurrent.idCustomer,
       "idRoute": provider.basketCurrent.idRoute,
       "lat": "$latSale",
@@ -325,27 +272,39 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
         "id_producto": element.idProduct,
         "precio_unitario": element.price
       }).toList())),
-      "idAuth": null,
+      "idAuth":  null,
       "paymentMethod": jsonEncode([{
         "tipo": "E",
         "importe": (provider.basketCurrent.sales.map((e) => e.price).toList()).reduce((value, element) => value+element),
       }]),
       "idOrigin": provider.basketCurrent.idDataOrigin,
-      "folio": null,
-      "type": "R",
+      "folio":  null,
+      "type":"R",
+      "isUpdate":0
     };
-      handler.insertSale(data);
-    prefs.dataSale=true;
+    int id= await handler.insertSale(dataLocal);
+    
     widget.customerCurrent.setMoney(((provider.basketCurrent.sales.map((element) => element.price*element.number).toList()).reduce((value, element) => value+element))+widget.customerCurrent.purse,isOffline:true,type:0);
-    Fluttertoast.showToast(
-            msg: "Guardado de forma local",
-            timeInSecForIosWeb: 16,
-            toastLength: Toast.LENGTH_LONG,
-            gravity: ToastGravity.TOP,
-            webShowClose: true,
-          );
-          Navigator.pop(context);
-    }
+    widget.customerCurrent.setType(7);
+    await postSale(data).then((answer) async {
+      setState(() {
+        isLoading = false;
+      });
+      if (!answer.error){
+        await handler.updateSale(1, id).then((value){
+          Fluttertoast.showToast(
+          msg: "Venta realizada con exito",
+          timeInSecForIosWeb: 2,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+        );
+        
+        });
+        
+      }
+    });
+        Navigator.pop(context,true);
   }
 
   @override

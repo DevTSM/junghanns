@@ -120,9 +120,7 @@ class _StopsState extends State<Stops> {
                   _currentLocation.longitude,
                   widget.customerCurrent.lat,
                   widget.customerCurrent.lng) <
-              widget.distance ||
-          provider.connectionStatus == 4) {
-        if (provider.connectionStatus != 4) {
+              widget.distance) {
           Map<String, dynamic> data = {
             "id_cliente": widget.customerCurrent.idClient.toString(),
             "id_parada": stopCurrent.id,
@@ -131,40 +129,7 @@ class _StopsState extends State<Stops> {
             "id_data_origen": widget.customerCurrent.id,
             "tipo": widget.customerCurrent.typeVisit.characters.first
           };
-
-          log("LA DATA ES: $data");
-
-          ///
-          await postStop(data).then((answer) {
-            setState(() {
-              isLoading = false;
-            });
-            if (answer.error) {
-              Fluttertoast.showToast(
-                msg: answer.message,
-                timeInSecForIosWeb: 2,
-                toastLength: Toast.LENGTH_LONG,
-                gravity: ToastGravity.TOP,
-                webShowClose: true,
-              );
-            } else {
-              //
-              log("Parada asignada");
-
-              Fluttertoast.showToast(
-                msg: "Parada asignada con exito",
-                timeInSecForIosWeb: 2,
-                toastLength: Toast.LENGTH_LONG,
-                gravity: ToastGravity.TOP,
-                webShowClose: true,
-              );
-
-              Navigator.pop(context);
-              //
-            }
-          });
-        } else {
-          Map<String, dynamic> data = {
+          Map<String, dynamic> dataOff = {
             "idCustomer": widget.customerCurrent.idClient,
             "idStop": stopCurrent.id,
             "lat": "${widget.customerCurrent.lat}",
@@ -172,19 +137,24 @@ class _StopsState extends State<Stops> {
             "idOrigin": widget.customerCurrent.id,
             "type": widget.customerCurrent.typeVisit.characters.first
           };
-          Navigator.pop(context);
-          handler.insertStopOff(data);
-            widget.customerCurrent.setType(stopCurrent.id==7||stopCurrent.id==9?0:3);
+           int id=await handler.insertStopOff(dataOff);
+          await postStop(data).then((answer) {
+            setState(() {
+              isLoading = false;
+            });
+            if (!answer.error){
+              handler.updateStopOff(1,id );
+            }
+          });
+          widget.customerCurrent.setType(7);
           Fluttertoast.showToast(
-            msg: "Guardado de forma local",
-            timeInSecForIosWeb: 16,
-            toastLength: Toast.LENGTH_LONG,
-            gravity: ToastGravity.TOP,
-            webShowClose: true,
-          );
-          Navigator.pop(context);
-          prefs.dataStop = true;
-        }
+                msg: "Parada asignada con exito",
+                timeInSecForIosWeb: 2,
+                toastLength: Toast.LENGTH_LONG,
+                gravity: ToastGravity.TOP,
+                webShowClose: true,
+              );
+              Navigator.pop(context);
       } else {
         Navigator.pop(context);
         Fluttertoast.showToast(
@@ -362,26 +332,7 @@ class _StopsState extends State<Stops> {
   }
 
   Widget typesOfStops() {
-    return provider.connectionStatus != 4
-        ? Expanded(
-            child: Container(
-                padding: const EdgeInsets.only(left: 20, right: 20),
-                margin: const EdgeInsets.only(top: 20),
-                child: GridView.custom(
-                  gridDelegate: SliverWovenGridDelegate.count(
-                    crossAxisCount: 3,
-                    mainAxisSpacing: 8,
-                    crossAxisSpacing: 10,
-                    pattern: const [
-                      WovenGridTile(.8),
-                    ],
-                  ),
-                  childrenDelegate: SliverChildBuilderDelegate(
-                    (context, index) => stop(stopList[index]),
-                    childCount: stopList.length,
-                  ),
-                )))
-        : Expanded(
+    return Expanded(
             child: Container(
                 padding: const EdgeInsets.only(left: 20, right: 20),
                 margin: const EdgeInsets.only(top: 20),

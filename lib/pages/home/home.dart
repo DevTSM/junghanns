@@ -14,6 +14,8 @@ import 'package:junghanns/database/async.dart';
 import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/models/dashboard.dart';
 import 'package:junghanns/models/product.dart';
+import 'package:junghanns/models/stop_ruta.dart';
+import 'package:junghanns/pages/home/specials.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/provider/provider.dart';
 import 'package:junghanns/styles/color.dart';
@@ -36,6 +38,9 @@ class _HomeState extends State<Home> {
   late bool isLoading;
   late bool isAsync, isLoadingAsync;
   late ProviderJunghanns provider;
+  late int atendidos;
+  late int routeTotal;
+  late int liquit, specials,specialsA;
 
   @override
   void initState() {
@@ -45,13 +50,19 @@ class _HomeState extends State<Home> {
     isLoading = false;
     isAsync = false;
     isLoadingAsync = false;
+    atendidos = 0;
+    routeTotal = 0;
+    liquit = 0;
+    specials = 0;
+    specialsA=0;
     //getDashboarR();
     getAsync();
   }
+
   getPermission() async {
     await Geolocator.requestPermission();
   }
-  
+
   getDashboarR() async {
     Timer(const Duration(milliseconds: 1000), () async {
       if (provider.connectionStatus < 4) {
@@ -101,11 +112,38 @@ class _HomeState extends State<Home> {
   getAsync() async {
     List<Map<String, dynamic>> dataList = await handler.retrieveSales();
     List<Map<String, dynamic>> dataList2 = await handler.retrieveStopOff();
+    await handler.retrieveUsers().then((value) {
+      log(value.length.toString());
+      value.map((e) {
+        setState(() {
+          switch (e.type) {
+            case 2:
+              specials++;
+              break;
+            case 7:
+            if(e.typeVisit=="ESPECIALES"){
+              specialsA++;
+            }
+              atendidos++;
+              break;
+            default:
+              routeTotal++;
+              break;
+          }
+        });
+      }).toList();
+    });
+    dataList2.map((element) {
+      List<Map<String, dynamic>> data = jsonDecode(element["saleItems"]);
+      setState(() {
+        liquit += (data.where((e) => e["id_producto"] == 22).length);
+      });
+    }).toList();
     prefs.dataSale = true;
     setState(() {
       isAsync = dataList2.isEmpty && dataList.isEmpty ? false : true;
     });
-    log('${isAsync ? 'listo para sincronizar' : 'Sin datos para sincronizar'} =>');
+    log('${isAsync ? 'listo para sincronizar' : 'Sin ventas para sincronizar'} =>');
   }
 
   // getStock() async {
@@ -143,7 +181,6 @@ class _HomeState extends State<Home> {
   //   });
   // }
 
-
   @override
   Widget build(BuildContext context) {
     size = MediaQuery.of(context).size;
@@ -174,7 +211,7 @@ class _HomeState extends State<Home> {
                 child: SpinKitCircle(
                   color: ColorsJunghanns.blue,
                 ))
-            : Visibility(visible: isAsync, child: buttonSync()),
+            : buttonSync(),
         Visibility(visible: isLoading, child: const LoadingJunghanns())
       ],
     );
@@ -211,7 +248,7 @@ class _HomeState extends State<Home> {
                           style: TextStyles.blue19_7,
                         ),
                         Text(
-                          "${dashboardR.customersR} clientes para visitar",
+                          "${routeTotal+specials} clientes para visitar",
                           style: TextStyles.grey14_4,
                         )
                       ],
@@ -269,7 +306,7 @@ class _HomeState extends State<Home> {
                       Column(
                         children: [
                           Text(
-                            "${dashboardR.customersR}",
+                            "${routeTotal+specials}",
                             style: TextStyles.white40_7,
                           ),
                           const Text(
@@ -302,7 +339,7 @@ class _HomeState extends State<Home> {
                               Column(
                                 children: [
                                   Text(
-                                    "${dashboardR.customersA}",
+                                    "$atendidos",
                                     style: TextStyles.blue40_7,
                                   ),
                                   const Text(
@@ -322,8 +359,8 @@ class _HomeState extends State<Home> {
             item(
                 "Servicios Especiales",
                 [
-                  "${dashboardR.specialServiceP} programados /",
-                  " ${dashboardR.specialServiceA} Atentidos"
+                  "${specials+specialsA} programados /",
+                  " $specialsA Atentidos"
                 ],
                 Image.asset(
                   "assets/icons/iconCalendar.png",
@@ -336,7 +373,7 @@ class _HomeState extends State<Home> {
                 "Avance de venta",
                 [
                   "${dashboardR.liquidStock} Líquidos existencia /",
-                  " ${dashboardR.liquidSales} Vendidos"
+                  " $liquit Vendidos"
                 ],
                 Image.asset(
                   "assets/icons/iconWarehouse.png",
@@ -403,11 +440,13 @@ class _HomeState extends State<Home> {
             setState(() {
               isLoadingAsync = true;
             });
+            provider.asyncProcess=true;
             Async async = Async(provider: provider);
-            async.setDataSales().then(
-                (value) => async.setDataStop().then((value) => setState(() {
-                      isLoadingAsync = false;
-                    })));
+            async
+                .init(isInit: false)
+                .then((value) => setState((){
+                  isLoading = false;
+                  isLoadingAsync=false;}));
           },
         ));
   }

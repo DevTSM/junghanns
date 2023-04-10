@@ -9,6 +9,7 @@ import 'package:junghanns/components/without_location.dart';
 import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/provider/provider.dart';
 import 'package:junghanns/services/customer.dart';
+import 'package:junghanns/services/store.dart';
 import 'package:junghanns/styles/color.dart';
 import 'package:junghanns/styles/decoration.dart';
 import 'package:junghanns/styles/text.dart';
@@ -43,20 +44,25 @@ class _RoutesState extends State<Routes> {
   }
 
   getCustomerListDB() async {
-    List<Map<String, dynamic>> dataList = await handler.retrieveUsersType2(2);
+    customerList.clear();
+    searchList.clear();
+    List<CustomerModel> dataList = await handler.retrieveUsers();
     setState(() {
       dataList.map((e) {
-        customerList.add(CustomerModel.fromDataBase(e));
+        if(e.type==1||e.type==2||e.type==3||e.type==4){
+        customerList.add(e);
+        }
       }).toList();
       customerList.sort((a, b) => a.orden.compareTo(b.orden));
       searchList = customerList;
-      getCheckToken();
+      getListUpdate(dataList.isEmpty?0:dataList.last.id);
     });
   }
 
-  getCheckToken() {
+  getListUpdate(int id) {
+    log("Ultimo cliente $id");
     Timer(const Duration(milliseconds: 800), () async {
-      await getListCustomer(prefs.idRouteD, DateTime.now(), "R").then((answer) {
+      await getCustomers(idLast: id).then((answer) {
         if (prefs.token == "") {
           Fluttertoast.showToast(
             msg: "Las credenciales caducaron.",
@@ -66,13 +72,21 @@ class _RoutesState extends State<Routes> {
             webShowClose: true,
           );
         }else{
-          Fluttertoast.showToast(
-            msg: "Successfull",
-            timeInSecForIosWeb: 2,
-            toastLength: Toast.LENGTH_LONG,
-            gravity: ToastGravity.TOP,
-            webShowClose: true,
-          );
+          if(!answer.error){
+            List<CustomerModel> list=[];
+            for (var item in answer.body) {
+            CustomerModel customer=CustomerModel.fromPayload(item);
+          list.add(customer);
+          if(customer.type==1||customer.type==2||customer.type==3||customer.type==4){
+        customerList.add(customer);
+        }
+        }
+        if(list.isNotEmpty){
+        handler.insertUser(list);
+         customerList.sort((a, b) => a.orden.compareTo(b.orden));
+        searchList=customerList;
+        }
+          }
         }
       });
       getPermission();
@@ -81,68 +95,6 @@ class _RoutesState extends State<Routes> {
       });
     });
   }
-
-  //deshabilitado
-  getDataCustomerList() async {
-    Timer(const Duration(milliseconds: 800), () async {
-      if (provider.connectionStatus < 4) {
-        customerList.clear();
-        setState(() {
-          isLoading = true;
-        });
-        await getListCustomer(prefs.idRouteD, DateTime.now(), "R")
-            .then((answer) {
-          setState(() {
-            isLoading = false;
-          });
-          if (prefs.token != "") {
-            if (answer.error) {
-              Fluttertoast.showToast(
-                msg: "Sin clientes en ruta",
-                timeInSecForIosWeb: 2,
-                toastLength: Toast.LENGTH_LONG,
-                gravity: ToastGravity.TOP,
-                webShowClose: true,
-              );
-            } else {
-              setState(() {
-                answer.body.map((e) {
-                  customerList
-                      .add(CustomerModel.fromList(e, prefs.idRouteD, 2));
-                }).toList();
-                searchList = customerList;
-              });
-              getPermission();
-            }
-          } else {
-            Fluttertoast.showToast(
-              msg: "Las credenciales caducaron.",
-              timeInSecForIosWeb: 2,
-              toastLength: Toast.LENGTH_LONG,
-              gravity: ToastGravity.TOP,
-              webShowClose: true,
-            );
-            Timer(const Duration(milliseconds: 2000), () async {
-              Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
-            });
-          }
-        });
-      } else {
-        List<Map<String, dynamic>> dataList =
-            await handler.retrieveUsersType2(2);
-        setState(() {
-          dataList.map((e) {
-            customerList.add(CustomerModel.fromDataBase(e));
-            log("estas son las autorizaciones ######${customerList.last.auth.length}   ${e["auth"]}");
-          }).toList();
-          customerList.sort((a, b) => a.orden.compareTo(b.orden));
-          searchList = customerList;
-        });
-      }
-    });
-  }
-
-  //-------
   getPermission() async {
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.whileInUse ||
@@ -153,29 +105,6 @@ class _RoutesState extends State<Routes> {
     }
   }
 
-  funRefreshList() async {
-    log("Refresh List");
-    customerList.clear();
-    await getListCustomer(prefs.idRouteD, DateTime.now(), "R").then((answer) {
-      if (answer.error) {
-        Fluttertoast.showToast(
-          msg: "Sin clientes en ruta",
-          timeInSecForIosWeb: 2,
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.TOP,
-          webShowClose: true,
-        );
-      } else {
-        answer.body.map((e) {
-          customerList.add(CustomerModel.fromList(e, prefs.idRouteD, 2));
-        }).toList();
-        setState(() {
-          searchList = customerList;
-        });
-      }
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     size = MediaQuery.of(context).size;
@@ -183,9 +112,7 @@ class _RoutesState extends State<Routes> {
     return Stack(children: [
       RefreshIndicator(
           onRefresh: () async {
-            if (provider.connectionStatus < 4) {
-              funRefreshList();
-            }
+            getCustomerListDB();
           },
           child: SizedBox(
             height: double.infinity,
@@ -210,6 +137,8 @@ class _RoutesState extends State<Routes> {
                         children: searchList.map((e) {
                           return Column(children: [
                             RoutesCard(
+                              updateList: getCustomerListDB,
+                              indexHome:2,
                                 icon: Container(
                                   decoration: BoxDecoration(
                                     color: Color(int.parse(

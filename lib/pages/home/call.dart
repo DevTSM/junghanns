@@ -10,6 +10,7 @@ import 'package:junghanns/components/without_location.dart';
 import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/provider/provider.dart';
 import 'package:junghanns/services/customer.dart';
+import 'package:junghanns/services/store.dart';
 import 'package:junghanns/styles/color.dart';
 import 'package:junghanns/styles/decoration.dart';
 import 'package:junghanns/styles/text.dart';
@@ -43,9 +44,62 @@ class _CallState extends State<Call> {
     buscadorC = TextEditingController();
     searchList = [];
     //
-    getDataCustomerList();
+    getCustomerListDB();
+  }
+getCustomerListDB() async {
+  customerList.clear();
+  searchList.clear();
+    List<CustomerModel> dataList = await handler.retrieveUsers();
+    setState(() {
+      dataList.map((e) {
+        if(e.type==6){
+        customerList.add(e);
+        }
+      }).toList();
+      customerList.sort((a, b) => a.orden.compareTo(b.orden));
+      searchList = customerList;
+      getListUpdate(dataList.isEmpty?0:dataList.last.id);
+    });
   }
 
+  getListUpdate(int id) {
+    log("Ultimo cliente $id");
+    Timer(const Duration(milliseconds: 800), () async {
+      await getCustomers(idLast: id).then((answer) {
+        log(answer.body.toString());
+        if (prefs.token == "") {
+          Fluttertoast.showToast(
+            msg: "Las credenciales caducaron.",
+            timeInSecForIosWeb: 2,
+            toastLength: Toast.LENGTH_LONG,
+            gravity: ToastGravity.TOP,
+            webShowClose: true,
+          );
+        }else{
+          if(!answer.error){
+            List<CustomerModel> list=[];
+            for (var item in answer.body) {
+            CustomerModel customer=CustomerModel.fromPayload(item);
+          list.add(customer);
+          if(customer.type==6){
+        customerList.add(customer);
+        }
+        }
+        if(list.isNotEmpty){
+        handler.insertUser(list);
+         customerList.sort((a, b) => a.orden.compareTo(b.orden));
+        searchList=customerList;
+        }
+          }
+        }
+      });
+      getPermission();
+      setState(() {
+        isLoading = false;
+      });
+    });
+  }
+ 
   getPermission() async {
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.whileInUse ||
@@ -56,76 +110,6 @@ class _CallState extends State<Call> {
     }
   }
 
-  getDataCustomerList() async {
-    Timer(const Duration(milliseconds: 800), () async {
-      if (provider.connectionStatus < 4) {
-        customerList.clear();
-        setState(() {
-          isLoading = true;
-        });
-        await getListCustomer(prefs.idRouteD, DateTime.now(), "C")
-            .then((answer) {
-          setState(() {
-            isLoading = false;
-          });
-          if (prefs.token != "") {
-            if (answer.error) {
-              Fluttertoast.showToast(
-                msg: "Sin clientes en ruta",
-                timeInSecForIosWeb: 2,
-                toastLength: Toast.LENGTH_LONG,
-                gravity: ToastGravity.TOP,
-                webShowClose: true,
-              );
-            } else {
-              setState(() {
-                answer.body.map((e) {
-                  customerList
-                      .add(CustomerModel.fromList(e, prefs.idRouteD, 4));
-                }).toList();
-                searchList = customerList;
-              });
-              getPermission();
-            }
-          } else {
-            Fluttertoast.showToast(
-              msg: "Las credenciales caducaron.",
-              timeInSecForIosWeb: 2,
-              toastLength: Toast.LENGTH_LONG,
-              gravity: ToastGravity.TOP,
-              webShowClose: true,
-            );
-            Timer(const Duration(milliseconds: 2000), () async {
-              Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
-            });
-          }
-        });
-      }
-    });
-  }
-
-  funRefreshList() async {
-    log("Refresh List");
-    customerList.clear();
-    await getListCustomer(prefs.idRouteD, DateTime.now(), "C").then((answer) {
-      if (answer.error) {
-        Fluttertoast.showToast(
-          msg: "Sin clientes en ruta",
-          timeInSecForIosWeb: 2,
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.TOP,
-          webShowClose: true,
-        );
-      } else {
-        answer.body.map((e) {
-          customerList.add(CustomerModel.fromList(e, prefs.idRouteD, 4));
-        }).toList();
-        setState(() {
-          searchList = customerList;
-        });
-      }
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -148,9 +132,7 @@ class _CallState extends State<Call> {
     body:Stack(children: [
       RefreshIndicator(
           onRefresh: () async {
-            if (provider.connectionStatus < 4) {
-              funRefreshList();
-            }
+            getCustomerListDB();
           },
           child: SizedBox(
             height: double.infinity,
@@ -170,15 +152,15 @@ class _CallState extends State<Call> {
                 Visibility(
                     visible: provider.connectionStatus < 4 &&
                         customerList.isNotEmpty,
-                    child: buscador()),
-                provider.connectionStatus < 4
-                    ? customerList.isNotEmpty
+                    child: buscador()),customerList.isNotEmpty
                         ? Expanded(
                             child: SingleChildScrollView(
                                 child: Column(
                             children: searchList.map((e) {
                               return Column(children: [
                                 RoutesCard(
+                                  updateList: getCustomerListDB,
+                                  indexHome: 0,
                                     icon: Container(
                                       decoration: BoxDecoration(
                                         color: Color(int.parse(
@@ -215,40 +197,6 @@ class _CallState extends State<Call> {
                             "Sin clientes",
                             style: TextStyles.blue18SemiBoldIt,
                           )))
-                    : Expanded(
-                        child: FutureBuilder(
-                            future: handler.retrieveUsersType(4),
-                            builder: (BuildContext context,
-                                AsyncSnapshot<List<CustomerModel>> snapshot) {
-                              if (snapshot.hasData) {
-                                return ListView.builder(
-                                    itemCount: snapshot.data?.length,
-                                    itemBuilder:
-                                        (BuildContext context, int index) {
-                                      return Column(children: [
-                                        RoutesCard(
-                                          icon: Image.asset(
-                                            "assets/icons/${snapshot.data![index].typeVisit == "RUTA" ? "user1" : snapshot.data![index].typeVisit == "SEGUNDA" ? "user3" : "user2"}.png",
-                                            width: size.width * .14,
-                                          ),
-                                          customerCurrent:
-                                              snapshot.data![index],
-                                        ),
-                                        Row(children: [
-                                          Container(
-                                            margin: EdgeInsets.only(
-                                                left: (size.width * .07) + 15),
-                                            color: ColorsJunghanns.grey,
-                                            width: .5,
-                                            height: 15,
-                                          )
-                                        ])
-                                      ]);
-                                    });
-                              } else {
-                                return Container();
-                              }
-                            }))
               ],
             ),
           )),

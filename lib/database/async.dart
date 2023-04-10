@@ -6,8 +6,11 @@ import 'package:junghanns/models/config.dart';
 import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/models/folio.dart';
 import 'package:junghanns/models/method_payment.dart';
+import 'package:junghanns/models/product.dart';
 import 'package:junghanns/models/refill.dart';
+import 'package:junghanns/models/sale.dart';
 import 'package:junghanns/models/stop.dart';
+import 'package:junghanns/models/stop_ruta.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/provider/provider.dart';
 import 'package:junghanns/services/auth.dart';
@@ -18,13 +21,18 @@ import 'package:junghanns/util/connection.dart';
 class Async {
   ProviderJunghanns provider;
   Async({required this.provider});
-  Future<bool> init() async {
+  Future<bool> init({bool isInit=true}) async {
+    provider.asyncProcess=true;
     provider.labelAsync = "Sincronizando datos, no cierres la app.";
     prefs.isAsyncCurrent = true;
-    return await handler.deleteTable().then((value) async {
-      provider.labelAsync = "Limpiando base de datos";
+     provider.labelAsync = "Obteniendo datos guardados";
+   await getAsyncData();
+    provider.labelAsync = "Limpiando base de datos";
+    return await handler.deleteTable(isInit: isInit).then((value) async {
       provider.labelAsync = "Sincronizando clientes";
       return getDataCustomers().then((value4) {
+        provider.labelAsync = "Sincronizando stock";
+      return getStock().then((value){
         provider.labelAsync = "Sincronizando paradas";
         return getDataStops().then((value5) {
           provider.labelAsync = "Sincronizando recargas";
@@ -32,14 +40,56 @@ class Async {
             provider.labelAsync = "Sincronizando folios";
             return getDataFolios().then((value6) {
               prefs.isAsyncCurrent = false;
+              provider.asyncProcess=false;
               return true;
             });
           });
         });
+        });
       });
     });
   }
-
+  Future <bool> getAsyncData() async {
+    List<Map<String,dynamic>> salesPen= await handler.retrieveSales();
+    List<Map<String,dynamic>> stopPen=await handler.retrieveStopOff();
+    List<StopRuta> stopRuta=await handler.retrieveStopRuta();
+    if(salesPen.isNotEmpty){
+       provider.labelAsync = "Sincronizando ventas locales";
+      for(var e in salesPen){
+        await setSale(e);
+        await handler.updateSale(1, e["id"]);
+      }
+    }
+    if(stopPen.isNotEmpty){
+       provider.labelAsync = "Sincronizando paradas en falso locales";
+      for(var e in stopPen){
+        await setStop(e);
+        await handler.updateStopOff(1, e["id"]);
+      }
+    }
+    if(stopRuta.isNotEmpty){
+       provider.labelAsync = "Sincronizando paradas de ruta";
+      for(var e in stopRuta){
+        await setInitRoute(e.lat,e.lng,status: e.status);
+        await handler.updateStopRuta(1, e.id);
+      }
+    }
+    return true;
+  }
+  Future <bool> getStock()async{
+    return await getStockList(prefs.idRouteD).then((answer){
+      if(answer.error){
+        log("error ${answer.body}");
+        return true;
+      }else{
+        for (var item in answer.body) {
+          handler.insertProduct(ProductModel.fromServiceProduct(item));
+        }
+        return true;
+      }
+    });
+  }
+  
   Future<bool> getDataCustomers() async {
     List<CustomerModel> list = [];
     provider.currentAsync = 1;
@@ -194,23 +244,29 @@ class Async {
       }
     });
   }
+  
   Future<bool> getDataFolios() async {
     return await getFolios().then((answer) {
       List<FolioModel> folioList = [];
       if (!answer.error) {
         for (var item in answer.body) {
-          for(var item2 in item["folios"]){
-            for(var item3 in item2["remision"]){
+          if(item["folios"]!=null){
+            if(item["folios"]["remision"]!=null){
+              for(var item3 in item["folios"]["remision"]){
               folioList.add(FolioModel.fromService(item3,item["serie"]));
             }
-            for(var itemC in item2["comodato"]){
+            }
+            if(item["folios"]["comodato"]!=null){
+              for(var itemC in item["folios"]["comodato"]){
               folioList.add(FolioModel.fromService(itemC,item["serie"]));
             }
-            for(var itemCI in item2["comodato_inst"]){
+            }
+            if(item["folios"]["comodato_inst"]!=null){
+               for(var itemCI in item["folios"]["comodato_inst"]){
               folioList.add(FolioModel.fromService(itemCI,item["serie"]));
             }
+            }
           }
-          
         }
         handler.insertFolios(folioList);
         log("-----------------------${folioList.length.toString()}");

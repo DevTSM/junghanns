@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:developer';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:junghanns/components/loading.dart';
@@ -18,14 +19,14 @@ import 'package:provider/provider.dart';
 
 import '../../preferences/global_variables.dart';
 
-class Specials extends StatefulWidget {
-  const Specials({Key? key}) : super(key: key);
+class Atendidos extends StatefulWidget {
+  const Atendidos({Key? key}) : super(key: key);
 
   @override
-  State<StatefulWidget> createState() => _SpecialsState();
+  State<StatefulWidget> createState() => _AtendidosState();
 }
 
-class _SpecialsState extends State<Specials> {
+class _AtendidosState extends State<Atendidos> {
   late List<CustomerModel> customerList;
   late ProviderJunghanns provider;
   late Size size;
@@ -52,7 +53,7 @@ getCustomerListDB() async {
     List<CustomerModel> dataList = await handler.retrieveUsers();
     setState(() {
       dataList.map((e) {
-        if(e.type==5){
+        if(e.type==7){
         customerList.add(e);
         }
       }).toList();
@@ -81,7 +82,7 @@ getCustomerListDB() async {
             for (var item in answer.body) {
             CustomerModel customer=CustomerModel.fromPayload(item);
           list.add(customer);
-          if(customer.type==5){
+          if(customer.type==7){
         customerList.add(customer);
         }
         }
@@ -110,14 +111,25 @@ getCustomerListDB() async {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     setState(() {
       size = MediaQuery.of(context).size;
       provider = Provider.of<ProviderJunghanns>(context);
     });
-    return Stack(children: [
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: ColorsJunghanns.whiteJ,
+    systemOverlayStyle: const SystemUiOverlayStyle(
+        statusBarColor: ColorsJunghanns.whiteJ,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.dark),
+        elevation: 0,
+    leading:IconButton(
+      onPressed: () => Navigator.pop(context),
+      icon: Icon(Icons.arrow_back_ios,color: ColorsJunghanns.blue,))
+      ),
+    body:Stack(children: [
       RefreshIndicator(
           onRefresh: () async {
             getCustomerListDB();
@@ -148,8 +160,8 @@ getCustomerListDB() async {
                             children: searchList.map((e) {
                               return Column(children: [
                                 RoutesCard(
-                                  updateList:getCustomerListDB,
-                                  indexHome: 1,
+                                  updateList: getCustomerListDB,
+                                  indexHome: 0,
                                     icon: Container(
                                       decoration: BoxDecoration(
                                         color: Color(int.parse(
@@ -190,7 +202,7 @@ getCustomerListDB() async {
             ),
           )),
       Visibility(visible: isLoading, child: const LoadingJunghanns())
-    ]);
+    ]));
   }
 
   Widget header() {
@@ -207,7 +219,7 @@ getCustomerListDB() async {
                 style: TextStyles.blue27_7,
               ),
               Text(
-                "  Clientes para Entrega",
+                "  Clientes Atendidos",
                 style: TextStyles.green15_4,
               ),
             ],
@@ -227,7 +239,7 @@ getCustomerListDB() async {
                           style: TextStyles.blue19_7,
                         ),
                         Text(
-                          "${customerList.length} clientes para visitar",
+                          "${customerList.length} visitados",
                           style: TextStyles.grey14_4,
                         )
                       ],

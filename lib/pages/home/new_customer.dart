@@ -39,11 +39,11 @@ class _NewCustomerState extends State<NewCustomer> {
   //
   late TextEditingController nameC, lastNameC, companyC, contactC;
   late TextEditingController phoneC, emailC, streetC, numEc, numIc;
-  late TextEditingController colonyC, townC, codeC, stateC, referenceC;
+  late TextEditingController colonyC, townC, codeC, stateC, referenceC,streetR1,streetR2,observacion,emailCo;
   //
   late String errLatLng, errName, errLastN, errDateB, errCompany, errContact;
   late String errPhone, errEmail, errTypeStreet, errStreet, errNumE;
-  late String errColony, errTown, errState, errCode, errTypeSaleC, errEmployee;
+  late String errColony, errTown, errState, errCode, errTypeSaleC, errEmployee,inicio,fin,errorInicio,errorFin;
   //
   late TypeOfStreetModel typeStreetS;
   late List<TypeOfStreetModel> typesStreetsList;
@@ -85,12 +85,20 @@ class _NewCustomerState extends State<NewCustomer> {
     companyC = TextEditingController();
     contactC = TextEditingController();
     //
+    streetR1=TextEditingController();
+    streetR2=TextEditingController();
+    observacion=TextEditingController();
+    emailCo=TextEditingController();
     dateBirth = dateAux = DateTime(DateTime.now().year - 50);
     isDate = false;
     //
     errLatLng = errName = errLastN = errDateB = errCompany = errContact = "";
     errPhone = errEmail = errTypeStreet = errStreet = errNumE = "";
     errColony = errTown = errState = errCode = errTypeSaleC = errEmployee = "";
+    inicio="Inicio";
+    fin="Fin";
+    errorInicio="";
+    errorFin="";
     //
     typesStreetsList = [];
     typeStreetS = TypeOfStreetModel.fromState();
@@ -296,6 +304,8 @@ class _NewCustomerState extends State<NewCustomer> {
                 true, 1),
             textField("*E-mail", "ejemplo@midominio.com", errEmail, emailC,
                 false, false, 1),
+            textField("*Confirmacion de E-mail", "ejemplo@midominio.com", errEmail, emailCo,
+                false, false, 1),
             buttonField(
                 "*Tipo Vialidad",
                 typeStreetS.id == -1
@@ -321,8 +331,56 @@ class _NewCustomerState extends State<NewCustomer> {
             textField("*Estado", "Estado", errState, stateC, false, false, 1),
             textField("*Código Postal", "Código Postal", errCode, codeC, true,
                 false, 1),
-            textField("Refecencias del domicilio", "Referencias del domicilio",
+                Container(
+          padding: const EdgeInsets.only(top: 15, left: 10),
+          child: Text(
+            "Entre calles",
+            style: TextStyles.blue15SemiBold,
+          ),
+        ),
+                textField("Calle y ", "calle y calle",
+                "", streetR1, false, false, 2),
+            
+            textField("Calle ", "calle y calle",
+                "", streetR2, false, false, 2),
+            textField("Refecencias adicionales del domicilio", "Referencias adicionales del domicilio",
                 "", referenceC, false, false, 5),
+                Container(
+          padding: const EdgeInsets.only(top: 15, left: 10),
+          child: Text(
+            "*Horario prefente de visita",
+            style: TextStyles.blue15SemiBold,
+          ),
+        ),
+                Row(
+              children: [
+                Expanded(child:buttonField(
+                "*Desde",
+                inicio,
+                errorInicio != ""
+                    ? Decorations.whiteBorder10Red
+                    : Decorations.whiteSblackCard,
+                inicio == "Inicio"
+                    ? TextStyles.grey15Itw
+                    : TextStyles.blueJ15SemiBold,
+                ()=>selectHour(true),
+                errorInicio)),
+                const SizedBox(width: 20,),
+                Expanded(child:buttonField(
+                "*Hasta",
+                fin,
+                errorFin != ""
+                    ? Decorations.whiteBorder10Red
+                    : Decorations.whiteSblackCard,
+                fin == "Fin"
+                    ? TextStyles.grey15Itw
+                    : TextStyles.blueJ15SemiBold,
+                ()=>selectHour(false),
+                errorFin)),
+              ],
+            ),
+            textField("Observación", "Observación",
+                "", observacion, false, false, 3),
             buttonField(
                 "*Tipo de Venta",
                 typeSaleCs.id == -1 ? "Tipo de Venta" : typeSaleCs.description,
@@ -345,6 +403,7 @@ class _NewCustomerState extends State<NewCustomer> {
                     : TextStyles.blueJ15SemiBold,
                 selectEmployee,
                 errEmployee),
+            
             buttonContinue()
           ],
         ));
@@ -717,6 +776,18 @@ class _NewCustomerState extends State<NewCustomer> {
               }).toList());
         });
   }
+  void selectHour(bool isInicio) async {
+    await showCupertinoModalPopup<int>(
+        context: context,
+        builder: (context) {
+          return CupertinoActionSheet(
+              actionScrollController: ScrollController(
+                  initialScrollOffset: 1.0, keepScrollOffset: true),
+              actions: ["06:00","07:00","08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00","21:00","22:00"].where((element) => isInicio?true:int.parse(element.substring(0,2))>=int.parse((inicio=="Inicio"?"0":inicio.substring(0,2)))).map((item) {
+                return showItemHour(item,isInicio);
+              }).toList());
+        });
+  }
 
   Widget showItemEmployee(EmployeeModel emp) {
     return GestureDetector(
@@ -736,7 +807,28 @@ class _NewCustomerState extends State<NewCustomer> {
       },
     );
   }
-
+  Widget showItemHour(String item,bool isInicio) {
+    return GestureDetector(
+      child: Container(
+          padding: const EdgeInsets.fromLTRB(28, 20, 10, 14),
+          child: DefaultTextStyle(
+              style: TextStyles.blueJ20Bold,
+              child: Text(
+                item,
+              ))),
+      onTap: () {
+        setState(() {
+          if(isInicio){
+            inicio=item;
+            fin="Fin";
+          }else{
+            fin=item;
+          }
+        });
+        Navigator.pop(context);
+      },
+    );
+  }
   Widget buttonContinue() {
     return Container(
       height: 45,
@@ -871,7 +963,9 @@ class _NewCustomerState extends State<NewCustomer> {
 
   bool checkValidField() {
     bool isValid = true;
-
+    setState(() {
+      
+    
     if (lat == 0 && lng == 0) {
       errLatLng = "*Coordenadas obligatorias";
       isValid = false;
@@ -995,7 +1089,18 @@ class _NewCustomerState extends State<NewCustomer> {
     } else {
       errEmployee = "";
     }
-
+    if(inicio=="Inicio"){
+      errorInicio="*Campo obligatorio";
+      isLoading=false;
+    }
+    if(fin=="Fin"){
+      errorFin="*Campo obligatorio";
+      isLoading=false;
+    }
+    if(emailCo.text!=emailC.text){
+      errEmail="el correo no coincide";
+    }
+    });
     return isValid;
   }
 
@@ -1056,7 +1161,12 @@ class _NewCustomerState extends State<NewCustomer> {
           "lon": lng.toString(),
           "referencia_domicilio": referenceC.text,
           "id_empleado": employeeS.id,
-          "tipo_venta": typeSaleCs.id
+          "tipo_venta": typeSaleCs.id,
+          "entre_calle_1":streetR1.text,
+          "entre_calle_2":streetR2.text,
+          "observaciones":observacion.text,
+          "hora_inicio":inicio,
+          "hora_fin":fin
         }
       };
     }

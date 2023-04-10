@@ -708,11 +708,11 @@ Future<Answer> getStatusComodato(int id) async {
     return Answer(body: e, message:"Algo salio mal, revisa tu conexion a internet.", error: true);
   }
 }
-Future<Answer> getCustomers() async {
+Future<Answer> getCustomers({int idLast=0}) async {
   log("/StoreServices <getCustomers>");
   try{
     var response = await http.get(
-        Uri.parse("${prefs.urlBase}payload?idRuta=${prefs.idRouteD}&date=${DateFormat('yyyyMMdd').format(DateTime.now())}"),
+        Uri.parse("${prefs.urlBase}payload?idRuta=${prefs.idRouteD}&date=${DateFormat('yyyyMMdd').format(DateTime.now())}${idLast==0?'':'&sync=$idLast'}"),
         headers: {
           "Content-Type": "aplication/json",
           "x-api-key": apiKey,

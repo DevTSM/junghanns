@@ -8,9 +8,11 @@ import 'package:junghanns/components/bottom_bar.dart';
 import 'package:junghanns/components/button.dart';
 import 'package:junghanns/components/drawer/drawer.dart';
 import 'package:junghanns/components/loading.dart';
+import 'package:junghanns/models/stop_ruta.dart';
 import 'package:junghanns/pages/home/call.dart';
 import 'package:junghanns/pages/home/home.dart';
 import 'package:junghanns/pages/home/new_customer.dart';
+import 'package:junghanns/pages/home/qr.dart';
 import 'package:junghanns/pages/home/routes.dart';
 import 'package:junghanns/pages/home/second.dart';
 import 'package:junghanns/pages/home/specials.dart';
@@ -28,8 +30,7 @@ const List<Widget> pages = [
   Home(),
   Specials(),
   Routes(),
-  Seconds(),
-  
+  QRSeller(),
   NewCustomer(),
   Call(),
 ];
@@ -112,6 +113,7 @@ class _HomePrincipalState extends State<HomePrincipal> {
       size = MediaQuery.of(context).size;
       provider = Provider.of<ProviderJunghanns>(context);
     });
+    log("${prefs.statusRoute}===>");
     return prefs.statusRoute == "INCM"
         ? comidaWidget()
         : Scaffold(
@@ -192,7 +194,13 @@ class _HomePrincipalState extends State<HomePrincipal> {
                           isloading=true;
                         });
                 await setCurrentLocation();
-                if (provider.connectionStatus < 4) {
+                StopRuta stop = StopRuta(
+            id: 1,
+            update: 0,
+            lat: currentLocation.latitude!,
+            lng: currentLocation.longitude!,
+            status:"FNCM");
+        int id = await handler.insertStopRuta(stop);
                   await setInitRoute(
                           currentLocation.latitude!, currentLocation.longitude!,
                           status: "fin_comida")
@@ -200,26 +208,13 @@ class _HomePrincipalState extends State<HomePrincipal> {
                         setState(() {
                           isloading=false;
                         });
-                    if (answer.error) {
-                      Fluttertoast.showToast(
-                        msg:
-                            "No fue posible continuar la ruta, revisa tu conexion a internet",
-                        timeInSecForIosWeb: 2,
-                        toastLength: Toast.LENGTH_LONG,
-                        gravity: ToastGravity.TOP,
-                        webShowClose: true,
-                      );
-                    } else {
-                      setState(() {
+                        if (!answer.error) {
+            handler.updateStopRuta(1, id);
+          }
+                  });
+                  setState(() {
                         prefs.statusRoute = "FNCM";
                       });
-                    }
-                  });
-                } else {
-                  setState(() {
-                    prefs.statusRoute = "FNCM";
-                  });
-                }
               },
               decoration: Decorations.greenBorder5,
               style: TextStyles.white17_6,

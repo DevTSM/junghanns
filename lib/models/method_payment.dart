@@ -37,7 +37,7 @@ class MethodPayment {
         typeWayToPay: data["tipoFormaPago"],
         type: data["type"],
         idProductService: data["idProductoServicio"] ?? -1,
-        idAuth: data["idAutorizaion"]??0,
+        idAuth: data["idAutorizacion"]??-1,
         description: data["descripcion"] ?? "",
         number: int.parse((data["cantidad"]??-1).toString()));
   }
@@ -47,6 +47,7 @@ class MethodPayment {
       "tipoFormaPago":typeWayToPay,
       "type":type,
       "idProductoServicio":idProductService,
+      "idAutorizacion":idAuth,
       "descripcion":description,
       "cantidad":number
     };

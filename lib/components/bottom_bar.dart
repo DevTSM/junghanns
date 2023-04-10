@@ -55,7 +55,7 @@ Widget bottomBar(Function setIndexCurrent, int indexCurrent,{BuildContext? conte
           width: 24,
           height: 24,
         ),
-        label: '2° Vuelta',
+        label: 'QR',
       ),
       BottomNavigationBarItem(
         icon: Image.asset(

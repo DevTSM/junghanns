@@ -39,7 +39,7 @@ class _OpeningState extends State<Opening> {
     super.initState();
     _connectivity = Connectivity();
     isAsync = false;
-    
+    log("cliente secret =====> ${prefs.clientSecret}");
     log("token de acceso =====> ${prefs.token}");
     if (prefs.version != version ) {
       String urlBaseSafe=prefs.urlBase;
@@ -58,8 +58,8 @@ class _OpeningState extends State<Opening> {
         DateTime dateLast=DateTime.parse(prefs.asyncLast != ""
                     ? prefs.asyncLast
                     : DateTime(2017, 9, 7, 17, 30).toString());
-       //if (DateTime.now().day!=dateLast.day||DateTime.now().month!=dateLast.month|| prefs.isAsyncCurrent) {
-        if (true) {
+       if (DateTime.now().day!=dateLast.day||DateTime.now().month!=dateLast.month|| prefs.isAsyncCurrent) {
+        //if (true) {
           setState(() {
             isAsync = true;
           });
@@ -89,6 +89,7 @@ class _OpeningState extends State<Opening> {
           );
         }
       } else {
+        prefs.statusRoute="";
         Navigator.pushReplacement<void, void>(
           context,
           MaterialPageRoute<void>(

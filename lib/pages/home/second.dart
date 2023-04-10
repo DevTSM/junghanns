@@ -168,6 +168,8 @@ class _SecondsState extends State<Seconds> {
                               children: searchList.map((e) {
                                 return Column(children: [
                                   RoutesCard(
+                                    updateList: (){},
+                                    indexHome: 3,
                                       icon: Container(
                                         decoration: BoxDecoration(
                                           color: Color(int.parse(
@@ -216,6 +218,8 @@ class _SecondsState extends State<Seconds> {
                                           (BuildContext context, int index) {
                                         return Column(children: [
                                           RoutesCard(
+                                            updateList: (){},
+                                            indexHome: 3,
                                               icon: Image.asset(
                                                 "assets/icons/${snapshot.data![index].typeVisit == "RUTA" ? "user1" : snapshot.data![index].typeVisit == "SEGUNDA" ? "user3" : "user2"}.png",
                                                 width: size.width * .14,

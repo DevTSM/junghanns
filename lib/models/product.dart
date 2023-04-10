@@ -63,7 +63,27 @@ class ProductModel {
         isSelect: false,
         rank: data["rank"] ?? "");
   }
-
+  factory ProductModel.fromDatabase(Map<String, dynamic> data) {
+    return ProductModel(
+        idProduct: data["idProductoServicio"] ?? 0,
+        description: data["descripcion"],
+        price: data["precio"]??-1,
+        stock: double.parse((data["stock"]??0).toString()).ceil(),
+        number: 0,
+        count: "",
+        img: "assets/icons/refill1.png",
+        type: 1,
+        isSelect: false,
+        rank: data["rank"]);
+  }
+  Map<String, dynamic> get getMapProduct=>{
+    "idProductoServicio":idProduct,
+      "descripcion":description,
+      "precio":price,
+      "stock":stock,
+      "url":img,
+      "rank":rank
+  };
   setSelect(bool isSelect) {
     this.isSelect = isSelect;
   }

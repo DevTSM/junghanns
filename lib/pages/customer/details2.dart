@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:junghanns/models/stop_ruta.dart';
 import 'package:linear_progress_bar/linear_progress_bar.dart';
 import 'package:location/location.dart';
 import 'package:auto_size_text/auto_size_text.dart';
@@ -40,12 +41,10 @@ import '../../services/auth.dart';
 
 class DetailsCustomer2 extends StatefulWidget {
   CustomerModel customerCurrent;
-  String type;
   int indexHome;
   DetailsCustomer2(
       {Key? key,
       required this.customerCurrent,
-      required this.type,
       required this.indexHome})
       : super(key: key);
   @override
@@ -70,89 +69,14 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
     configList = [];
     authList = [];
     dif = 0;
-    isRange = false;
-    isLoading = true;
+    isRange = false; 
+    isLoading=false;
     isLoadingHistory = false;
     isLoadingRange = false;
     currentLocation = LocationData.fromMap({});
-    checkToken();
-  }
-
-  checkToken() async {
-    await getDetailsCustomer(widget.customerCurrent.id, widget.type)
-        .then((answer) async {
-      setState(() {
-        isLoading = false;
-      });
-      if (!answer.error) {
-        setState(() {
-          widget.customerCurrent.setData=answer.body;
-          handler.updateUser(widget.customerCurrent);
-        });
-      }
-    });
     setCurrentLocation();
     getHistory();
   }
-
-  //deshabilitado
-  getDataDetails() async {
-    Timer(const Duration(milliseconds: 1000), () async {
-      if (provider.connectionStatus < 4) {
-        setState(() {
-          isLoading = true;
-        });
-        await getDetailsCustomer(widget.customerCurrent.id, widget.type)
-            .then((answer) async {
-          setState(() {
-            isLoading = false;
-          });
-          if (answer.error) {
-            Fluttertoast.showToast(
-              msg: answer.message,
-              timeInSecForIosWeb: 2,
-              toastLength: Toast.LENGTH_LONG,
-              gravity: ToastGravity.TOP,
-              webShowClose: true,
-            );
-          } else {
-            setState(() {
-              widget.customerCurrent = CustomerModel.fromService(answer.body,
-                  widget.customerCurrent.id, widget.customerCurrent.type);
-            });
-          }
-          getMoney();
-          setCurrentLocation();
-          getHistory();
-        });
-      } else {
-        setState(() {
-          isLoading = false;
-        });
-        setCurrentLocation();
-      }
-    });
-  }
-
-  getMoney() {
-    getMoneyCustomer(widget.customerCurrent.idClient).then((answer) {
-      if (answer.error) {
-        Fluttertoast.showToast(
-          msg: answer.message,
-          timeInSecForIosWeb: 2,
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.TOP,
-          webShowClose: true,
-        );
-      } else {
-        setState(() {
-          widget.customerCurrent
-              .setMoney(double.parse((answer.body["saldo"] ?? 0).toString()));
-        });
-      }
-    });
-  }
-  // ---------
   setCurrentLocation() async {
     try {
       setState(() {
@@ -588,7 +512,6 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
           ),
         ),
         onRefresh: () async {
-          getMoney();
           setCurrentLocation();
         });
   }
@@ -850,7 +773,8 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
                           : prefs.statusRoute == "INCM"
                               ? ButtonJunghanns(
                                   fun: () async {
-                                    if (provider.connectionStatus < 4) {
+                                    StopRuta stop=StopRuta(id: 1, update: 0, lat: currentLocation.latitude!, lng: currentLocation.longitude!, status: "FNCM");
+                                    int id= await handler.insertStopRuta(stop);
                                       setState(() {
                                         isLoading = true;
                                       });
@@ -862,36 +786,24 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
                                         setState(() {
                                           isLoading = false;
                                         });
-                                        if (answer.error) {
-                                          Fluttertoast.showToast(
-                                            msg:
-                                                "No fue posible continuar la ruta, revisa tu conexion a internet",
-                                            timeInSecForIosWeb: 2,
-                                            toastLength: Toast.LENGTH_LONG,
-                                            gravity: ToastGravity.TOP,
-                                            webShowClose: true,
-                                          );
-                                        } else {
-                                          setState(() {
-                                            prefs.statusRoute = "FNCM";
-                                          });
+                                        if (!answer.error){
+                                          handler.updateStopRuta(1, id);
                                         }
                                       });
-                                    } else {
                                       setState(() {
                                         prefs.statusRoute = "FNCM";
                                       });
-                                    }
                                   },
                                   decoration: Decorations.greenBorder5,
                                   style: TextStyles.white17_6,
                                   label: "Continuar ruta")
                               : ButtonJunghanns(
                                   fun: () async {
-                                    if (provider.connectionStatus < 4) {
-                                      setState(() {
+                                    setState(() {
                                         isLoading = true;
                                       });
+                                    StopRuta stop=StopRuta(id: 1, update: 0, lat: currentLocation.latitude!, lng: currentLocation.longitude!, status: "INRT");
+                                    int id= await handler.insertStopRuta(stop);
                                       await setInitRoute(
                                               currentLocation.latitude!,
                                               currentLocation.longitude!)
@@ -899,26 +811,16 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
                                         setState(() {
                                           isLoading = false;
                                         });
-                                        if (answer.error) {
-                                          Fluttertoast.showToast(
-                                            msg:
-                                                "No fue posible iniciar la ruta, revisa tu conexion a internet",
-                                            timeInSecForIosWeb: 2,
-                                            toastLength: Toast.LENGTH_LONG,
-                                            gravity: ToastGravity.TOP,
-                                            webShowClose: true,
-                                          );
-                                        } else {
-                                          setState(() {
-                                            prefs.statusRoute = "INRT";
-                                          });
+                                        if (!answer.error) {
+                                          log("se inicio la Ruta");
+                                          handler.updateStopRuta(1, id);
+                                        }else{
+                                          log("StopRuta por actualizar");
                                         }
                                       });
-                                    } else {
                                       setState(() {
                                         prefs.statusRoute = "INRT";
                                       });
-                                    }
                                   },
                                   decoration: Decorations.greenBorder5,
                                   style: TextStyles.white17_6,

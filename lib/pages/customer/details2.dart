@@ -268,7 +268,9 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
                     authList: authList.isEmpty ? authList : [authList.first],
                   ))).then(
           (value) => setState((){
-            widget.customerCurrent;
+            log("se actualizo =====> ${widget.customerCurrent.type}  ${widget.customerCurrent.id}");
+            getHistory();
+            log("se actualizo =====> ${widget.customerCurrent.type}  ${widget.customerCurrent.id}");
           }));
     } catch (e) {
       log(e.toString());
@@ -282,7 +284,9 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
         MaterialPageRoute<void>(
             builder: (BuildContext context) => ShoppingCartRefill(
                   customerCurrent: widget.customerCurrent,
-                ))).then((value) =>setState(() {}));
+                ))).then((value) =>setState(() {
+                   getHistory();
+                }));
   }
 
   funCheckDistanceSale(bool isSale) async {

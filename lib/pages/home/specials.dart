@@ -46,26 +46,26 @@ class _SpecialsState extends State<Specials> {
     getCustomerListDB();
   }
 
-getCustomerListDB() async {
-  searchList.clear();
-  customerList.clear();
+  getCustomerListDB() async {
+    searchList.clear();
+    customerList.clear();
     List<CustomerModel> dataList = await handler.retrieveUsers();
     setState(() {
       dataList.map((e) {
-        if(e.type==5){
-        customerList.add(e);
+        if (e.type == 5) {
+          customerList.add(e);
         }
       }).toList();
       customerList.sort((a, b) => a.orden.compareTo(b.orden));
       searchList = customerList;
-      getListUpdate(dataList.isEmpty?0:dataList.last.id);
+      getListUpdate(dataList, dataList.isEmpty ? 0 : dataList.last.id);
     });
   }
 
-  getListUpdate(int id) {
+  getListUpdate(List<CustomerModel> users, int id) {
     log("Ultimo cliente $id");
     Timer(const Duration(milliseconds: 800), () async {
-      await getCustomers(idLast: id).then((answer) {
+      await getCustomers().then((answer) {
         log(answer.body.toString());
         if (prefs.token == "") {
           Fluttertoast.showToast(
@@ -75,21 +75,38 @@ getCustomerListDB() async {
             gravity: ToastGravity.TOP,
             webShowClose: true,
           );
-        }else{
-          if(!answer.error){
-            List<CustomerModel> list=[];
+          Timer(const Duration(milliseconds: 2000), () async {
+              Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+            });
+        } else {
+          if (!answer.error) {
+            List<CustomerModel> list = [];
+            List<CustomerModel> listDelete = [];
             for (var item in answer.body) {
-            CustomerModel customer=CustomerModel.fromPayload(item);
-          list.add(customer);
-          if(customer.type==5){
-        customerList.add(customer);
-        }
-        }
-        if(list.isNotEmpty){
-        handler.insertUser(list);
-         customerList.sort((a, b) => a.orden.compareTo(b.orden));
-        searchList=customerList;
-        }
+              CustomerModel customer = CustomerModel.fromPayload(item);
+              listDelete.add(customer);
+              var exits = users
+                  .where((element) => element.idClient == customer.idClient);
+              if (exits.isEmpty) {
+                list.add(customer);
+                if (customer.type == 5) {
+                  customerList.add(customer);
+                }
+              }
+            }
+            users.map((e) {
+              if (listDelete
+                  .where((element) => element.idClient == e.idClient)
+                  .isEmpty) {
+                e.setType(8);
+                handler.updateUser(e);
+              }
+            }).toList();
+            if (list.isNotEmpty) {
+              handler.insertUser(list);
+              customerList.sort((a, b) => a.orden.compareTo(b.orden));
+              searchList = customerList;
+            }
           }
         }
       });
@@ -99,7 +116,7 @@ getCustomerListDB() async {
       });
     });
   }
- 
+
   getPermission() async {
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.whileInUse ||
@@ -109,7 +126,6 @@ getCustomerListDB() async {
       provider.permission = false;
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -141,51 +157,51 @@ getCustomerListDB() async {
                     visible: provider.connectionStatus < 4 &&
                         customerList.isNotEmpty,
                     child: buscador()),
-                    customerList.isNotEmpty
-                        ? Expanded(
-                            child: SingleChildScrollView(
-                                child: Column(
-                            children: searchList.map((e) {
-                              return Column(children: [
-                                RoutesCard(
-                                  updateList:getCustomerListDB,
-                                  indexHome: 1,
-                                    icon: Container(
-                                      decoration: BoxDecoration(
-                                        color: Color(int.parse(
-                                            e.color
-                                                .toUpperCase()
-                                                .replaceAll("#", "FF"),
-                                            radix: 16)),
-                                        borderRadius: const BorderRadius.all(
-                                          Radius.circular(30),
-                                        ),
-                                      ),
-                                      padding: const EdgeInsets.all(10),
-                                      height: size.width * .14,
-                                      width: size.width * .14,
-                                      child: Image.asset(
-                                          "assets/icons/userIcon.png"),
+                customerList.isNotEmpty
+                    ? Expanded(
+                        child: SingleChildScrollView(
+                            child: Column(
+                        children: searchList.map((e) {
+                          return Column(children: [
+                            RoutesCard(
+                                updateList: getCustomerListDB,
+                                indexHome: 1,
+                                icon: Container(
+                                  decoration: BoxDecoration(
+                                    color: Color(int.parse(
+                                        e.color
+                                            .toUpperCase()
+                                            .replaceAll("#", "FF"),
+                                        radix: 16)),
+                                    borderRadius: const BorderRadius.all(
+                                      Radius.circular(30),
                                     ),
-                                    customerCurrent: e),
-                                Row(children: [
-                                  Container(
-                                    margin: EdgeInsets.only(
-                                        left: (size.width * .07) + 15),
-                                    color: ColorsJunghanns.grey,
-                                    width: .5,
-                                    height: 15,
-                                  )
-                                ])
-                              ]);
-                            }).toList(),
-                          )))
-                        : Expanded(
-                            child: Center(
-                                child: Text(
-                            "Sin clientes",
-                            style: TextStyles.blue18SemiBoldIt,
-                          )))
+                                  ),
+                                  padding: const EdgeInsets.all(10),
+                                  height: size.width * .14,
+                                  width: size.width * .14,
+                                  child:
+                                      Image.asset("assets/icons/userIcon.png"),
+                                ),
+                                customerCurrent: e),
+                            Row(children: [
+                              Container(
+                                margin: EdgeInsets.only(
+                                    left: (size.width * .07) + 15),
+                                color: ColorsJunghanns.grey,
+                                width: .5,
+                                height: 15,
+                              )
+                            ])
+                          ]);
+                        }).toList(),
+                      )))
+                    : Expanded(
+                        child: Center(
+                            child: Text(
+                        "Sin clientes",
+                        style: TextStyles.blue18SemiBoldIt,
+                      )))
               ],
             ),
           )),

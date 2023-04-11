@@ -75,6 +75,9 @@ getCustomerListDB() async {
             gravity: ToastGravity.TOP,
             webShowClose: true,
           );
+          Timer(const Duration(milliseconds: 2000), () async {
+              Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+            });
         }else{
           if(!answer.error){
             List<CustomerModel> list=[];

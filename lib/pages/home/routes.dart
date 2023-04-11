@@ -49,20 +49,20 @@ class _RoutesState extends State<Routes> {
     List<CustomerModel> dataList = await handler.retrieveUsers();
     setState(() {
       dataList.map((e) {
-        if(e.type==1||e.type==2||e.type==3||e.type==4){
-        customerList.add(e);
+        if (e.type == 1 || e.type == 2 || e.type == 3 || e.type == 4) {
+          customerList.add(e);
         }
       }).toList();
       customerList.sort((a, b) => a.orden.compareTo(b.orden));
       searchList = customerList;
-      getListUpdate(dataList.isEmpty?0:dataList.last.id);
+      getListUpdate(dataList, dataList.isEmpty ? 0 : dataList.last.id);
     });
   }
 
-  getListUpdate(int id) {
+  getListUpdate(List<CustomerModel> users, int id) {
     log("Ultimo cliente $id");
     Timer(const Duration(milliseconds: 800), () async {
-      await getCustomers(idLast: id).then((answer) {
+      await getCustomers().then((answer) {
         if (prefs.token == "") {
           Fluttertoast.showToast(
             msg: "Las credenciales caducaron.",
@@ -71,21 +71,40 @@ class _RoutesState extends State<Routes> {
             gravity: ToastGravity.TOP,
             webShowClose: true,
           );
-        }else{
-          if(!answer.error){
-            List<CustomerModel> list=[];
+          Timer(const Duration(milliseconds: 2000), () async {
+              Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+            });
+        } else {
+          if (!answer.error) {
+            List<CustomerModel> list = [];
+            List<CustomerModel> listDelete=[];
             for (var item in answer.body) {
-            CustomerModel customer=CustomerModel.fromPayload(item);
-          list.add(customer);
-          if(customer.type==1||customer.type==2||customer.type==3||customer.type==4){
-        customerList.add(customer);
-        }
-        }
-        if(list.isNotEmpty){
-        handler.insertUser(list);
-         customerList.sort((a, b) => a.orden.compareTo(b.orden));
-        searchList=customerList;
-        }
+              CustomerModel customer = CustomerModel.fromPayload(item);
+              listDelete.add(customer);
+              var exits = users
+                  .where((element) => element.idClient == customer.idClient);
+              if (exits.isEmpty) {
+                list.add(customer);
+                if (customer.type == 1 ||
+                    customer.type == 2 ||
+                    customer.type == 3 ||
+                    customer.type == 4) {
+                  customerList.add(customer);
+                }
+              }
+            }
+            users.map((e){
+              if(listDelete.where((element) => element.idClient==e.idClient).isEmpty){
+                e.setType(7);
+                handler.updateUser(e);
+              }
+            }).toList();
+            if (list.isNotEmpty) {
+              handler.insertUser(list);
+              customerList.sort((a, b) => a.orden.compareTo(b.orden));
+              searchList = customerList;
+            }
+
           }
         }
       });
@@ -95,6 +114,7 @@ class _RoutesState extends State<Routes> {
       });
     });
   }
+
   getPermission() async {
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.whileInUse ||
@@ -137,8 +157,8 @@ class _RoutesState extends State<Routes> {
                         children: searchList.map((e) {
                           return Column(children: [
                             RoutesCard(
-                              updateList: getCustomerListDB,
-                              indexHome:2,
+                                updateList: getCustomerListDB,
+                                indexHome: 2,
                                 icon: Container(
                                   decoration: BoxDecoration(
                                     color: Color(int.parse(

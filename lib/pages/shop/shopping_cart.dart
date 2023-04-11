@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:junghanns/database/async.dart';
 import 'package:junghanns/models/folio.dart';
@@ -61,7 +62,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
   late List<ProductModel> productsList, productListOther;
   late bool isLoading, isRange;
   late List<ConfigModel> configList = [];
-  late List<FolioModel> folios=[];
+  late List<FolioModel> folios = [];
   late double distance;
   late SecondWayToPay secWayToPay;
   late NumberFormat formatMoney = NumberFormat("\$#,##0.00");
@@ -76,7 +77,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
   void initState() {
     super.initState();
     productsList = [];
-    folios=[];
+    folios = [];
     productListOther = [];
     isLoading = false;
     isRange = false;
@@ -84,7 +85,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
     distance = 0;
     secWayToPay = SecondWayToPay(wayToPay: "", typeWayToPay: "", cost: 0);
     latSale = lngSale = 0;
-    idLocal=0;
+    idLocal = 0;
     getProductLocal();
   }
 
@@ -96,34 +97,41 @@ class _ShoppingCartState extends State<ShoppingCart> {
 
   getProductLocal() async {
     Timer(const Duration(milliseconds: 1000), () async {
-    provider.initShopping(widget.customerCurrent);
-    List<ProductModel> dataList =
-          await handler.retrieveProducts();
-          dataList.map((e) {
-              if (widget.authList.isEmpty) {
-                log("id de producto: ${e.idProduct} con stock ${e.stock}");
-                setState(() {
-                  productsList.add(e);
-                });
-                
-              } else {
-                if (e.idProduct ==
-                    widget.authList.first.product.idProduct) {
-                      setState(() {
-                        productsList.add(
-                      ProductModel.fromProduct(widget.authList.first.product));
-                      });
-                  
-                }
-              }
-            }).toList();
+      provider.initShopping(widget.customerCurrent);
+      List<ProductModel> dataList = await handler.retrieveProducts();
+      dataList.map((e) {
+        log("id de producto: ${e.idProduct} con stock ${e.stock}");
+        if (widget.authList.isEmpty) {
+          if(e.stock>0){
+          setState(() {
+            productsList.add(e);
+          });
+          }
+        } else {
+          if (e.idProduct == widget.authList.first.product.idProduct && e.stock>0) {
+            log("======> ${e.idProduct} ${widget.authList.first.product.idProduct} ${e.stock} ${widget.authList.first.product.stock}");
             setState(() {
-              productListOther =
-                  productsList.where((element) => element.rank == "").toList();
+              ProductModel product=ProductModel.fromProduct(widget.authList.first.product);
+              product.setStock(widget.authList.first.product.stock>e.stock?e.stock:widget.authList.first.product.stock);
+              productsList
+                  .add(product);
             });
-            checkPriceCvsPriceS();
-            getDataPayment();
-    folios= await handler.retrieveFolios();
+          }else{
+            if(e.stock<=0){
+              widget.customerCurrent.delete(widget.authList.first.idAuth);
+            }
+          }
+        }
+      }).toList();
+      setState(() {
+        productListOther =
+            productsList.where((element) => element.rank == "").toList();
+        isOtherProduct =
+            productsList.where((element) => element.rank != "").isEmpty;
+      });
+      checkPriceCvsPriceS();
+      getDataPayment();
+      folios = await handler.retrieveFolios();
     });
   }
 
@@ -140,50 +148,75 @@ class _ShoppingCartState extends State<ShoppingCart> {
   }
 
   getDataPayment() async {
-        List<MethodPayment> paymentsList = [];
-        //Aqui se valida si existe la autorizacion para como dato para filtrar los metodos de pago
-        if (widget.authList.isNotEmpty) {
-          switch (widget.authList.first.type) {
-            case "C":
-              paymentsList.add(MethodPayment(
-                  wayToPay: "Credito",
-                  typeWayToPay: "C",
-                  type: "Atributo",
-                  idProductService: -1,
-                  description: "",
-                  number: -1));
-              break;
-            case "V":
-              widget.customerCurrent.payment.map((e) {
-                log("${e.idAuth} ===== ${widget.authList.first.idAuth}");
-                MethodPayment method = e;
-                if (method.idAuth == widget.authList.first.idAuth) {
-                  paymentsList.add(method);
-                }
-              }).toList();
-              break;
-            default:
+    List<MethodPayment> paymentsList = [];
+    List<MethodPayment> paymentsListT = [];
+     await getPaymentMethods(widget.customerCurrent.idClient, prefs.idRouteD)
+        .then((answer) {
+          if(!answer.error){
+            answer.body.map((e){
+              paymentsListT.add(MethodPayment.fromService(e));
+            }).toList();
           }
-        } else {
-          //Se agregan todos lo metodos de pago si no hay autorizacion
-          widget.customerCurrent.payment
-              .map((e) => e.typeWayToPay!="M"?paymentsList.add(e):null)
-              .toList();
-          //Se agrega metodo de pago "Monedero"
-          if (widget.customerCurrent.purse > 0&&widget.customerCurrent.payment.where((element) => element.typeWayToPay=="M").isEmpty) {
-            paymentsList.add(MethodPayment(
-                wayToPay: "Monedero",
-                typeWayToPay: "M",
-                type: "Monedero",
-                idProductService: -1,
-                description: "",
-                number: -1));
-          }
-        }
-        setState(() {
-          widget.customerCurrent.setPayment(paymentsList);
-          isLoading=false;
         });
+        if(paymentsListT.isNotEmpty){
+        widget.customerCurrent.setPayment(paymentsListT);
+        }
+    //Aqui se valida si existe la autorizacion para como dato para filtrar los metodos de pago
+    if (widget.authList.isNotEmpty) {
+      switch (widget.authList.first.type) {
+        case "C":
+          paymentsList.add(MethodPayment(
+              wayToPay: "Credito",
+              typeWayToPay: "C",
+              type: "Atributo",
+              idAuth: widget.authList.first.idAuth,
+              idProductService: -1,
+              description: "",
+              number: -1));
+          break;
+        case "V":
+          widget.customerCurrent.payment.map((e) {
+            log("${e.idAuth} ===== ${widget.authList.first.idAuth}");
+            MethodPayment method = e;
+            if (method.idAuth == widget.authList.first.idAuth) {
+              paymentsList.add(method);
+            }
+            if(widget.authList.first.authText=="CORTESIA"||widget.authList.first.authText=="GARRAFON A LA PAR"){
+              paymentsList.add(MethodPayment(
+              wayToPay: "Efectivo",
+              typeWayToPay: "E",
+              type: "Atributo",
+              idProductService: -1,
+              description: "",
+              number: -1));
+            }
+          }).toList();
+          break;
+        default:
+      }
+    } else {
+      //Se agregan todos lo metodos de pago si no hay autorizacion
+      widget.customerCurrent.payment
+          .map((e) => e.typeWayToPay != "M" ? paymentsList.add(e) : null)
+          .toList();
+      //Se agrega metodo de pago "Monedero"
+      if (widget.customerCurrent.purse > 0 &&
+          widget.customerCurrent.payment
+              .where((element) => element.typeWayToPay == "M")
+              .isEmpty) {
+        paymentsList.add(MethodPayment(
+            wayToPay: "Monedero",
+            typeWayToPay: "M",
+            type: "Monedero",
+            idProductService: -1,
+            description: "",
+            number: -1));
+      }
+    }
+    setState(() {
+      widget.customerCurrent.setPayment(paymentsList);
+      isLoading = false;
+    });
   }
 
   selectWayToPay() async {
@@ -323,10 +356,16 @@ class _ShoppingCartState extends State<ShoppingCart> {
                                             webShowClose: true,
                                           );
                                         } else {
-                                          widget.customerCurrent.setPhones(
-                                              List.from((answer.body["telefonos"] ?? [])
-                                                  .map((e) => e["telefono"].toString())
-                                                  .toList()));
+                                          log(answer.body["telefonos"].toString());
+                                          List<String> phones=[];
+                                          (answer.body["telefonos"] ??
+                                                          [])
+                                                      .map((e) {
+                                            if ((e["tipo"]??"") == "MOVIL") {
+                                              phones.add(e["telefono"].toString());
+                                            }
+                                          }).toList();
+                                          widget.customerCurrent.setPhones(phones);
                                           showComodato(methodCurrent);
                                         }
                                       });
@@ -417,7 +456,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
                           child: ButtonJunghanns(
                               fun: () async {
                                 Fluttertoast.showToast(
-                                  msg: "Verificando autorización",
+                                  msg: "Verificando autorización ......",
                                   timeInSecForIosWeb: 2,
                                   toastLength: Toast.LENGTH_LONG,
                                   gravity: ToastGravity.TOP,
@@ -433,7 +472,8 @@ class _ShoppingCartState extends State<ShoppingCart> {
                                       webShowClose: true,
                                     );
                                   } else {
-                                    Fluttertoast.showToast(
+                                    if(answer.body["estatus"]=="A"){
+                                      Fluttertoast.showToast(
                                       msg: "Autorización verificada",
                                       timeInSecForIosWeb: 2,
                                       toastLength: Toast.LENGTH_LONG,
@@ -441,7 +481,18 @@ class _ShoppingCartState extends State<ShoppingCart> {
                                       webShowClose: true,
                                     );
                                     Navigator.pop(context);
+                                    provider.basketCurrent.folio=int.parse(answer.body["folio"]??"-1");
                                     funSale(methodCurrent);
+                                    }else{
+                                      Fluttertoast.showToast(
+                                      msg: "Aun no se ha verificado.",
+                                      timeInSecForIosWeb: 2,
+                                      toastLength: Toast.LENGTH_LONG,
+                                      gravity: ToastGravity.TOP,
+                                      webShowClose: true,
+                                    );
+                                    }
+                                    
                                   }
                                 });
                               },
@@ -470,6 +521,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
   }
 
   showComodato(MethodPayment methodCurrent) {
+    log("------->${widget.customerCurrent.phones.length}");
     String phoneCurrent = widget.customerCurrent.phones.isNotEmpty
         ? widget.customerCurrent.phones.first
         : "1234";
@@ -496,27 +548,36 @@ class _ShoppingCartState extends State<ShoppingCart> {
                       const SizedBox(
                         width: 10,
                       ),
-                      DropdownButton<String>(
-                        value: phoneCurrent,
-                        icon: const Icon(Icons.arrow_drop_down_sharp),
-                        elevation: 5,
-                        onChanged: (String? value) {
-                          setState(() {
-                            phoneCurrent = value!;
-                          });
-                        },
-                        items: (widget.customerCurrent.phones.isNotEmpty
-                                ? widget.customerCurrent.phones
-                                    .map((e) => e.substring(6, e.length))
-                                    .toList()
-                                : ["1234"])
-                            .map<DropdownMenuItem<String>>((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(value),
-                          );
-                        }).toList(),
-                      )
+                      widget.customerCurrent.phones.length > 1
+                          ? DropdownButton<String>(
+                              value: phoneCurrent,
+                              icon: const Icon(Icons.arrow_drop_down_sharp),
+                              elevation: 5,
+                              onChanged: (String? value) {
+                                setState(() {
+                                  phoneCurrent = value!;
+                                });
+                              },
+                              items: (widget.customerCurrent.phones.isNotEmpty
+                                      ? widget.customerCurrent.phones
+                                          .map((e) => e.substring(6, e.length))
+                                          .toList()
+                                      : ["1234"])
+                                  .map<DropdownMenuItem<String>>(
+                                      (String value) {
+                                return DropdownMenuItem<String>(
+                                  value: value,
+                                  child: Text(value),
+                                );
+                              }).toList(),
+                            )
+                          : widget.customerCurrent.phones.isNotEmpty
+                              ? Text(widget.customerCurrent.phones.first
+                                  .substring(
+                                      6,
+                                      widget
+                                          .customerCurrent.phones.first.length))
+                              : const Text("Sin numeros registrados")
                     ],
                   ),
                   Row(
@@ -526,13 +587,23 @@ class _ShoppingCartState extends State<ShoppingCart> {
                           child: ButtonJunghanns(
                               fun: () async {
                                 Navigator.pop(context);
-                                await setComodato(widget.customerCurrent.idClient,
-                                        latSale, lngSale, phoneCurrent)
+                                DeviceInfoPlugin deviceInfoPlugin =
+                                    DeviceInfoPlugin();
+                                AndroidDeviceInfo build =
+                                    await deviceInfoPlugin.androidInfo;
+                                await setComodato(
+                                        build,
+                                        widget.customerCurrent.idClient,
+                                        latSale,
+                                        lngSale,
+                                        provider.basketCurrent.sales.first.idProduct,
+                                        provider.basketCurrent.sales.first.number,
+                                        widget.authList.first.idAuth)
                                     .then((answer) {
                                   if (answer.error) {
                                     Fluttertoast.showToast(
                                       msg:
-                                          "Ocurrio un error al enviar la solicitud",
+                                          answer.message,
                                       timeInSecForIosWeb: 2,
                                       toastLength: Toast.LENGTH_LONG,
                                       gravity: ToastGravity.TOP,
@@ -674,62 +745,62 @@ class _ShoppingCartState extends State<ShoppingCart> {
   }
 
   funSale(MethodPayment methodPayment) async {
-      if (secWayToPay.wayToPay.isEmpty) {
-        provider.basketCurrent.waysToPay.add(WayToPay(
-            type: methodPayment.typeWayToPay,
-            cost: provider.basketCurrent.totalPrice));
-      } else {
-        provider.basketCurrent.waysToPay.add(WayToPay(
-            type: methodPayment.typeWayToPay,
-            cost: widget.customerCurrent.purse));
-        provider.basketCurrent.waysToPay.add(
-            WayToPay(type: secWayToPay.typeWayToPay, cost: secWayToPay.cost));
-      }
-      List<Map> listSales = [];
-      for (var element in provider.basketCurrent.sales) {
-        listSales.add({
-          "cantidad": element.number,
-          "id_producto": element.idProduct,
-          "precio_unitario": element.price
-        });
-      }
-      if (widget.customerCurrent.priceS != 0) {
-        listSales.add({
-          "cantidad": widget.customerCurrent.numberS,
-          "id_producto": widget.customerCurrent.idProdServS,
-          "precio_unitario": widget.customerCurrent.priceS
-        });
-      }
-      List<Map> listWaysToPay = [];
-      for (var ele in provider.basketCurrent.waysToPay) {
-        listWaysToPay.add({
-          "tipo": ele.type,
-          "importe": ele.cost,
-        });
-      }
-      if (widget.authList.isNotEmpty) {
-        provider.basketCurrent.idAuth = widget.authList.first.idAuth;
-        widget.authList.removeWhere(
-            (element) => element.idAuth == provider.basketCurrent.idAuth);
-      }
-      Map<String, dynamic> data = {
-        "id_cliente": provider.basketCurrent.idCustomer,
-        "id_ruta": provider.basketCurrent.idRoute,
-        "latitud": "$latSale",
-        "longitud": "$lngSale",
-        "venta": List.from(listSales.toList()),
-        "id_autorizacion": provider.basketCurrent.idAuth != -1
-            ? provider.basketCurrent.idAuth
-            : null,
-        "formas_de_pago": listWaysToPay,
-        "id_data_origen": provider.basketCurrent.idDataOrigin,
-        "folio": provider.basketCurrent.folio != -1
-            ? provider.basketCurrent.folio
-            : null,
-        "tipo_operacion": provider.basketCurrent.typeOperation,
-        "version": "1.1.4"
-      };
-      Map<String, dynamic> dataLocal = {
+    if (secWayToPay.wayToPay.isEmpty) {
+      provider.basketCurrent.waysToPay.add(WayToPay(
+          type: methodPayment.typeWayToPay,
+          cost: provider.basketCurrent.totalPrice));
+    } else {
+      provider.basketCurrent.waysToPay.add(WayToPay(
+          type: methodPayment.typeWayToPay,
+          cost: widget.customerCurrent.purse));
+      provider.basketCurrent.waysToPay.add(
+          WayToPay(type: secWayToPay.typeWayToPay, cost: secWayToPay.cost));
+    }
+    List<Map> listSales = [];
+    for (var element in provider.basketCurrent.sales) {
+      listSales.add({
+        "cantidad": element.number,
+        "id_producto": element.idProduct,
+        "precio_unitario": element.price
+      });
+    }
+    if (widget.customerCurrent.priceS != 0) {
+      listSales.add({
+        "cantidad": widget.customerCurrent.numberS,
+        "id_producto": widget.customerCurrent.idProdServS,
+        "precio_unitario": widget.customerCurrent.priceS
+      });
+    }
+    List<Map> listWaysToPay = [];
+    for (var ele in provider.basketCurrent.waysToPay) {
+      listWaysToPay.add({
+        "tipo": ele.type,
+        "importe": ele.cost,
+      });
+    }
+    if (widget.authList.isNotEmpty) {
+      provider.basketCurrent.idAuth = widget.authList.first.idAuth;
+      widget.authList.removeWhere(
+          (element) => element.idAuth == provider.basketCurrent.idAuth);
+    }
+    Map<String, dynamic> data = {
+      "id_cliente": provider.basketCurrent.idCustomer,
+      "id_ruta": provider.basketCurrent.idRoute,
+      "latitud": "$latSale",
+      "longitud": "$lngSale",
+      "venta": List.from(listSales.toList()),
+      "id_autorizacion": provider.basketCurrent.idAuth != -1
+          ? provider.basketCurrent.idAuth
+          : null,
+      "formas_de_pago": listWaysToPay,
+      "id_data_origen": provider.basketCurrent.idDataOrigin,
+      "folio": provider.basketCurrent.folio != -1
+          ? provider.basketCurrent.folio
+          : null,
+      "tipo_operacion": provider.basketCurrent.typeOperation,
+      "version": "1.1.4"
+    };
+    Map<String, dynamic> dataLocal = {
       "idCustomer": provider.basketCurrent.idCustomer,
       "idRoute": provider.basketCurrent.idRoute,
       "lat": "$latSale",
@@ -744,26 +815,43 @@ class _ShoppingCartState extends State<ShoppingCart> {
           ? provider.basketCurrent.folio
           : null,
       "type": provider.basketCurrent.typeOperation,
-      "isUpdate":0
+      "isUpdate": 0
     };
-      int id= await handler.insertSale(dataLocal);
-      for(var e in provider.basketCurrent.sales){
-        await handler.updateProductStock(e.stock-e.number, e.idProduct);
-      }
-      if(provider.basketCurrent.waysToPay.where((element) => element.type=="M").isNotEmpty){
+    int id = await handler.insertSale(dataLocal);
+    for (var e in provider.basketCurrent.sales) {
+      await handler.updateProductStock((e.stock - e.number), e.idProduct);
+    }
+    if (provider.basketCurrent.waysToPay
+        .where((element) => element.type == "M")
+        .isNotEmpty) {
       log("metodo de pago Monedero ");
-      widget.customerCurrent.setMoney((widget.customerCurrent.purse-((provider.basketCurrent.sales.map((element) => element.price*element.number).toList()).reduce((value, element) => value+element)))>=0?(widget.customerCurrent.purse-((provider.basketCurrent.sales.map((element) => element.price*element.number).toList()).reduce((value, element) => value+element))):0,isOffline:true,type:0);
-      }
-      widget.customerCurrent.setType(7);
-          await postSale(data).then((answer) async {
-        setState(() {
-          isLoading = false;
-        });
-        if (!answer.error){
-          await handler.updateSale(1, id);
-        }
+      widget.customerCurrent.setMoney(
+          (widget.customerCurrent.purse -
+                      ((provider.basketCurrent.sales
+                              .map((element) => element.price * element.number)
+                              .toList())
+                          .reduce((value, element) => value + element))) >=
+                  0
+              ? (widget.customerCurrent.purse -
+                  ((provider.basketCurrent.sales
+                          .map((element) => element.price * element.number)
+                          .toList())
+                      .reduce((value, element) => value + element)))
+              : 0,
+          isOffline: true,
+          type: 0);
+    }
+    widget.customerCurrent.setType(7);
+    log("se actualizo =====> ${widget.customerCurrent.type}  ${widget.customerCurrent.id}");
+    await postSale(data).then((answer) async {
+      setState(() {
+        isLoading = false;
       });
-      Navigator.pop(context,true);
+      if (!answer.error) {
+        await handler.updateSale(1, id);
+      }
+    });
+    Navigator.pop(context, true);
   }
 
   @override
@@ -867,6 +955,9 @@ class _ShoppingCartState extends State<ShoppingCart> {
                 const SizedBox(
                   height: 10,
                 ),
+                Visibility(
+                  visible: productListOther.isNotEmpty,
+                  child: 
                 Container(
                     margin: const EdgeInsets.only(
                         left: 15, right: 15, bottom: 10, top: 10),
@@ -881,7 +972,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
                             : Decorations.blueBorder12,
                         style: TextStyles.white17_5,
                         label:
-                            isOtherProduct ? "Regresar" : "Otros Productos")),
+                            isOtherProduct ? "Regresar" : "Otros Productos"))),
                 const SizedBox(
                   height: 10,
                 ),
@@ -1151,22 +1242,23 @@ class _ShoppingCartState extends State<ShoppingCart> {
             isLoading = true;
             isRequestFolio = false;
           });
-          var exits=folios.where((element) => element.number==int.parse(folioC.text));
-          if(exits.isEmpty){
-             setState(() {
-                isLoading = false;
-                errFolio = "* No se encontro el folio";
-                isRequestFolio = true;
-              });
-          }else{
-            if(exits.first.status==1){
+          var exits = folios
+              .where((element) => element.number == int.parse(folioC.text));
+          if (exits.isEmpty) {
+            setState(() {
+              isLoading = false;
+              errFolio = "* No se encontro el folio";
+              isRequestFolio = true;
+            });
+          } else {
+            if (exits.first.status == 1) {
               provider.basketCurrent.folio = int.parse(folioC.text);
-                MethodPayment met = widget.customerCurrent.payment
-                    .firstWhere(((element) => element.wayToPay == "Credito"));
-                setState(() {
-                  isLoading = false;
-                });
-                showConfirmSale(met);
+              MethodPayment met = widget.customerCurrent.payment
+                  .firstWhere(((element) => element.wayToPay == "Credito"));
+              setState(() {
+                isLoading = false;
+              });
+              showConfirmSale(met);
             }
           }
         } else {

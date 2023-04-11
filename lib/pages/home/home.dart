@@ -55,7 +55,7 @@ class _HomeState extends State<Home> {
     liquit = 0;
     specials = 0;
     specialsA=0;
-    //getDashboarR();
+    getDashboarR();
     getAsync();
   }
 
@@ -110,7 +110,7 @@ class _HomeState extends State<Home> {
   }
 
   getAsync() async {
-    List<Map<String, dynamic>> dataList = await handler.retrieveSales();
+    List<Map<String, dynamic>> dataList = await handler.retrieveSalesOff();
     List<Map<String, dynamic>> dataList2 = await handler.retrieveStopOff();
     await handler.retrieveUsers().then((value) {
       log(value.length.toString());
@@ -133,10 +133,10 @@ class _HomeState extends State<Home> {
         });
       }).toList();
     });
-    dataList2.map((element) {
-      List<Map<String, dynamic>> data = jsonDecode(element["saleItems"]);
+    dataList.map((element) {
+      List<dynamic> data = jsonDecode(element["saleItems"]);
       setState(() {
-        liquit += (data.where((e) => e["id_producto"] == 22).length);
+        data.map((e) => liquit+=int.parse(e["cantidad"].toString())).toList();
       });
     }).toList();
     prefs.dataSale = true;

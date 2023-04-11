@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:math' as prefix;
 
+import 'package:flutter/material.dart';
 import 'package:junghanns/models/authorization.dart';
 import 'package:junghanns/models/config.dart';
 import 'package:junghanns/models/method_payment.dart';
@@ -318,7 +319,9 @@ class CustomerModel {
 
     };
   }
-
+  delete(int id){
+    auth.removeWhere((element) => element.idAuth==id);
+  }
   setHistory(Map<String, dynamic> data) {
     history = data["historial"] != null
         ? List.from(

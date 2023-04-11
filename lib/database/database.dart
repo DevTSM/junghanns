@@ -27,6 +27,7 @@ class DataBase {
         // 5=Entregas =>ET
         // 6=clientes llama =>CL
         // 7=Atendidos
+        // 8=Eliminados
 
         await database.execute(
           "CREATE TABLE customer(id INTEGER PRIMARY KEY, orden INTEGER , idCustomer INTEGER, idRoute INTEGER,type INTEGER, lat DOUBLE, lng DOUBLE, priceLiquid DOUBLE, byCollet DOUBLE, purse DOUBLE, name TEXT NOT NULL, address TEXT NOT NULL , nameRoute TEXT NOT NULL,typeVisit TEXT NOT NULL, category TEXT NOT NULL,days TEXT NOT NULL, img TEXT NOT NULL, observacion TEXT,auth TEXT,payment TEXT,color TEXT,config INTEGER,history TEXT)",
@@ -134,8 +135,12 @@ class DataBase {
       db.delete('sale');
       db.delete('stopRuta');
       db.delete('stopOff');
+      db.delete('customer');
+    }else{
+      List<CustomerModel> dataAtendidos=await retrieveUsersType(7);
+      db.delete('customer');
+      insertUser(dataAtendidos);
     }
-    db.delete('customer');
     db.delete('stop');
     db.delete('refill');
     db.delete('product');
@@ -236,6 +241,10 @@ class DataBase {
   Future<List<Map<String, dynamic>>> retrieveSales() async {
     final Database db = await initializeDB();
     return await db.query('sale',where: "isUpdate = ?",whereArgs: [0]);
+  }
+  Future<List<Map<String, dynamic>>> retrieveSalesOff() async {
+    final Database db = await initializeDB();
+    return await db.query('sale');
   }
   Future<List<Map<String, dynamic>>> retrieveSalesAll() async {
     final Database db = await initializeDB();

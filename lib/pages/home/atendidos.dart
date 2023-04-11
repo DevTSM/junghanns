@@ -57,9 +57,11 @@ getCustomerListDB() async {
         customerList.add(e);
         }
       }).toList();
-      customerList.sort((a, b) => a.orden.compareTo(b.orden));
+      setState(() {
+        customerList.sort((a, b) => a.orden.compareTo(b.orden));
       searchList = customerList;
-      getListUpdate(dataList.isEmpty?0:dataList.last.id);
+      });
+      //getListUpdate(dataList.isEmpty?0:dataList.last.id);
     });
   }
 
@@ -76,6 +78,9 @@ getCustomerListDB() async {
             gravity: ToastGravity.TOP,
             webShowClose: true,
           );
+          Timer(const Duration(milliseconds: 2000), () async {
+              Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+            });
         }else{
           if(!answer.error){
             List<CustomerModel> list=[];

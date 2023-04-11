@@ -59,7 +59,7 @@ class _OpeningState extends State<Opening> {
                     ? prefs.asyncLast
                     : DateTime(2017, 9, 7, 17, 30).toString());
        if (DateTime.now().day!=dateLast.day||DateTime.now().month!=dateLast.month|| prefs.isAsyncCurrent) {
-        //if (true) {
+       // if (true) {
           setState(() {
             isAsync = true;
           });

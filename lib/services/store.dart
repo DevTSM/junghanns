@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 import 'dart:async';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart';
@@ -76,10 +77,15 @@ Future<Answer> getStockList(int idR) async {
   }
 }
 
-Future<Answer> setInitRoute(double lat, double lng,{String status="inicio"}) async {
+Future<Answer> setInitRoute(double lat, double lng,
+    {String status = "inicio"}) async {
   log("/StoreServices <setInitRoute>");
   try {
-    Map<String,dynamic> data={"tipo": status, "latitud": lat.toString(), "longitud": lng.toString()};
+    Map<String, dynamic> data = {
+      "tipo": status,
+      "latitud": lat.toString(),
+      "longitud": lng.toString()
+    };
     log("${prefs.urlBase}    $lat    $lng $data   ${prefs.clientSecret}");
     var response = await http.post(Uri.parse("${prefs.urlBase}ruta"),
         headers: {
@@ -278,7 +284,7 @@ Future<Answer> getStopsList() async {
       "client_secret": prefs.clientSecret,
       "Authorization": "Bearer ${prefs.token}",
     });
-    return Answer.fromService(body); 
+    return Answer.fromService(body);
     // var response =jsonDecode(body.body);
     // if (response != null) {
     //   log("/StoreServices <getStopsList> Successfull ${response.toString()}");
@@ -672,74 +678,103 @@ Future<Answer> getStatusRecordNewCustomer(int idR) async {
         error: true);
   }
 }
-Future<Answer> setComodato(int id,double lat, double lng,String phone) async {
-  log("/StoreServices <setComodato>");
+
+Future<Answer> setComodato(AndroidDeviceInfo build, int id, double lat,
+    double lng, int idProduct,int cantidad,int idAuth) async {
+  log("/StoreServices <setComodato> $cantidad");
   try {
-    var response = await http.post(
-        Uri.parse("${prefs.urlBase}rutasolicitud"),
+    var response = await http.post(Uri.parse("${prefs.urlBase}rutasolicitud"),
         headers: {
           HttpHeaders.contentTypeHeader: 'application/json; charset=UTF-8',
           "x-api-key": apiKey,
           "client_secret": prefs.clientSecret,
           "Authorization": "Bearer ${prefs.token}",
-        },body: jsonEncode({"tipo":"FC","phone":phone,"lat":lat,"lon":lng,"id_cliente":id}));
+        },
+        body: jsonEncode({
+          "tipo": "FC",
+          //"telefono": phone.toString(),
+          "lat": lat.toString(),
+          "lon": lng.toString(),
+          "id_cliente": id,
+          "id_producto":idProduct,
+          "cantidad":cantidad,
+          "id_autorizacion":idAuth,
+          "emisor": {
+            "FingerPrint": build.fingerprint,
+            "Modelo": build.model,
+            "Marca": build.brand,
+            "VersionSO": build.version.securityPatch,
+            "SerialNumber": build.version.release,
+            "Imac": build.board
+          }
+        }));
     log("/StoreServices <setComodato> ${response.body}");
     return Answer.fromService(response);
   } catch (e) {
     log("/StoreServices <setComodato> Catch");
-    return Answer(body: e, message:"Algo salio mal, revisa tu conexion a internet.", error: true);
+    return Answer(
+        body: e,
+        message: "Algo salio mal, revisa tu conexion a internet.",
+        error: true);
   }
 }
+
 Future<Answer> getStatusComodato(int id) async {
   log("/StoreServices <getStatusComodato>");
   try {
-    var response = await http.get(
-        Uri.parse("${prefs.urlBase}rutasolicitud?id=$id"),
-        headers: {
-          "Content-Type": "aplication/json",
-          "x-api-key": apiKey,
-          "client_secret": prefs.clientSecret,
-          "Authorization": "Bearer ${prefs.token}",
-        });
+    var response = await http
+        .get(Uri.parse("${prefs.urlBase}rutasolicitud?id=$id"), headers: {
+      "Content-Type": "aplication/json",
+      "x-api-key": apiKey,
+      "client_secret": prefs.clientSecret,
+      "Authorization": "Bearer ${prefs.token}",
+    });
     log("/StoreServices <getStatusComodato> ${response.body}");
     return Answer.fromService(response);
   } catch (e) {
     log("/StoreServices <getStatusComodato> Catch");
-    return Answer(body: e, message:"Algo salio mal, revisa tu conexion a internet.", error: true);
+    return Answer(
+        body: e,
+        message: "Algo salio mal, revisa tu conexion a internet.",
+        error: true);
   }
 }
-Future<Answer> getCustomers({int idLast=0}) async {
+
+Future<Answer> getCustomers({int idLast = 0}) async {
   log("/StoreServices <getCustomers>");
-  try{
+  try {
     var response = await http.get(
-        Uri.parse("${prefs.urlBase}payload?idRuta=${prefs.idRouteD}&date=${DateFormat('yyyyMMdd').format(DateTime.now())}${idLast==0?'':'&sync=$idLast'}"),
+        Uri.parse(
+            "${prefs.urlBase}payload?idRuta=${prefs.idRouteD}&date=${DateFormat('yyyyMMdd').format(DateTime.now())}${idLast == 0 ? '' : '&sync=$idLast'}"),
         headers: {
           "Content-Type": "aplication/json",
           "x-api-key": apiKey,
           "client_secret": prefs.clientSecret,
           "Authorization": "Bearer ${prefs.token}",
         });
-      return Answer.fromService(response, message: "error al obtener los datos");
-  }catch(e){
+    return Answer.fromService(response, message: "error al obtener los datos");
+  } catch (e) {
     return Answer(
         body: {"error": e},
         message: "Algo salio mal, revisa tu conexion a internet.",
         error: true);
   }
 }
+
 Future<Answer> getFolios() async {
   log("/StoreServices <getFolios>");
-  try{
+  try {
     var response = await http.get(
-        Uri.parse("${prefs.urlBase}validate?q=folios&id_ruta=${prefs.idRouteD}"),
+        Uri.parse(
+            "${prefs.urlBase}validate?q=folios&id_ruta=${prefs.idRouteD}"),
         headers: {
           "Content-Type": "aplication/json",
           "x-api-key": apiKey,
           "client_secret": prefs.clientSecret,
           "Authorization": "Bearer ${prefs.token}",
         });
-      return Answer.fromService(response, message: "error al obtener los datos");
-  }catch(e){
+    return Answer.fromService(response, message: "error al obtener los datos");
+  } catch (e) {
     return Answer(
         body: {"error": e},
         message: "Algo salio mal, revisa tu conexion a internet.",

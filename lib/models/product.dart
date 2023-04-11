@@ -59,7 +59,7 @@ class ProductModel {
         number: 0,
         img: data["url"],
         type: 1,
-        count: data["data"]??"",
+        count: data["data"]??"0",
         isSelect: false,
         rank: data["rank"] ?? "");
   }
@@ -70,8 +70,8 @@ class ProductModel {
         price: data["precio"]??-1,
         stock: double.parse((data["stock"]??0).toString()).ceil(),
         number: 0,
-        count: "",
-        img: "assets/icons/refill1.png",
+        count: "0",
+        img: data["img"]??"assets/icons/refill1.png",
         type: 1,
         isSelect: false,
         rank: data["rank"]);
@@ -99,6 +99,9 @@ class ProductModel {
   }
   setCount(int number){
     this.number=number;
+  }
+  setStock(int stock){
+    this.stock=stock;
   }
   factory ProductModel.fromServiceRefill(Map<String, dynamic> data) {
     return ProductModel(

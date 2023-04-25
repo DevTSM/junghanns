@@ -40,7 +40,7 @@ Future<Answer> getProductList() async {
     log("/StoreServices <getProductList> Catch ${e.toString()}");
     return Answer(
         body: e,
-        message: "Algo salio mal, revisa tu conexion a internet.",
+        message: "Conexion inestable con el back",
         error: true);
   }
 }
@@ -56,7 +56,7 @@ Future<Answer> getStockList(int idR) async {
           "x-api-key": apiKey,
           "client_secret": prefs.clientSecret,
           "Authorization": "Bearer ${prefs.token}",
-        });
+        }).timeout(Duration(seconds: timerDuration));
     log("${response.statusCode}");
     if (response.statusCode == 200) {
       log("/StoreServices <getStockList> Successfull, ${response.body}");
@@ -72,7 +72,28 @@ Future<Answer> getStockList(int idR) async {
     log("/StoreServices <getStockList> Catch ${e.toString()}");
     return Answer(
         body: e,
-        message: "Algo salio mal, revisa tu conexion a internet.",
+        message: "Conexion inestable con el back",
+        error: true);
+  }
+}
+Future<Answer> getDataQr() async {
+  log("/StoreServices <getDataQr>");
+  try {
+    var response = await http.get(
+        Uri.parse("${prefs.urlBase}ruta?idRuta=${prefs.idRouteD}&fecha=${(DateFormat('yyyyMMdd').format(DateTime.now()))}&q=roll"),
+        headers: {
+          "Content-Type": "aplication/json",
+          "x-api-key": apiKey,
+          "client_secret": prefs.clientSecret,
+          "Authorization": "Bearer ${prefs.token}",
+        }).timeout(Duration(seconds:timerDuration));
+    log("${response.statusCode}");
+    return Answer.fromService(response);
+  } catch (e) {
+    log("/StoreServices <getStockList> Catch ${e.toString()}");
+    return Answer(
+        body: e,
+        message: "Conexion inestable con el back",
         error: true);
   }
 }
@@ -110,7 +131,7 @@ Future<Answer> setInitRoute(double lat, double lng,
     log("/StoreServices <setInitRoute> Catch ${e.toString()}");
     return Answer(
         body: e,
-        message: "Algo salio mal, revisa tu conexion a internet.",
+        message: "Conexion inestable con el back",
         error: true);
   }
 }
@@ -126,7 +147,7 @@ Future<Answer> getRefillList(int idR) async {
           "x-api-key": apiKey,
           "client_secret": prefs.clientSecret,
           "Authorization": "Bearer ${prefs.token}",
-        });
+        }).timeout(Duration(seconds: timerDuration));
     log("${response.statusCode}");
     if (response.statusCode == 200) {
       log("/StoreServices <getRefillList> Successfull, ${response.body}");
@@ -142,7 +163,7 @@ Future<Answer> getRefillList(int idR) async {
     log("/StoreServices <getRefillList> Catch ${e.toString()}");
     return Answer(
         body: e,
-        message: "Algo salio mal, revisa tu conexion a internet.",
+        message: "Conexion inestable con el back",
         error: true);
   }
 }
@@ -173,7 +194,7 @@ Future<Answer> getPaymentMethods(int idClient, int idR) async {
     log("/StoreServices <getPaymentMethods> Catch ${e.toString()}");
     return Answer(
         body: e,
-        message: "Algo salio mal, revisa tu conexion a internet.",
+        message: "Conexion inestable con el back",
         error: true);
   }
 }
@@ -189,7 +210,7 @@ Future<Answer> getAuthorization(int idClient, int idR) async {
           "x-api-key": apiKey,
           "client_secret": prefs.clientSecret,
           "Authorization": "Bearer ${prefs.token}",
-        });
+        }).timeout(Duration(seconds: timerDuration));
     log("${response.statusCode} ${response.body}");
     if (response.statusCode == 200) {
       log("/StoreServices <getAuthorization> Successfull, ${response.body}");
@@ -205,7 +226,7 @@ Future<Answer> getAuthorization(int idClient, int idR) async {
     log("/StoreServices <getAuthorization> Catch ${e.toString()}");
     return Answer(
         body: e,
-        message: "Algo salio mal, revisa tu conexion a internet.",
+        message: "Conexion inestable con el back",
         error: true);
   }
 }
@@ -238,7 +259,7 @@ Future<Answer> setSale(Map<String, dynamic> data) async {
     log("/StoreServices <setSale> Catch ${e.toString()}");
     return Answer(
         body: e,
-        message: "Algo salio mal, revisa tu conexion a internet.",
+        message: "Conexion inestable con el back",
         error: true);
   }
 }
@@ -253,7 +274,7 @@ Future<Answer> postSale(Map<String, dynamic> data) async {
           "client_secret": prefs.clientSecret,
           "Authorization": "Bearer ${prefs.token}",
         },
-        body: jsonEncode(data));
+        body: jsonEncode(data)).timeout(Duration(seconds: timerDuration));
     log("${response.statusCode}");
     if (response.statusCode == 201) {
       log("/StoreServices <PostSale> Successfull, ${response.body}");
@@ -270,7 +291,7 @@ Future<Answer> postSale(Map<String, dynamic> data) async {
     log("/StoreServices <setSale> Catch ${e.toString()}");
     return Answer(
         body: e,
-        message: "Algo salio mal, revisa tu conexion a internet.",
+        message: "Conexion inestable con el back",
         error: true);
   }
 }
@@ -283,7 +304,7 @@ Future<Answer> getStopsList() async {
       "x-api-key": apiKey,
       "client_secret": prefs.clientSecret,
       "Authorization": "Bearer ${prefs.token}",
-    });
+    }).timeout(Duration(seconds: timerDuration));
     return Answer.fromService(body);
     // var response =jsonDecode(body.body);
     // if (response != null) {
@@ -300,7 +321,7 @@ Future<Answer> getStopsList() async {
     log("/StoreServices <getStopsList> Catch ${e.toString()}");
     return Answer(
         body: e,
-        message: "Algo salio mal, revisa tu conexion a internet.",
+        message: "Conexion inestable con el back",
         error: true);
   }
 }
@@ -373,7 +394,7 @@ Future<Answer> setStop(Map<String, dynamic> data) async {
     log("/StoreServices <SetStop> Catch ${e.toString()}");
     return Answer(
         body: e,
-        message: "Algo salio mal, revisa tu conexion a internet.",
+        message: "Conexion inestable con el back",
         error: true);
   }
 }
@@ -405,7 +426,7 @@ Future<Answer> postStop(Map<String, dynamic> data) async {
     log("/StoreServices <SetStop> Catch ${e.toString()}");
     return Answer(
         body: e,
-        message: "Algo salio mal, revisa tu conexion a internet.",
+        message: "Conexion inestable con el back",
         error: true);
   }
 }
@@ -421,14 +442,14 @@ Future<Answer> getDashboarRuta(int idR, DateTime date) async {
           "x-api-key": apiKey,
           "client_secret": prefs.clientSecret,
           "Authorization": "Bearer ${prefs.token}",
-        });
+        }).timeout(Duration(seconds:timerDuration));
     log("${response.body} -----");
     return Answer.fromService(response);
   } catch (e) {
-    log("/CustomerServices <getListCustomer> Catch ${e.toString()}");
+    log("/CustomerServices <getDashboardRuta> Catch ${e.toString()}");
     return Answer(
         body: {"error": e.toString()},
-        message: "Algo salio mal, revisa tu conexion a internet.",
+        message: "Conexion inestable con el back",
         error: true);
   }
 }
@@ -457,7 +478,7 @@ Future<Answer> getTypesOfStreets() async {
   } catch (e) {
     return Answer(
         body: {"error": e},
-        message: "Algo salio mal, revisa tu conexion a internet.",
+        message: "Conexion inestable con el back",
         error: true);
   }
 }
@@ -486,7 +507,7 @@ Future<Answer> getTypesOfSalesC() async {
   } catch (e) {
     return Answer(
         body: {"error": e},
-        message: "Algo salio mal, revisa tu conexion a internet.",
+        message: "Conexion inestable con el back",
         error: true);
   }
 }
@@ -515,7 +536,7 @@ Future<Answer> getEmployees() async {
   } catch (e) {
     return Answer(
         body: {"error": e},
-        message: "Algo salio mal, revisa tu conexion a internet.",
+        message: "Conexion inestable con el back",
         error: true);
   }
 }
@@ -546,7 +567,7 @@ Future<Answer> postNewCustomer(Map<String, dynamic> data) async {
   } catch (e) {
     return Answer(
         body: {"error": e},
-        message: "Algo salio mal, revisa tu conexion a internet.",
+        message: "Conexion inestable con el back",
         error: true);
   }
 }
@@ -581,7 +602,7 @@ Future<Answer> putValidateOTP(Map<String, dynamic> data) async {
   } catch (e) {
     return Answer(
         body: {"error": e},
-        message: "Algo salio mal, revisa tu conexion a internet.",
+        message: "Conexion inestable con el back",
         error: true);
   }
 }
@@ -612,7 +633,7 @@ Future<Answer> postResendCode(Map<String, dynamic> data) async {
   } catch (e) {
     return Answer(
         body: {"error": e},
-        message: "Algo salio mal, revisa tu conexion a internet.",
+        message: "Conexion inestable con el back",
         error: true);
   }
 }
@@ -647,7 +668,7 @@ Future<Answer> putCancelOTP(Map<String, dynamic> data) async {
   } catch (e) {
     return Answer(
         body: {"error": e},
-        message: "Algo salio mal, revisa tu conexion a internet.",
+        message: "Conexion inestable con el back",
         error: true);
   }
 }
@@ -751,6 +772,26 @@ Future<Answer> getCustomers({int idLast = 0}) async {
           "x-api-key": apiKey,
           "client_secret": prefs.clientSecret,
           "Authorization": "Bearer ${prefs.token}",
+        }).timeout(Duration(seconds: timerDuration));
+    return Answer.fromService(response, message: "error al obtener los datos");
+  } catch (e) {
+    return Answer(
+        body: {"error": e},
+        message: "Conexion inestable con el back",
+        error: true);
+  }
+}
+Future<Answer> getCustomersAtendidos() async {
+  log("/StoreServices <getCustomers>");
+  try {
+    var response = await http.get(
+        Uri.parse(
+            "${prefs.urlBase}payload?idRuta=${prefs.idRouteD}&date=${DateFormat('yyyyMMdd').format(DateTime.now())}&filter=atn"),
+        headers: {
+          "Content-Type": "aplication/json",
+          "x-api-key": apiKey,
+          "client_secret": prefs.clientSecret,
+          "Authorization": "Bearer ${prefs.token}",
         });
     return Answer.fromService(response, message: "error al obtener los datos");
   } catch (e) {
@@ -772,7 +813,7 @@ Future<Answer> getFolios() async {
           "x-api-key": apiKey,
           "client_secret": prefs.clientSecret,
           "Authorization": "Bearer ${prefs.token}",
-        });
+        }).timeout(Duration(seconds: timerDuration));
     return Answer.fromService(response, message: "error al obtener los datos");
   } catch (e) {
     return Answer(

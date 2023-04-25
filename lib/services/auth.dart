@@ -100,15 +100,15 @@ Future<Answer> validateOTP(String token,String code,double lat,double lng) async
 
 Future<Answer> getClientSecret(String user, String password) async {
   log("/AuthServices <getClientSecret>");
-  try {
-    var response = jsonDecode((await http.get(
+  //try {
+    var body = await http.get(
       Uri.parse("${prefs.urlBase}token?q=secret&u=$user&p=$password"),
       headers: {
         "Content-Type": "aplication/json",
         "x-api-key": apiKey,
       },
-    ))
-        .body);
+    );
+        var response=jsonDecode(body.body);
     if (response["client_secret"] != null) {
       log("/AuthServices <getClientSecret> Successfull ${response.toString()}");
       return Answer(body: response, message: "", error: false);
@@ -116,10 +116,10 @@ Future<Answer> getClientSecret(String user, String password) async {
       log("/AuthServices <getClientSecret> Fail ${response.toString()}");
       return Answer(body: response, message: response.toString(), error: true);
     }
-  } catch (e) {
-    log("/AuthServices <getClientSecret> Catch ${e.toString()}");
-    return Answer(body: e, message: "Algo salio mal, revisa tu conexion a internet.", error: true);
-  }
+  // } catch (e) {
+  //   log("/AuthServices <getClientSecret> Catch ${e.toString()}");
+  //   return Answer(body: e, message: "Algo salio mal, revisa tu conexion a internet.", error: true);
+  // }
 }
 
 Future<Answer> getToken(String user) async {
@@ -210,15 +210,15 @@ Future<Answer> updateToken(String toke) async {
 Future<Answer> getConfig(int id) async {
   log("/AuthServices <getConfig>");
   try {
-    var response = jsonDecode((await http.get(
+    var response1 = await http.get(
             Uri.parse("${prefs.urlBase}configruta?id_cliente=$id&q=distancia_km"),
             headers: {
           "Content-Type": "aplication/json",
           "x-api-key": apiKey,
           "client_secret": prefs.clientSecret,
           "Authorization": "Bearer ${prefs.token}",
-        }))
-        .body);
+        }).timeout(Duration(seconds: timerDuration));
+        var response=jsonDecode(response1.body);
     if (response != null) {
       log("/AuthServices <getConfig> Successfull $response");
       return Answer(body: response, message: "", error: false);

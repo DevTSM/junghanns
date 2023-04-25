@@ -15,9 +15,11 @@ class Answer {
       if(response.statusCode==203){
         log("/Respuesta fallida");
           String urlBase=prefs.urlBase;
+          String nameCEDIS=prefs.labelCedis;
       prefs.prefs!.clear();
       prefs.version = version;
       prefs.urlBase=urlBase;
+      prefs.labelCedis=nameCEDIS;
          return Answer(body: {}, message: "Código de error ${response.statusCode}", error: true);
       }else{
       log("/Respuesta exitosa");
@@ -32,9 +34,11 @@ class Answer {
       log("/Respuesta fallida");
       if(response.statusCode==403|| response.statusCode == 401){
         String urlBase=prefs.urlBase;
+        String nameCEDIS=prefs.labelCedis;
       prefs.prefs!.clear();
       prefs.version = version;
       prefs.urlBase=urlBase;
+      prefs.labelCedis=nameCEDIS;
       }
        dynamic body=jsonDecode(response.body);
       return Answer(body: body, message: body["message"]??"Código de error ${response.statusCode}", error: true);

@@ -205,6 +205,21 @@ class CustomerModel {
         notifS: data["notificacion"] ?? "");
   }
   factory CustomerModel.fromDataBase(Map<String, dynamic> data) {
+    int cantidad=0;
+    int idProductoServicio=0;
+    double precioU=0;
+    String descripcion="";
+    String not="";
+    String desc="";
+    if(data["cargoAdicional"]!=null&&data["cargoAdicional"]!=""){
+    Map<String,dynamic> data2=jsonDecode(data["cargoAdicional"]);
+      cantidad=data2["cargosFijos"]!=null?int.parse((data2["cargosFijos"]["cantidad"]??0).toString()):0;
+      idProductoServicio=data2["cargosFijos"]!=null?int.parse((data2["cargosFijos"]["idProductoServicio"]??0).toString()):0;
+      descripcion=data2["cargosFijos"]!=null?data2["cargosFijos"]["descripcion"]??"":"";
+      precioU=data2["cargosFijos"]!=null?double.parse((data2["cargosFijos"]["precioUnitario"]??0).toString()):0;
+      not=data2["notificacion"]??"";
+      desc=data2["descServicio"]??"";
+    }
     return CustomerModel(
       phones: [],
         invoice: false,
@@ -234,17 +249,31 @@ class CustomerModel {
         configList: [ConfigModel.fromDatabase(data["config"]??0)],
         payment: data["payment"]!=""?List.from(jsonDecode(data["payment"]).map((e)=>MethodPayment.fromService(e)).toList()):[],
         //payment: [],
-        referenceAddress: data["referenceAddress"] ?? "",
+        referenceAddress: data["referenciaDomicilio"] ?? "",
         color: data["color"] ?? "000000",
         //
-        descServiceS: "",
-        numberS: 0,
-        idProdServS: 0,
-        descriptionS: "",
-        priceS: 0,
-        notifS: "",);
+        descServiceS: desc,
+        numberS: cantidad,
+        idProdServS: idProductoServicio,
+        descriptionS: descripcion,
+        priceS: precioU,
+        notifS: not,);
   }
   factory CustomerModel.fromPayload(Map<String,dynamic>data){
+    int cantidad=0;
+    int idProductoServicio=0;
+    double precioU=0;
+    String descripcion="";
+    String not="";
+    String desc="";
+    if((data["clue"]??"CR")=="ES"){
+      cantidad=data["cargoAdicional"]!=null?data["cargoAdicional"]["cargosFijos"]!=null?int.parse((data["cargoAdicional"]["cargosFijos"]["cantidad"]??0).toString()):0:0;
+      idProductoServicio=data["cargoAdicional"]!=null?data["cargoAdicional"]["cargosFijos"]!=null?int.parse((data["cargoAdicional"]["cargosFijos"]["idProductoServicio"]??0).toString()):0:0;
+      descripcion=data["cargoAdicional"]!=null?data["cargoAdicional"]["cargosFijos"]!=null?data["cargoAdicional"]["cargosFijos"]["descripcion"]??"":"":"";
+      precioU=data["cargoAdicional"]!=null?data["cargoAdicional"]["cargosFijos"]!=null?double.parse((data["cargoAdicional"]["cargosFijos"]["precioUnitario"]??0).toString()):0:0;
+      not=data["cargoAdicional"]!=null?data["cargoAdicional"]["notificacion"]??"":"";
+      desc=data["cargoAdicional"]!=null?data["cargoAdicional"]["descServicio"]??"":"";
+    }
     return CustomerModel(
       phones: [],
       auth: List.from(data["auth"]).map((e)=>AuthorizationModel.fromService(e)).toList(), 
@@ -274,22 +303,12 @@ class CustomerModel {
       history: [], 
       referenceAddress: data["referenciaDomicilio"] ?? "",
       color: data["color"] ?? "FF000000", 
-      numberS: data["cargosFijos"] != null
-            ? int.parse((data["cargosFijos"]["cantidad"] ?? 0).toString())
-            : 0, 
-      idProdServS: data["cargosFijos"] != null
-            ? int.parse(
-                (data["cargosFijos"]["idProductoServicio"] ?? 0).toString())
-            : 0, 
-      descriptionS: data["cargosFijos"] != null
-            ? data["cargosFijos"]["descripcion"] ?? ""
-            : "", 
-      priceS: data["cargosFijos"] != null
-            ? double.parse(
-                (data["cargosFijos"]["precioUnitario"] ?? 10).toString())
-            : 0,
-      notifS: data["notificacion"] ?? "", 
-      descServiceS: data["descServicio"] ?? "");
+      numberS: cantidad, 
+      idProdServS: idProductoServicio, 
+      descriptionS: descripcion, 
+      priceS: precioU,
+      notifS: not, 
+      descServiceS: desc);
   }
   Map<String, dynamic> getMap() {
     return {
@@ -315,8 +334,9 @@ class CustomerModel {
       'payment': payment.isNotEmpty?jsonEncode(payment.map((e) => e.getMap()).toList()):"",
       'color': color,
       'config':configList.isNotEmpty?configList.last.valor:0,
-      'history':history.isNotEmpty?jsonEncode(history.map((e) => e.getMap).toList()):""
-
+      'history':history.isNotEmpty?jsonEncode(history.map((e) => e.getMap).toList()):"",
+      'cargoAdicional':jsonEncode({"notificacion":notifS,"descServicio":descServiceS,"cargosFijos":{"cantidad":numberS,"idProductoServicio":idProdServS,"descripcion":descriptionS,"precioUnitario":priceS}}),
+      'referenciaDomicilio':referenceAddress
     };
   }
   delete(int id){

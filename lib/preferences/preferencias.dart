@@ -15,6 +15,24 @@ class PreferenciasUsuario {
   initPrefs() async {
     prefs = await SharedPreferences.getInstance();
   }
+  int get existStock {
+    return prefs!.getInt("existStock") ?? 0;
+  }
+  set existStock(int existStock) {
+    prefs!.setInt("existStock", existStock);
+  }
+  int get soldStock {
+    return prefs!.getInt("soldStock") ?? 0;
+  }
+  set soldStock(int soldStock) {
+    prefs!.setInt("soldStock", soldStock);
+  }
+  String get qr {
+    return prefs!.getString("qr") ?? "";
+  }
+  set qr(String qr) {
+    prefs!.setString("qr", qr);
+  }
   String get statusRoute {
     return prefs!.getString("statusRoute") ?? "";
   }

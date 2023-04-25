@@ -429,7 +429,7 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
                         (context, index) => ProductSaleCard(
                           isRefill: true,
                                     update: (ProductModel productCurrent,
-                                        bool isAdd) {
+                                        int isAdd) {
                                       provider.updateProductShopping(
                                           productCurrent, isAdd);
                                       setState(() {});

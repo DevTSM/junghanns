@@ -177,7 +177,7 @@ class ProductSaleCardPriorityState extends State<ProductSaleCardPriority> {
                                         )),
                                     onTap: () {
                                       setState(() => widget.update(
-                                          widget.productCurrent, false));
+                                          widget.productCurrent, 0));
                                           count.text= widget.productCurrent.number.toString();
                                     }),
                                     const SizedBox(width: 10,),
@@ -192,11 +192,11 @@ class ProductSaleCardPriorityState extends State<ProductSaleCardPriority> {
                                     if((number??1)<widget.productCurrent.stock&&(number??1)>0){
                                     setState(() => widget.productCurrent.setCount((number??1)));
                                     widget.update(
-                                          widget.productCurrent, false);
+                                          widget.productCurrent, 2);
                                   }else{
                                      setState(() => widget.productCurrent.setCount(widget.productCurrent.stock));
                                     widget.update(
-                                          widget.productCurrent, false);
+                                          widget.productCurrent, 2);
                                   }
                                   
                                   }
@@ -210,7 +210,7 @@ class ProductSaleCardPriorityState extends State<ProductSaleCardPriority> {
                                             widget.productCurrent.type == 2
                                         ? () {
                                             setState(() => widget.update(
-                                                widget.productCurrent, true));
+                                                widget.productCurrent, 1));
                                                 count.text= widget.productCurrent.number.toString();
                                           }
                                         : () {},
@@ -404,7 +404,7 @@ class ProductSaleCardState extends State<ProductSaleCard> {
                                         )),
                                     onTap: () {
                                       setState(() => widget.update(
-                                          widget.productCurrent, false));
+                                          widget.productCurrent, 0));
                                     }),
 
                                 //CANTIDAD
@@ -422,7 +422,7 @@ class ProductSaleCardState extends State<ProductSaleCard> {
                                             widget.productCurrent.type == 2
                                         ? () {
                                             setState(() => widget.update(
-                                                widget.productCurrent, true));
+                                                widget.productCurrent, 1));
                                           }
                                         : () {},
                                     child: Container(

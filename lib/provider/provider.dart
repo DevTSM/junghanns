@@ -94,14 +94,15 @@ class ProviderJunghanns extends ChangeNotifier {
     basketCurrent = BasketModel.fromInit(customerCurrent);
   }
 
-  updateProductShopping(ProductModel productCurrent, bool isAdd) {
+  updateProductShopping(ProductModel productCurrent, int isAdd) {
     //TODO: verificacion de Autorizacion
     var exits = basketCurrent.sales
         .where((element) => element.idProduct == productCurrent.idProduct);
     if (exits.isNotEmpty) {
-      if (isAdd) {
+      if (isAdd==1) {
         exits.first.number += 1;
       } else {
+        if(isAdd==0){
         if (exits.first.number == 1) {
           exits.first.number = 0;
           basketCurrent.sales.removeWhere(
@@ -109,17 +110,23 @@ class ProviderJunghanns extends ChangeNotifier {
         } else {
           exits.first.number -= 1;
         }
+        }//aqui no importa ya que se le asigno el numero
       }
     } else {
-      if (isAdd) {
+      if (isAdd==1) {
         productCurrent.number = 1;
         basketCurrent.sales.add(productCurrent);
+      }else{
+        if(isAdd==2){
+          basketCurrent.sales.add(productCurrent);
+        }
       }
     }
-    basketCurrent.totalPrice = 0;
+    basketCurrent.totalPrice = basketCurrent.addPrice;
     for (var e in basketCurrent.sales) {
       basketCurrent.totalPrice += (e.price * e.number);
     }
+    
     notifyListeners();
   }
 }

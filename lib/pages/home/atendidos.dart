@@ -61,14 +61,16 @@ getCustomerListDB() async {
         customerList.sort((a, b) => a.orden.compareTo(b.orden));
       searchList = customerList;
       });
-      //getListUpdate(dataList.isEmpty?0:dataList.last.id);
+      getListUpdate();
     });
   }
 
-  getListUpdate(int id) {
-    log("Ultimo cliente $id");
+  getListUpdate() {
     Timer(const Duration(milliseconds: 800), () async {
-      await getCustomers(idLast: id).then((answer) {
+      setState(() {
+        isLoading = true;
+      });
+      await getCustomersAtendidos().then((answer) {
         log(answer.body.toString());
         if (prefs.token == "") {
           Fluttertoast.showToast(
@@ -87,19 +89,17 @@ getCustomerListDB() async {
             for (var item in answer.body) {
             CustomerModel customer=CustomerModel.fromPayload(item);
           list.add(customer);
-          if(customer.type==7){
-        customerList.add(customer);
-        }
         }
         if(list.isNotEmpty){
-        handler.insertUser(list);
+        //handler.insertUser(list);
+        customerList.clear();
+        customerList.addAll(list);
          customerList.sort((a, b) => a.orden.compareTo(b.orden));
         searchList=customerList;
         }
           }
         }
       });
-      getPermission();
       setState(() {
         isLoading = false;
       });

@@ -216,7 +216,6 @@ class _LoginState extends State<Login> {
                       webShowClose: true,
                     );
                   } else {
-                    log(answer.body.toString());
                     prefs.isLogged = true;
                     //---------------------------------- Info DeliveryMan
                     prefs.idUserD = answer2.body["id_usuario"] ?? 0;

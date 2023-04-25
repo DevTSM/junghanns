@@ -27,6 +27,7 @@ class BasketModel {
   double lat;
   double lng;
   double totalPrice;
+  double addPrice;
   String typeOperation;
   List<ProductModel> sales;
   List<WayToPay> waysToPay;
@@ -42,7 +43,8 @@ class BasketModel {
       required this.idDataOrigin,
       required this.folio,
       required this.typeOperation,
-      required this.totalPrice});
+      required this.totalPrice,
+      this.addPrice=0});
 
   factory BasketModel.fromState() {
     return BasketModel(
@@ -70,9 +72,8 @@ class BasketModel {
         idDataOrigin: customerCurrent.id,
         folio: -1,
         typeOperation: "V",
-        totalPrice: customerCurrent.priceS != 0
-        ? (customerCurrent.priceS * customerCurrent.numberS)
-        : 0
+        totalPrice: 0,
+        addPrice: (customerCurrent.priceS * customerCurrent.numberS)
         );
   }
 }

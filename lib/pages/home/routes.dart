@@ -62,7 +62,9 @@ class _RoutesState extends State<Routes> {
   getListUpdate(List<CustomerModel> users, int id) {
     log("Ultimo cliente $id");
     Timer(const Duration(milliseconds: 800), () async {
+      
       await getCustomers().then((answer) {
+        log("entrando al servicio");
         if (prefs.token == "") {
           Fluttertoast.showToast(
             msg: "Las credenciales caducaron.",
@@ -105,6 +107,14 @@ class _RoutesState extends State<Routes> {
               searchList = customerList;
             }
 
+          }else{
+            Fluttertoast.showToast(
+              msg: "Conexion inestable con el back",
+              timeInSecForIosWeb: 2,
+              toastLength: Toast.LENGTH_LONG,
+              gravity: ToastGravity.TOP,
+              webShowClose: true,
+              backgroundColor: ColorsJunghanns.red);
           }
         }
       });

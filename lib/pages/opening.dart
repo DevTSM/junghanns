@@ -41,12 +41,21 @@ class _OpeningState extends State<Opening> {
     isAsync = false;
     log("cliente secret =====> ${prefs.clientSecret}");
     log("token de acceso =====> ${prefs.token}");
+    //TODO: URL
+    //prefs.urlBase=urlBase;
+    //prefs.qr="";
+    log("Version: ${prefs.version}");
     if (prefs.version != version ) {
       String urlBaseSafe=prefs.urlBase;
+      String nameCEDIS=prefs.labelCedis;
       prefs.prefs!.clear();
       prefs.version = version;
       prefs.urlBase=urlBaseSafe;
-      log("limpiando cache =====>");
+      prefs.labelCedis=nameCEDIS;
+      log("limpiando cache =====> ${prefs.urlBase}");
+      if(version=="8.2"){
+      handler.addColumn();
+      }
     }
     initConnectivity();
   }
@@ -119,6 +128,7 @@ class _OpeningState extends State<Opening> {
     provider.connectionStatus = result.index;
     provider.path=await getDatabasesPath();
     log("url base: ${prefs.urlBase}");
+    log("id Route: ${prefs.idRouteD}");
     
     if(prefs.urlBase!=""){
     if (result.index < 4) {

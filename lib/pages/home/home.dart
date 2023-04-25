@@ -76,7 +76,7 @@ class _HomeState extends State<Home> {
           if (prefs.token != "") {
             if (answer.error) {
               Fluttertoast.showToast(
-                msg: "Sin datos de ruta",
+                msg: answer.message,
                 timeInSecForIosWeb: 2,
                 toastLength: Toast.LENGTH_LONG,
                 gravity: ToastGravity.TOP,
@@ -85,6 +85,8 @@ class _HomeState extends State<Home> {
             } else {
               setState(() {
                 dashboardR = DashboardModel.fromService(answer.body);
+                prefs.existStock=dashboardR.liquidStock;
+                prefs.soldStock=dashboardR.liquidSales;
                 prefs.statusRoute = answer.body["paro_de_ruta"] ?? "";
               });
             }
@@ -110,7 +112,7 @@ class _HomeState extends State<Home> {
   }
 
   getAsync() async {
-    List<Map<String, dynamic>> dataList = await handler.retrieveSalesOff();
+    List<Map<String, dynamic>> dataList = await handler.retrieveSales();
     List<Map<String, dynamic>> dataList2 = await handler.retrieveStopOff();
     await handler.retrieveUsers().then((value) {
       log(value.length.toString());
@@ -119,12 +121,15 @@ class _HomeState extends State<Home> {
           switch (e.type) {
             case 2:
               specials++;
+              routeTotal++;
               break;
             case 7:
             if(e.typeVisit=="ESPECIALES"){
               specialsA++;
             }
               atendidos++;
+              break;
+              case 6:
               break;
             default:
               routeTotal++;
@@ -136,7 +141,11 @@ class _HomeState extends State<Home> {
     dataList.map((element) {
       List<dynamic> data = jsonDecode(element["saleItems"]);
       setState(() {
-        data.map((e) => liquit+=int.parse(e["cantidad"].toString())).toList();
+        data.map((e){
+          if(e["id_producto"]==22){
+            liquit+=int.parse(e["cantidad"].toString());
+          }
+        }).toList();
       });
     }).toList();
     prefs.dataSale = true;
@@ -372,8 +381,8 @@ class _HomeState extends State<Home> {
             item(
                 "Avance de venta",
                 [
-                  "${dashboardR.liquidStock} Líquidos existencia /",
-                  " $liquit Vendidos"
+                  "${prefs.existStock} Líquidos existencia /",
+                  " ${prefs.soldStock-liquit} Vendidos"
                 ],
                 Image.asset(
                   "assets/icons/iconWarehouse.png",

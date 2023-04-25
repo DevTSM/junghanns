@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:junghanns/models/authorization.dart';
 import 'package:junghanns/models/config.dart';
 import 'package:junghanns/models/customer.dart';
@@ -26,7 +27,6 @@ class Async {
     provider.labelAsync = "Sincronizando datos, no cierres la app.";
     prefs.isAsyncCurrent = true;
      provider.labelAsync = "Obteniendo datos guardados";
-   await getAsyncData();
     provider.labelAsync = "Limpiando base de datos";
     return await handler.deleteTable(isInit: isInit).then((value) async {
       provider.labelAsync = "Sincronizando clientes";
@@ -39,14 +39,35 @@ class Async {
           return getDataRefill().then((value6) {
             provider.labelAsync = "Sincronizando folios";
             return getDataFolios().then((value6) {
-              prefs.isAsyncCurrent = false;
+              return getQR().then((value7){
+                provider.labelAsync = "Sincronizando QR";
+                prefs.isAsyncCurrent = false;
               provider.asyncProcess=false;
               return true;
+              });
             });
           });
         });
         });
       });
+    });
+  }
+  Future <bool> getQR()async{
+    return await getDataQr().then((answer){
+      if(answer.error){
+        Fluttertoast.showToast(
+              msg: answer.message,
+              timeInSecForIosWeb: 2,
+              toastLength: Toast.LENGTH_LONG,
+              gravity: ToastGravity.TOP,
+              webShowClose: true);
+        return true;
+      }else{
+        List<Map<String,dynamic>> data=[];
+        answer.body.map((e)=>data.add({"name":e["nombre"],"url":e["url"]})).toList();
+        prefs.qr=jsonEncode(data);
+        return true;
+      }
     });
   }
   Future <bool> getAsyncData() async {
@@ -79,7 +100,12 @@ class Async {
   Future <bool> getStock()async{
     return await getStockList(prefs.idRouteD).then((answer){
       if(answer.error){
-        log("error ${answer.body}");
+        Fluttertoast.showToast(
+              msg: answer.message,
+              timeInSecForIosWeb: 2,
+              toastLength: Toast.LENGTH_LONG,
+              gravity: ToastGravity.TOP,
+              webShowClose: true);
         return true;
       }else{
         for (var item in answer.body) {
@@ -96,7 +122,12 @@ class Async {
     provider.totalAsync = 2;
     return await getCustomers().then((answer) async {
       if (answer.error) {
-        log("error ${answer.body.toString()}");
+        Fluttertoast.showToast(
+              msg: answer.message,
+              timeInSecForIosWeb: 2,
+              toastLength: Toast.LENGTH_LONG,
+              gravity: ToastGravity.TOP,
+              webShowClose: true);
         return true;
       } else {
         for (var item in answer.body) {
@@ -224,6 +255,12 @@ class Async {
         handler.insertStop(stopList);
         return true;
       } else {
+        Fluttertoast.showToast(
+              msg: answer.message,
+              timeInSecForIosWeb: 2,
+              toastLength: Toast.LENGTH_LONG,
+              gravity: ToastGravity.TOP,
+              webShowClose: true);
         return false;
       }
     });
@@ -237,9 +274,14 @@ class Async {
           refillList.add(RefillModel.fromService(item));
         }
         handler.insertRefill(refillList);
-        log("-----------------------${refillList.length.toString()}");
         return true;
       } else {
+        Fluttertoast.showToast(
+              msg: answer.message,
+              timeInSecForIosWeb: 2,
+              toastLength: Toast.LENGTH_LONG,
+              gravity: ToastGravity.TOP,
+              webShowClose: true);
         return false;
       }
     });
@@ -266,12 +308,22 @@ class Async {
               folioList.add(FolioModel.fromService(itemCI,item["serie"]));
             }
             }
+            if(item["folios"]["prestamo"]!=null){
+               for(var itemCI in item["folios"]["prestamo"]){
+              folioList.add(FolioModel.fromService(itemCI,item["serie"]));
+            }
+            }
           }
         }
         handler.insertFolios(folioList);
-        log("-----------------------${folioList.length.toString()}");
         return true;
       } else {
+        Fluttertoast.showToast(
+              msg: answer.message,
+              timeInSecForIosWeb: 2,
+              toastLength: Toast.LENGTH_LONG,
+              gravity: ToastGravity.TOP,
+              webShowClose: true);
         return false;
       }
     });

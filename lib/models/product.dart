@@ -5,6 +5,8 @@ class ProductModel {
   String description;
   double price;
   int stock;
+  //se usa para cuando hay autorizaciones
+  int stockLocal;
   int number;
   String img;
   String count;
@@ -16,6 +18,7 @@ class ProductModel {
       {required this.idProduct,
       required this.description,
       required this.price,
+      required this.stockLocal,
       required this.stock,
       required this.number,
       required this.img,
@@ -30,6 +33,7 @@ class ProductModel {
         description: "Liquido de recambio 20 LTS",
         price: 200.00,
         stock: 20,
+        stockLocal: 20,
         number: 0,
         img: "https://img77.uenicdn.com/image/upload/v1573695379/business/d3d540b1-1c2e-4895-90d6-eb749f17f808.jpg",
         type: 1,
@@ -43,6 +47,7 @@ class ProductModel {
         description: productCurrent.description,
         price: productCurrent.price,
         stock: productCurrent.stock,
+        stockLocal: productCurrent.stock,
         number: 0,
         img: productCurrent.img,
         count: productCurrent.count,
@@ -56,6 +61,7 @@ class ProductModel {
         description: data["descripcion"],
         price: double.parse((data["precio"] ?? "0").toString()),
         stock: int.parse((data["stock"]??(data["cantidad"] ?? 0)).toString()),
+        stockLocal: int.parse((data["stock"]??(data["cantidad"] ?? 0)).toString()),
         number: 0,
         img: data["url"],
         type: 1,
@@ -69,9 +75,10 @@ class ProductModel {
         description: data["descripcion"],
         price: data["precio"]??-1,
         stock: double.parse((data["stock"]??0).toString()).ceil(),
+        stockLocal: double.parse((data["stock"]??0).toString()).ceil(),
         number: 0,
         count: "0",
-        img: data["img"]??"assets/icons/refill1.png",
+        img: data["url"]??"assets/icons/refill1.png",
         type: 1,
         isSelect: false,
         rank: data["rank"]);
@@ -100,8 +107,9 @@ class ProductModel {
   setCount(int number){
     this.number=number;
   }
-  setStock(int stock){
+  setStock(int stock,int stockLocal){
     this.stock=stock;
+    this.stockLocal=stockLocal;
   }
   factory ProductModel.fromServiceRefill(Map<String, dynamic> data) {
     return ProductModel(
@@ -109,6 +117,7 @@ class ProductModel {
         description: data["descripcion"],
         price: double.parse((data["precio"] ?? "0").toString()),
         stock: 0,
+        stockLocal: 0,
         number: 0,
         img: "assets/icons/refill1.png",
         type: 2,
@@ -122,6 +131,7 @@ class ProductModel {
         description: data["description"],
         price: data["price"]??-1,
         stock: 0,
+        stockLocal: 0,
         number: 0,
         count: "",
         img: "assets/icons/refill1.png",

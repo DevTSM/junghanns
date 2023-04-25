@@ -100,7 +100,6 @@ class _ShoppingCartState extends State<ShoppingCart> {
       provider.initShopping(widget.customerCurrent);
       List<ProductModel> dataList = await handler.retrieveProducts();
       dataList.map((e) {
-        log("id de producto: ${e.idProduct} con stock ${e.stock}");
         if (widget.authList.isEmpty) {
           if(e.stock>0){
           setState(() {
@@ -108,26 +107,20 @@ class _ShoppingCartState extends State<ShoppingCart> {
           });
           }
         } else {
-          if (e.idProduct == widget.authList.first.product.idProduct && e.stock>0) {
-            log("======> ${e.idProduct} ${widget.authList.first.product.idProduct} ${e.stock} ${widget.authList.first.product.stock}");
+          if (e.idProduct == widget.authList.first.product.idProduct) {
             setState(() {
               ProductModel product=ProductModel.fromProduct(widget.authList.first.product);
-              product.setStock(widget.authList.first.product.stock>e.stock?e.stock:widget.authList.first.product.stock);
+              product.setStock(widget.authList.first.product.stock<=e.stock?widget.authList.first.product.stock:e.stock,e.stock);
               productsList
                   .add(product);
             });
-          }else{
-            if(e.stock<=0){
-              widget.customerCurrent.delete(widget.authList.first.idAuth);
-            }
           }
         }
       }).toList();
       setState(() {
-        productListOther =
-            productsList.where((element) => element.rank == "").toList();
-        isOtherProduct =
-            productsList.where((element) => element.rank != "").isEmpty;
+        var exits=productsList.where((element) => element.rank == "");
+        productListOther =exits.toList();
+        isOtherProduct =(productsList.where((element) => element.rank != "").isEmpty);
       });
       checkPriceCvsPriceS();
       getDataPayment();
@@ -140,6 +133,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
       int index = productsList.indexWhere((element) => element.idProduct == 22);
       if (index != -1) {
         log("Index de liquido es: $index");
+        log("Price liquid: ${widget.customerCurrent.priceLiquid}");
         if (widget.customerCurrent.priceLiquid < productsList[index].price) {
           productsList[index].price = widget.customerCurrent.priceLiquid;
         }
@@ -156,6 +150,14 @@ class _ShoppingCartState extends State<ShoppingCart> {
             answer.body.map((e){
               paymentsListT.add(MethodPayment.fromService(e));
             }).toList();
+          }else{
+            Fluttertoast.showToast(
+              msg: "Conexion inestable con el back",
+              timeInSecForIosWeb: 2,
+              toastLength: Toast.LENGTH_LONG,
+              gravity: ToastGravity.TOP,
+              webShowClose: true,
+              backgroundColor: ColorsJunghanns.red);
           }
         });
         if(paymentsListT.isNotEmpty){
@@ -499,18 +501,18 @@ class _ShoppingCartState extends State<ShoppingCart> {
                               decoration: Decorations.blueBorder12,
                               style: TextStyles.white18SemiBoldIt,
                               label: "Verificar")),
-                      const SizedBox(
-                        width: 25,
-                      ),
-                      Expanded(
-                          child: ButtonJunghanns(
-                        fun: () {
-                          Navigator.pop(context);
-                        },
-                        decoration: Decorations.redCard,
-                        style: TextStyles.white18SemiBoldIt,
-                        label: "Cancelar",
-                      )),
+                      // const SizedBox(
+                      //   width: 25,
+                      // ),
+                      // Expanded(
+                      //     child: ButtonJunghanns(
+                      //   fun: () {
+                      //     Navigator.pop(context);
+                      //   },
+                      //   decoration: Decorations.redCard,
+                      //   style: TextStyles.white18SemiBoldIt,
+                      //   label: "Cancelar",
+                      // )),
                     ],
                   )
                 ],
@@ -541,6 +543,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
                   DefaultTextStyle(
                       style: TextStyles.blueJ22Bold,
                       child: const Text("¿Enviar confirmación a:?")),
+                      const SizedBox(height: 5,),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -580,6 +583,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
                               : const Text("Sin numeros registrados")
                     ],
                   ),
+                  const SizedBox(height: 5,),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
@@ -701,10 +705,11 @@ class _ShoppingCartState extends State<ShoppingCart> {
               gravity: ToastGravity.TOP,
               webShowClose: true,
             );
+            configList.addAll(widget.customerCurrent.configList);
           } else {
             for (var item in answer.body) {
               configList.add(ConfigModel.fromService(item));
-            }
+            }}
             setState(() {
               distance = calculateDistance(
                       widget.customerCurrent.lat,
@@ -715,7 +720,6 @@ class _ShoppingCartState extends State<ShoppingCart> {
               isRange = distance <= configList.last.valor;
               log(" distance $distance isRange $isRange");
             });
-          }
         });
       } else {
         setState(() {
@@ -819,7 +823,10 @@ class _ShoppingCartState extends State<ShoppingCart> {
     };
     int id = await handler.insertSale(dataLocal);
     for (var e in provider.basketCurrent.sales) {
-      await handler.updateProductStock((e.stock - e.number), e.idProduct);
+      await handler.updateProductStock((e.stockLocal - e.number), e.idProduct);
+    }
+    if(provider.basketCurrent.idAuth!=-1){
+      widget.customerCurrent.delete(provider.basketCurrent.idAuth);
     }
     if (provider.basketCurrent.waysToPay
         .where((element) => element.type == "M")
@@ -849,6 +856,13 @@ class _ShoppingCartState extends State<ShoppingCart> {
       });
       if (!answer.error) {
         await handler.updateSale(1, id);
+      }else{
+        Fluttertoast.showToast(
+              msg: answer.message,
+              timeInSecForIosWeb: 2,
+              toastLength: Toast.LENGTH_LONG,
+              gravity: ToastGravity.TOP,
+              webShowClose: true,);
       }
     });
     Navigator.pop(context, true);
@@ -925,7 +939,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
                           childrenDelegate: SliverChildBuilderDelegate(
                               (context, index) => ProductSaleCard(
                                     update: (ProductModel productCurrent,
-                                        bool isAdd) {
+                                        int isAdd) {
                                       provider.updateProductShopping(
                                           productCurrent, isAdd);
                                       setState(() {});
@@ -943,7 +957,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
                               .map((e) => ProductSaleCardPriority(
                                   productCurrent: e,
                                   update: (ProductModel productCurrent,
-                                      bool isAdd) {
+                                      int isAdd) {
                                     setState(() {
                                       provider.updateProductShopping(
                                           productCurrent, isAdd);
@@ -1244,6 +1258,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
           });
           var exits = folios
               .where((element) => element.number == int.parse(folioC.text));
+          log("${folios.map((e) => e.number.toString()).toList()}");
           if (exits.isEmpty) {
             setState(() {
               isLoading = false;

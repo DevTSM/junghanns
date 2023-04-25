@@ -43,9 +43,7 @@ class DetailsCustomer2 extends StatefulWidget {
   CustomerModel customerCurrent;
   int indexHome;
   DetailsCustomer2(
-      {Key? key,
-      required this.customerCurrent,
-      required this.indexHome})
+      {Key? key, required this.customerCurrent, required this.indexHome})
       : super(key: key);
   @override
   State<StatefulWidget> createState() => _DetailsCustomer2State();
@@ -69,14 +67,16 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
     configList = [];
     authList = [];
     dif = 0;
-    isRange = false; 
-    isLoading=false;
+    isRange = false;
+    isLoading = false;
     isLoadingHistory = false;
     isLoadingRange = false;
     currentLocation = LocationData.fromMap({});
     setCurrentLocation();
     getHistory();
+    log("/////////${widget.customerCurrent.notifS}  ${widget.customerCurrent.typeVisit}");
   }
+
   setCurrentLocation() async {
     try {
       setState(() {
@@ -125,7 +125,7 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
       return false;
     }
   }
-  
+
   funCheckDistance(LocationData currentLocation) async {
     try {
       if (provider.connectionStatus < 4) {
@@ -137,12 +137,12 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
               toastLength: Toast.LENGTH_LONG,
               gravity: ToastGravity.TOP,
               webShowClose: true,
-            );
+            );configList.addAll(widget.customerCurrent.configList);
           } else {
             for (var item in answer.body) {
               configList.add(ConfigModel.fromService(item));
               //log("-------- ${configList.length} ");
-            }
+            }}
             setState(() {
               dif = calculateDistance(
                       widget.customerCurrent.lat,
@@ -152,7 +152,6 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
                   1000;
               isRange = dif <= configList.last.valor;
             });
-          }
         });
       } else {
         setState(() {
@@ -180,7 +179,7 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
       return false;
     }
   }
-  
+
   getHistory() async {
     setState(() {
       isLoadingHistory = true;
@@ -201,15 +200,17 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
 
   getAuth() async {
     authList.clear();
-      await getAuthorization(widget.customerCurrent.idClient, prefs.idRouteD)
-          .then((answer) {
-        if (!answer.error){
-          answer.body
-              .map((e) => authList.add(AuthorizationModel.fromService(e)))
-              .toList();
-        }
-      });
-      widget.customerCurrent.auth.map((e) => authList.add(e)).toList();
+    await getAuthorization(widget.customerCurrent.idClient, prefs.idRouteD)
+        .then((answer) {
+      if (!answer.error) {
+        answer.body
+            .map((e) => authList.add(AuthorizationModel.fromService(e)))
+            .toList();
+      } else {
+        authList.addAll(widget.customerCurrent.auth);
+      }
+    });
+    widget.customerCurrent.setAuth(authList);
   }
 
   showSelectPR() {
@@ -266,9 +267,8 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
               builder: (BuildContext context) => ShoppingCart(
                     customerCurrent: widget.customerCurrent,
                     authList: authList.isEmpty ? authList : [authList.first],
-                  ))).then(
-          (value) => setState((){
-            log("se actualizo =====> ${widget.customerCurrent.type}  ${widget.customerCurrent.id}");
+                  ))).then((value) => setState(() {
+            log("se actualizo =====> ${widget.customerCurrent.auth.length}  ${widget.customerCurrent.id}");
             getHistory();
             log("se actualizo =====> ${widget.customerCurrent.type}  ${widget.customerCurrent.id}");
           }));
@@ -284,9 +284,9 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
         MaterialPageRoute<void>(
             builder: (BuildContext context) => ShoppingCartRefill(
                   customerCurrent: widget.customerCurrent,
-                ))).then((value) =>setState(() {
-                   getHistory();
-                }));
+                ))).then((value) => setState(() {
+          getHistory();
+        }));
   }
 
   funCheckDistanceSale(bool isSale) async {
@@ -299,7 +299,6 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
       isLoading = false;
     });
     if (isRange) {
-      //TODO:pruebas if(true){
       if (isSale) {
         showSelectPR();
       } else {
@@ -560,7 +559,7 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
                   padding: const EdgeInsets.only(top: 8, bottom: 8),
                   child: RichText(
                     text: TextSpan(
-                      text: "Referencia de domicilio: ",
+                      text: "Ref. Domicilio: ",
                       style: TextStyles.green16Itw,
                       children: <TextSpan>[
                         TextSpan(
@@ -737,7 +736,7 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
                   ? const SpinKitCircle(
                       color: ColorsJunghanns.blue,
                     )
-                  : isRange
+                  : isRange 
                       ? prefs.statusRoute == "INRT" ||
                               prefs.statusRoute == "FNCM"
                           ? Row(
@@ -777,26 +776,31 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
                           : prefs.statusRoute == "INCM"
                               ? ButtonJunghanns(
                                   fun: () async {
-                                    StopRuta stop=StopRuta(id: 1, update: 0, lat: currentLocation.latitude!, lng: currentLocation.longitude!, status: "FNCM");
-                                    int id= await handler.insertStopRuta(stop);
+                                    StopRuta stop = StopRuta(
+                                        id: 1,
+                                        update: 0,
+                                        lat: currentLocation.latitude!,
+                                        lng: currentLocation.longitude!,
+                                        status: "FNCM");
+                                    int id = await handler.insertStopRuta(stop);
+                                    setState(() {
+                                      isLoading = true;
+                                    });
+                                    await setInitRoute(
+                                            currentLocation.latitude!,
+                                            currentLocation.longitude!,
+                                            status: "fin_comida")
+                                        .then((answer) {
                                       setState(() {
-                                        isLoading = true;
+                                        isLoading = false;
                                       });
-                                      await setInitRoute(
-                                              currentLocation.latitude!,
-                                              currentLocation.longitude!,
-                                              status: "fin_comida")
-                                          .then((answer) {
-                                        setState(() {
-                                          isLoading = false;
-                                        });
-                                        if (!answer.error){
-                                          handler.updateStopRuta(1, id);
-                                        }
-                                      });
-                                      setState(() {
-                                        prefs.statusRoute = "FNCM";
-                                      });
+                                      if (!answer.error) {
+                                        handler.updateStopRuta(1, id);
+                                      }
+                                    });
+                                    setState(() {
+                                      prefs.statusRoute = "FNCM";
+                                    });
                                   },
                                   decoration: Decorations.greenBorder5,
                                   style: TextStyles.white17_6,
@@ -804,27 +808,43 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
                               : ButtonJunghanns(
                                   fun: () async {
                                     setState(() {
-                                        isLoading = true;
-                                      });
-                                    StopRuta stop=StopRuta(id: 1, update: 0, lat: currentLocation.latitude!, lng: currentLocation.longitude!, status: "INRT");
-                                    int id= await handler.insertStopRuta(stop);
-                                      await setInitRoute(
-                                              currentLocation.latitude!,
-                                              currentLocation.longitude!)
-                                          .then((answer) {
-                                        setState(() {
-                                          isLoading = false;
-                                        });
-                                        if (!answer.error) {
-                                          log("se inicio la Ruta");
-                                          handler.updateStopRuta(1, id);
-                                        }else{
-                                          log("StopRuta por actualizar");
-                                        }
-                                      });
+                                      isLoading = true;
+                                    });
+                                    StopRuta stop = StopRuta(
+                                        id: 1,
+                                        update: 0,
+                                        lat: currentLocation.latitude!,
+                                        lng: currentLocation.longitude!,
+                                        status: "INRT");
+                                    int id = 0;
+                                    try {
+                                      id = await handler.insertStopRuta(stop);
+                                    } catch (e) {
+                                      Fluttertoast.showToast(
+                                        msg: "Local:$e",
+                                        timeInSecForIosWeb: 2,
+                                        toastLength: Toast.LENGTH_LONG,
+                                        gravity: ToastGravity.TOP,
+                                        webShowClose: true,
+                                      );
+                                    }
+                                    await setInitRoute(
+                                            currentLocation.latitude!,
+                                            currentLocation.longitude!)
+                                        .then((answer) {
                                       setState(() {
-                                        prefs.statusRoute = "INRT";
+                                        isLoading = false;
                                       });
+                                      if (!answer.error) {
+                                        log("se inicio la Ruta");
+                                        handler.updateStopRuta(1, id);
+                                      } else {
+                                        log("StopRuta por actualizar");
+                                      }
+                                    });
+                                    setState(() {
+                                      prefs.statusRoute = "INRT";
+                                    });
                                   },
                                   decoration: Decorations.greenBorder5,
                                   style: TextStyles.white17_6,

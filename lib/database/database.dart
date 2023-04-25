@@ -1,5 +1,6 @@
 import 'dart:developer';
 
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/models/folio.dart';
 import 'package:junghanns/models/product.dart';
@@ -30,7 +31,7 @@ class DataBase {
         // 8=Eliminados
 
         await database.execute(
-          "CREATE TABLE customer(id INTEGER PRIMARY KEY, orden INTEGER , idCustomer INTEGER, idRoute INTEGER,type INTEGER, lat DOUBLE, lng DOUBLE, priceLiquid DOUBLE, byCollet DOUBLE, purse DOUBLE, name TEXT NOT NULL, address TEXT NOT NULL , nameRoute TEXT NOT NULL,typeVisit TEXT NOT NULL, category TEXT NOT NULL,days TEXT NOT NULL, img TEXT NOT NULL, observacion TEXT,auth TEXT,payment TEXT,color TEXT,config INTEGER,history TEXT)",
+          "CREATE TABLE customer(id INTEGER PRIMARY KEY, orden INTEGER , idCustomer INTEGER, idRoute INTEGER,type INTEGER, lat DOUBLE, lng DOUBLE, priceLiquid DOUBLE, byCollet DOUBLE, purse DOUBLE, name TEXT NOT NULL, address TEXT NOT NULL , nameRoute TEXT NOT NULL,typeVisit TEXT NOT NULL, category TEXT NOT NULL,days TEXT NOT NULL, img TEXT NOT NULL, observacion TEXT,auth TEXT,payment TEXT,color TEXT,config INTEGER,history TEXT,cargoAdicional TEXT,referenciaDomicilio TEXT)",
         );
         //lista de paradas en falso
         await database.execute(
@@ -184,8 +185,20 @@ class DataBase {
     db.delete('refill');
   }
   addColumn() async {
+    try{
+    log("=================================|||||||||||||||||||||||||||||||||||| actualizamos la base de datos");
     final db = await initializeDB();
-    db.execute("ALTER TABLE customer ADD async INTEGER NOT NULL DEFAULT 1");
+    await db.execute("ALTER TABLE customer ADD referenciaDomicilio TEXT");
+    await db.execute("ALTER TABLE customer ADD cargoAdicional TEXT");
+    }catch(e){
+      Fluttertoast.showToast(
+          msg: e.toString(),
+          timeInSecForIosWeb: 2,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+        );
+    }
   }
 
   Future<List<FolioModel>> retrieveFolios() async {

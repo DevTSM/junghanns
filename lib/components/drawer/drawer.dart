@@ -4,6 +4,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:junghanns/components/button.dart';
 import 'package:junghanns/components/modal/yes_not.dart';
+import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/models/stop_ruta.dart';
 import 'package:junghanns/pages/debug/debug.dart';
 import 'package:junghanns/pages/home/atendidos.dart';
@@ -33,7 +34,7 @@ updateStatus(ProviderJunghanns provider, String status) async {
             update: 0,
             lat: currentLocation.latitude!,
             lng: currentLocation.longitude!,
-            status: status=="inicio_comida" ? "INCM" : "FNRT");
+            status: status == "inicio_comida" ? "INCM" : "FNRT");
         int id = await handler.insertStopRuta(stop);
         await setInitRoute(
                 currentLocation.latitude!, currentLocation.longitude!,
@@ -44,7 +45,7 @@ updateStatus(ProviderJunghanns provider, String status) async {
             handler.updateStopRuta(1, id);
           }
         });
-        prefs.statusRoute = status=="inicio_comida" ? "INCM" : "FNRT";
+        prefs.statusRoute = status == "inicio_comida" ? "INCM" : "FNRT";
         Fluttertoast.showToast(
           msg: status == "inicio_comida"
               ? "¡Buen provecho!"
@@ -79,8 +80,9 @@ updateStatus(ProviderJunghanns provider, String status) async {
   }
 }
 
-Widget drawer(ProviderJunghanns provider, BuildContext context,
-    Function setIndexCurrent) {
+
+drawer(ProviderJunghanns provider, BuildContext context,
+    Function setIndexCurrent,bool isFinRuta){
   item(Function navigator, String icon, String title) {
     return Builder(
         builder: (context) => GestureDetector(
@@ -112,6 +114,8 @@ Widget drawer(ProviderJunghanns provider, BuildContext context,
               )
             ])));
   }
+
+  
 
   return Drawer(
       child: Container(
@@ -199,11 +203,15 @@ Widget drawer(ProviderJunghanns provider, BuildContext context,
                               const SizedBox(
                                 width: 20,
                               ),
+                              Visibility(
+                                visible: isFinRuta,
+                                child: 
                               Expanded(
                                   child: GestureDetector(
-                                      onTap: () {
+                                      onTap: () async {
                                         Scaffold.of(context).closeDrawer();
-                                        showYesNot(
+
+                                        await showYesNot(
                                             context,
                                             () => updateStatus(provider, "fin"),
                                             "fin");
@@ -227,7 +235,7 @@ Widget drawer(ProviderJunghanns provider, BuildContext context,
                                                     TextStyles.white14SemiBold,
                                               ),
                                             ],
-                                          )))),
+                                          ))))),
                             ],
                           )),
                     ],

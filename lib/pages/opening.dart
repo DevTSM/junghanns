@@ -53,7 +53,7 @@ class _OpeningState extends State<Opening> {
       prefs.urlBase=urlBaseSafe;
       prefs.labelCedis=nameCEDIS;
       log("limpiando cache =====> ${prefs.urlBase}");
-      if(version=="8.2"){
+      if(version=="8.5"){
       handler.addColumn();
       }
     }

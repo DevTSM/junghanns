@@ -163,40 +163,16 @@ class _ShoppingCartState extends State<ShoppingCart> {
         if(paymentsListT.isNotEmpty){
         widget.customerCurrent.setPayment(paymentsListT);
         }
-    //Aqui se valida si existe la autorizacion para como dato para filtrar los metodos de pago
+    
     if (widget.authList.isNotEmpty) {
-      switch (widget.authList.first.type) {
-        case "C":
-          paymentsList.add(MethodPayment(
-              wayToPay: "Credito",
-              typeWayToPay: "C",
-              type: "Atributo",
-              idAuth: widget.authList.first.idAuth,
-              idProductService: -1,
-              description: "",
-              number: -1));
-          break;
-        case "V":
-          widget.customerCurrent.payment.map((e) {
-            log("${e.idAuth} ===== ${widget.authList.first.idAuth}");
-            MethodPayment method = e;
-            if (method.idAuth == widget.authList.first.idAuth) {
-              paymentsList.add(method);
-            }
-            if(widget.authList.first.authText=="CORTESIA"||widget.authList.first.authText=="GARRAFON A LA PAR"){
-              paymentsList.add(MethodPayment(
-              wayToPay: "Efectivo",
-              typeWayToPay: "E",
-              type: "Atributo",
-              idProductService: -1,
-              description: "",
-              number: -1));
+      //Aqui se valida si existe la autorizacion para como dato para filtrar los metodos de pago
+       widget.customerCurrent.payment.map((e) {
+            if (e.idAuth == widget.authList.first.idAuth) {
+              paymentsList.add(e);
             }
           }).toList();
-          break;
-        default:
-      }
-    } else {
+    } 
+    if(paymentsList.isEmpty) {
       //Se agregan todos lo metodos de pago si no hay autorizacion
       widget.customerCurrent.payment
           .map((e) => e.typeWayToPay != "M" ? paymentsList.add(e) : null)
@@ -216,7 +192,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
       }
     }
     setState(() {
-      widget.customerCurrent.setPayment(paymentsList);
+    widget.customerCurrent.setPayment(paymentsList);
       isLoading = false;
     });
   }
@@ -260,7 +236,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
   }
 
   bool funCheckMethodPayment(MethodPayment methodCurrent) {
-    //TODO: esta funcion no es util
+    //TODO: esta funcion no es util ya que esta mal implementado el segundo metodo de pago
     if (methodCurrent.wayToPay == "Monedero") {
       if (provider.basketCurrent.totalPrice > widget.customerCurrent.purse) {
         secWayToPay.wayToPay = "Efectivo";
@@ -273,28 +249,6 @@ class _ShoppingCartState extends State<ShoppingCart> {
       secWayToPay = SecondWayToPay(wayToPay: "", typeWayToPay: "", cost: 0);
       return true;
     }
-
-    // switch (methodCurrent.wayToPay) {
-    //   case "Efectivo":
-    //     isTrue = true;
-    //     secWayToPay = SecondWayToPay(wayToPay: "", typeWayToPay: "", cost: 0);
-    //     break;
-    //   case "Credito":
-    //     isTrue = true;
-    //     secWayToPay = SecondWayToPay(wayToPay: "", typeWayToPay: "", cost: 0);
-    //     break;
-    //   case "Monedero":
-    //     if (provider.basketCurrent.totalPrice > widget.customerCurrent.purse) {
-    //       secWayToPay.wayToPay = "Efectivo";
-    //       secWayToPay.typeWayToPay = "E";
-    //       secWayToPay.cost =
-    //           provider.basketCurrent.totalPrice - widget.customerCurrent.purse;
-    //       isTrue = true;
-    //     } else {
-    //       isTrue = true;
-    //     }
-    //     break;
-    // }
   }
 
   showConfirmSale(MethodPayment methodCurrent) {
@@ -358,7 +312,6 @@ class _ShoppingCartState extends State<ShoppingCart> {
                                             webShowClose: true,
                                           );
                                         } else {
-                                          log(answer.body["telefonos"].toString());
                                           List<String> phones=[];
                                           (answer.body["telefonos"] ??
                                                           [])
@@ -371,7 +324,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
                                           showComodato(methodCurrent);
                                         }
                                       });
-                                    } else {
+                                    }else {
                                       funSale(methodCurrent);
                                     }
                                   } else {
@@ -523,7 +476,6 @@ class _ShoppingCartState extends State<ShoppingCart> {
   }
 
   showComodato(MethodPayment methodCurrent) {
-    log("------->${widget.customerCurrent.phones.length}");
     String phoneCurrent = widget.customerCurrent.phones.isNotEmpty
         ? widget.customerCurrent.phones.first
         : "1234";
@@ -848,8 +800,18 @@ class _ShoppingCartState extends State<ShoppingCart> {
           isOffline: true,
           type: 0);
     }
+    widget.customerCurrent.addHistory({
+    'fecha':DateTime.now().toString(),
+    'tipo':"VENTA",
+    'descripcion':"${provider.basketCurrent.sales.first.idProduct} - ${provider.basketCurrent.sales.first.description}",
+    'importe':provider.basketCurrent.sales .map((e) => e.number*e.price).toList().reduce((value, element) => value+element),
+    'cantidad':provider.basketCurrent.sales .map((e) => e.number).toList().reduce((value, element) => value+element)
+  });
     widget.customerCurrent.setType(7);
     log("se actualizo =====> ${widget.customerCurrent.type}  ${widget.customerCurrent.id}");
+    setState(() {
+        isLoading = true;
+      });
     await postSale(data).then((answer) async {
       setState(() {
         isLoading = false;
@@ -916,7 +878,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
       child: productsList.isEmpty
           ? Center(
               child: Text(
-              "Sin productos",
+              widget.authList.isNotEmpty?"No se hay stock para la autorizacion ${widget.authList.first.product.idProduct}":"Sin productos",
               style: TextStyles.blue18SemiBoldIt,
             ))
           : Column(
@@ -991,7 +953,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
                   height: 10,
                 ),
                 Visibility(
-                    visible: provider.basketCurrent.sales.isNotEmpty,
+                    visible: provider.basketCurrent.sales.where((element) => element.number>0).isNotEmpty,
                     child: Container(
                         margin: const EdgeInsets.only(
                             left: 15, right: 15, bottom: 10, top: 10),
@@ -1002,17 +964,16 @@ class _ShoppingCartState extends State<ShoppingCart> {
                           decoration: Decorations.blueBorder12,
                           fun: () {
                             if (widget.customerCurrent.payment.length > 1) {
+                              //si hay mas de un metodo agregamos select
                               selectWayToPay();
                             } else {
-                              //validamos que existan metodos de pago
                               if (widget.customerCurrent.payment.isNotEmpty) {
+                                //validamos que existan metodos de pago
                                 if (funCheckMethodPayment(
                                     widget.customerCurrent.payment.first)) {
-                                  if (widget.customerCurrent.payment.first
-                                          .wayToPay ==
-                                      "Credito") {
+                                  if (widget.customerCurrent.payment.first.getIsFolio()) {
+                                    //habilitamos el modal para folio
                                     setState(() {
-                                      //habilitamos el modal para folio
                                       isRequestFolio = true;
                                     });
                                   } else {
@@ -1163,7 +1124,11 @@ class _ShoppingCartState extends State<ShoppingCart> {
           padding: const EdgeInsets.all(18),
           width: size.width * .75,
           decoration: Decorations.whiteS1Card,
-          child: Stack(
+          child: folios.isEmpty?Container(
+            alignment: Alignment.center,
+            child: DefaultTextStyle(
+                style: TextStyles.blueJ22Bold,
+                child: const Text("No se encontraron folios Asignados"))): Stack(
             children: [
               Column(
                 mainAxisSize: MainAxisSize.min,
@@ -1257,8 +1222,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
             isRequestFolio = false;
           });
           var exits = folios
-              .where((element) => element.number == int.parse(folioC.text));
-          log("${folios.map((e) => e.number.toString()).toList()}");
+              .where((element) =>  element.getValid(widget.customerCurrent.payment.first.wayToPay)&&element.number == int.parse(folioC.text));
           if (exits.isEmpty) {
             setState(() {
               isLoading = false;
@@ -1268,12 +1232,10 @@ class _ShoppingCartState extends State<ShoppingCart> {
           } else {
             if (exits.first.status == 1) {
               provider.basketCurrent.folio = int.parse(folioC.text);
-              MethodPayment met = widget.customerCurrent.payment
-                  .firstWhere(((element) => element.wayToPay == "Credito"));
               setState(() {
                 isLoading = false;
               });
-              showConfirmSale(met);
+              showConfirmSale(widget.customerCurrent.payment.first);
             }
           }
         } else {

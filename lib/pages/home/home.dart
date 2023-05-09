@@ -36,7 +36,7 @@ class _HomeState extends State<Home> {
   late Size size;
   late DashboardModel dashboardR;
   late bool isLoading;
-  late bool isAsync, isLoadingAsync;
+  late bool isLoadingAsync;
   late ProviderJunghanns provider;
   late int atendidos;
   late int routeTotal;
@@ -48,7 +48,6 @@ class _HomeState extends State<Home> {
     getPermission();
     dashboardR = DashboardModel.fromPrefs();
     isLoading = false;
-    isAsync = false;
     isLoadingAsync = false;
     atendidos = 0;
     routeTotal = 0;
@@ -114,8 +113,8 @@ class _HomeState extends State<Home> {
   getAsync() async {
     List<Map<String, dynamic>> dataList = await handler.retrieveSales();
     List<Map<String, dynamic>> dataList2 = await handler.retrieveStopOff();
-    await handler.retrieveUsers().then((value) {
-      log(value.length.toString());
+    List<CustomerModel> value= await handler.retrieveUsers();
+    log("total ___>${value.length}");
       value.map((e) {
         setState(() {
           switch (e.type) {
@@ -137,7 +136,7 @@ class _HomeState extends State<Home> {
           }
         });
       }).toList();
-    });
+      log("-----------> $routeTotal");
     dataList.map((element) {
       List<dynamic> data = jsonDecode(element["saleItems"]);
       setState(() {
@@ -149,10 +148,6 @@ class _HomeState extends State<Home> {
       });
     }).toList();
     prefs.dataSale = true;
-    setState(() {
-      isAsync = dataList2.isEmpty && dataList.isEmpty ? false : true;
-    });
-    log('${isAsync ? 'listo para sincronizar' : 'Sin ventas para sincronizar'} =>');
   }
 
   // getStock() async {
@@ -382,7 +377,7 @@ class _HomeState extends State<Home> {
                 "Avance de venta",
                 [
                   "${prefs.existStock} Líquidos existencia /",
-                  " ${prefs.soldStock-liquit} Vendidos"
+                  " ${prefs.soldStock+liquit} Vendidos"
                 ],
                 Image.asset(
                   "assets/icons/iconWarehouse.png",
@@ -452,10 +447,12 @@ class _HomeState extends State<Home> {
             provider.asyncProcess=true;
             Async async = Async(provider: provider);
             async
-                .init(isInit: false)
+                .initAsync()
                 .then((value) => setState((){
                   isLoading = false;
-                  isLoadingAsync=false;}));
+                  isLoadingAsync=false;
+                  getAsync();}));
+                  
           },
         ));
   }

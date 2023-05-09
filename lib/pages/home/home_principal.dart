@@ -48,13 +48,15 @@ class _HomePrincipalState extends State<HomePrincipal> {
   late ProviderJunghanns provider;
   late LocationData currentLocation;
   late int indexCurrent;
-  late bool isloading;
+  late bool isloading,isFinRuta;
   @override
   void initState() {
     super.initState();
     indexCurrent = widget.index;
+    isFinRuta=false;
     currentLocation = LocationData.fromMap({});
     isloading=false;
+    getFinRuta();
   }
 
   @override
@@ -107,19 +109,29 @@ class _HomePrincipalState extends State<HomePrincipal> {
     }
   }
 
+  getFinRuta() async {
+  List<Map<String, dynamic>> dataList =
+      await handler.retrieveUsersType2(1, 2, 3, 4, 5, 6);
+      setState(() {
+  if (dataList.isEmpty) {
+    isFinRuta=true;
+  } else {
+    isFinRuta=false;
+  }
+  });
+}
   @override
   Widget build(BuildContext context) {
     setState(() {
       size = MediaQuery.of(context).size;
       provider = Provider.of<ProviderJunghanns>(context);
     });
-    log("${prefs.statusRoute}===>");
     return prefs.statusRoute == "INCM"
         ? comidaWidget()
         : Scaffold(
             //key: GlobalKey<ScaffoldState>(),
             appBar: appBarJunghanns(context, size, provider),
-            drawer: drawer(provider, context,setIndexCurrent),
+            drawer: drawer(provider, context,setIndexCurrent,isFinRuta),
             body: !provider.asyncProcess
                 ? provider.isStatusloading
                     ? const Center(child: LoadingJunghanns())

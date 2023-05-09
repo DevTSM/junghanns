@@ -1,5 +1,7 @@
 import 'dart:developer';
 
+import 'package:junghanns/models/shopping_basket.dart';
+
 class MethodPayment {
   String wayToPay;
   String typeWayToPay;
@@ -51,5 +53,15 @@ class MethodPayment {
       "descripcion":description,
       "cantidad":number
     };
+  }
+  bool getIsFolio(){
+  switch(wayToPay){
+    case 'Credito':
+    return true;
+    case 'Prestamo':
+    return true;
+    default: 
+    return false;
+  }
   }
 }

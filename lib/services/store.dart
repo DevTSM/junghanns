@@ -409,7 +409,7 @@ Future<Answer> postStop(Map<String, dynamic> data) async {
           "client_secret": prefs.clientSecret,
           "Authorization": "Bearer ${prefs.token}"
         },
-        body: jsonEncode(data));
+        body: jsonEncode(data)).timeout(Duration(seconds: timerDuration));
     log("${response.statusCode}");
     if (response.statusCode == 201) {
       log("/StoreServices <PostStop> Successfull ${response.body}");

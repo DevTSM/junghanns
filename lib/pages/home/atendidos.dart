@@ -61,11 +61,11 @@ getCustomerListDB() async {
         customerList.sort((a, b) => a.orden.compareTo(b.orden));
       searchList = customerList;
       });
-      getListUpdate();
+      getListUpdate(dataList);
     });
   }
 
-  getListUpdate() {
+  getListUpdate(List<CustomerModel> users) {
     Timer(const Duration(milliseconds: 800), () async {
       setState(() {
         isLoading = true;
@@ -87,16 +87,27 @@ getCustomerListDB() async {
           if(!answer.error){
             List<CustomerModel> list=[];
             for (var item in answer.body) {
-            CustomerModel customer=CustomerModel.fromPayload(item);
-          list.add(customer);
-        }
-        if(list.isNotEmpty){
-        //handler.insertUser(list);
-        customerList.clear();
-        customerList.addAll(list);
-         customerList.sort((a, b) => a.orden.compareTo(b.orden));
-        searchList=customerList;
-        }
+            CustomerModel customer=CustomerModel.fromPayload(item,isAtendido: true);
+            var exits = users
+                  .where((element) => element.idClient == customer.idClient);
+              if (exits.isEmpty) {
+                list.add(customer);
+                  customerList.add(customer);
+              }
+            }
+            if (list.isNotEmpty) {
+              handler.insertUser(list);
+              customerList.sort((a, b) => a.orden.compareTo(b.orden));
+              searchList = customerList;
+            }
+          }else{
+            Fluttertoast.showToast(
+              msg: "Conexion inestable con el back",
+              timeInSecForIosWeb: 2,
+              toastLength: Toast.LENGTH_LONG,
+              gravity: ToastGravity.TOP,
+              webShowClose: true,
+              backgroundColor: ColorsJunghanns.red);
           }
         }
       });

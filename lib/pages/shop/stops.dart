@@ -146,6 +146,14 @@ class _StopsState extends State<Stops> {
               handler.updateStopOff(1,id );
             }
           });
+          log("aqui ................");
+          widget.customerCurrent.addHistory({
+    'fecha':DateTime.now().toString(),
+    'tipo':"PARADA",
+    'descripcion':"${stopCurrent.id} - ${stopCurrent.description}",
+    'importe':0,
+    'cantidad':1
+  });
           widget.customerCurrent.setType(7);
           Fluttertoast.showToast(
                 msg: "Parada asignada con exito",

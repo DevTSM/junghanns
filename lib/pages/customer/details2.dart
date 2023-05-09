@@ -185,7 +185,6 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
       isLoadingHistory = true;
     });
     await getHistoryCustomer(widget.customerCurrent.idClient).then((answer) {
-      log("---------History ${answer.body}");
       setState(() {
         isLoadingHistory = false;
       });
@@ -738,7 +737,7 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
                     )
                   : isRange 
                       ? prefs.statusRoute == "INRT" ||
-                              prefs.statusRoute == "FNCM"
+                              prefs.statusRoute == "FNCM"||prefs.statusRoute == "FNRT"
                           ? Row(
                               mainAxisAlignment: MainAxisAlignment.spaceAround,
                               children: [
@@ -773,39 +772,7 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
                                         label: "Parada"))
                               ],
                             )
-                          : prefs.statusRoute == "INCM"
-                              ? ButtonJunghanns(
-                                  fun: () async {
-                                    StopRuta stop = StopRuta(
-                                        id: 1,
-                                        update: 0,
-                                        lat: currentLocation.latitude!,
-                                        lng: currentLocation.longitude!,
-                                        status: "FNCM");
-                                    int id = await handler.insertStopRuta(stop);
-                                    setState(() {
-                                      isLoading = true;
-                                    });
-                                    await setInitRoute(
-                                            currentLocation.latitude!,
-                                            currentLocation.longitude!,
-                                            status: "fin_comida")
-                                        .then((answer) {
-                                      setState(() {
-                                        isLoading = false;
-                                      });
-                                      if (!answer.error) {
-                                        handler.updateStopRuta(1, id);
-                                      }
-                                    });
-                                    setState(() {
-                                      prefs.statusRoute = "FNCM";
-                                    });
-                                  },
-                                  decoration: Decorations.greenBorder5,
-                                  style: TextStyles.white17_6,
-                                  label: "Continuar ruta")
-                              : ButtonJunghanns(
+                          : ButtonJunghanns(
                                   fun: () async {
                                     setState(() {
                                       isLoading = true;

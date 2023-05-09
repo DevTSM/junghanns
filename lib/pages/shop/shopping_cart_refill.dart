@@ -200,6 +200,7 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
               gravity: ToastGravity.TOP,
               webShowClose: true,
             );
+            configList.addAll(widget.customerCurrent.configList);
           } else {
             for (var item in answer.body) {
               configList.add(ConfigModel.fromService(item));
@@ -285,6 +286,13 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
     int id= await handler.insertSale(dataLocal);
     
     widget.customerCurrent.setMoney(((provider.basketCurrent.sales.map((element) => element.price*element.number).toList()).reduce((value, element) => value+element))+widget.customerCurrent.purse,isOffline:true,type:0);
+    widget.customerCurrent.addHistory({
+    'fecha':DateTime.now().toString(),
+    'tipo':"RECARGA",
+    'descripcion':"${provider.basketCurrent.sales.first.idProduct} - ${provider.basketCurrent.sales.first.description}",
+    'importe':provider.basketCurrent.sales .map((e) => e.number*e.price).toList().reduce((value, element) => value+element),
+    'cantidad':provider.basketCurrent.sales .map((e) => e.number).toList().reduce((value, element) => value+element)
+  });
     widget.customerCurrent.setType(7);
     await postSale(data).then((answer) async {
       setState(() {

@@ -148,7 +148,15 @@ class DataBase {
     db.delete('folios');
     
   }
-  deleStock() async {
+  deleteCustomers() async {
+     final db = await initializeDB();
+    db.delete('customer');
+  }
+  deleteFolios() async {
+     final db = await initializeDB();
+    db.delete('folios');
+  }
+  deleteStock() async {
     final db = await initializeDB();
     db.delete('product');
   }

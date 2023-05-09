@@ -65,8 +65,8 @@ class _SpecialsState extends State<Specials> {
   getListUpdate(List<CustomerModel> users, int id) {
     log("Ultimo cliente $id");
     Timer(const Duration(milliseconds: 800), () async {
+      
       await getCustomers().then((answer) {
-        log(answer.body.toString());
         if (prefs.token == "") {
           Fluttertoast.showToast(
             msg: "Las credenciales caducaron.",
@@ -81,7 +81,7 @@ class _SpecialsState extends State<Specials> {
         } else {
           if (!answer.error) {
             List<CustomerModel> list = [];
-            List<CustomerModel> listDelete = [];
+            List<CustomerModel> listDelete=[];
             for (var item in answer.body) {
               CustomerModel customer = CustomerModel.fromPayload(item);
               listDelete.add(customer);
@@ -94,11 +94,9 @@ class _SpecialsState extends State<Specials> {
                 }
               }
             }
-            users.map((e) {
-              if (listDelete
-                  .where((element) => element.idClient == e.idClient)
-                  .isEmpty) {
-                e.setType(8);
+            users.map((e){
+              if(listDelete.where((element) => element.idClient==e.idClient).isEmpty){
+                e.setType(7);
                 handler.updateUser(e);
               }
             }).toList();
@@ -107,6 +105,15 @@ class _SpecialsState extends State<Specials> {
               customerList.sort((a, b) => a.orden.compareTo(b.orden));
               searchList = customerList;
             }
+
+          }else{
+            Fluttertoast.showToast(
+              msg: "Conexion inestable con el back",
+              timeInSecForIosWeb: 2,
+              toastLength: Toast.LENGTH_LONG,
+              gravity: ToastGravity.TOP,
+              webShowClose: true,
+              backgroundColor: ColorsJunghanns.red);
           }
         }
       });

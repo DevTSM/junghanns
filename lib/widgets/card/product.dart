@@ -189,7 +189,7 @@ class ProductSaleCardPriorityState extends State<ProductSaleCardPriority> {
                                   (String value){
                                   if(value!=""){
                                     int? number=int.tryParse(value);
-                                    if((number??1)<widget.productCurrent.stock&&(number??1)>0){
+                                    if((number??1)<widget.productCurrent.stock&&(number??1)>=0){
                                     setState(() => widget.productCurrent.setCount((number??1)));
                                     widget.update(
                                           widget.productCurrent, 2);
@@ -265,10 +265,12 @@ class ProductSaleCard extends StatefulWidget {
 class ProductSaleCardState extends State<ProductSaleCard> {
   var myGroup = AutoSizeGroup();
   late NumberFormat formatMoney = NumberFormat("\$#,##0.00");
+  late TextEditingController count;
 
   @override
   void initState() {
     super.initState();
+    count=TextEditingController();
   }
 
   @override
@@ -405,15 +407,30 @@ class ProductSaleCardState extends State<ProductSaleCard> {
                                     onTap: () {
                                       setState(() => widget.update(
                                           widget.productCurrent, 0));
+                                          count.text= widget.productCurrent.number.toString();
                                     }),
 
                                 //CANTIDAD
-                                DefaultTextStyle(
-                                  style: TextStyles.greenJ30Bold,
-                                  child: Text(
-                                    widget.productCurrent.number.toString(),
-                                  ),
-                                ),
+                                Expanded(child:textField2(
+                                  ontap: (){
+                                    count.text= widget.productCurrent.number.toString();
+                                  },
+                                  (String value){
+                                  if(value!=""){
+                                    int? number=int.tryParse(value);
+                                    if((number??1)<widget.productCurrent.stock&&(number??1)>=0){
+                                    setState(() => widget.productCurrent.setCount((number??1)));
+                                    widget.update(
+                                          widget.productCurrent, 2);
+                                  }else{
+                                     setState(() => widget.productCurrent.setCount(widget.productCurrent.stock));
+                                    widget.update(
+                                          widget.productCurrent, 2);
+                                  }
+                                  
+                                  }
+                                },count, "", type: TextInputType.number)),
+                                const SizedBox(width: 10,),
 
                                 //BOTON DE MAS
                                 GestureDetector(
@@ -423,6 +440,7 @@ class ProductSaleCardState extends State<ProductSaleCard> {
                                         ? () {
                                             setState(() => widget.update(
                                                 widget.productCurrent, 1));
+                                                count.text= widget.productCurrent.number.toString();
                                           }
                                         : () {},
                                     child: Container(

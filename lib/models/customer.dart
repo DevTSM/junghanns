@@ -259,7 +259,7 @@ class CustomerModel {
         priceS: precioU,
         notifS: not,);
   }
-  factory CustomerModel.fromPayload(Map<String,dynamic>data){
+  factory CustomerModel.fromPayload(Map<String,dynamic>data,{bool isAtendido=false}){
     int cantidad=0;
     int idProductoServicio=0;
     double precioU=0;
@@ -284,7 +284,7 @@ class CustomerModel {
       orden: data["orden"] ?? 0, 
       idClient:  data["id_client"] ?? 0, 
       idRoute: int.parse((data["id_route"] ?? 0).toString()), 
-      type: getType(data["clue"]??"CR"), 
+      type: isAtendido?7:getType(data["clue"]??"CR"), 
       lat:  double.parse((data["lat"]??0).toString()), 
       lng:  double.parse((data["lon"]??0).toString()), 
       priceLiquid: double.parse((data["price"]??0).toString()), 
@@ -347,6 +347,9 @@ class CustomerModel {
         ? List.from(
             data["historial"].map((e) => SaleModel.fromService(e)).toList())
         : [];
+  }
+  addHistory(Map<String, dynamic> data) {
+    history.insert(0,SaleModel.fromService(data));
   }
 
   setMoney(double purse,{bool isOffline=false,int type=0}) async {

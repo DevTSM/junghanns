@@ -46,6 +46,7 @@ Widget textField(TextEditingController controller, String hintText,
             style: style??TextStyles.greenJ30Bold,
             textAlign: TextAlign.center,
             decoration: InputDecoration(
+              counterStyle: style??TextStyles.greenJ30Bold,
                counterText: "",
               hintText: hintText,
               hintStyle: TextStyles.blue18SemiBoldIt,

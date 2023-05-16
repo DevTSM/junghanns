@@ -114,7 +114,11 @@ class _StopsState extends State<Stops> {
       Position _currentLocation = await Geolocator.getCurrentPosition();
       latStop = _currentLocation.latitude;
       lngStop = _currentLocation.longitude;
-      log("Coordenadas : $latStop, $lngStop");
+      log("Coordenadas : $latStop, $lngStop  ${widget.customerCurrent.lat} ${widget.customerCurrent.lng} ===> ${Geolocator.distanceBetween(
+                  _currentLocation.latitude,
+                  _currentLocation.longitude,
+                  widget.customerCurrent.lat,
+                  widget.customerCurrent.lng)} <====> ${widget.distance}" );
       if (Geolocator.distanceBetween(
                   _currentLocation.latitude,
                   _currentLocation.longitude,
@@ -135,7 +139,8 @@ class _StopsState extends State<Stops> {
             "lat": "${widget.customerCurrent.lat}",
             "lng": "${widget.customerCurrent.lng}",
             "idOrigin": widget.customerCurrent.id,
-            "type": widget.customerCurrent.typeVisit.characters.first
+            "type": widget.customerCurrent.typeVisit.characters.first,
+            "isUpdate":0
           };
            int id=await handler.insertStopOff(dataOff);
           await postStop(data).then((answer) {

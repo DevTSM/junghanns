@@ -199,6 +199,10 @@ class ProductSaleCardPriorityState extends State<ProductSaleCardPriority> {
                                           widget.productCurrent, 2);
                                   }
                                   
+                                  }else{
+                                     setState(() => widget.productCurrent.setCount(0));
+                                    widget.update(
+                                          widget.productCurrent, 2);
                                   }
                                 },count, "",type: TextInputType.number)),
                                 const SizedBox(width: 10,),
@@ -428,6 +432,10 @@ class ProductSaleCardState extends State<ProductSaleCard> {
                                           widget.productCurrent, 2);
                                   }
                                   
+                                  }else{
+                                     setState(() => widget.productCurrent.setCount(0));
+                                    widget.update(
+                                          widget.productCurrent, 2);
                                   }
                                 },count, "", type: TextInputType.number)),
                                 const SizedBox(width: 10,),

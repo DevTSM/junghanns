@@ -112,7 +112,6 @@ class _HomeState extends State<Home> {
 
   getAsync() async {
     List<Map<String, dynamic>> dataList = await handler.retrieveSales();
-    List<Map<String, dynamic>> dataList2 = await handler.retrieveStopOff();
     List<CustomerModel> value= await handler.retrieveUsers();
     log("total ___>${value.length}");
       value.map((e) {

@@ -116,7 +116,7 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
         isLoadingRange = false;
       });
       Fluttertoast.showToast(
-          msg: "Tiempo de espera superado, vuelve a intentarlo",
+          msg: "Dispositivo sin coordenadas",
           timeInSecForIosWeb: 2,
           toastLength: Toast.LENGTH_LONG,
           gravity: ToastGravity.TOP,
@@ -137,7 +137,8 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
               toastLength: Toast.LENGTH_LONG,
               gravity: ToastGravity.TOP,
               webShowClose: true,
-            );configList.addAll(widget.customerCurrent.configList);
+            );
+            configList.addAll(widget.customerCurrent.configList);
           } else {
             for (var item in answer.body) {
               configList.add(ConfigModel.fromService(item));
@@ -154,6 +155,7 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
             });
         });
       } else {
+        configList.addAll(widget.customerCurrent.configList);
         setState(() {
           dif = calculateDistance(
                   widget.customerCurrent.lat,
@@ -170,7 +172,7 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
     } catch (e) {
       log("***ERROR -- $e");
       Fluttertoast.showToast(
-          msg: "Tiempo de espera superado, vuelve a intentarlo",
+          msg: "Conexion inestable con el back __",
           timeInSecForIosWeb: 2,
           toastLength: Toast.LENGTH_LONG,
           gravity: ToastGravity.TOP,
@@ -264,6 +266,7 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
           context,
           MaterialPageRoute<void>(
               builder: (BuildContext context) => ShoppingCart(
+                index: widget.indexHome,
                     customerCurrent: widget.customerCurrent,
                     authList: authList.isEmpty ? authList : [authList.first],
                   ))).then((value) => setState(() {

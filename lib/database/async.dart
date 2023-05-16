@@ -84,7 +84,7 @@ class Async {
   
   Future <bool> getAsyncData() async {
     List<Map<String,dynamic>> salesPen= await handler.retrieveSales();
-    List<Map<String,dynamic>> stopPen=await handler.retrieveStopOff();
+    List<Map<String,dynamic>> stopPen=await handler.retrieveStopOffUpdate();
     List<StopRuta> stopRuta=await handler.retrieveStopRuta();
     if(salesPen.isNotEmpty){
       log("ventas pendientes ---------> ${salesPen.length}");
@@ -442,43 +442,4 @@ class Async {
     }
   }
 
-  Future<void> setDataStop() async {
-    if (provider.connectionStatus != 4) {
-      Connection connection=Connection();
-    await connection.init();
-    log("latencia  ${connection.latency}");
-    log("Verificando conexion Paradas${connection.stableConnection}");
-//if(connection.stableConnection){
-  if(true){
-      provider.asyncProcess=true;
-      provider.labelAsync="Sincronizando Ventas, no cierres la app.";
-      List<Map<String, dynamic>> dataList =
-          await handler.retrieveStopOff();
-      provider.totalAsync=dataList.length;
-      provider.currentAsync=0;
-      log("-------%%${dataList.length.toString()}");
-      for(var e in dataList){
-        log("recorriendo el arreglo");
-        provider.currentAsync++;
-      Map<String,dynamic> data={
-        "id_cliente": e["idCustomer"].toString(),
-            "id_parada": e["idStop"],
-            "lat": "${e["lat"]}",
-            "lon": "${e["lng"]}",
-            "id_data_origen": e["idOrigin"],
-            "tipo": e["type"]
-      };
-      await postStop(data).then((answer) async {
-            if (!answer.error){
-              await handler.deleteStopId(data["id_cliente"]);
-            }
-          });
-      
-      }
-      prefs.dataStop=!(dataList.length==provider.currentAsync);
-      provider.asyncProcess=false;
-      log("Sincronizacion completa Paradas");
-    }
-    }
-  }
 }

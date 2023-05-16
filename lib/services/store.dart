@@ -793,7 +793,7 @@ Future<Answer> getCustomersAtendidos() async {
           "client_secret": prefs.clientSecret,
           "Authorization": "Bearer ${prefs.token}",
         });
-    return Answer.fromService(response, message: "error al obtener los datos");
+    return Answer.fromService(response);
   } catch (e) {
     return Answer(
         body: {"error": e},

@@ -49,8 +49,9 @@ class SecondWayToPay {
 class ShoppingCart extends StatefulWidget {
   CustomerModel customerCurrent;
   List<AuthorizationModel> authList;
+  int index;
   ShoppingCart(
-      {Key? key, required this.customerCurrent, required this.authList})
+      {Key? key, required this.customerCurrent, required this.authList,this.index=2})
       : super(key: key);
 
   @override
@@ -635,7 +636,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
       }
     } catch (e) {
       Fluttertoast.showToast(
-          msg: "Tiempo de espera superado, vuelve a intentarlo",
+          msg: "Dispositivo sin coordenadas",
           timeInSecForIosWeb: 2,
           toastLength: Toast.LENGTH_LONG,
           gravity: ToastGravity.TOP,
@@ -862,7 +863,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
           Visibility(visible: isRequestFolio, child: requestFolio())
         ],
       ),
-      bottomNavigationBar: bottomBar(() {}, 2, isHome: false, context: context),
+      bottomNavigationBar: bottomBar(() {}, widget.index, isHome: false, context: context),
     );
   }
 

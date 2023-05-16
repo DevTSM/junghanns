@@ -101,8 +101,9 @@ getCustomerListDB() async {
               searchList = customerList;
             }
           }else{
+            log(answer.message);
             Fluttertoast.showToast(
-              msg: "Conexion inestable con el back",
+              msg: answer.message=="Sin datos"?answer.message:"Conexion inestable con el back",
               timeInSecForIosWeb: 2,
               toastLength: Toast.LENGTH_LONG,
               gravity: ToastGravity.TOP,

@@ -240,7 +240,7 @@ class DataBase {
   }
   Future<List<StopRuta>> retrieveStopRuta() async {
     final Database db = await initializeDB();
-    final List<Map<String, Object?>> queryResult = await db.query('stopRuta');
+    final List<Map<String, Object?>> queryResult = await db.query('stopRuta',where: "isUpdate = ?",whereArgs: [0]);
     return queryResult.map((e) => StopRuta.fromDataBase(e)).toList();
   }
   Future<List<StopModel>> retrieveStop() async {
@@ -258,6 +258,10 @@ class DataBase {
   Future<List<Map<String, dynamic>>> retrieveStopOff() async {
     final Database db = await initializeDB();
     return await db.query('stopOff');
+  }
+  Future<List<Map<String, dynamic>>> retrieveStopOffUpdate() async {
+    final Database db = await initializeDB();
+    return await db.query('stopOff',where: "isUpdate = ?",whereArgs: [0]);
   }
   Future<List<Map<String, dynamic>>> retrieveSales() async {
     final Database db = await initializeDB();

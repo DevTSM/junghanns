@@ -101,7 +101,8 @@ class Async {
       "id_data_origen": e["idOrigin"],
       "folio": e["folio"],
       "tipo_operacion": e["type"],
-      "version": "1.1.4"
+      "fecha_entrega":e["fecha_entrega"],
+      "id_marca_garrafon":e["id_marca_garrafon"]
     };
         await postSale(data).then((value) async {
           if(!value.error){
@@ -257,7 +258,6 @@ class Async {
                                   item.auth.first.type == "C") {
                                 paymentsList.add(MethodPayment(
                                     wayToPay: "Credito",
-                                    typeWayToPay: "C",
                                     type: "Atributo",
                                     idProductService: -1,
                                     description: "",
@@ -271,7 +271,6 @@ class Async {
                                 if (item.purse > 0) {
                                   paymentsList.add(MethodPayment(
                                       wayToPay: "Monedero",
-                                      typeWayToPay: "M",
                                       type: "Monedero",
                                       idProductService: -1,
                                       description: "",
@@ -357,7 +356,7 @@ class Async {
   
   Future<bool> getDataFolios() async {
     return await getFolios().then((answer) async {
-      
+      log(answer.body.toString());
       List<FolioModel> folioList = [];
       if (!answer.error) {
         await handler.deleteFolios();
@@ -397,49 +396,6 @@ class Async {
         return false;
       }
     });
-  }
-
-  Future<void> setDataSales() async {
-    if (provider.connectionStatus != 4) {
-      Connection connection = Connection();
-      await connection.init();
-      log("Verificando conexion Ventas ${connection.stableConnection}");
-     // if (connection.stableConnection) {
-      if(true){
-        provider.asyncProcess = true;
-        provider.labelAsync = "Sincronizando Ventas, no cierres la app.";
-        List<Map<String, dynamic>> dataList = await handler.retrieveSales();
-        provider.totalAsync = dataList.length;
-        provider.currentAsync = 0;
-        log("-------%%${dataList.length.toString()}");
-        for (var e in dataList) {
-          provider.currentAsync++;
-          Map<String, dynamic> data = {
-            "id_cliente": e["idCustomer"],
-            "id_ruta": e["idRoute"],
-            "latitud": e["lat"].toString(),
-            "longitud": e["lng"].toString(),
-            "venta": List.from(jsonDecode(e["saleItems"]).toList()),
-            "id_autorizacion": e["idAuth"],
-            "formas_de_pago":
-                List.from(jsonDecode(e["paymentMethod"]).toList()),
-            "id_data_origen": e["idOrigin"],
-            "folio": e["folio"],
-            "tipo_operacion": e["type"],
-            "version": "1.1.4"
-          };
-          await postSale(data).then((answer) async {
-            if (!answer.error) {
-              log("venta asignada");
-              await handler.updateSale(1,e["id"]);
-            }
-          });
-        }
-        prefs.dataSale = !(dataList.length == provider.currentAsync);
-        provider.asyncProcess = false;
-        log("Sincronizacion completa Ventas");
-      }
-    }
   }
 
 }

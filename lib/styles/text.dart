@@ -190,6 +190,12 @@ class TextStyles {
       decoration: TextDecoration.underline,
       decorationThickness: 2);
 
+  static TextStyle blue13SemiBoldUnderline = const TextStyle(
+      fontSize: 13,
+      fontFamily: 'MyriadPro-SemiBold',
+      color: ColorsJunghanns.blueJ2,
+      decoration: TextDecoration.underline,);
+
   static TextStyle blue15SemiBold = const TextStyle(
       fontSize: 15,
       fontFamily: 'MyriadPro-SemiBold',

@@ -131,7 +131,7 @@ class _HomePrincipalState extends State<HomePrincipal> {
         : Scaffold(
             //key: GlobalKey<ScaffoldState>(),
             appBar: appBarJunghanns(context, size, provider),
-            drawer: drawer(provider, context,setIndexCurrent,isFinRuta),
+            drawer: drawer(provider, context,setIndexCurrent,/*isFinRuta*/true),//se comenta el valor de confirmacion de ruta debido a una adecuacion pendiente
             body: !provider.asyncProcess
                 ? provider.isStatusloading
                     ? const Center(child: LoadingJunghanns())

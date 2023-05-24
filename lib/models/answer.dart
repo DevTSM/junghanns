@@ -10,7 +10,7 @@ class Answer {
   Answer({required this.body,required this.message,required this.error});
   factory Answer.fromService(Response response,{String? message}){
     try{
-      
+      log(response.statusCode.toString());
     if(response.statusCode<400){
       if(response.statusCode==203){
         log("/Respuesta fallida");
@@ -24,10 +24,10 @@ class Answer {
       }else{
       log("/Respuesta exitosa");
       if(response.statusCode==204){
-    return Answer(body: {[]}, message: message??"Sin datos",error: true);
+    return Answer(body: {[]}, message: "Sin datos",error: true);
       }else{
         dynamic body=jsonDecode(response.body);
-        return Answer(body: body, message: message??"Respuesta Exitosa",error: false);
+        return Answer(body: body, message: "Respuesta Exitosa",error: false);
       }
       }
     }else{
@@ -40,12 +40,13 @@ class Answer {
       prefs.urlBase=urlBase;
       prefs.labelCedis=nameCEDIS;
       }
+      
        dynamic body=jsonDecode(response.body);
       return Answer(body: body, message: body["message"]??"Código de error ${response.statusCode}", error: true);
     }
     }catch(e){
       log("/Error en respuesta");
-      return Answer(body: {"error": ""}, message: e.toString(), error: true);
+      return Answer(body: {"error": ""}, message: "Error inesperado: $e", error: true);
     }
   }
 }

@@ -61,7 +61,7 @@ class DataBase {
         //ventas offLine
         //formas de pago y productos en jsonEncode
         await database.execute(
-          "CREATE TABLE sale(id INTEGER PRIMARY KEY AUTOINCREMENT,idCustomer INTEGER ,idRoute INTEGER, lat DOUBLE, lng DOUBLE, saleItems TEXT, idAuth INTEGER,paymentMethod TEXT,idOrigin INTEGER,folio INTEGER,type TEXT,isUpdate INTEGER)",
+          "CREATE TABLE sale(id INTEGER PRIMARY KEY AUTOINCREMENT,idCustomer INTEGER ,idRoute INTEGER, lat DOUBLE, lng DOUBLE, saleItems TEXT, idAuth INTEGER,paymentMethod TEXT,idOrigin INTEGER,folio INTEGER,type TEXT,isUpdate INTEGER,fecha_entrega TEXT,id_marca_garrafon INTEGER)",
         );
         //
       },
@@ -194,13 +194,14 @@ class DataBase {
   }
   addColumn() async {
     try{
-    log("=================================|||||||||||||||||||||||||||||||||||| actualizamos la base de datos");
     final db = await initializeDB();
-    await db.execute("ALTER TABLE customer ADD referenciaDomicilio TEXT");
-    await db.execute("ALTER TABLE customer ADD cargoAdicional TEXT");
+    log("<=========== Agregando columnas =====>");
+    await db.execute("ALTER TABLE sale ADD id_marca_garrafon INTEGER");
+    await db.execute("ALTER TABLE sale ADD fecha_entrega TEXT");
     }catch(e){
+      log("Error al agregar los campos a la base local: $e");
       Fluttertoast.showToast(
-          msg: e.toString(),
+          msg: "Error al agregar los campos a la base local",
           timeInSecForIosWeb: 2,
           toastLength: Toast.LENGTH_LONG,
           gravity: ToastGravity.TOP,

@@ -262,7 +262,6 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
       "id_data_origen": provider.basketCurrent.idDataOrigin,
       "folio": null,
       "tipo_operacion": "R",
-      "version": "1.13"
     };
     Map<String, dynamic> dataLocal = {
       "idCustomer": provider.basketCurrent.idCustomer,

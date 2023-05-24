@@ -2,13 +2,13 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:junghanns/components/button.dart';
+import 'package:junghanns/models/transfer.dart';
 import 'package:junghanns/styles/decoration.dart';
 import 'package:junghanns/styles/text.dart';
-  class YesNot extends StatelessWidget{
-    final Function fun;
-    final String label;
-    final bool isGeneric;
-  const YesNot({Key? key,required this.fun,required this.label,required this.isGeneric}) : super(key: key);
+  class ShowTransfer extends StatelessWidget{
+    final Function update;
+    final TransferModel current;
+  const ShowTransfer({Key? key,required this.update,required this.current}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -18,12 +18,34 @@ import 'package:junghanns/styles/text.dart';
               width: MediaQuery.of(context).size.width * .85,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   DefaultTextStyle(
                       style: TextStyles.blueJ22Bold,
+                      child: RichText(text: TextSpan(
+                        children: [
+                          TextSpan(text: "Cantidad: ",style: TextStyles.blue15SemiBold),
+                          TextSpan(text: "${current.amount}",style: TextStyles.greenJ20Bold,)
+                        ]
+                      ))),
+                      DefaultTextStyle(
+                      style: TextStyles.blue15SemiBold,
+                      child: const Text("Producto: ")),
+                      DefaultTextStyle(
+                      style: TextStyles.greenJ20Bold,
+                      child: Text(current.description)),
+                      DefaultTextStyle(
+                      style: TextStyles.blue18SemiBoldIt,
                       textAlign: TextAlign.center,
-                      child: Text(isGeneric?label:"¿Seguro que quieres ${label=="fin"?"finalizar la ruta?":label=="inicio_comida"?"iniciar el horario de comida?":"realizar esta acción?"}")),
+                      child: Text(current.observation)),
+                  Container(
+                    width: double.infinity,
+                    alignment: Alignment.center,
+                    child:DefaultTextStyle(
+                      style: TextStyles.blueJ22Bold,
+                      textAlign: TextAlign.center,
+                      child: const Text("¿Que deseas Hacer?"))),
                   const SizedBox(
                     height: 15,
                   ),
@@ -36,11 +58,11 @@ import 'package:junghanns/styles/text.dart';
                               width: double.infinity,
                               fun: (){
                                     Navigator.pop(context);
-                                    fun();
+                                    update(current,"A");
                                   },
                               decoration: Decorations.blueBorder12,
                               style: TextStyles.white18SemiBoldIt,
-                              label: "Si")),
+                              label: "Aceptar")),
                       const Expanded(
                           child: SizedBox(
                         width: 15,
@@ -49,11 +71,12 @@ import 'package:junghanns/styles/text.dart';
                           flex: 2,
                           child: ButtonJunghannsLabel(
                               width: double.infinity,
-                              fun: ()=>
-                                    Navigator.pop(context),
+                              fun: (){
+                                    Navigator.pop(context);
+                                    update(current,"R");},
                               decoration: Decorations.redCard,
                               style: TextStyles.white18SemiBoldIt,
-                              label: "No")),
+                              label: "Rechazar")),
                     ],
                   ),
                 ],
@@ -62,9 +85,9 @@ import 'package:junghanns/styles/text.dart';
   }
   }
 
-  showYesNot(BuildContext context,Function fun,String label,bool isGeneric){
+  showTransfer(BuildContext context,Function update,TransferModel current){
     showDialog(
     context: context,
-    builder: (_) => AlertDialog(content: YesNot(fun:fun,label: label,isGeneric:isGeneric),),
+    builder: (_) => AlertDialog(content: ShowTransfer(update:update,current: current,),),
   );
   }

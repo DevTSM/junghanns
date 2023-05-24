@@ -278,12 +278,12 @@ Future<Answer> postSale(Map<String, dynamic> data) async {
     log("${response.statusCode}");
     if (response.statusCode == 201) {
       log("/StoreServices <PostSale> Successfull, ${response.body}");
-      return Answer(body: jsonDecode(response.body), message: "", error: false);
+      return Answer(body: jsonDecode(response.body), message: "Venta registrada con exito", error: false);
     } else {
       log("/StoreServices <PostSale> Fail ${response.body}");
       return Answer(
           body: response,
-          message: response.body,
+          message: "Error al registrar la venta",
           //"Algo salio mal, intentalo mas tarde.",
           error: true);
     }
@@ -552,7 +552,6 @@ Future<Answer> postNewCustomer(Map<String, dynamic> data) async {
           "Authorization": "Bearer ${prefs.token}"
         },
         body: jsonEncode(data));
-    log("${response.statusCode}");
     if (response.statusCode == 201) {
       log("/StoreServices <PostNewCustomer> Successfull ${response.body}");
       return Answer(body: jsonDecode(response.body), message: "", error: false);
@@ -560,7 +559,7 @@ Future<Answer> postNewCustomer(Map<String, dynamic> data) async {
       log("/StoreServices <PostNewCustomer> Fail ${response.body}");
       return Answer(
           body: response,
-          message: response.body,
+          message: "Error inesperado, valida que el numero no este registrado",
           //"Algo salio mal, intentalo mas tarde.",
           error: true);
     }
@@ -618,18 +617,18 @@ Future<Answer> postResendCode(Map<String, dynamic> data) async {
           "Authorization": "Bearer ${prefs.token}"
         },
         body: jsonEncode(data));
-    log("${response.statusCode}");
-    if (response.statusCode == 201) {
-      log("/StoreServices <PostResendCode> Successfull ${response.body}");
-      return Answer(body: jsonDecode(response.body), message: "", error: false);
-    } else {
-      log("/StoreServices <PostResendCode> Fail ${response.body}");
-      return Answer(
-          body: response,
-          message: response.body,
-          //"Algo salio mal, intentalo mas tarde.",
-          error: true);
-    }
+        return Answer.fromService(response,message: "Error inesperado");
+    // if (response.statusCode == 201||response.statusCode == 200) {
+    //   log("/StoreServices <PostResendCode> Successfull ${response.body}");
+    //   return Answer(body: jsonDecode(response.body), message: "", error: false);
+    // } else {
+    //   log("/StoreServices <PostResendCode> Fail ${response.body}");
+    //   return Answer(
+    //       body: response,
+    //       message: "Error Inesperado",
+    //       //"Algo salio mal, intentalo mas tarde.",
+    //       error: true);
+    // }
   } catch (e) {
     return Answer(
         body: {"error": e},
@@ -649,21 +648,20 @@ Future<Answer> putCancelOTP(Map<String, dynamic> data) async {
           "Authorization": "Bearer ${prefs.token}"
         },
         body: jsonEncode(data));
-    log("${response.statusCode}");
     var dataOTP = jsonDecode(response.body);
     if (response.statusCode == 200) {
       String check = dataOTP["status"] ?? "";
       if (check == "Rechazado") {
         log("/StoreServices <PutCancelOTP> Successfull ${response.body}");
         return Answer(
-            body: jsonDecode(response.body), message: "", error: false);
+            body: jsonDecode(response.body), message: "Cancelacion exitosa", error: false);
       } else {
         log("/StoreServices <PutCancelOTP> 1-Fail ${response.body}");
-        return Answer(body: dataOTP, message: response.body, error: true);
+        return Answer(body: dataOTP, message: dataOTP["message"]??"Error inesperado", error: true);
       }
     } else {
       log("/StoreServices <PutCancelOTP> 2-Fail ${response.body}");
-      return Answer(body: dataOTP, message: response.body, error: true);
+      return Answer(body: dataOTP, message: dataOTP["message"]??"Error inesperado", error: true);
     }
   } catch (e) {
     return Answer(
@@ -819,6 +817,114 @@ Future<Answer> getFolios() async {
     return Answer(
         body: {"error": e},
         message: "Algo salio mal, revisa tu conexion a internet.",
+        error: true);
+  }
+}
+Future<Answer> getBrands() async {
+  log("/StoreServices <getBrands>");
+  try {
+    var body = await http.get(Uri.parse("${prefs.urlBase}marcasgarrafon"), headers: {
+      "Content-Type": "aplication/json",
+      "x-api-key": apiKey,
+      "client_secret": prefs.clientSecret,
+      "Authorization": "Bearer ${prefs.token}",
+    }).timeout(Duration(seconds: timerDuration));
+    return Answer.fromService(body,message: "Error inesperado");
+  } catch (e) {
+    log("/StoreServices <getBrands> Catch ${e.toString()}");
+    return Answer(
+        body: e,
+        message: "Conexion inestable con el back",
+        error: true);
+  }
+}
+Future<Answer> getTransfer({String type="E"}) async {
+  log("/StoreServices <getTransfer>");
+  try {
+    var body = await http.get(Uri.parse("${prefs.urlBase}transferalmacen?idRuta=${prefs.idRouteD}&tipo=$type"), headers: {
+      "Content-Type": "aplication/json",
+      "x-api-key": apiKey,
+      "client_secret": prefs.clientSecret,
+      "Authorization": "Bearer ${prefs.token}",
+    }).timeout(Duration(seconds: timerDuration));
+    return Answer.fromService(body,message: "Error inesperado");
+  } catch (e) {
+    log("/StoreServices <getTransfer> Catch ${e.toString()}");
+    return Answer(
+        body: e,
+        message: "Conexion inestable con el back",
+        error: true);
+  }
+}
+Future<Answer> getRoutes() async {
+  log("/StoreServices <getRoutes>");
+  try {
+    var body = await http.get(Uri.parse("${prefs.urlBase}rutas"), headers: {
+      "Content-Type": "aplication/json",
+      "x-api-key": apiKey,
+      "client_secret": prefs.clientSecret,
+      "Authorization": "Bearer ${prefs.token}",
+    }).timeout(Duration(seconds: timerDuration));
+    return Answer.fromService(body,message: "Error inesperado");
+  } catch (e) {
+    log("/StoreServices <getRoutes> Catch ${e.toString()}");
+    return Answer(
+        body: e,
+        message: "Conexion inestable con el back",
+        error: true);
+  }
+}
+Future<Answer> getProducts() async {
+  log("/StoreServices <getProducts>");
+  try {
+    var body = await http.get(Uri.parse("${prefs.urlBase}productos"), headers: {
+      "Content-Type": "aplication/json",
+      "x-api-key": apiKey,
+      "client_secret": prefs.clientSecret,
+      "Authorization": "Bearer ${prefs.token}",
+    }).timeout(Duration(seconds: timerDuration));
+    return Answer.fromService(body,message: "Error inesperado");
+  } catch (e) {
+    log("/StoreServices <getProducts> Catch ${e.toString()}");
+    return Answer(
+        body: e,
+        message: "Conexion inestable con el back",
+        error: true);
+  }
+}
+Future<Answer> setTransferNew(Map<String,dynamic> data) async {
+  log("/StoreServices <setTransferNew>");
+  try {
+    var body = await http.post(Uri.parse("${prefs.urlBase}transferalmacen"), headers: {
+      HttpHeaders.contentTypeHeader: 'application/json; charset=UTF-8',
+      "x-api-key": apiKey,
+      "client_secret": prefs.clientSecret,
+      "Authorization": "Bearer ${prefs.token}",
+    },body: jsonEncode(data)).timeout(Duration(seconds: timerDuration));
+    return Answer.fromService(body,message: "Error inesperado");
+  } catch (e) {
+    log("/StoreServices <setTransferNew> Catch ${e.toString()}");
+    return Answer(
+        body: e,
+        message: "Conexion inestable con el back",
+        error: true);
+  }
+}
+Future<Answer> setStatusTransfer(Map<String,dynamic> data) async {
+  log("/StoreServices <setStatusTransfer>");
+  try {
+    var body = await http.put(Uri.parse("${prefs.urlBase}transferalmacen"), headers: {
+      HttpHeaders.contentTypeHeader: 'application/json; charset=UTF-8',
+      "x-api-key": apiKey,
+      "client_secret": prefs.clientSecret,
+      "Authorization": "Bearer ${prefs.token}",
+    },body: jsonEncode(data)).timeout(Duration(seconds: timerDuration));
+    return Answer.fromService(body,message: "Error inesperado");
+  } catch (e) {
+    log("/StoreServices <setStatusTransfer> Catch ${e.toString()}");
+    return Answer(
+        body: e,
+        message: "Conexion inestable con el back",
         error: true);
   }
 }

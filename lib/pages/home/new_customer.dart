@@ -10,6 +10,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:junghanns/components/button.dart';
 import 'package:junghanns/components/loading.dart';
+import 'package:junghanns/components/modal/yes_not.dart';
 import 'package:junghanns/models/employee.dart';
 import 'package:junghanns/models/saleCambaceo.dart';
 import 'package:junghanns/models/type_street.dart';
@@ -562,16 +563,14 @@ class _NewCustomerState extends State<NewCustomer> {
           ),
         ),
         //Field
-        Container(
-            decoration: Decorations.whiteSblackCard,
-            child: TextFormField(
+        TextFormField(
                 controller: controller,
                 textAlignVertical: TextAlignVertical.center,
                 style: TextStyles.blueJ15SemiBold,
                 keyboardType:
                     isNumber ? TextInputType.number : TextInputType.text,
                 maxLines: numLines,
-                maxLength: numLines == 5 ? 200 : null,
+                maxLength: numLines == 5 ? 60 : null,
                 inputFormatters:
                     isPhone ? [MaskedInputFormatter("###  ###  ####")] : [],
                 decoration: InputDecoration(
@@ -584,7 +583,7 @@ class _NewCustomerState extends State<NewCustomer> {
                   enabledBorder: OutlineInputBorder(
                     borderSide: errT != ""
                         ? const BorderSide(width: 1, color: Colors.red)
-                        : const BorderSide(width: 0, color: Colors.white),
+                        : const BorderSide(width: 1, color: ColorsJunghanns.lighGrey),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   focusedBorder: OutlineInputBorder(
@@ -592,7 +591,7 @@ class _NewCustomerState extends State<NewCustomer> {
                         width: 1, color: ColorsJunghanns.blueJ),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                ))),
+                )),
         //
         errT.isNotEmpty
             ? Container(
@@ -1194,7 +1193,6 @@ class _NewCustomerState extends State<NewCustomer> {
           webShowClose: true,
         );
         idNewCustomer = int.parse((answer.body["id"] ?? -1).toString());
-        log(idNewCustomer.toString());
       }
     });
   }
@@ -1266,8 +1264,7 @@ class _NewCustomerState extends State<NewCustomer> {
                         height: 35,
                         child: ButtonJunghanns(
                             fun: () {
-                              log("RESEND CODE");
-                              funResendCode(true);
+                              showYesNot(context, ()=>funResendCode(false), "¿Estas seguro de volver a enviar y generar un código de validación? Esto invalidará el código enviado anteriormente", true);
                             },
                             decoration: Decorations.greenJCard,
                             style: TextStyles.white15R,
@@ -1278,8 +1275,7 @@ class _NewCustomerState extends State<NewCustomer> {
                         height: 35,
                         child: ButtonJunghanns(
                             fun: () {
-                              log("CANCEL CODE");
-                              funResendCode(false);
+                              showYesNot(context, ()=>funResendCode(false), "¿Estas seguro de volver a enviar y generar un código de validación? Esto invalidará el código enviado anteriormente", true);
                             },
                             decoration: Decorations.blueJ2Card,
                             style: TextStyles.white15R,
@@ -1294,8 +1290,7 @@ class _NewCustomerState extends State<NewCustomer> {
                         height: 35,
                         child: ButtonJunghanns(
                             fun: () {
-                              log("CANCEL CODE");
-                              funCancelCode();
+                              showYesNot(context, ()=>funCancelCode(), "¿Estas seguro de cancelar la validación?", true);
                             },
                             decoration: Decorations.redCard,
                             style: TextStyles.white15R,
@@ -1432,14 +1427,9 @@ class _NewCustomerState extends State<NewCustomer> {
   }
 
   funCancelCode() async {
-    log("FUN RESEND CODE");
-
     Map<String, dynamic> data = {
       "id": idNewCustomer,
     };
-
-    log("INFO RESEND: $data");
-
     await putCancelOTP(data).then((answer) {
       if (answer.error) {
         Fluttertoast.showToast(

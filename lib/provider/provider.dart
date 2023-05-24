@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:junghanns/models/authorization.dart';
 import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/models/product.dart';
 import 'package:junghanns/models/shopping_basket.dart';
@@ -11,24 +12,19 @@ import 'package:junghanns/util/connection.dart';
 
 class ProviderJunghanns extends ChangeNotifier {
   //VARIABLES
-  final Stream _myStream =
-      Stream.periodic(const Duration(seconds: 20), (int count) => count);
-  late StreamSubscription _sub;
-  Connection connecction=Connection();
   BasketModel basketCurrent = BasketModel.fromState();
-  List<CustomerModel> _customerList = [];
   String _path = "";
   String _labelAsync = "Sincronizando datos, no cierres la app";
-  int _connectionStatus = 100;
   double _downloadRate = 0;
+  int _connectionStatus = 100;
   int _totalAsync = 1;
   int _currentAsync = 0;
-  bool get permission => _permission;
   bool _permission = true;
   bool _asyncProcess = false;
   bool _isStatusloading = false;
 
   //GETS
+  bool get permission => _permission;
   bool get isStatusloading => _isStatusloading;
   bool get asyncProcess => _asyncProcess;
   int get totalAsync => _totalAsync;
@@ -37,7 +33,6 @@ class ProviderJunghanns extends ChangeNotifier {
   double get downloadRate => _downloadRate;
   String get labelAsync => _labelAsync;
   String get path => _path;
-  List<CustomerModel> get customerList => _customerList;
   //SETS
   set isStatusloading(bool isStatusloading) {
     _isStatusloading = isStatusloading;
@@ -84,14 +79,9 @@ class ProviderJunghanns extends ChangeNotifier {
     notifyListeners();
   }
 
-  set customerList(List<CustomerModel> customerList) {
-    _customerList = customerList;
-    notifyListeners();
-  }
-
   //FUNCTIONS
-  initShopping(CustomerModel customerCurrent) {
-    basketCurrent = BasketModel.fromInit(customerCurrent);
+  initShopping(CustomerModel customerCurrent,{AuthorizationModel? auth}) {
+    basketCurrent = BasketModel.fromInit(customerCurrent,auth);
   }
 
   updateProductShopping(ProductModel productCurrent, int isAdd) {

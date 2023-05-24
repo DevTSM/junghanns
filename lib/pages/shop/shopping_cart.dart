@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:developer';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:junghanns/database/async.dart';
 import 'package:junghanns/models/folio.dart';
@@ -47,11 +48,14 @@ class SecondWayToPay {
 }
 
 class ShoppingCart extends StatefulWidget {
-  CustomerModel customerCurrent;
-  List<AuthorizationModel> authList;
-  int index;
-  ShoppingCart(
-      {Key? key, required this.customerCurrent, required this.authList,this.index=2})
+  final CustomerModel customerCurrent;
+  final List<AuthorizationModel> authList;
+  final int index;
+  const ShoppingCart(
+      {Key? key,
+      required this.customerCurrent,
+      required this.authList,
+      this.index = 2})
       : super(key: key);
 
   @override
@@ -59,34 +63,34 @@ class ShoppingCart extends StatefulWidget {
 }
 
 class _ShoppingCartState extends State<ShoppingCart> {
-  late Size size;
+  late ProviderJunghanns provider;
   late List<ProductModel> productsList, productListOther;
-  late bool isLoading, isRange;
   late List<ConfigModel> configList = [];
   late List<FolioModel> folios = [];
-  late double distance;
-  late SecondWayToPay secWayToPay;
   late NumberFormat formatMoney = NumberFormat("\$#,##0.00");
   late TextEditingController folioC = TextEditingController();
-  late bool isRequestFolio = false;
+  late Size size;
+  late SecondWayToPay secWayToPay; //se tiene que remover posteriormente
   late String errFolio = "";
-  late ProviderJunghanns provider;
   late double latSale, lngSale;
+  late double distance;
+  late bool isLoading, isRange;
+  late bool isRequestFolio = false;
   late bool isOtherProduct;
-  late int idLocal;
+
   @override
   void initState() {
     super.initState();
     productsList = [];
-    folios = [];
     productListOther = [];
+    folios = [];
+    secWayToPay = SecondWayToPay(wayToPay: "", typeWayToPay: "", cost: 0);
+    distance = 0;
+    latSale = 0;
+    lngSale = 0;
     isLoading = false;
     isRange = false;
     isOtherProduct = false;
-    distance = 0;
-    secWayToPay = SecondWayToPay(wayToPay: "", typeWayToPay: "", cost: 0);
-    latSale = lngSale = 0;
-    idLocal = 0;
     getProductLocal();
   }
 
@@ -98,30 +102,37 @@ class _ShoppingCartState extends State<ShoppingCart> {
 
   getProductLocal() async {
     Timer(const Duration(milliseconds: 1000), () async {
-      provider.initShopping(widget.customerCurrent);
+      provider.initShopping(widget.customerCurrent,
+          auth: widget.authList.isNotEmpty ? widget.authList.first : null);
       List<ProductModel> dataList = await handler.retrieveProducts();
       dataList.map((e) {
-        if (widget.authList.isEmpty) {
-          if(e.stock>0){
-          setState(() {
-            productsList.add(e);
-          });
+        if (provider.basketCurrent.authCurrent.idAuth == 0) {
+          if (e.stock > 0) {
+            setState(() {
+              productsList.add(e);
+            });
           }
         } else {
-          if (e.idProduct == widget.authList.first.product.idProduct) {
+          if (e.idProduct ==
+              provider.basketCurrent.authCurrent.product.idProduct) {
             setState(() {
-              ProductModel product=ProductModel.fromProduct(widget.authList.first.product);
-              product.setStock(widget.authList.first.product.stock<=e.stock?widget.authList.first.product.stock:e.stock,e.stock);
-              productsList
-                  .add(product);
+              ProductModel product =
+                  ProductModel.fromProduct(widget.authList.first.product);
+              product.setStock(
+                  provider.basketCurrent.authCurrent.product.stock <= e.stock
+                      ? provider.basketCurrent.authCurrent.product.stock
+                      : e.stock,
+                  e.stock);
+              productsList.add(product);
             });
           }
         }
       }).toList();
       setState(() {
-        var exits=productsList.where((element) => element.rank == "");
-        productListOther =exits.toList();
-        isOtherProduct =(productsList.where((element) => element.rank != "").isEmpty);
+        var exits = productsList.where((element) => element.rank == "");
+        productListOther = exits.toList();
+        isOtherProduct =
+            (productsList.where((element) => element.rank != "").isEmpty);
       });
       checkPriceCvsPriceS();
       getDataPayment();
@@ -145,47 +156,46 @@ class _ShoppingCartState extends State<ShoppingCart> {
   getDataPayment() async {
     List<MethodPayment> paymentsList = [];
     List<MethodPayment> paymentsListT = [];
-     await getPaymentMethods(widget.customerCurrent.idClient, prefs.idRouteD)
+    await getPaymentMethods(widget.customerCurrent.idClient, prefs.idRouteD)
         .then((answer) {
-          if(!answer.error){
-            answer.body.map((e){
-              paymentsListT.add(MethodPayment.fromService(e));
-            }).toList();
-          }else{
-            Fluttertoast.showToast(
-              msg: "Conexion inestable con el back",
-              timeInSecForIosWeb: 2,
-              toastLength: Toast.LENGTH_LONG,
-              gravity: ToastGravity.TOP,
-              webShowClose: true,
-              backgroundColor: ColorsJunghanns.red);
-          }
-        });
-        if(paymentsListT.isNotEmpty){
-        widget.customerCurrent.setPayment(paymentsListT);
+      if (!answer.error) {
+        answer.body.map((e) {
+          paymentsListT.add(MethodPayment.fromService(e));
+        }).toList();
+      } else {
+        Fluttertoast.showToast(
+            msg: "Conexion inestable con el back",
+            timeInSecForIosWeb: 2,
+            toastLength: Toast.LENGTH_LONG,
+            gravity: ToastGravity.TOP,
+            webShowClose: true,
+            backgroundColor: ColorsJunghanns.red);
+      }
+    });
+    if (paymentsListT.isNotEmpty) {
+      widget.customerCurrent.setPayment(paymentsListT);
+    }
+
+    if (provider.basketCurrent.authCurrent.idAuth != 0) {
+      //Aqui se valida si existe la autorizacion para filtrar los metodos de pago
+      widget.customerCurrent.payment.map((e) {
+        if (e.idAuth == provider.basketCurrent.authCurrent.idAuth) {
+          paymentsList.add(e);
         }
-    
-    if (widget.authList.isNotEmpty) {
-      //Aqui se valida si existe la autorizacion para como dato para filtrar los metodos de pago
-       widget.customerCurrent.payment.map((e) {
-            if (e.idAuth == widget.authList.first.idAuth) {
-              paymentsList.add(e);
-            }
-          }).toList();
-    } 
-    if(paymentsList.isEmpty) {
+      }).toList();
+    }
+    if (paymentsList.isEmpty) {
       //Se agregan todos lo metodos de pago si no hay autorizacion
       widget.customerCurrent.payment
-          .map((e) => e.typeWayToPay != "M" ? paymentsList.add(e) : null)
+          .map((e) => e.wayToPay != "Monedero" ? paymentsList.add(e) : null)
           .toList();
       //Se agrega metodo de pago "Monedero"
       if (widget.customerCurrent.purse > 0 &&
           widget.customerCurrent.payment
-              .where((element) => element.typeWayToPay == "M")
+              .where((element) => element.wayToPay == "Monedero")
               .isEmpty) {
         paymentsList.add(MethodPayment(
             wayToPay: "Monedero",
-            typeWayToPay: "M",
             type: "Monedero",
             idProductService: -1,
             description: "",
@@ -193,12 +203,12 @@ class _ShoppingCartState extends State<ShoppingCart> {
       }
     }
     setState(() {
-    widget.customerCurrent.setPayment(paymentsList);
+      widget.customerCurrent.setPayment(paymentsList);
       isLoading = false;
     });
   }
 
-  selectWayToPay() async {
+  selectPayment() async {
     await showCupertinoModalPopup<int>(
         context: context,
         builder: (context) {
@@ -271,6 +281,48 @@ class _ShoppingCartState extends State<ShoppingCart> {
                           child: Text("¿Pago en ${methodCurrent.wayToPay} ?"))
                       : textTwoWayToPay(
                           methodCurrent.wayToPay, widget.customerCurrent.purse),
+                  Visibility(
+                      visible:
+                          provider.basketCurrent.authCurrent.authText.toUpperCase() == "GARRAFON A LA PAR",
+                      child: DefaultTextStyle(
+                          style: TextStyles.blueJ215R,
+                          child: RichText(
+                              text: TextSpan(children: [
+                            TextSpan(
+                                text:
+                                    "Marca de garrafon: ${provider.basketCurrent.brandJug["descripcion"]??"No se proporciono"} ",
+                                style: TextStyles.blueJ215R),
+                            // TextSpan(
+                            //   text: "Editar",
+                            //   style: TextStyles.blue13SemiBoldUnderline,
+                            //   recognizer: TapGestureRecognizer()
+                            //     ..onTap = () {
+                            //       Navigator.pop(context);
+                            //       showBrand(context);
+                            //     },
+                            // )
+                          ])))),
+                  Visibility(
+                      visible:
+                          methodCurrent.wayToPay.toUpperCase() == "PRESTAMO",
+                      child: DefaultTextStyle(
+                          style: TextStyles.blueJ215R,
+                          child: RichText(
+                              text: TextSpan(children: [
+                            TextSpan(
+                                text:
+                                    "Devolución: ${DateFormat('dd/MM/yyyy').format(provider.basketCurrent.datePrestamo)} ",
+                                style: TextStyles.blueJ215R),
+                            TextSpan(
+                              text: "Editar",
+                              style: TextStyles.blue13SemiBoldUnderline,
+                              recognizer: TapGestureRecognizer()
+                                ..onTap = () {
+                                  Navigator.pop(context);
+                                  _selectDate(context);
+                                },
+                            )
+                          ])))),
                   DefaultTextStyle(
                       style: TextStyles.blueJ215R,
                       child: const Text(
@@ -313,19 +365,20 @@ class _ShoppingCartState extends State<ShoppingCart> {
                                             webShowClose: true,
                                           );
                                         } else {
-                                          List<String> phones=[];
-                                          (answer.body["telefonos"] ??
-                                                          [])
-                                                      .map((e) {
-                                            if ((e["tipo"]??"") == "MOVIL") {
-                                              phones.add(e["telefono"].toString());
+                                          List<String> phones = [];
+                                          (answer.body["telefonos"] ?? [])
+                                              .map((e) {
+                                            if ((e["tipo"] ?? "") == "MOVIL") {
+                                              phones.add(
+                                                  e["telefono"].toString());
                                             }
                                           }).toList();
-                                          widget.customerCurrent.setPhones(phones);
+                                          widget.customerCurrent
+                                              .setPhones(phones);
                                           showComodato(methodCurrent);
                                         }
                                       });
-                                    }else {
+                                    } else {
                                       funSale(methodCurrent);
                                     }
                                   } else {
@@ -428,27 +481,27 @@ class _ShoppingCartState extends State<ShoppingCart> {
                                       webShowClose: true,
                                     );
                                   } else {
-                                    if(answer.body["estatus"]=="A"){
+                                    if (answer.body["estatus"] == "A") {
                                       Fluttertoast.showToast(
-                                      msg: "Autorización verificada",
-                                      timeInSecForIosWeb: 2,
-                                      toastLength: Toast.LENGTH_LONG,
-                                      gravity: ToastGravity.TOP,
-                                      webShowClose: true,
-                                    );
-                                    Navigator.pop(context);
-                                    provider.basketCurrent.folio=int.parse(answer.body["folio"]??"-1");
-                                    funSale(methodCurrent);
-                                    }else{
+                                        msg: "Autorización verificada",
+                                        timeInSecForIosWeb: 2,
+                                        toastLength: Toast.LENGTH_LONG,
+                                        gravity: ToastGravity.TOP,
+                                        webShowClose: true,
+                                      );
+                                      Navigator.pop(context);
+                                      provider.basketCurrent.folio = int.parse(
+                                          answer.body["folio"] ?? "-1");
+                                      funSale(methodCurrent);
+                                    } else {
                                       Fluttertoast.showToast(
-                                      msg: "Aun no se ha verificado.",
-                                      timeInSecForIosWeb: 2,
-                                      toastLength: Toast.LENGTH_LONG,
-                                      gravity: ToastGravity.TOP,
-                                      webShowClose: true,
-                                    );
+                                        msg: "Aun no se ha verificado.",
+                                        timeInSecForIosWeb: 2,
+                                        toastLength: Toast.LENGTH_LONG,
+                                        gravity: ToastGravity.TOP,
+                                        webShowClose: true,
+                                      );
                                     }
-                                    
                                   }
                                 });
                               },
@@ -496,7 +549,9 @@ class _ShoppingCartState extends State<ShoppingCart> {
                   DefaultTextStyle(
                       style: TextStyles.blueJ22Bold,
                       child: const Text("¿Enviar confirmación a:?")),
-                      const SizedBox(height: 5,),
+                  const SizedBox(
+                    height: 5,
+                  ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -536,7 +591,9 @@ class _ShoppingCartState extends State<ShoppingCart> {
                               : const Text("Sin numeros registrados")
                     ],
                   ),
-                  const SizedBox(height: 5,),
+                  const SizedBox(
+                    height: 5,
+                  ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
@@ -553,14 +610,15 @@ class _ShoppingCartState extends State<ShoppingCart> {
                                         widget.customerCurrent.idClient,
                                         latSale,
                                         lngSale,
-                                        provider.basketCurrent.sales.first.idProduct,
-                                        provider.basketCurrent.sales.first.number,
+                                        provider.basketCurrent.sales.first
+                                            .idProduct,
+                                        provider
+                                            .basketCurrent.sales.first.number,
                                         widget.authList.first.idAuth)
                                     .then((answer) {
                                   if (answer.error) {
                                     Fluttertoast.showToast(
-                                      msg:
-                                          answer.message,
+                                      msg: answer.message,
                                       timeInSecForIosWeb: 2,
                                       toastLength: Toast.LENGTH_LONG,
                                       gravity: ToastGravity.TOP,
@@ -602,6 +660,19 @@ class _ShoppingCartState extends State<ShoppingCart> {
             ),
           );
         });
+  }
+
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+        context: context,
+        initialDate: provider.basketCurrent.datePrestamo,
+        initialDatePickerMode: DatePickerMode.day,
+        firstDate: DateTime(2015),
+        lastDate: DateTime(2038));
+    if (picked != null) {
+      provider.basketCurrent.datePrestamo = picked;
+    }
+    showConfirmSale(widget.customerCurrent.payment.first);
   }
 
   setCurrentLocation() async {
@@ -662,17 +733,18 @@ class _ShoppingCartState extends State<ShoppingCart> {
           } else {
             for (var item in answer.body) {
               configList.add(ConfigModel.fromService(item));
-            }}
-            setState(() {
-              distance = calculateDistance(
-                      widget.customerCurrent.lat,
-                      widget.customerCurrent.lng,
-                      currentLocation.latitude,
-                      currentLocation.longitude) *
-                  1000;
-              isRange = distance <= configList.last.valor;
-              log(" distance $distance isRange $isRange");
-            });
+            }
+          }
+          setState(() {
+            distance = calculateDistance(
+                    widget.customerCurrent.lat,
+                    widget.customerCurrent.lng,
+                    currentLocation.latitude,
+                    currentLocation.longitude) *
+                1000;
+            isRange = distance <= configList.last.valor;
+            log(" distance $distance isRange $isRange");
+          });
         });
       } else {
         setState(() {
@@ -701,15 +773,148 @@ class _ShoppingCartState extends State<ShoppingCart> {
     }
   }
 
+  showBrand(List<Map<String,dynamic>> brands) {
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return Center(
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              width: size.width * .75,
+              decoration: Decorations.whiteS1Card,
+              child: Material(
+                  child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  DefaultTextStyle(
+                      style: TextStyles.blueJ20Bold,
+                      textAlign: TextAlign.center,
+                      child: const Text("Selecciona la marca del garrafon")),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  Container(
+                    decoration: Decorations.whiteJCard,
+                    padding: const EdgeInsets.only(left: 10,right: 10),
+                    width: double.infinity,
+                  child:brands.length > 1
+                      ? DropdownButton<Map<String,dynamic>>(
+                          value: provider.basketCurrent.brandJug,
+                          isExpanded: true,
+                          underline: Container(),
+                          icon: const Icon(Icons.arrow_drop_down_sharp),
+                          elevation: 5,
+                          onChanged: (Map<String,dynamic>? value) {
+                            setState(() {
+                              provider.basketCurrent.brandJug = value!;
+                            });
+                          },
+                          items: brands
+                              .map<DropdownMenuItem<Map<String,dynamic>>>((Map<String, dynamic> value) {
+                            return DropdownMenuItem<Map<String,dynamic>>(
+                              value: value,
+                              child: Text(value["descripcion"],style: TextStyles.blue18SemiBoldIt,textAlign: TextAlign.center,),
+                            );
+                          }).toList(),
+                        )
+                      : brands.isNotEmpty
+                          ? Text(brands.first["descripcion"],style: TextStyles.blue18SemiBoldIt,textAlign: TextAlign.center,)
+                          : const Text("No se encontraron datos")),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Expanded(
+                          child: ButtonJunghanns(
+                              fun: () async {
+                                Navigator.pop(context);
+                                showConfirmSale(widget.customerCurrent.payment.first);
+                              },
+                              decoration: Decorations.blueBorder12,
+                              style: TextStyles.white18SemiBoldIt,
+                              label: "Aceptar")),
+                      const SizedBox(
+                        width: 25,
+                      ),
+                      Expanded(
+                          child: ButtonJunghanns(
+                        fun: () {
+                          Navigator.pop(context);
+                        },
+                        decoration: Decorations.redCard,
+                        style: TextStyles.white18SemiBoldIt,
+                        label: "Cancelar",
+                      )),
+                    ],
+                  )
+                ],
+              )),
+            ),
+          );
+        });
+  }
+
+  caseSale() async {
+    if (widget.customerCurrent.payment.length > 1) {
+      //si hay mas de un metodo agregamos select
+      selectPayment();
+    } else {
+      if (widget.customerCurrent.payment.isNotEmpty) {
+        //validamos que existan metodos de pago
+        if (funCheckMethodPayment(widget.customerCurrent.payment.first)) {
+          if (widget.customerCurrent.payment.first.getIsFolio()) {
+            //habilitamos el modal para folio
+            setState(() {
+              isRequestFolio = true;
+            });
+          } else {
+            if (provider.basketCurrent.authCurrent.authText.toUpperCase() ==
+                "GARRAFON A LA PAR") {
+              await getBrands().then((answer) {
+                if (answer.error) {
+                  Fluttertoast.showToast(
+                    msg: answer.message,
+                    timeInSecForIosWeb: 2,
+                    toastLength: Toast.LENGTH_LONG,
+                    gravity: ToastGravity.TOP,
+                    webShowClose: true,
+                  );
+                } else {
+                  //answer.body=[{"descripcion":"Epura"}];
+                  if (answer.body.isNotEmpty) {
+                    provider.basketCurrent.brandJug = answer.body.first;
+                    showBrand(List.from(answer.body));
+                  }
+                }
+              });
+            } else {
+              showConfirmSale(widget.customerCurrent.payment.first);
+            }
+          }
+        }
+      } else {
+        Fluttertoast.showToast(
+          msg:
+              "No se encontraron metodos de pago ${widget.authList.isNotEmpty ? "para la autorización ${widget.authList.first.idAuth}" : ""}",
+          timeInSecForIosWeb: 2,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+        );
+      }
+    }
+  }
+
   funSale(MethodPayment methodPayment) async {
     if (secWayToPay.wayToPay.isEmpty) {
       provider.basketCurrent.waysToPay.add(WayToPay(
-          type: methodPayment.typeWayToPay,
-          cost: provider.basketCurrent.totalPrice));
+          type: methodPayment.type, cost: provider.basketCurrent.totalPrice));
     } else {
       provider.basketCurrent.waysToPay.add(WayToPay(
-          type: methodPayment.typeWayToPay,
-          cost: widget.customerCurrent.purse));
+          type: methodPayment.type, cost: widget.customerCurrent.purse));
       provider.basketCurrent.waysToPay.add(
           WayToPay(type: secWayToPay.typeWayToPay, cost: secWayToPay.cost));
     }
@@ -740,6 +945,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
       widget.authList.removeWhere(
           (element) => element.idAuth == provider.basketCurrent.idAuth);
     }
+
     Map<String, dynamic> data = {
       "id_cliente": provider.basketCurrent.idCustomer,
       "id_ruta": provider.basketCurrent.idRoute,
@@ -754,8 +960,9 @@ class _ShoppingCartState extends State<ShoppingCart> {
       "folio": provider.basketCurrent.folio != -1
           ? provider.basketCurrent.folio
           : null,
+      "fecha_entrega": provider.basketCurrent.datePrestamo.toString(),
       "tipo_operacion": provider.basketCurrent.typeOperation,
-      "version": "1.1.4"
+      "id_marca_garrafon":provider.basketCurrent.brandJug["id"]??-1
     };
     Map<String, dynamic> dataLocal = {
       "idCustomer": provider.basketCurrent.idCustomer,
@@ -772,13 +979,15 @@ class _ShoppingCartState extends State<ShoppingCart> {
           ? provider.basketCurrent.folio
           : null,
       "type": provider.basketCurrent.typeOperation,
-      "isUpdate": 0
+      "isUpdate": 0,
+      "fecha_entrega": provider.basketCurrent.datePrestamo.toString(),
+      "id_marca_garrafon":provider.basketCurrent.brandJug["id"]??-1
     };
     int id = await handler.insertSale(dataLocal);
     for (var e in provider.basketCurrent.sales) {
       await handler.updateProductStock((e.stockLocal - e.number), e.idProduct);
     }
-    if(provider.basketCurrent.idAuth!=-1){
+    if (provider.basketCurrent.idAuth != -1) {
       widget.customerCurrent.delete(provider.basketCurrent.idAuth);
     }
     if (provider.basketCurrent.waysToPay
@@ -802,30 +1011,39 @@ class _ShoppingCartState extends State<ShoppingCart> {
           type: 0);
     }
     widget.customerCurrent.addHistory({
-    'fecha':DateTime.now().toString(),
-    'tipo':"VENTA",
-    'descripcion':"${provider.basketCurrent.sales.first.idProduct} - ${provider.basketCurrent.sales.first.description}",
-    'importe':provider.basketCurrent.sales .map((e) => e.number*e.price).toList().reduce((value, element) => value+element),
-    'cantidad':provider.basketCurrent.sales .map((e) => e.number).toList().reduce((value, element) => value+element)
-  });
+      'fecha': DateTime.now().toString(),
+      'tipo': "VENTA",
+      'descripcion':
+          "${provider.basketCurrent.sales.first.idProduct} - ${provider.basketCurrent.sales.first.description}",
+      'importe': provider.basketCurrent.sales
+          .map((e) => e.number * e.price)
+          .toList()
+          .reduce((value, element) => value + element),
+      'cantidad': provider.basketCurrent.sales
+          .map((e) => e.number)
+          .toList()
+          .reduce((value, element) => value + element)
+    });
     widget.customerCurrent.setType(7);
     log("se actualizo =====> ${widget.customerCurrent.type}  ${widget.customerCurrent.id}");
     setState(() {
-        isLoading = true;
-      });
+      isLoading = true;
+    });
     await postSale(data).then((answer) async {
       setState(() {
         isLoading = false;
       });
       if (!answer.error) {
         await handler.updateSale(1, id);
-      }else{
+      } else {
         Fluttertoast.showToast(
-              msg: answer.message,
-              timeInSecForIosWeb: 2,
-              toastLength: Toast.LENGTH_LONG,
-              gravity: ToastGravity.TOP,
-              webShowClose: true,);
+          msg: answer.message,
+          timeInSecForIosWeb: 2,
+          backgroundColor: ColorsJunghanns.red,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+        );
       }
     });
     Navigator.pop(context, true);
@@ -863,7 +1081,8 @@ class _ShoppingCartState extends State<ShoppingCart> {
           Visibility(visible: isRequestFolio, child: requestFolio())
         ],
       ),
-      bottomNavigationBar: bottomBar(() {}, widget.index, isHome: false, context: context),
+      bottomNavigationBar:
+          bottomBar(() {}, widget.index, isHome: false, context: context),
     );
   }
 
@@ -879,7 +1098,9 @@ class _ShoppingCartState extends State<ShoppingCart> {
       child: productsList.isEmpty
           ? Center(
               child: Text(
-              widget.authList.isNotEmpty?"No se hay stock para la autorizacion ${widget.authList.first.product.idProduct}":"Sin productos",
+              widget.authList.isNotEmpty
+                  ? "No hay stock para la autorizacion ${widget.authList.first.product.idProduct}"
+                  : "Sin productos",
               style: TextStyles.blue18SemiBoldIt,
             ))
           : Column(
@@ -919,8 +1140,8 @@ class _ShoppingCartState extends State<ShoppingCart> {
                               .where((element) => element.rank != "")
                               .map((e) => ProductSaleCardPriority(
                                   productCurrent: e,
-                                  update: (ProductModel productCurrent,
-                                      int isAdd) {
+                                  update:
+                                      (ProductModel productCurrent, int isAdd) {
                                     setState(() {
                                       provider.updateProductShopping(
                                           productCurrent, isAdd);
@@ -933,28 +1154,30 @@ class _ShoppingCartState extends State<ShoppingCart> {
                   height: 10,
                 ),
                 Visibility(
-                  visible: productListOther.isNotEmpty,
-                  child: 
-                Container(
-                    margin: const EdgeInsets.only(
-                        left: 15, right: 15, bottom: 10, top: 10),
-                    child: ButtonJunghanns(
-                        fun: () {
-                          setState(() {
-                            isOtherProduct = !isOtherProduct;
-                          });
-                        },
-                        decoration: isOtherProduct
-                            ? Decorations.redCardB30
-                            : Decorations.blueBorder12,
-                        style: TextStyles.white17_5,
-                        label:
-                            isOtherProduct ? "Regresar" : "Otros Productos"))),
+                    visible: productListOther.isNotEmpty,
+                    child: Container(
+                        margin: const EdgeInsets.only(
+                            left: 15, right: 15, bottom: 10, top: 10),
+                        child: ButtonJunghanns(
+                            fun: () {
+                              setState(() {
+                                isOtherProduct = !isOtherProduct;
+                              });
+                            },
+                            decoration: isOtherProduct
+                                ? Decorations.redCardB30
+                                : Decorations.blueBorder12,
+                            style: TextStyles.white17_5,
+                            label: isOtherProduct
+                                ? "Regresar"
+                                : "Otros Productos"))),
                 const SizedBox(
                   height: 10,
                 ),
                 Visibility(
-                    visible: provider.basketCurrent.sales.where((element) => element.number>0).isNotEmpty,
+                    visible: provider.basketCurrent.sales
+                        .where((element) => element.number > 0)
+                        .isNotEmpty,
                     child: Container(
                         margin: const EdgeInsets.only(
                             left: 15, right: 15, bottom: 10, top: 10),
@@ -963,37 +1186,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
                         alignment: Alignment.center,
                         child: ButtonJunghanns(
                           decoration: Decorations.blueBorder12,
-                          fun: () {
-                            if (widget.customerCurrent.payment.length > 1) {
-                              //si hay mas de un metodo agregamos select
-                              selectWayToPay();
-                            } else {
-                              if (widget.customerCurrent.payment.isNotEmpty) {
-                                //validamos que existan metodos de pago
-                                if (funCheckMethodPayment(
-                                    widget.customerCurrent.payment.first)) {
-                                  if (widget.customerCurrent.payment.first.getIsFolio()) {
-                                    //habilitamos el modal para folio
-                                    setState(() {
-                                      isRequestFolio = true;
-                                    });
-                                  } else {
-                                    showConfirmSale(
-                                        widget.customerCurrent.payment.first);
-                                  }
-                                }
-                              } else {
-                                Fluttertoast.showToast(
-                                  msg:
-                                      "No se encontraron metodos de pago ${widget.authList.isNotEmpty ? "para la autorización ${widget.authList.first.idAuth}" : ""}",
-                                  timeInSecForIosWeb: 2,
-                                  toastLength: Toast.LENGTH_LONG,
-                                  gravity: ToastGravity.TOP,
-                                  webShowClose: true,
-                                );
-                              }
-                            }
-                          },
+                          fun: caseSale,
                           label: "Terminar venta",
                           style: TextStyles.white17_5,
                         )))
@@ -1125,37 +1318,39 @@ class _ShoppingCartState extends State<ShoppingCart> {
           padding: const EdgeInsets.all(18),
           width: size.width * .75,
           decoration: Decorations.whiteS1Card,
-          child: folios.isEmpty?Container(
-            alignment: Alignment.center,
-            child: DefaultTextStyle(
-                style: TextStyles.blueJ22Bold,
-                child: const Text("No se encontraron folios Asignados"))): Stack(
-            children: [
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  //Title
-                  titleFolio(),
-                  //Field
-                  Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+          child: folios.isEmpty
+              ? Container(
+                  alignment: Alignment.center,
+                  child: DefaultTextStyle(
+                      style: TextStyles.blueJ22Bold,
+                      child: const Text("No se encontraron folios Asignados")))
+              : Stack(
+                  children: [
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        folioField(),
-                        Container(
-                            padding: const EdgeInsets.only(
-                                top: 4, left: 10, bottom: 8),
-                            child: Text(
-                              errFolio,
-                              style: TextStyles.redJ13N,
-                            )),
-                      ]),
-                  //Buttom Validate
-                  buttomFolio()
-                ],
-              ),
-            ],
-          )),
+                        //Title
+                        titleFolio(),
+                        //Field
+                        Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              folioField(),
+                              Container(
+                                  padding: const EdgeInsets.only(
+                                      top: 4, left: 10, bottom: 8),
+                                  child: Text(
+                                    errFolio,
+                                    style: TextStyles.redJ13N,
+                                  )),
+                            ]),
+                        //Buttom Validate
+                        buttomFolio()
+                      ],
+                    ),
+                  ],
+                )),
     );
   }
 
@@ -1222,8 +1417,9 @@ class _ShoppingCartState extends State<ShoppingCart> {
             isLoading = true;
             isRequestFolio = false;
           });
-          var exits = folios
-              .where((element) =>  element.getValid(widget.customerCurrent.payment.first.wayToPay)&&element.number == int.parse(folioC.text));
+          var exits = folios.where((element) =>
+              element.getValid(widget.customerCurrent.payment.first.wayToPay) &&
+              element.number == int.parse(folioC.text));
           if (exits.isEmpty) {
             setState(() {
               isLoading = false;
@@ -1236,7 +1432,14 @@ class _ShoppingCartState extends State<ShoppingCart> {
               setState(() {
                 isLoading = false;
               });
-              showConfirmSale(widget.customerCurrent.payment.first);
+              if (widget.authList.isNotEmpty) {
+                if (widget.authList.first.authText == "PRESTAMO") {
+                  //validamos que sea un prestamo para desplegar el picker de fecha
+                  _selectDate(context);
+                }
+              } else {
+                showConfirmSale(widget.customerCurrent.payment.first);
+              }
             }
           }
         } else {

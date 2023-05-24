@@ -1,3 +1,4 @@
+import 'package:junghanns/models/authorization.dart';
 import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/models/product.dart';
 import 'package:junghanns/preferences/global_variables.dart';
@@ -24,11 +25,15 @@ class BasketModel {
   int idAuth;
   int idDataOrigin;
   int folio;
+  
   double lat;
   double lng;
   double totalPrice;
   double addPrice;
   String typeOperation;
+  DateTime datePrestamo;
+  Map<String,dynamic> brandJug;
+  AuthorizationModel authCurrent;
   List<ProductModel> sales;
   List<WayToPay> waysToPay;
 
@@ -42,6 +47,9 @@ class BasketModel {
       required this.waysToPay,
       required this.idDataOrigin,
       required this.folio,
+      required this.brandJug,
+      required this.datePrestamo,
+      required this.authCurrent,
       required this.typeOperation,
       required this.totalPrice,
       this.addPrice=0});
@@ -58,9 +66,12 @@ class BasketModel {
         idDataOrigin: -1,
         folio: -1,
         typeOperation: "V",
+        brandJug: {},
+        authCurrent: AuthorizationModel.fromState(),
+        datePrestamo: DateTime.now(),
         totalPrice: 0);
   }
-  factory BasketModel.fromInit(CustomerModel customerCurrent) {
+  factory BasketModel.fromInit(CustomerModel customerCurrent,AuthorizationModel? auth) {
     return BasketModel(
         idCustomer: customerCurrent.idClient,
         idRoute: prefs.idRouteD,
@@ -69,11 +80,17 @@ class BasketModel {
         sales: [],
         idAuth: -1,
         waysToPay: [],
+        brandJug: {},
         idDataOrigin: customerCurrent.id,
+        authCurrent: auth??AuthorizationModel.fromState(),
         folio: -1,
         typeOperation: "V",
         totalPrice: 0,
+        datePrestamo: DateTime.parse("${DateTime.now().year}-${(DateTime.now().month+1)>9?(DateTime.now().month+1)<=12?DateTime.now().month+1:01:"0${(DateTime.now().month+1)}"}-01"),
         addPrice: (customerCurrent.priceS * customerCurrent.numberS)
         );
   }
+  set auth(AuthorizationModel authCurrent)=>this.authCurrent=authCurrent;
+  set datePrestamoCurrent(DateTime datePrestamo)=>this.datePrestamo=datePrestamo;
+  set jugCurrent(Map<String,dynamic> brandJug)=>this.brandJug=brandJug;
 }

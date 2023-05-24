@@ -79,7 +79,7 @@ class _QRSellerState extends State<QRSeller> {
                                     .where((element) => element["url"] != null)
                                     .isEmpty
                                 ? ""
-                                : "Por favor selecciona una opcion para poder generar el Qr",
+                                : "Por favor selecciona una opcion para poder generar el QR",
                         style: TextStyles.blue19_4,
                         textAlign: TextAlign.center,
                       ),
@@ -92,7 +92,11 @@ class _QRSellerState extends State<QRSeller> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                           Container(
-                              decoration: Decorations.whiteSblackCard,
+                              decoration: list
+                                          .where((element) =>
+                                              element["url"] != null)
+                                          .length >
+                                      1?Decorations.whiteSblackCard:const BoxDecoration(),
                               margin:
                                   const EdgeInsets.only(left: 15, right: 15),
                               padding:
@@ -104,8 +108,10 @@ class _QRSellerState extends State<QRSeller> {
                                           .length >
                                       1
                                   ? DropdownButton<Map<String, dynamic>>(
-                                      isExpanded: true,dropdownColor: ColorsJunghanns.lighGrey,
-                                      borderRadius: BorderRadius.all(Radius.circular(12)),
+                                      isExpanded: true,
+                                      dropdownColor: ColorsJunghanns.lighGrey,
+                                      borderRadius:
+                                          BorderRadius.all(Radius.circular(12)),
                                       underline: Container(),
                                       value: nameCurrent,
                                       icon: const Icon(
@@ -179,7 +185,7 @@ class _QRSellerState extends State<QRSeller> {
                                 fit: BoxFit.contain,
                               )),
                           Container(
-                              decoration: Decorations.whiteBorder12,
+                              decoration: Decorations.whiteSblackCard,
                               margin: EdgeInsets.only(
                                   left: MediaQuery.of(context).size.width * .1,
                                   right: MediaQuery.of(context).size.width * .1,
@@ -203,142 +209,167 @@ class _QRSellerState extends State<QRSeller> {
                     : const SizedBox(),
                 nameCurrent['url'] != null
                     ? Padding(
-                      padding:EdgeInsets.only(left: MediaQuery.of(context).size.width*.1,right: MediaQuery.of(context).size.width*.1,bottom: 20),
-                      child:Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          GestureDetector(
-                            onTap: () {
-                              screenshotController
-                                  .captureFromWidget(
-                                      InheritedTheme.captureAll(
-                                          context,
-                                          Material(
-                                              child: Container(
-                                                  padding:
-                                                      const EdgeInsets.all(15),
-                                                  decoration:
-                                                      const BoxDecoration(
-                                                          image:
-                                                              DecorationImage(
-                                                                  image:
-                                                                      AssetImage(
-                                                                    "assets/images/junghannsWater.png",
-                                                                  ),
-                                                                  fit: BoxFit
-                                                                      .cover)),
-                                                  height: MediaQuery.of(context)
-                                                      .size
-                                                      .height,
-                                                  width: MediaQuery.of(context)
-                                                      .size
-                                                      .width,
-                                                  child: Column(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .spaceAround,
-                                                    children: [
-                                                      Image.asset(
-                                                        "assets/images/junghannsLogo.png",
-                                                      ),
-                                                      Expanded(
-                                                          child: Container(
-                                                              alignment:
-                                                                  Alignment
-                                                                      .center,
-                                                              child: Text(
-                                                                  nameCurrent[
-                                                                      "name"],
-                                                                  style: TextStyles
-                                                                      .blue15SemiBold))),
-                                                      qrWidget()
-                                                    ],
-                                                  )))),
-                                      delay: Duration(seconds: 1))
-                                  .then((capturedImage) async {
-                                final tempDir = await getTemporaryDirectory();
-                                File file =
-                                    await File('${tempDir.path}/image.png')
-                                        .create();
-                                file.writeAsBytesSync(capturedImage);
-                                await Share.shareFiles([file.path],);
-                              }); 
-                            },
-                            child: Image.asset(
-                              "assets/icons/shared.png",
-                              width: 40,
+                        padding: EdgeInsets.only(
+                            left: MediaQuery.of(context).size.width * .1,
+                            right: MediaQuery.of(context).size.width * .1,
+                            bottom: 20),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            GestureDetector(
+                              onTap: () {
+                                screenshotController
+                                    .captureFromWidget(
+                                        InheritedTheme.captureAll(
+                                            context,
+                                            Material(
+                                                child: Container(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            15),
+                                                    decoration:
+                                                        const BoxDecoration(
+                                                            image:
+                                                                DecorationImage(
+                                                                    image:
+                                                                        AssetImage(
+                                                                      "assets/images/junghannsWater.png",
+                                                                    ),
+                                                                    fit: BoxFit
+                                                                        .cover)),
+                                                    height:
+                                                        MediaQuery.of(context)
+                                                            .size
+                                                            .height,
+                                                    width:
+                                                        MediaQuery.of(context)
+                                                            .size
+                                                            .width,
+                                                    child: Column(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .spaceAround,
+                                                      children: [
+                                                        Image.asset(
+                                                          "assets/images/junghannsLogo.png",
+                                                        ),
+                                                        Expanded(
+                                                            child: Container(
+                                                                alignment:
+                                                                    Alignment
+                                                                        .center,
+                                                                child: Text(
+                                                                    nameCurrent[
+                                                                        "name"],
+                                                                    style: TextStyles
+                                                                        .blue15SemiBold))),
+                                                        qrWidget()
+                                                      ],
+                                                    )))),
+                                        delay: Duration(seconds: 1))
+                                    .then((capturedImage) async {
+                                  final tempDir = await getTemporaryDirectory();
+                                  File file =
+                                      await File('${tempDir.path}/image.png')
+                                          .create();
+                                  file.writeAsBytesSync(capturedImage);
+                                  await Share.shareFiles(
+                                    [file.path],
+                                  );
+                                });
+                              },
+                              child:Column(
+                                children: [
+                                  Image.asset(
+                                "assets/icons/shared.png",
+                                width: 40,
+                              ),
+                              const SizedBox(
+                                height: 5,
+                              ),
+                              Text("Compartir",style: TextStyles.grey15Itw,)
+                                ],
+                              )
                             ),
-                          ),
-                          GestureDetector(
-                            onTap: () {
-                              screenshotController
-                                  .captureFromWidget(
-                                      InheritedTheme.captureAll(
-                                          context,
-                                          Material(
-                                              child: Container(
-                                                  padding:
-                                                      const EdgeInsets.all(30),
-                                                  decoration:
-                                                      const BoxDecoration(
-                                                          image:
-                                                              DecorationImage(
-                                                                  image:
-                                                                      AssetImage(
-                                                                    "assets/images/junghannsWater.png",
-                                                                  ),
-                                                                  fit: BoxFit
-                                                                      .cover)),
-                                                  height: MediaQuery.of(context)
-                                                      .size
-                                                      .height,
-                                                  width: MediaQuery.of(context)
-                                                      .size
-                                                      .width,
-                                                  child: Column(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .spaceAround,
-                                                    children: [
-                                                      Image.asset(
-                                                        "assets/images/junghannsLogo.png",
-                                                      ),
-                                                      Expanded(
-                                                          child: Container(
-                                                              alignment:
-                                                                  Alignment
-                                                                      .center,
-                                                              child: Text(
-                                                                  nameCurrent[
-                                                                      "name"],
-                                                                  style: TextStyles
-                                                                      .blue15SemiBold))),
-                                                      qrWidget()
-                                                    ],
-                                                  )))),
-                                      delay: Duration(seconds: 1))
-                                  .then((capturedImage) async {
-                                final tempDir = await getTemporaryDirectory();
-                                File file =
-                                    await File('${tempDir.path}/${nameCurrent["name"]}.png')
-                                        .create();
-                                file.writeAsBytesSync(capturedImage);
-                                Fluttertoast.showToast(
-          msg: "Guardado en \n $tempDir",
-          timeInSecForIosWeb: 2,
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.TOP,
-          webShowClose: true,
-        );
-                              });
-                            },
-                            child: Image.asset(
-                              "assets/icons/save.png",
-                              width: 40,
+                            GestureDetector(
+                              onTap: () {
+                                screenshotController
+                                    .captureFromWidget(
+                                        InheritedTheme.captureAll(
+                                            context,
+                                            Material(
+                                                child: Container(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            30),
+                                                    decoration:
+                                                        const BoxDecoration(
+                                                            image:
+                                                                DecorationImage(
+                                                                    image:
+                                                                        AssetImage(
+                                                                      "assets/images/junghannsWater.png",
+                                                                    ),
+                                                                    fit: BoxFit
+                                                                        .cover)),
+                                                    height:
+                                                        MediaQuery.of(context)
+                                                            .size
+                                                            .height,
+                                                    width:
+                                                        MediaQuery.of(context)
+                                                            .size
+                                                            .width,
+                                                    child: Column(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .spaceAround,
+                                                      children: [
+                                                        Image.asset(
+                                                          "assets/images/junghannsLogo.png",
+                                                        ),
+                                                        Expanded(
+                                                            child: Container(
+                                                                alignment:
+                                                                    Alignment
+                                                                        .center,
+                                                                child: Text(
+                                                                    nameCurrent[
+                                                                        "name"],
+                                                                    style: TextStyles
+                                                                        .blue15SemiBold))),
+                                                        qrWidget()
+                                                      ],
+                                                    )))),
+                                        delay: Duration(seconds: 1))
+                                    .then((capturedImage) async {
+                                  final tempDir = await getTemporaryDirectory();
+                                  File file = await File(
+                                          '${tempDir.path}/${nameCurrent["name"]}.png')
+                                      .create();
+                                  file.writeAsBytesSync(capturedImage);
+                                  Fluttertoast.showToast(
+                                    msg: "Guardado en \n $tempDir",
+                                    timeInSecForIosWeb: 2,
+                                    toastLength: Toast.LENGTH_LONG,
+                                    gravity: ToastGravity.TOP,
+                                    webShowClose: true,
+                                  );
+                                });
+                              },
+                              child: Column(
+                                children:[
+                                Image.asset(
+                                "assets/icons/save.png",
+                                width: 40,
+                              ),
+                              const SizedBox(
+                                height: 5,
+                              ),
+                              Text("Guardar",style: TextStyles.grey15Itw,)])
                             ),
-                          ),
-                        ],
-                      ))
+                          ],
+                        ))
                     : Container()
               ],
             )));
@@ -360,7 +391,6 @@ class _QRSellerState extends State<QRSeller> {
                   gapless: true,
                   version: QrVersions.auto,
                   padding: const EdgeInsets.all(10),
-                  semanticsLabel: '',
                   backgroundColor: Colors.transparent,
                   foregroundColor: ColorsJunghanns.blue,
                 )

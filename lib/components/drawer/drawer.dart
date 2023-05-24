@@ -9,6 +9,7 @@ import 'package:junghanns/models/stop_ruta.dart';
 import 'package:junghanns/pages/debug/debug.dart';
 import 'package:junghanns/pages/home/atendidos.dart';
 import 'package:junghanns/pages/home/call.dart';
+import 'package:junghanns/pages/transfer/transfer.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/provider/provider.dart';
 import 'package:junghanns/services/store.dart';
@@ -144,13 +145,21 @@ drawer(ProviderJunghanns provider, BuildContext context,
                                             const Call())),
                                 "assets/icons/menuOp5B.png",
                                 "Cliente llama"),
+                                item(
+                                () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute<void>(
+                                        builder: (BuildContext context) =>
+                                            const Transfer())),
+                                "assets/icons/menuOp4B.png",
+                                "Transferencias"),
                             item(
                                 () => Navigator.push(
                                     context,
                                     MaterialPageRoute<void>(
                                         builder: (BuildContext context) =>
                                             const Atendidos())),
-                                "assets/icons/menuOp4B.png",
+                                "assets/icons/iconCheck.png",
                                 "Atendidos"),
                             item(
                                 () => Navigator.push(
@@ -158,8 +167,9 @@ drawer(ProviderJunghanns provider, BuildContext context,
                                     MaterialPageRoute<void>(
                                         builder: (BuildContext context) =>
                                             const Debug())),
-                                "assets/icons/menuOp4B.png",
-                                "Debug")
+                                "assets/icons/observationIcon.png",
+                                "Debug"),
+                            
                           ],
                         ),
                       )),
@@ -177,7 +187,7 @@ drawer(ProviderJunghanns provider, BuildContext context,
                                                 context,
                                                 () => updateStatus(
                                                     provider, "inicio_comida"),
-                                                "inicio_comida");
+                                                "inicio_comida",false);
                                           },
                                           child: Container(
                                               padding: const EdgeInsets.all(10),
@@ -214,7 +224,7 @@ drawer(ProviderJunghanns provider, BuildContext context,
                                         await showYesNot(
                                             context,
                                             () => updateStatus(provider, "fin"),
-                                            "fin");
+                                            "fin",false);
                                       },
                                       child: Container(
                                           padding: const EdgeInsets.all(10),

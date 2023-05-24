@@ -4,7 +4,6 @@ import 'package:junghanns/models/shopping_basket.dart';
 
 class MethodPayment {
   String wayToPay;
-  String typeWayToPay;
   String type;
   int idProductService;
   int idAuth;
@@ -13,7 +12,6 @@ class MethodPayment {
 
   MethodPayment(
       {required this.wayToPay,
-      required this.typeWayToPay,
       required this.type,
       required this.idProductService,
       required this.description,
@@ -23,7 +21,6 @@ class MethodPayment {
   factory MethodPayment.fromState() {
     return MethodPayment(
         wayToPay: "Contado",
-        typeWayToPay: "E",
         type: "Atributo",
         idProductService: -1,
         description: "",
@@ -31,12 +28,11 @@ class MethodPayment {
   }
   factory MethodPayment.fromWhitOutConnection(){
     return MethodPayment(
-      wayToPay: "Efectivo", typeWayToPay: "E", type: "Atributo", idProductService: -1, description: "", number: -1);
+      wayToPay: "Efectivo",type: "Atributo", idProductService: -1, description: "", number: -1);
   } 
   factory MethodPayment.fromService(Map<String, dynamic> data) {
     return MethodPayment(
         wayToPay: data["formaPago"] ?? "",
-        typeWayToPay: data["tipoFormaPago"],
         type: data["type"],
         idProductService: data["idProductoServicio"] ?? -1,
         idAuth: data["idAutorizacion"]??-1,
@@ -46,7 +42,6 @@ class MethodPayment {
   getMap(){
     return {
       "formaPago":wayToPay,
-      "tipoFormaPago":typeWayToPay,
       "type":type,
       "idProductoServicio":idProductService,
       "idAutorizacion":idAuth,

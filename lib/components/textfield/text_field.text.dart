@@ -4,8 +4,9 @@ import 'package:junghanns/styles/color.dart';
 import 'package:junghanns/styles/text.dart';
 
 Widget textField(TextEditingController controller, String hintText,
-      Widget iconS, bool isPass,{bool isObscure=true,Function? fun,int max=20}) {
-    return SizedBox(
+      Widget iconS, bool isPass,{bool isObscure=true,Function? fun,int max=20,BoxDecoration decoration=const BoxDecoration()}) {
+    return Container(
+      decoration: decoration,
       height: 50,
         child: TextFormField(
             controller: controller,

@@ -100,7 +100,7 @@ Future<Answer> validateOTP(String token,String code,double lat,double lng) async
 
 Future<Answer> getClientSecret(String user, String password) async {
   log("/AuthServices <getClientSecret>");
-  //try {
+  try {
     var body = await http.get(
       Uri.parse("${prefs.urlBase}token?q=secret&u=$user&p=$password"),
       headers: {
@@ -108,18 +108,19 @@ Future<Answer> getClientSecret(String user, String password) async {
         "x-api-key": apiKey,
       },
     );
-        var response=jsonDecode(body.body);
-    if (response["client_secret"] != null) {
-      log("/AuthServices <getClientSecret> Successfull ${response.toString()}");
-      return Answer(body: response, message: "", error: false);
-    } else {
-      log("/AuthServices <getClientSecret> Fail ${response.toString()}");
-      return Answer(body: response, message: response.toString(), error: true);
-    }
-  // } catch (e) {
-  //   log("/AuthServices <getClientSecret> Catch ${e.toString()}");
-  //   return Answer(body: e, message: "Algo salio mal, revisa tu conexion a internet.", error: true);
-  // }
+        //var response=jsonDecode(body.body);
+        return Answer.fromService(body);
+    // if (response["client_secret"] != null) {
+    //   log("/AuthServices <getClientSecret> Successfull ${response.toString()}");
+    //   return Answer(body: response, message: "", error: false);
+    // } else {
+    //   log("/AuthServices <getClientSecret> Fail ${response.toString()}");
+    //   return Answer(body: response, message: response.toString(), error: true);
+    // }
+  } catch (e) {
+    log("/AuthServices <getClientSecret> Catch ${e.toString()}");
+    return Answer(body: e, message: "Conexion inestable con el back jusoft", error: true);
+  }
 }
 
 Future<Answer> getToken(String user) async {
@@ -154,29 +155,29 @@ Future<Answer> getToken(String user) async {
 Future<Answer> login(Map<String, dynamic> data) async {
   log("/AuthServices <login>");
   try {
-    var response = jsonDecode((await http.post(Uri.parse("${prefs.urlBase}loginruta"),
+    var response = await http.post(Uri.parse("${prefs.urlBase}loginruta"),
             headers: {
               HttpHeaders.contentTypeHeader: 'application/json; charset=UTF-8',
               "x-api-key": apiKey,
               "client_secret": prefs.clientSecret,
               "Authorization": "Bearer ${prefs.token}"
             },
-            body: jsonEncode(data)))
-        .body);
-    if (response["id_usuario"] != null) {
-      log("/AuthServices <login> Successfull ${response.toString()}");
-      return Answer(body: response, message: "", error: false);
-    } else {
-      log("/AuthServices <login> Fail ${response.toString()}");
-      return Answer(
-          body: response,
-          message: "Algo salio mal, intentalo mas tarde.",
-          error: true);
-    }
+            body: jsonEncode(data));
+        return Answer.fromService(response);
+    // if (response["id_usuario"] != null) {
+    //   log("/AuthServices <login> Successfull ${response.toString()}");
+    //   return Answer(body: response, message: "", error: false);
+    // } else {
+    //   log("/AuthServices <login> Fail ${response.toString()}");
+    //   return Answer(
+    //       body: response,
+    //       message: "Algo salio mal, intentalo mas tarde.",
+    //       error: true);
+    // }
   } catch (e) {
     log("/AuthServices <login> Catch ${e.toString()}");
     return Answer(
-        body: e, message: "Algo salio mal, revisa tu conexion a internet.", error: true);
+        body: e, message: "Conexion inestable con el back jusoft", error: true);
   }
 }
 Future<Answer> updateToken(String toke) async {

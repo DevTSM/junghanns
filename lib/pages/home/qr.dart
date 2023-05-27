@@ -206,7 +206,7 @@ class _QRSellerState extends State<QRSeller> {
                               ))
                         ],
                       )
-                    : const SizedBox(),
+                    : const SizedBox(height: 35,),
                 nameCurrent['url'] != null
                     ? Padding(
                         padding: EdgeInsets.only(
@@ -376,24 +376,25 @@ class _QRSellerState extends State<QRSeller> {
   }
 
   Widget qrWidget() {
-    return Expanded(
-        flex: 2,
-        child: SizedBox(
+    return SizedBox(
           width: MediaQuery.of(context).size.width -
               (list.where((element) => element["url"] != null).isEmpty
                   ? 0
                   : 100),
           height: MediaQuery.of(context).size.width - 100,
           child: nameCurrent["url"] != null
-              ? QrImage(
+              ? Container(
+                alignment: Alignment.center,
+                decoration: Decorations.white2Card,
+                child:QrImage(
                   size: MediaQuery.of(context).size.width - 100,
                   data: nameCurrent["url"],
                   gapless: true,
                   version: QrVersions.auto,
-                  padding: const EdgeInsets.all(10),
-                  backgroundColor: Colors.transparent,
+                  padding: const EdgeInsets.all(15),
+                  //backgroundColor: ColorsJunghanns.white,                 
                   foregroundColor: ColorsJunghanns.blue,
-                )
+                ))
               : Container(
                   padding:
                       list.where((element) => element["url"] != null).isEmpty
@@ -407,7 +408,7 @@ class _QRSellerState extends State<QRSeller> {
                         : "assets/images/jh_wpa_ele-02.png",
                     fit: BoxFit.contain,
                   )),
-        ));
+        );
   }
 
   Future<dynamic> ShowCapturedWidget(

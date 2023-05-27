@@ -214,7 +214,7 @@ drawer(ProviderJunghanns provider, BuildContext context,
                                 width: 20,
                               ),
                               Visibility(
-                                visible: isFinRuta,
+                                visible: isFinRuta&&prefs.statusRoute!="",
                                 child: 
                               Expanded(
                                   child: GestureDetector(

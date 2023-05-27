@@ -10,6 +10,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:junghanns/components/button.dart';
 import 'package:junghanns/components/loading.dart';
+import 'package:junghanns/components/modal/showlocation.dart';
 import 'package:junghanns/components/modal/yes_not.dart';
 import 'package:junghanns/models/employee.dart';
 import 'package:junghanns/models/saleCambaceo.dart';
@@ -38,13 +39,15 @@ class _NewCustomerState extends State<NewCustomer> {
   late DateTime dateAux, dateBirth;
   late bool isDate;
   //
-  late TextEditingController nameC, lastNameC, companyC, contactC;
+  late TextEditingController nameC, lastNameC, lastNameMC,companyC, contactC;
   late TextEditingController phoneC, emailC, streetC, numEc, numIc;
   late TextEditingController colonyC, townC, codeC, stateC, referenceC,streetR1,streetR2,observacion,emailCo;
+  late TextEditingController numberChildren,numberAdults;
   //
   late String errLatLng, errName, errLastN, errDateB, errCompany, errContact;
   late String errPhone, errEmail, errTypeStreet, errStreet, errNumE;
   late String errColony, errTown, errState, errCode, errTypeSaleC, errEmployee,inicio,fin,errorInicio,errorFin;
+  late String errAdults,errChildren,errMaterno;
   //
   late TypeOfStreetModel typeStreetS;
   late List<TypeOfStreetModel> typesStreetsList;
@@ -73,6 +76,9 @@ class _NewCustomerState extends State<NewCustomer> {
     //
     nameC = TextEditingController();
     lastNameC = TextEditingController();
+    lastNameMC=TextEditingController();
+    numberAdults=TextEditingController();
+    numberChildren=TextEditingController();
     phoneC = TextEditingController();
     emailC = TextEditingController();
     streetC = TextEditingController();
@@ -93,13 +99,30 @@ class _NewCustomerState extends State<NewCustomer> {
     dateBirth = dateAux = DateTime(DateTime.now().year - 50);
     isDate = false;
     //
-    errLatLng = errName = errLastN = errDateB = errCompany = errContact = "";
-    errPhone = errEmail = errTypeStreet = errStreet = errNumE = "";
-    errColony = errTown = errState = errCode = errTypeSaleC = errEmployee = "";
+    errLatLng="";
+    errName =""; 
+    errLastN = "";
+    errDateB = "";
+    errCompany = "";
+    errContact = "";
+    errPhone = "";
+    errEmail = "";
+    errTypeStreet = "";
+    errStreet = "";
+    errNumE = "";
+    errColony = "";
+    errTown = "";
+    errState = "";
+    errCode = "";
+    errTypeSaleC = "";
+    errEmployee = "";
     inicio="Inicio";
     fin="Fin";
     errorInicio="";
     errorFin="";
+    errAdults="";
+    errChildren="";
+    errMaterno="";
     //
     typesStreetsList = [];
     typeStreetS = TypeOfStreetModel.fromState();
@@ -276,9 +299,13 @@ class _NewCustomerState extends State<NewCustomer> {
                     "*Nombre(s)", "Nombre(s)", errName, nameC, false, false, 1)
                 : Container(),
             typeCustomerS == "PARTICULAR"
-                ? textField("*Apellidos", "Apellidos", errLastN, lastNameC,
+                ? textField("*Apellidos paterno", "Apellido paterno", errLastN, lastNameC,
                     false, false, 1)
                 : Container(),
+                Visibility(
+                  visible: typeCustomerS == "PARTICULAR",
+                  child: textField("*Apellido materno", "Apellido materno", errMaterno, lastNameMC,
+                    false, false, 1)),
             typeCustomerS == "PARTICULAR"
                 ? buttonField(
                     "*Fecha Nacimiento",
@@ -380,6 +407,14 @@ class _NewCustomerState extends State<NewCustomer> {
                 errorFin)),
               ],
             ),
+            Visibility(
+                  visible: typeCustomerS == "PARTICULAR",
+                  child: textField("* # de niños en casa (<12)", "1", errChildren, numberChildren,
+                    false, false, 1)),
+                    Visibility(
+                  visible: typeCustomerS == "PARTICULAR",
+                  child: textField("* # de adultos en casa (12+)", "1", errAdults, numberAdults,
+                    false, false, 1)),
             textField("Observación", "Observación",
                 "", observacion, false, false, 3),
             buttonField(
@@ -411,7 +446,27 @@ class _NewCustomerState extends State<NewCustomer> {
   }
 
   Widget buttonLocation() {
-    return Column(
+    return lat!=0&&lng!=0?Row(
+      children: [
+        Expanded(child:ButtonJunghanns(
+                fun: () {
+                  log("Fun update location");
+                  funButtonLocation();
+                },
+                decoration: Decorations.blueBorder12,
+                style: TextStyles.white14SemiBold,
+                label: "Actualizar ubicación")),
+                const SizedBox(
+                  width: 15,
+                ),
+        Expanded(child:ButtonJunghanns(
+                fun: ()=>showLocation(context, refreshLocation, lat, lng),
+                decoration: Decorations.greenBorder12,
+                style: TextStyles.white14SemiBold,
+                label: "Ver ubicación"))
+
+      ],
+    ):Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
@@ -438,7 +493,12 @@ class _NewCustomerState extends State<NewCustomer> {
       ],
     );
   }
+  refreshLocation(){
+    Navigator.pop(context);
+    funButtonLocation();
+    showLocation(context, refreshLocation, lat, lng);
 
+  }
   funButtonLocation() async {
     setState(() {
       isLoading = true;
@@ -775,6 +835,7 @@ class _NewCustomerState extends State<NewCustomer> {
               }).toList());
         });
   }
+  
   void selectHour(bool isInicio) async {
     await showCupertinoModalPopup<int>(
         context: context,
@@ -806,6 +867,7 @@ class _NewCustomerState extends State<NewCustomer> {
       },
     );
   }
+  
   Widget showItemHour(String item,bool isInicio) {
     return GestureDetector(
       child: Container(
@@ -828,6 +890,7 @@ class _NewCustomerState extends State<NewCustomer> {
       },
     );
   }
+  
   Widget buttonContinue() {
     return Container(
       height: 45,

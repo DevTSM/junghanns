@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
+import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:junghanns/components/loading.dart';
+import 'package:junghanns/components/need_async.dart';
 import 'package:junghanns/components/without_internet.dart';
 import 'package:junghanns/components/without_location.dart';
 import 'package:junghanns/models/customer.dart';
@@ -67,9 +69,7 @@ class _DebugState extends State<Debug> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Visibility(
-                    visible: provider.connectionStatus == 4,
-                    child: const WithoutInternet()),
+                provider.connectionStatus == 4? const WithoutInternet():provider.isNeedAsync?const NeedAsync():Container(),
                 const SizedBox(
                   height: 15,
                 ),
@@ -103,6 +103,11 @@ class _DebugState extends State<Debug> {
                                           ]),
                                           overflow: TextOverflow.ellipsis),
                                         const SizedBox(height: 5,),
+                                        Text(
+                                              "Id registro: ${snapshot.data?[index]
+                                                        ["id"]??0}",
+                                              style: TextStyles.blue16_4,
+                                            ),
                                           Text(
                                               "Productos: ${jsonDecode(snapshot.data?[index]
                                                         ["saleItems"])}",
@@ -113,7 +118,13 @@ class _DebugState extends State<Debug> {
                                               "Metodos: ${jsonDecode(snapshot.data?[index]
                                                         ["paymentMethod"])}",
                                               style: TextStyles.blue16_4,
-                                            )
+                                            ),
+                                            snapshot.data?[index]
+                                                        ["fecha"]!=null?Text(
+                                              "Hora venta: ${DateFormat('hh:mm:ss a').format(DateTime.parse(snapshot.data?[index]
+                                                        ["fecha"]))}",
+                                              style: TextStyles.blue16_4,
+                                            ):Container()
                                       
                                     ])),
                                     IconButton(

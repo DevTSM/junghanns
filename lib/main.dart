@@ -62,6 +62,7 @@ class _MyAppState extends State<MyApp> {
     _notificationService.init();
     FirebaseMessaging.onMessage.listen((RemoteMessage event) {
       log("message recieved\n${event.notification!.body}\n${event.data.values}");
+      log(event.data.isEmpty.toString());
       NotificationService _notificationService = NotificationService();
       _notificationService.showNotifications(
           "${event.notification!.title}", "${event.notification!.body}");

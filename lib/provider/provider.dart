@@ -1,14 +1,11 @@
 // ignore_for_file: unnecessary_getters_setters
 
-import 'dart:async';
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:junghanns/models/authorization.dart';
 import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/models/product.dart';
 import 'package:junghanns/models/shopping_basket.dart';
-import 'package:junghanns/util/connection.dart';
+import 'package:junghanns/preferences/global_variables.dart';
 
 class ProviderJunghanns extends ChangeNotifier {
   //VARIABLES
@@ -22,8 +19,10 @@ class ProviderJunghanns extends ChangeNotifier {
   bool _permission = true;
   bool _asyncProcess = false;
   bool _isStatusloading = false;
+  bool _isNeedAsync=false;
 
   //GETS
+  bool get isNeedAsync=>_isNeedAsync;
   bool get permission => _permission;
   bool get isStatusloading => _isStatusloading;
   bool get asyncProcess => _asyncProcess;
@@ -33,7 +32,12 @@ class ProviderJunghanns extends ChangeNotifier {
   double get downloadRate => _downloadRate;
   String get labelAsync => _labelAsync;
   String get path => _path;
+  Map<String,dynamic> get brand=> basketCurrent.brandJug;
   //SETS
+  set isNeedAsync(bool isNeedAsync){
+    _isNeedAsync=isNeedAsync;
+    notifyListeners();
+  }
   set isStatusloading(bool isStatusloading) {
     _isStatusloading = isStatusloading;
     notifyListeners();
@@ -78,12 +82,15 @@ class ProviderJunghanns extends ChangeNotifier {
     _labelAsync = labelAsync;
     notifyListeners();
   }
+  set brand(Map<String,dynamic> data){
+    basketCurrent.brandJug=data;
+    notifyListeners();
+  }
 
   //FUNCTIONS
   initShopping(CustomerModel customerCurrent,{AuthorizationModel? auth}) {
     basketCurrent = BasketModel.fromInit(customerCurrent,auth);
   }
-
   updateProductShopping(ProductModel productCurrent, int isAdd) {
     //TODO: verificacion de Autorizacion
     var exits = basketCurrent.sales
@@ -117,6 +124,12 @@ class ProviderJunghanns extends ChangeNotifier {
       basketCurrent.totalPrice += (e.price * e.number);
     }
     
+    notifyListeners();
+  }
+  getIsNeedAsync() async {
+    List<Map<String,dynamic>> salesPen= await handler.retrieveSales();
+    List<Map<String,dynamic>> stopPen=await handler.retrieveStopOffUpdate();
+    _isNeedAsync=salesPen.isNotEmpty||stopPen.isNotEmpty;
     notifyListeners();
   }
 }

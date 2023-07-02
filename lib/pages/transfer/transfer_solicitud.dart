@@ -10,6 +10,7 @@ import 'package:junghanns/components/modal/yes_not.dart';
 import 'package:junghanns/components/select.dart';
 import 'package:junghanns/components/textfield/text_field.text.dart';
 import 'package:junghanns/models/transfer.dart';
+import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/services/store.dart';
 import 'package:junghanns/styles/color.dart';
 import 'package:junghanns/styles/decoration.dart';
@@ -124,6 +125,7 @@ class _TransferNewState extends State<TransferNew> {
       } else {
         setState(() {
           routes = List.from(answer.body);
+          routes.removeWhere((element) => element["id"]==prefs.idRouteD);
           route = routes.isNotEmpty ? routes.first : {"id": 0};
         });
       }

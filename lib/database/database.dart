@@ -31,7 +31,7 @@ class DataBase {
         // 8=Eliminados
 
         await database.execute(
-          "CREATE TABLE customer(id INTEGER PRIMARY KEY, orden INTEGER , idCustomer INTEGER, idRoute INTEGER,type INTEGER, lat DOUBLE, lng DOUBLE, priceLiquid DOUBLE, byCollet DOUBLE, purse DOUBLE, name TEXT NOT NULL, address TEXT NOT NULL , nameRoute TEXT NOT NULL,typeVisit TEXT NOT NULL, category TEXT NOT NULL,days TEXT NOT NULL, img TEXT NOT NULL, observacion TEXT,auth TEXT,payment TEXT,color TEXT,config INTEGER,history TEXT,cargoAdicional TEXT,referenciaDomicilio TEXT)",
+          "CREATE TABLE customer(id INTEGER PRIMARY KEY, orden INTEGER , idCustomer INTEGER, idRoute INTEGER,type INTEGER, lat DOUBLE, lng DOUBLE, priceLiquid DOUBLE, byCollet DOUBLE, purse DOUBLE, name TEXT NOT NULL, address TEXT NOT NULL , nameRoute TEXT NOT NULL,typeVisit TEXT NOT NULL, category TEXT NOT NULL,days TEXT NOT NULL, img TEXT NOT NULL, observacion TEXT,auth TEXT,payment TEXT,color TEXT,config INTEGER,history TEXT,cargoAdicional TEXT,referenciaDomicilio TEXT,billing TEXT)",
         );
         //lista de paradas en falso
         await database.execute(
@@ -61,7 +61,7 @@ class DataBase {
         //ventas offLine
         //formas de pago y productos en jsonEncode
         await database.execute(
-          "CREATE TABLE sale(id INTEGER PRIMARY KEY AUTOINCREMENT,idCustomer INTEGER ,idRoute INTEGER, lat DOUBLE, lng DOUBLE, saleItems TEXT, idAuth INTEGER,paymentMethod TEXT,idOrigin INTEGER,folio INTEGER,type TEXT,isUpdate INTEGER,fecha_entrega TEXT,id_marca_garrafon INTEGER)",
+          "CREATE TABLE sale(id INTEGER PRIMARY KEY AUTOINCREMENT,idCustomer INTEGER ,idRoute INTEGER, lat DOUBLE, lng DOUBLE, saleItems TEXT, idAuth INTEGER,paymentMethod TEXT,idOrigin INTEGER,folio INTEGER,type TEXT,isUpdate INTEGER,fecha_entrega TEXT,id_marca_garrafon INTEGER,isError INTEGER,fecha_update TEXT)",
         );
         //
       },
@@ -104,7 +104,6 @@ class DataBase {
     final Database db = await initializeDB();
     for (var refill in refillList) {
       result = await db.insert('refill', refill.getMap());
-      log(result.toString());
     }
     return result;
   }
@@ -126,6 +125,13 @@ class DataBase {
     int result = 0;
     final Database db = await initializeDB();
     result = await db.insert('sale', sale);
+    log("se inserto la venta $result");
+    return result;
+  }
+  Future<int> insertBrand(Map<String, dynamic> brand) async {
+    int result = 0;
+    final Database db = await initializeDB();
+    result = await db.insert('sale', brand);
     log("se inserto la venta $result");
     return result;
   }
@@ -196,6 +202,11 @@ class DataBase {
     try{
     final db = await initializeDB();
     log("<=========== Agregando columnas =====>");
+    await db.execute("ALTER TABLE stopOff ADD fecha TEXT");
+    await db.execute("ALTER TABLE sale ADD fecha TEXT");
+    await db.execute("ALTER TABLE sale ADD fecha_update TEXT");
+    await db.execute("ALTER TABLE customer ADD billing TEXT");
+    await db.execute("ALTER TABLE sale ADD isError INTEGER");
     await db.execute("ALTER TABLE sale ADD id_marca_garrafon INTEGER");
     await db.execute("ALTER TABLE sale ADD fecha_entrega TEXT");
     }catch(e){
@@ -324,19 +335,19 @@ class DataBase {
     );
   }
 
-  Future<void> updateSale(int update, int id) async {
+  Future<void> updateSale(Map<String,dynamic>data, int id) async {
     // Get a reference to the database.
     final db = await initializeDB();
     // Update the given Dog.
     await db.update(
       'sale',
-      {'isUpdate': 1},
+      data,
       // Ensure that the Dog has a matching id.
       where: 'id = ?',
       // Pass the Dog's id as a whereArg to prevent SQL injection.
       whereArgs: [id],
     );
-    log("venta $id actualizada con $update");
+    log("venta $id actualizada con $data");
   }
   Future<void> updateStopOff(int update, int id) async {
     // Get a reference to the database.

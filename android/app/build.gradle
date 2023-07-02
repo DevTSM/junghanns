@@ -33,6 +33,7 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     compileSdkVersion 33
+    ndkVersion "25.1.8937393"
     lintOptions {
         disable 'InvalidPackage'
         disable "Instantiatable"
@@ -55,10 +56,10 @@ android {
 
     defaultConfig {
         applicationId "com.devts.junghanns"
-        minSdkVersion 21
+        minSdkVersion 26
         targetSdkVersion 33
-        versionCode 33
-        versionName "8.11"
+        versionCode 50
+        versionName "9.03"
     }
 
     signingConfigs {

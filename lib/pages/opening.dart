@@ -1,23 +1,19 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:developer';
+import 'dart:io';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:flutter/services.dart';
 import 'package:junghanns/database/async.dart';
-import 'package:junghanns/pages/async/openingAsync.dart';
 import 'package:junghanns/pages/auth/get_branch.dart';
 import 'package:junghanns/pages/home/home_principal.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/provider/provider.dart';
-import 'package:junghanns/services/store.dart';
 import 'package:junghanns/styles/color.dart';
-import 'package:junghanns/util/connection.dart';
 import 'package:linear_progress_bar/linear_progress_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:sqflite/sqflite.dart';
-
 import 'auth/login.dart';
 
 class Opening extends StatefulWidget {
@@ -29,6 +25,8 @@ class Opening extends StatefulWidget {
 }
 
 class _OpeningState extends State<Opening> {
+  static const platform = const MethodChannel('example.com/channel');
+  String _batteryLevel = 'Unknown battery level.';
   late ProviderJunghanns provider;
   late Connectivity _connectivity;
   late StreamSubscription<ConnectivityResult> _connectivitySubscription;
@@ -42,8 +40,11 @@ class _OpeningState extends State<Opening> {
     log("cliente secret =====> ${prefs.clientSecret}");
     log("token de acceso =====> ${prefs.token}");
     //TODO: URL
-    //prefs.urlBase=urlBase;
+    // prefs.urlBase=urlBaseManuality;
+    // prefs.labelCedis="BETA W";
     //prefs.qr="";
+    //prefs.version="8.11";
+    //getAndroidID();
     log("Version: ${prefs.version}");
     if (prefs.version != version ) {
       String urlBaseSafe=prefs.urlBase;
@@ -53,17 +54,48 @@ class _OpeningState extends State<Opening> {
       prefs.urlBase=urlBaseSafe;
       prefs.labelCedis=nameCEDIS;
       log("limpiando cache =====> ${prefs.urlBase}");
-      if(version=="8.11"){
+      if(version==validVersion){
       handler.addColumn();
       }
     }
     initConnectivity();
   }
-
+  Future<void> getAndroidID() async {
+  DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+  if (Platform.isAndroid) {
+    AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+    String? androidId = androidInfo.id;
+   log("#################################################### $androidId");
+  }
+}
+  Future<void> _generateRandomNumber() async {
+    String random;
+    try {
+      random = (await platform.invokeMethod('getRandomNumber')).toString();
+    } on PlatformException catch (e) {
+      random = "0";
+    }
+setState(() {
+      _batteryLevel = random.toString();
+    });
+    log("#################################################### $_batteryLevel");
+  }
   asyncDB() async {
+    //_generateRandomNumber();
     //validamos si ya se hizo la sincronizacion
+    //String macAddress =await FlutterDeviceIdentifier.serialCode;
+    // Fluttertoast.showToast(
+    //           msg: macAddress,
+    //           timeInSecForIosWeb: 2,
+    //           toastLength: Toast.LENGTH_LONG,
+    //           gravity: ToastGravity.TOP,
+    //           webShowClose: true,
+    //         );
+    //         log("################# $macAddress====>");
     Timer(const Duration(milliseconds: 2000), () async {
+      provider.getIsNeedAsync();
       if (prefs.isLogged) {
+        log(" Ultima Syncronizacion ${prefs.asyncLast}");
         DateTime dateLast=DateTime.parse(prefs.asyncLast != ""
                     ? prefs.asyncLast
                     : DateTime(2017, 9, 7, 17, 30).toString());

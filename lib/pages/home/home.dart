@@ -9,6 +9,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:junghanns/components/loading.dart';
+import 'package:junghanns/components/need_async.dart';
 import 'package:junghanns/components/without_internet.dart';
 import 'package:junghanns/database/async.dart';
 import 'package:junghanns/models/customer.dart';
@@ -21,6 +22,7 @@ import 'package:junghanns/provider/provider.dart';
 import 'package:junghanns/styles/color.dart';
 import 'package:junghanns/styles/decoration.dart';
 import 'package:junghanns/styles/text.dart';
+import 'package:junghanns/widgets/card/dashboard.dart';
 import 'package:provider/provider.dart';
 
 import '../../services/store.dart';
@@ -40,7 +42,16 @@ class _HomeState extends State<Home> {
   late ProviderJunghanns provider;
   late int atendidos;
   late int routeTotal;
-  late int liquit, specials,specialsA;
+  late int specials,
+      specialsA,
+      llama,
+      llamaA,
+      entrega,
+      entregaA,
+      rutaA,
+      llamaCA,
+      llamaC,
+      secon;
 
   @override
   void initState() {
@@ -51,9 +62,16 @@ class _HomeState extends State<Home> {
     isLoadingAsync = false;
     atendidos = 0;
     routeTotal = 0;
-    liquit = 0;
     specials = 0;
-    specialsA=0;
+    specialsA = 0;
+    entrega = 0;
+    entregaA = 0;
+    llama = 0;
+    llamaA = 0;
+    rutaA = 0;
+    llamaC = 0;
+    llamaCA = 0;
+    secon=0;
     getDashboarR();
     getAsync();
   }
@@ -68,7 +86,8 @@ class _HomeState extends State<Home> {
         setState(() {
           isLoading = true;
         });
-        await getDashboarRuta(prefs.idRouteD, DateTime.now()).then((answer) {
+        await getDashboarRuta(prefs.idRouteD, DateTime.now())
+            .then((answer) async {
           setState(() {
             isLoading = false;
           });
@@ -84,8 +103,6 @@ class _HomeState extends State<Home> {
             } else {
               setState(() {
                 dashboardR = DashboardModel.fromService(answer.body);
-                prefs.existStock=dashboardR.liquidStock;
-                prefs.soldStock=dashboardR.liquidSales;
                 prefs.statusRoute = answer.body["paro_de_ruta"] ?? "";
               });
             }
@@ -107,82 +124,71 @@ class _HomeState extends State<Home> {
           isLoading = false;
         });
       }
+      List<Map<String, dynamic>> dataList = await handler.retrieveSalesAll();
+      dataList.map((e) {
+        List<dynamic> data = jsonDecode(e["saleItems"]);
+        data.map((e1) {
+          var exits = dashboardR.stock.where((element) =>
+              element["id"] == e1["id_producto"] && (e["isError"] ?? 0) != 1);
+          if (exits.isNotEmpty) {
+            log(e1.toString());
+            setState(() {
+              exits.first["venta_local"] =
+                  int.parse((exits.first["venta_local"] ?? 0).toString()) +
+                      int.parse((e1["cantidad"] ?? 0).toString());
+            });
+          }
+        }).toList();
+      }).toList();
     });
   }
 
   getAsync() async {
-    List<Map<String, dynamic>> dataList = await handler.retrieveSales();
-    List<CustomerModel> value= await handler.retrieveUsers();
-    log("total ___>${value.length}");
-      value.map((e) {
-        setState(() {
-          switch (e.type) {
-            case 2:
-              specials++;
-              routeTotal++;
-              break;
-            case 7:
-            if(e.typeVisit=="ESPECIALES"){
+    List<CustomerModel> value = await handler.retrieveUsers();
+    value.map((e) {
+      setState(() {
+        switch (e.type) {
+          case 2:
+            specials++;
+            break;
+            case 3:
+            secon++;
+            break;
+          case 4:
+            llamaC++;
+            break;
+          case 5:
+            entrega++;
+            break;
+          case 6:
+          llama++;
+          break;
+          case 7:
+            if (e.typeVisit == "ESPECIALES") {
               specialsA++;
             }
-              atendidos++;
-              break;
-              case 6:
-              break;
-            default:
-              routeTotal++;
-              break;
-          }
-        });
-      }).toList();
-      log("-----------> $routeTotal");
-    dataList.map((element) {
-      List<dynamic> data = jsonDecode(element["saleItems"]);
-      setState(() {
-        data.map((e){
-          if(e["id_producto"]==22){
-            liquit+=int.parse(e["cantidad"].toString());
-          }
-        }).toList();
+            if (e.typeVisit == "CTE LLAMA") {
+              llamaA++;
+            }
+            if (e.typeVisit == "RUTA") {
+              rutaA++;
+            }
+            if (e.typeVisit == "CTE LLAMA C") {
+              llamaCA++;
+            }
+            if (e.typeVisit == "ENTREGA") {
+              entregaA++;
+            }
+            atendidos++;
+            break;
+          default:
+            routeTotal++;
+            break;
+        }
       });
     }).toList();
     prefs.dataSale = true;
   }
-
-  // getStock() async {
-  //   Timer(const Duration(milliseconds: 1000), () async {
-  //     if (provider.connectionStatus < 4) {
-  //       await getStockList(prefs.idRouteD).then((answer) {
-  //         setState(() {
-  //           isLoading = false;
-  //         });
-  //         if (answer.error) {
-  //           Fluttertoast.showToast(
-  //             msg: "Sin productos",
-  //             timeInSecForIosWeb: 2,
-  //             toastLength: Toast.LENGTH_LONG,
-  //             gravity: ToastGravity.TOP,
-  //             webShowClose: true,
-  //           );
-  //         } else {
-  //           prefs.stock = jsonEncode(answer.body);
-  //           List<ProductModel> productsList = [];
-  //           answer.body.map((e) {
-  //             productsList.add(ProductModel.fromServiceProduct(e));
-  //           }).toList();
-  //           if (productsList.isNotEmpty) {
-  //             productsList
-  //                 .sort(((a, b) => b.rank.length.compareTo(a.rank.length)));
-  //           }
-  //         }
-  //       });
-  //     } else {
-  //       setState(() {
-  //         isLoading = false;
-  //       });
-  //     }
-  //   });
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -197,9 +203,11 @@ class _HomeState extends State<Home> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Visibility(
-                      visible: provider.connectionStatus == 4,
-                      child: const WithoutInternet()),
+                  provider.connectionStatus == 4
+                      ? const WithoutInternet()
+                      : provider.isNeedAsync
+                          ? const NeedAsync()
+                          : Container(),
                   deliveryMenZone(),
                   const SizedBox(
                     height: 20,
@@ -251,7 +259,7 @@ class _HomeState extends State<Home> {
                           style: TextStyles.blue19_7,
                         ),
                         Text(
-                          "${routeTotal+specials} clientes para visitar",
+                          "${routeTotal + specials + llamaC + entrega} clientes para visitar",
                           style: TextStyles.grey14_4,
                         )
                       ],
@@ -286,13 +294,6 @@ class _HomeState extends State<Home> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              "Clientes atentidos",
-              style: TextStyles.blue19_6,
-            ),
-            const SizedBox(
-              height: 20,
-            ),
             Row(
               children: [
                 Expanded(
@@ -309,7 +310,7 @@ class _HomeState extends State<Home> {
                       Column(
                         children: [
                           Text(
-                            "${routeTotal+specials}",
+                            "${routeTotal + specials + llamaC + entrega}",
                             style: TextStyles.white40_7,
                           ),
                           const Text(
@@ -360,10 +361,33 @@ class _HomeState extends State<Home> {
               height: 20,
             ),
             item(
-                "Servicios Especiales",
+                "VISITAS",
                 [
-                  "${specials+specialsA} programados /",
-                  " $specialsA Atentidos"
+                  {
+                    "type": "Ruta",
+                    "atendidos": rutaA,
+                    "faltantes": routeTotal +rutaA,
+                  },
+                  {
+                    "type": "Especiales",
+                    "atendidos": specialsA,
+                    "faltantes": specials + specialsA,
+                  },
+                  {
+                    "type": "Entregas",
+                    "atendidos": entregaA,
+                    "faltantes": entrega+entregaA,
+                  },
+                  {
+                    "type": "C. Llama Conf.",
+                    "atendidos": llamaCA,
+                    "faltantes": llamaC+llamaCA,
+                  },
+                  {
+                    "type":"C. Llama",
+                     "atendidos": llamaA,
+                    "faltantes": llamaA,
+                  }
                 ],
                 Image.asset(
                   "assets/icons/iconCalendar.png",
@@ -373,20 +397,24 @@ class _HomeState extends State<Home> {
               height: 10,
             ),
             item(
-                "Avance de venta",
-                [
-                  "${prefs.existStock} Líquidos existencia /",
-                  " ${prefs.soldStock+liquit} Vendidos"
-                ],
-                Image.asset(
-                  "assets/icons/iconWarehouse.png",
-                  width: size.width * .1,
-                ))
+                "ALMACÉN",
+                dashboardR.stock
+                    .map((e) => {
+                          "type": e["desc"] ?? "",
+                          "atendidos": e["venta_local"] ?? 0,
+                          "faltantes": e["stock"] ?? 0
+                        })
+                    .toList(),
+                Container()),
+            const SizedBox(
+              height: 70,
+            ),
           ],
         ));
   }
 
-  Widget item(String label, List<String> description, Widget icon) {
+  Widget item(
+      String label, List<Map<String, dynamic>> description, Widget icon) {
     return Container(
       decoration: Decorations.whiteBorder12,
       padding: const EdgeInsets.only(left: 15, right: 15, top: 18, bottom: 18),
@@ -400,14 +428,67 @@ class _HomeState extends State<Home> {
               const SizedBox(
                 height: 7,
               ),
-              RichText(
-                  text: TextSpan(children: [
-                TextSpan(text: description[0], style: TextStyles.grey14_4),
-                TextSpan(text: description[1], style: TextStyles.grey14_7)
-              ]))
+              Column(
+                children: [
+                  Row(
+                    children: [
+                      const Expanded(
+                          flex: 2,
+                          child: Text("Tipo", style: TextStyles.grey14_7)),
+                      Expanded(
+                          child: AutoSizeText(
+                        label == "ALMACÉN" ? "Total" : "Programadas",
+                        style: TextStyles.grey14_7,
+                        maxLines: 1,
+                        textAlign: TextAlign.center,
+                      )),
+                      Expanded(
+                          child: Text(
+                        label == "ALMACÉN" ? "Vendidos" : "Atendidas",
+                        style: TextStyles.grey14_7,
+                        textAlign: TextAlign.center,
+                      ))
+                    ],
+                  )
+                ],
+              ),
+              const SizedBox(
+                height: 7,
+              ),
+              description.isNotEmpty
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: description
+                          .map((e) => Row(
+                                children: [
+                                  Expanded(
+                                      flex: 2,
+                                      child: Text(e["type"],
+                                          style: TextStyles.grey14_4)),
+                                  Expanded(
+                                      child: Text(
+                                    e["faltantes"].toString(),
+                                    style: TextStyles.grey14_4,
+                                    textAlign: TextAlign.center,
+                                  )),
+                                  Expanded(
+                                      child: Text(e["atendidos"].toString(),
+                                          style: TextStyles.grey14_4,
+                                          textAlign: TextAlign.center)),
+                                ],
+                              ))
+                          .toList(),
+                    )
+                  : const SizedBox(
+                      width: double.infinity,
+                      child: Text(
+                        "Sin stock asignado",
+                        style: TextStyles.blue16_4,
+                        textAlign: TextAlign.center,
+                      ),
+                    )
             ],
           )),
-          icon
         ],
       ),
     );
@@ -443,15 +524,16 @@ class _HomeState extends State<Home> {
             setState(() {
               isLoadingAsync = true;
             });
-            provider.asyncProcess=true;
+            provider.asyncProcess = true;
+            provider.isNeedAsync = false;
             Async async = Async(provider: provider);
-            async
-                .initAsync()
-                .then((value) => setState((){
-                  isLoading = false;
-                  isLoadingAsync=false;
-                  getAsync();}));
-                  
+            async.initAsync().then((value) {
+              setState(() {
+                isLoading = false;
+                isLoadingAsync = false;
+              });
+              getAsync();
+            });
           },
         ));
   }

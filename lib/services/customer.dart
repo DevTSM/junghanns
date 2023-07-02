@@ -18,12 +18,14 @@ Future<Answer> getListCustomer(int idR, DateTime date, String type) async {
           "client_secret": prefs.clientSecret,
           "Authorization": "Bearer ${prefs.token}",
         });
-    log(response.statusCode.toString());
-    return Answer.fromService(response);
+    return Answer.fromService(response,200);
   } catch (e) {
     log("/CustomerServices <getListCustomer> Catch ${e.toString()}");
     return Answer(
-        body: e, message: "Algo salio mal, revisa tu conexion a internet.", error: true);
+        body: e,
+        message: "Algo salio mal, revisa tu conexion a internet.",
+        status: 1002,
+        error: true);
   }
 }
 
@@ -38,32 +40,41 @@ Future<Answer> getDetailsCustomer(int id, String type) async {
           "client_secret": prefs.clientSecret,
           "Authorization": "Bearer ${prefs.token}",
         });
-    log("/CustomerServices <getDetailsCustomer> ${response.body}");
-    return Answer.fromService(response);
+    log("/CustomerServices <getDetailsCustomer>");
+    return Answer.fromService(response,200);
   } catch (e) {
     log("/CustomerServices <getDetailsCustomer> Catch");
-    return Answer(body: e, message:"Algo salio mal, revisa tu conexion a internet.", error: true);
-  }
-}
-Future<Answer> getPhonesCustomer(int id) async {
-  log("/CustomerServices <getPhonesCustomer>");
-  try {
-    var response = await http.get(
-        Uri.parse("${prefs.urlBase}cliente?q=tel&id=$id"),
-        headers: {
-          "Content-Type": "aplication/json",
-          "x-api-key": apiKey,
-          "client_secret": prefs.clientSecret,
-          "Authorization": "Bearer ${prefs.token}",
-        });
-    log("/CustomerServices <getPhonesCustomer> ${response.body}");
-    return Answer.fromService(response);
-  } catch (e) {
-    log("/CustomerServices <getPhonesCustomer> Catch");
-    return Answer(body: e, message:"Algo salio mal, revisa tu conexion a internet.", error: true);
+    return Answer(
+        body: e,
+        message: "Algo salio mal, revisa tu conexion a internet.",
+        status: 1002,
+        error: true);
   }
 }
 
+Future<Answer> getPhonesCustomer(int id) async {
+  log("/CustomerServices <getPhonesCustomer>");
+  try {
+    var response = await http
+        .get(Uri.parse("${prefs.urlBase}cliente?q=tel&id=$id"), headers: {
+      "Content-Type": "aplication/json",
+      "x-api-key": apiKey,
+      "client_secret": prefs.clientSecret,
+      "Authorization": "Bearer ${prefs.token}",
+    });
+    log("/CustomerServices <getPhonesCustomer>");
+    return Answer.fromService(response,200);
+  } catch (e) {
+    log("/CustomerServices <getPhonesCustomer> Catch");
+    return Answer(
+        body: e,
+        message: "Algo salio mal, revisa tu conexion a internet.",
+        status: 1002,
+        error: true);
+  }
+}
+
+////////////////////
 Future<Answer> getHistoryCustomer(int id) async {
   log("/CustomerServices <getHistoryCustomer>");
   try {
@@ -76,26 +87,34 @@ Future<Answer> getHistoryCustomer(int id) async {
     });
     if (response.statusCode == 200) {
       log("/CustomerServices <getHistoryCustomer> Successfull ${jsonDecode(response.body)}");
-      return Answer(body: jsonDecode(response.body), message: "", error: false);
+      return Answer(
+          body: jsonDecode(response.body),
+          message: "",
+          status: response.statusCode,
+          error: false);
     } else {
       log("/CustomerServices <getHistoryCustomer> Fail");
       return Answer(
           body: response,
           message: "Algo salio mal con el historial, intentalo mas tarde.",
+          status: response.statusCode,
           error: true);
     }
   } catch (e) {
     log("/CustomerServices <getHistoryCustomer> Catch");
     return Answer(
-        body: e, message: "Algo salio mal, revisa tu conexion a internet.", error: true);
+        body: e,
+        message: "Algo salio mal, revisa tu conexion a internet.",
+        status: 1002,
+        error: true);
   }
 }
 
 Future<Answer> getMoneyCustomer(int id) async {
   log("/CustomerServices <getMoneyCustomer>");
   try {
-    var response =
-        await http.get(Uri.parse("${prefs.urlBase}cliente?q=money&id=$id"), headers: {
+    var response = await http
+        .get(Uri.parse("${prefs.urlBase}cliente?q=money&id=$id"), headers: {
       "Content-Type": "aplication/json",
       "x-api-key": apiKey,
       "client_secret": prefs.clientSecret,
@@ -103,17 +122,25 @@ Future<Answer> getMoneyCustomer(int id) async {
     });
     if (response.statusCode == 200) {
       log("/CustomerServices <getMoneyCustomer> Successfull ${jsonDecode(response.body)}");
-      return Answer(body: jsonDecode(response.body), message: "", error: false);
+      return Answer(
+          body: jsonDecode(response.body),
+          message: "",
+          status: response.statusCode,
+          error: false);
     } else {
       log("/CustomerServices <getMoneyCustomer> Fail");
       return Answer(
           body: response,
           message: "No fue posible obtener el saldo, intentalo mas tarde.",
+          status: response.statusCode,
           error: true);
     }
   } catch (e) {
     log("/CustomerServices <getMoneyCustomer> Catch");
     return Answer(
-        body: e, message: "Algo salio mal, revisa tu conexion a internet.", error: true);
+        body: e,
+        message: "Algo salio mal, revisa tu conexion a internet.",
+        status: 1002,
+        error: true);
   }
 }

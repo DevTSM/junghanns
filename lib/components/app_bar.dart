@@ -27,7 +27,7 @@ PreferredSizeWidget appBarJunghanns(BuildContext context, Size size,ProviderJung
         alignment: Alignment.center,
         padding: const EdgeInsets.only(right: 15),
         child: Text(
-          "${prefs.labelCedis}V$version Sincronizando",
+          "${prefs.labelCedis} V$version Sincronizando",
           style: TextStyles.blue18SemiBoldIt,
         ),
       ),

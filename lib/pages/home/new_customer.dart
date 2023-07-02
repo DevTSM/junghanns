@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:developer';
+import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -12,11 +13,15 @@ import 'package:junghanns/components/button.dart';
 import 'package:junghanns/components/loading.dart';
 import 'package:junghanns/components/modal/showlocation.dart';
 import 'package:junghanns/components/modal/yes_not.dart';
+import 'package:junghanns/components/select.dart';
+import 'package:junghanns/components/textfield/text_field.text.dart';
+import 'package:junghanns/models/answer.dart';
 import 'package:junghanns/models/employee.dart';
 import 'package:junghanns/models/saleCambaceo.dart';
 import 'package:junghanns/models/type_street.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/provider/provider.dart';
+import 'package:junghanns/services/catalogue.dart';
 import 'package:junghanns/services/store.dart';
 import 'package:junghanns/styles/color.dart';
 import 'package:junghanns/styles/text.dart';
@@ -38,16 +43,43 @@ class _NewCustomerState extends State<NewCustomer> {
   late String typeCustomerS;
   late DateTime dateAux, dateBirth;
   late bool isDate;
+  late List<Map<String, dynamic>> chanels;
+  late List<Map<String, dynamic>> schedules;
+  late Map<String, dynamic> schedule;
+  late Map<String, dynamic> chanelValidation;
   //
-  late TextEditingController nameC, lastNameC, lastNameMC,companyC, contactC;
-  late TextEditingController phoneC, emailC, streetC, numEc, numIc;
-  late TextEditingController colonyC, townC, codeC, stateC, referenceC,streetR1,streetR2,observacion,emailCo;
-  late TextEditingController numberChildren,numberAdults;
+  late TextEditingController nameC, lastNameC, lastNameMC, companyC, contactC;
+  late TextEditingController phoneC,
+      emailC,
+      streetC,
+      numEc,
+      numIc,
+      otherSchedule;
+  late TextEditingController colonyC,
+      townC,
+      codeC,
+      stateC,
+      referenceC,
+      streetR1,
+      streetR2,
+      observacion,
+      emailCo;
+  late TextEditingController numberChildren, numberAdults;
   //
   late String errLatLng, errName, errLastN, errDateB, errCompany, errContact;
   late String errPhone, errEmail, errTypeStreet, errStreet, errNumE;
-  late String errColony, errTown, errState, errCode, errTypeSaleC, errEmployee,inicio,fin,errorInicio,errorFin;
-  late String errAdults,errChildren,errMaterno;
+  late String errColony,
+      errTown,
+      errState,
+      errCode,
+      errTypeSaleC,
+      errEmployee,
+      inicio,
+      fin,
+      errorInicio,
+      errorFin,
+      errorOtherSchedule;
+  late String errAdults, errChildren, errMaterno;
   //
   late TypeOfStreetModel typeStreetS;
   late List<TypeOfStreetModel> typesStreetsList;
@@ -73,12 +105,20 @@ class _NewCustomerState extends State<NewCustomer> {
     isLoading = false;
     lat = lng = 0;
     typeCustomerS = "PARTICULAR";
+    schedules = [];
+    chanels = [
+      {"id": 0, "descripcion": "Selecciona una opción"},
+      {"id": 1, "descripcion": "whatsapp"},
+      {"id": 2, "descripcion": "sms"},
+      {"id": 3, "descripcion": "email"},
+      {"id": 4, "descripcion": "llamada"}
+    ];
     //
     nameC = TextEditingController();
     lastNameC = TextEditingController();
-    lastNameMC=TextEditingController();
-    numberAdults=TextEditingController();
-    numberChildren=TextEditingController();
+    lastNameMC = TextEditingController();
+    numberAdults = TextEditingController();
+    numberChildren = TextEditingController();
     phoneC = TextEditingController();
     emailC = TextEditingController();
     streetC = TextEditingController();
@@ -92,15 +132,16 @@ class _NewCustomerState extends State<NewCustomer> {
     companyC = TextEditingController();
     contactC = TextEditingController();
     //
-    streetR1=TextEditingController();
-    streetR2=TextEditingController();
-    observacion=TextEditingController();
-    emailCo=TextEditingController();
+    streetR1 = TextEditingController();
+    streetR2 = TextEditingController();
+    observacion = TextEditingController();
+    emailCo = TextEditingController();
+    otherSchedule = TextEditingController();
     dateBirth = dateAux = DateTime(DateTime.now().year - 50);
     isDate = false;
     //
-    errLatLng="";
-    errName =""; 
+    errLatLng = "";
+    errName = "";
     errLastN = "";
     errDateB = "";
     errCompany = "";
@@ -114,15 +155,18 @@ class _NewCustomerState extends State<NewCustomer> {
     errTown = "";
     errState = "";
     errCode = "";
+    errorOtherSchedule = "";
     errTypeSaleC = "";
     errEmployee = "";
-    inicio="Inicio";
-    fin="Fin";
-    errorInicio="";
-    errorFin="";
-    errAdults="";
-    errChildren="";
-    errMaterno="";
+    chanelValidation = chanels.first;
+    schedule = {"id": 0, "descripcion": "Selecciona una opción"};
+    inicio = "Inicio";
+    fin = "Fin";
+    errorInicio = "";
+    errorFin = "";
+    errAdults = "";
+    errChildren = "";
+    errMaterno = "";
     //
     typesStreetsList = [];
     typeStreetS = TypeOfStreetModel.fromState();
@@ -133,6 +177,7 @@ class _NewCustomerState extends State<NewCustomer> {
     //
     getPermission();
     getListTypesOfStreets();
+    funButtonLocation();
   }
 
   getPermission() async {
@@ -223,7 +268,7 @@ class _NewCustomerState extends State<NewCustomer> {
           webShowClose: true,
         );
       } else {
-        log("STATUS RECORD");
+        log("STATUS RECORD ====> ${answer.body}");
         if (answer.body["status"] == "awaiting_validation") {
           phoneEdit = answer.body["tel_movil"];
           idNewCustomer =
@@ -233,11 +278,34 @@ class _NewCustomerState extends State<NewCustomer> {
           lat = _currentLocation.latitude;
           lng = _currentLocation.longitude;
           isOTP = true;
+        }else{
+          prefs.channelValidation="";
+          prefs.customerP=true;
         }
       }
-      setState(() {
-        isLoading = false;
-      });
+    });
+    getDataSchedules();
+  }
+
+  getDataSchedules() async {
+    await getSchedules().then((answer) {
+      if (answer.error) {
+        Fluttertoast.showToast(
+          msg: answer.message,
+          timeInSecForIosWeb: 2,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+        );
+      } else {
+        setState(() {
+          schedules = List.from(answer.body.map((e) => e).toList());
+          schedule=schedules.first;
+        });
+      }
+    });
+    setState(() {
+      isLoading = false;
     });
   }
 
@@ -299,19 +367,19 @@ class _NewCustomerState extends State<NewCustomer> {
                     "*Nombre(s)", "Nombre(s)", errName, nameC, false, false, 1)
                 : Container(),
             typeCustomerS == "PARTICULAR"
-                ? textField("*Apellidos paterno", "Apellido paterno", errLastN, lastNameC,
-                    false, false, 1)
+                ? textField("*Apellidos paterno", "Apellido paterno", errLastN,
+                    lastNameC, false, false, 1)
                 : Container(),
-                Visibility(
-                  visible: typeCustomerS == "PARTICULAR",
-                  child: textField("*Apellido materno", "Apellido materno", errMaterno, lastNameMC,
-                    false, false, 1)),
+            Visibility(
+                visible: typeCustomerS == "PARTICULAR",
+                child: textField("*Apellido materno", "Apellido materno",
+                    errMaterno, lastNameMC, false, false, 1)),
             typeCustomerS == "PARTICULAR"
                 ? buttonField(
                     "*Fecha Nacimiento",
                     !isDate
                         ? "Fecha Nacimiento"
-                        : "${dateBirth.day} / ${dateBirth.month} / ${dateBirth.year}",
+                        : DateFormat('dd/MM/yyyy').format(dateBirth),
                     errDateB != ""
                         ? Decorations.whiteBorder10Red
                         : Decorations.whiteSblackCard,
@@ -332,8 +400,8 @@ class _NewCustomerState extends State<NewCustomer> {
                 true, 1),
             textField("*E-mail", "ejemplo@midominio.com", errEmail, emailC,
                 false, false, 1),
-            textField("*Confirmacion de E-mail", "ejemplo@midominio.com", errEmail, emailCo,
-                false, false, 1),
+            textField("*Confirmacion de E-mail", "ejemplo@midominio.com",
+                errEmail, emailCo, false, false, 1),
             buttonField(
                 "*Tipo Vialidad",
                 typeStreetS.id == -1
@@ -351,7 +419,7 @@ class _NewCustomerState extends State<NewCustomer> {
             textField("*No. Exterior", "No. Exterior", errNumE, numEc, false,
                 false, 1),
             textField(
-                "No. Interior", "No, Interiro", "", numIc, false, false, 1),
+                "No. Interior", "No, Interior", "", numIc, false, false, 1),
             textField(
                 "*Colonia", "Colonia", errColony, colonyC, false, false, 1),
             textField("*Municipio o Alcaldía", "Municipio o Alcaldia", errTown,
@@ -359,64 +427,95 @@ class _NewCustomerState extends State<NewCustomer> {
             textField("*Estado", "Estado", errState, stateC, false, false, 1),
             textField("*Código Postal", "Código Postal", errCode, codeC, true,
                 false, 1),
-                Container(
-          padding: const EdgeInsets.only(top: 15, left: 10),
-          child: Text(
-            "Entre calles",
-            style: TextStyles.blue15SemiBold,
-          ),
-        ),
-                textField("Calle y ", "calle y calle",
-                "", streetR1, false, false, 2),
-            
-            textField("Calle ", "calle y calle",
-                "", streetR2, false, false, 2),
-            textField("Refecencias adicionales del domicilio", "Referencias adicionales del domicilio",
-                "", referenceC, false, false, 5),
-                Container(
-          padding: const EdgeInsets.only(top: 15, left: 10),
-          child: Text(
-            "*Horario prefente de visita",
-            style: TextStyles.blue15SemiBold,
-          ),
-        ),
-                Row(
-              children: [
-                Expanded(child:buttonField(
-                "*Desde",
-                inicio,
-                errorInicio != ""
-                    ? Decorations.whiteBorder10Red
-                    : Decorations.whiteSblackCard,
-                inicio == "Inicio"
-                    ? TextStyles.grey15Itw
-                    : TextStyles.blueJ15SemiBold,
-                ()=>selectHour(true),
-                errorInicio)),
-                const SizedBox(width: 20,),
-                Expanded(child:buttonField(
-                "*Hasta",
-                fin,
-                errorFin != ""
-                    ? Decorations.whiteBorder10Red
-                    : Decorations.whiteSblackCard,
-                fin == "Fin"
-                    ? TextStyles.grey15Itw
-                    : TextStyles.blueJ15SemiBold,
-                ()=>selectHour(false),
-                errorFin)),
-              ],
+            Container(
+              padding: const EdgeInsets.only(top: 15, left: 10),
+              child: Text(
+                "Entre calles",
+                style: TextStyles.blue15SemiBold,
+              ),
             ),
+            textField(
+                "Calle y ", "calle y calle", "", streetR1, false, false, 2),
+
+            textField("Calle ", "calle y calle", "", streetR2, false, false, 2),
+            textField(
+                "Referencias adicionales del domicilio",
+                "Referencias adicionales del domicilio",
+                "",
+                referenceC,
+                false,
+                false,
+                5),
+            Container(
+              padding: const EdgeInsets.only(top: 15, left: 10, bottom: 10),
+              child: Text(
+                "*Horario prefente de visita",
+                style: TextStyles.blue15SemiBold,
+              ),
+            ),
+            schedules.isNotEmpty
+                ? selectMap(context, (value) {
+                    setState(() {
+                      schedule = value;
+                    });
+                  },
+                    schedules,
+                    schedule["descripcion"] == "Selecciona una opción"
+                        ? schedules.first
+                        : schedule,
+                    decoration: Decorations.whiteSblackCard,
+                    style: TextStyles.blueJ15SemiBold)
+                : Container(),
             Visibility(
-                  visible: typeCustomerS == "PARTICULAR",
-                  child: textField("* # de niños en casa (<12)", "1", errChildren, numberChildren,
-                    false, false, 1)),
-                    Visibility(
-                  visible: typeCustomerS == "PARTICULAR",
-                  child: textField("* # de adultos en casa (12+)", "1", errAdults, numberAdults,
-                    false, false, 1)),
-            textField("Observación", "Observación",
-                "", observacion, false, false, 3),
+                visible: schedule["descripcion"] == "Otro horario",
+                child: textField("* Otro horario", "L-V de 08:00 a 14:00 hrs",
+                    errorOtherSchedule, otherSchedule, false, false, 1)),
+            // Row(
+            //   children: [
+            //     Expanded(
+            //         child: buttonField(
+            //             "*Desde",
+            //             inicio,
+            //             errorInicio != ""
+            //                 ? Decorations.whiteBorder10Red
+            //                 : Decorations.whiteSblackCard,
+            //             inicio == "Inicio"
+            //                 ? TextStyles.grey15Itw
+            //                 : TextStyles.blueJ15SemiBold,
+            //             () => selectHour(true),
+            //             errorInicio)),
+            //     const SizedBox(
+            //       width: 20,
+            //     ),
+            //     Expanded(
+            //         child: buttonField(
+            //             "*Hasta",
+            //             fin,
+            //             errorFin != ""
+            //                 ? Decorations.whiteBorder10Red
+            //                 : Decorations.whiteSblackCard,
+            //             fin == "Fin"
+            //                 ? TextStyles.grey15Itw
+            //                 : TextStyles.blueJ15SemiBold,
+            //             () => selectHour(false),
+            //             errorFin)),
+            //   ],
+            // ),
+            Visibility(
+                visible: typeCustomerS == "PARTICULAR",
+                child: textField(
+                  "* # de niños en casa (<12)",
+                  "1",
+                  errChildren,
+                  numberChildren,
+                  true,
+                  false,
+                  1,
+                )),
+            textField("* # ${typeCustomerS == "PARTICULAR"?"de adultos en casa (12+)":"de personas"}", "1", errAdults,
+                    numberAdults, true, false, 1),
+            textField(
+                "Observación", "Observación", "", observacion, false, false, 3),
             buttonField(
                 "*Tipo de Venta",
                 typeSaleCs.id == -1 ? "Tipo de Venta" : typeSaleCs.description,
@@ -439,66 +538,71 @@ class _NewCustomerState extends State<NewCustomer> {
                     : TextStyles.blueJ15SemiBold,
                 selectEmployee,
                 errEmployee),
-            
+
             buttonContinue()
           ],
         ));
   }
 
   Widget buttonLocation() {
-    return lat!=0&&lng!=0?Row(
-      children: [
-        Expanded(child:ButtonJunghanns(
-                fun: () {
-                  log("Fun update location");
-                  funButtonLocation();
-                },
-                decoration: Decorations.blueBorder12,
-                style: TextStyles.white14SemiBold,
-                label: "Actualizar ubicación")),
-                const SizedBox(
-                  width: 15,
-                ),
-        Expanded(child:ButtonJunghanns(
-                fun: ()=>showLocation(context, refreshLocation, lat, lng),
-                decoration: Decorations.greenBorder12,
-                style: TextStyles.white14SemiBold,
-                label: "Ver ubicación"))
-
-      ],
-    ):Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-            margin: const EdgeInsets.only(top: 15),
-            height: 35,
-            child: ButtonJunghanns(
-                fun: () {
-                  log("Fun update location");
-                  funButtonLocation();
-                },
-                decoration: Decorations.blueBorder12,
-                style: TextStyles.white14SemiBold,
-                label: "*ACTUALIZAR UBICACIÓN")),
-        errLatLng.isNotEmpty
-            ? Container(
-                padding: const EdgeInsets.only(top: 5, left: 15),
-                child: Text(
-                  errLatLng,
-                  style: errLatLng == "*Coordenadas actualizadas"
-                      ? TextStyles.greenJ13N
-                      : TextStyles.redJ13N,
-                ))
-            : Container()
-      ],
-    );
+    return lat != 0 && lng != 0
+        ? Row(
+            children: [
+              Expanded(
+                  child: ButtonJunghanns(
+                      fun: () {
+                        log("Fun update location");
+                        funButtonLocation();
+                      },
+                      decoration: Decorations.blueBorder12,
+                      style: TextStyles.white14SemiBold,
+                      label: "Actualizar ubicación")),
+              const SizedBox(
+                width: 15,
+              ),
+              Expanded(
+                  child: ButtonJunghanns(
+                      fun: () =>
+                          showLocation(context, refreshLocation, lat, lng),
+                      decoration: Decorations.greenBorder12,
+                      style: TextStyles.white14SemiBold,
+                      label: "Ver ubicación"))
+            ],
+          )
+        : Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                  margin: const EdgeInsets.only(top: 15),
+                  height: 35,
+                  child: ButtonJunghanns(
+                      fun: () {
+                        log("Fun update location");
+                        funButtonLocation();
+                      },
+                      decoration: Decorations.blueBorder12,
+                      style: TextStyles.white14SemiBold,
+                      label: "*ACTUALIZAR UBICACIÓN")),
+              errLatLng.isNotEmpty
+                  ? Container(
+                      padding: const EdgeInsets.only(top: 5, left: 15),
+                      child: Text(
+                        errLatLng,
+                        style: errLatLng == "*Coordenadas actualizadas"
+                            ? TextStyles.greenJ13N
+                            : TextStyles.redJ13N,
+                      ))
+                  : Container()
+            ],
+          );
   }
-  refreshLocation(){
+
+  refreshLocation() {
     Navigator.pop(context);
     funButtonLocation();
     showLocation(context, refreshLocation, lat, lng);
-
   }
+
   funButtonLocation() async {
     setState(() {
       isLoading = true;
@@ -624,34 +728,34 @@ class _NewCustomerState extends State<NewCustomer> {
         ),
         //Field
         TextFormField(
-                controller: controller,
-                textAlignVertical: TextAlignVertical.center,
-                style: TextStyles.blueJ15SemiBold,
-                keyboardType:
-                    isNumber ? TextInputType.number : TextInputType.text,
-                maxLines: numLines,
-                maxLength: numLines == 5 ? 60 : null,
-                inputFormatters:
-                    isPhone ? [MaskedInputFormatter("###  ###  ####")] : [],
-                decoration: InputDecoration(
-                  hintText: hintT,
-                  hintStyle: TextStyles.grey15Itw,
-                  filled: true,
-                  fillColor: ColorsJunghanns.white,
-                  contentPadding: const EdgeInsets.only(left: 12, top: 10),
-                  border: InputBorder.none,
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: errT != ""
-                        ? const BorderSide(width: 1, color: Colors.red)
-                        : const BorderSide(width: 1, color: ColorsJunghanns.lighGrey),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(
-                        width: 1, color: ColorsJunghanns.blueJ),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                )),
+            controller: controller,
+            textAlignVertical: TextAlignVertical.center,
+            style: TextStyles.blueJ15SemiBold,
+            keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+            maxLines: numLines,
+            maxLength: numLines == 5 ? 60 : null,
+            inputFormatters:
+                isPhone ? [MaskedInputFormatter("###  ###  ####")] : [],
+            decoration: InputDecoration(
+              hintText: hintT,
+              hintStyle: TextStyles.grey15Itw,
+              filled: true,
+              fillColor: ColorsJunghanns.white,
+              contentPadding: const EdgeInsets.only(left: 12, top: 10),
+              border: InputBorder.none,
+              enabledBorder: OutlineInputBorder(
+                borderSide: errT != ""
+                    ? const BorderSide(width: 1, color: Colors.red)
+                    : const BorderSide(
+                        width: 1, color: ColorsJunghanns.lighGrey),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderSide:
+                    const BorderSide(width: 1, color: ColorsJunghanns.blueJ),
+                borderRadius: BorderRadius.circular(10),
+              ),
+            )),
         //
         errT.isNotEmpty
             ? Container(
@@ -835,7 +939,7 @@ class _NewCustomerState extends State<NewCustomer> {
               }).toList());
         });
   }
-  
+
   void selectHour(bool isInicio) async {
     await showCupertinoModalPopup<int>(
         context: context,
@@ -843,8 +947,33 @@ class _NewCustomerState extends State<NewCustomer> {
           return CupertinoActionSheet(
               actionScrollController: ScrollController(
                   initialScrollOffset: 1.0, keepScrollOffset: true),
-              actions: ["06:00","07:00","08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00","21:00","22:00"].where((element) => isInicio?true:int.parse(element.substring(0,2))>=int.parse((inicio=="Inicio"?"0":inicio.substring(0,2)))).map((item) {
-                return showItemHour(item,isInicio);
+              actions: [
+                "06:00",
+                "07:00",
+                "08:00",
+                "09:00",
+                "10:00",
+                "11:00",
+                "12:00",
+                "13:00",
+                "14:00",
+                "15:00",
+                "16:00",
+                "17:00",
+                "18:00",
+                "19:00",
+                "20:00",
+                "21:00",
+                "22:00"
+              ]
+                  .where((element) => isInicio
+                      ? true
+                      : int.parse(element.substring(0, 2)) >=
+                          int.parse((inicio == "Inicio"
+                              ? "0"
+                              : inicio.substring(0, 2))))
+                  .map((item) {
+                return showItemHour(item, isInicio);
               }).toList());
         });
   }
@@ -867,8 +996,8 @@ class _NewCustomerState extends State<NewCustomer> {
       },
     );
   }
-  
-  Widget showItemHour(String item,bool isInicio) {
+
+  Widget showItemHour(String item, bool isInicio) {
     return GestureDetector(
       child: Container(
           padding: const EdgeInsets.fromLTRB(28, 20, 10, 14),
@@ -879,18 +1008,18 @@ class _NewCustomerState extends State<NewCustomer> {
               ))),
       onTap: () {
         setState(() {
-          if(isInicio){
-            inicio=item;
-            fin="Fin";
-          }else{
-            fin=item;
+          if (isInicio) {
+            inicio = item;
+            fin = "Fin";
+          } else {
+            fin = item;
           }
         });
         Navigator.pop(context);
       },
     );
   }
-  
+
   Widget buttonContinue() {
     return Container(
       height: 45,
@@ -961,11 +1090,13 @@ class _NewCustomerState extends State<NewCustomer> {
         child: Column(
           children: [
             DefaultTextStyle(
+              style: TextStyles.blueJ218R,
+              child: Text(
+                "Registrar y enviar código de verificación a ",
                 style: TextStyles.blueJ218R,
-                child: const Text(
-                  "Registrar y enviar código de verificación a",
-                  textAlign: TextAlign.center,
-                )),
+                textAlign: TextAlign.center,
+              ),
+            ),
             DefaultTextStyle(
                 style: TextStyles.greenJ20Bold,
                 textAlign: TextAlign.center,
@@ -1026,162 +1157,189 @@ class _NewCustomerState extends State<NewCustomer> {
   bool checkValidField() {
     bool isValid = true;
     setState(() {
-      
-    
-    if (lat == 0 && lng == 0) {
-      errLatLng = "*Coordenadas obligatorias";
-      isValid = false;
-    } else {
-      errLatLng = "*Coordenadas actualizadas";
-    }
-
-    if (typeCustomerS == "PARTICULAR" && nameC.text.isEmpty) {
-      errName = "*Campo obligatorio";
-      isValid = false;
-    } else {
-      errName = "";
-    }
-
-    if (typeCustomerS == "PARTICULAR" && lastNameC.text.isEmpty) {
-      errLastN = "*Campo obligatorio";
-      isValid = false;
-    } else {
-      errLastN = "";
-    }
-
-    if (typeCustomerS == "PARTICULAR" && !isDate) {
-      errDateB = "*Campo obligatorio";
-      isValid = false;
-    } else {
-      errDateB = "";
-    }
-
-    if (typeCustomerS == "EMPRESA" && companyC.text.isEmpty) {
-      errCompany = "*Campo obligatorio";
-      isValid = false;
-    } else {
-      errCompany = "";
-    }
-
-    if (typeCustomerS == "EMPRESA" && contactC.text.isEmpty) {
-      errContact = "*Campo obligatorio";
-      isValid = false;
-    } else {
-      errContact = "";
-    }
-
-    if (phoneC.text.isEmpty) {
-      errPhone = "*Campo obligatorio";
-      isValid = false;
-    } else {
-      if (phoneC.text.length < 14) {
-        errPhone = "*Télefono incompleto";
+      if (lat == 0 && lng == 0) {
+        errLatLng = "*Coordenadas obligatorias";
         isValid = false;
       } else {
-        errPhone = "";
+        errLatLng = "*Coordenadas actualizadas";
       }
-    }
 
-    if (emailC.text.isEmpty) {
-      errEmail = "*Campo obligatorio";
-      isValid = false;
-    } else {
-      errEmail = "";
-    }
+      if (typeCustomerS == "PARTICULAR" && nameC.text.isEmpty) {
+        errName = "*Campo obligatorio";
+        isValid = false;
+      } else {
+        errName = "";
+      }
 
-    if (typeStreetS.id == -1) {
-      errTypeStreet = "*Campo obligatorio";
-      isValid = false;
-    } else {
-      errTypeStreet = "";
-    }
+      if (typeCustomerS == "PARTICULAR" && lastNameC.text.isEmpty) {
+        errLastN = "*Campo obligatorio";
+        isValid = false;
+      } else {
+        errLastN = "";
+      }
 
-    if (streetC.text.isEmpty) {
-      errStreet = "*Campo obligatorio";
-      isValid = false;
-    } else {
-      errStreet = "";
-    }
+      if (typeCustomerS == "PARTICULAR" && !isDate) {
+        errDateB = "*Campo obligatorio";
+        isValid = false;
+      } else {
+        errDateB = "";
+      }
 
-    if (numEc.text.isEmpty) {
-      errNumE = "*Campo obligatorio";
-      isValid = false;
-    } else {
-      errNumE = "";
-    }
+      if (typeCustomerS == "EMPRESA" && companyC.text.isEmpty) {
+        errCompany = "*Campo obligatorio";
+        isValid = false;
+      } else {
+        errCompany = "";
+      }
 
-    if (colonyC.text.isEmpty) {
-      errColony = "*Campo obligatorio";
-      isValid = false;
-    } else {
-      errColony = "";
-    }
+      if (typeCustomerS == "EMPRESA" && contactC.text.isEmpty) {
+        errContact = "*Campo obligatorio";
+        isValid = false;
+      } else {
+        errContact = "";
+      }
 
-    if (townC.text.isEmpty) {
-      errTown = "*Campo obligatorio";
-      isValid = false;
-    } else {
-      errTown = "";
-    }
+      if (phoneC.text.isEmpty) {
+        errPhone = "*Campo obligatorio";
+        isValid = false;
+      } else {
+        if (phoneC.text.length < 14) {
+          errPhone = "*Télefono incompleto";
+          isValid = false;
+        } else {
+          errPhone = "";
+        }
+      }
 
-    if (stateC.text.isEmpty) {
-      errState = "*Campo obligatorio";
-      isValid = false;
-    } else {
-      errState = "";
-    }
+      if (emailC.text.isEmpty) {
+        errEmail = "*Campo obligatorio";
+        isValid = false;
+      } else {
+        if (emailCo.text != emailC.text) {
+          errEmail = "el correo no coincide";
+        } else {
+          errEmail = "";
+        }
+      }
 
-    if (codeC.text.isEmpty) {
-      errCode = "*Campo obligatorio";
-      isValid = false;
-    } else {
-      errCode = "";
-    }
+      if (typeStreetS.id == -1) {
+        errTypeStreet = "*Campo obligatorio";
+        isValid = false;
+      } else {
+        errTypeStreet = "";
+      }
 
-    if (typeSaleCs.id == -1) {
-      errTypeSaleC = "*Campo obligatorio";
-      isValid = false;
-    } else {
-      errTypeSaleC = "";
-    }
+      if (streetC.text.isEmpty) {
+        errStreet = "*Campo obligatorio";
+        isValid = false;
+      } else {
+        errStreet = "";
+      }
 
-    if (employeeS.id == -1) {
-      errEmployee = "*Campo obligatorio";
-      isValid = false;
-    } else {
-      errEmployee = "";
-    }
-    if(inicio=="Inicio"){
-      errorInicio="*Campo obligatorio";
-      isLoading=false;
-    }
-    if(fin=="Fin"){
-      errorFin="*Campo obligatorio";
-      isLoading=false;
-    }
-    if(emailCo.text!=emailC.text){
-      errEmail="el correo no coincide";
-    }
+      if (numEc.text.isEmpty) {
+        errNumE = "*Campo obligatorio";
+        isValid = false;
+      } else {
+        errNumE = "";
+      }
+
+      if (colonyC.text.isEmpty) {
+        errColony = "*Campo obligatorio";
+        isValid = false;
+      } else {
+        errColony = "";
+      }
+
+      if (townC.text.isEmpty) {
+        errTown = "*Campo obligatorio";
+        isValid = false;
+      } else {
+        errTown = "";
+      }
+
+      if (stateC.text.isEmpty) {
+        errState = "*Campo obligatorio";
+        isValid = false;
+      } else {
+        errState = "";
+      }
+
+      if (codeC.text.isEmpty) {
+        errCode = "*Campo obligatorio";
+        isValid = false;
+      } else {
+        errCode = "";
+      }
+
+      if (typeSaleCs.id == -1) {
+        errTypeSaleC = "*Campo obligatorio";
+        isValid = false;
+      } else {
+        errTypeSaleC = "";
+      }
+
+      if (employeeS.id == -1) {
+        errEmployee = "*Campo obligatorio";
+        isValid = false;
+      } else {
+        errEmployee = "";
+      }
+      if (inicio == "Inicio") {
+        errorInicio = "*Campo obligatorio";
+      //  isValid = false;
+      }
+      if (fin == "Fin") {
+        errorFin = "*Campo obligatorio";
+       // isValid = false;
+      }
+      if (schedule["descripcion"] == "Otro horario" &&
+          otherSchedule.text.isEmpty) {
+        errorOtherSchedule = "debes ingresar un horario";
+        isValid = false;
+      } else {
+        errorOtherSchedule = "";
+      }
+      if (numberChildren.text.isEmpty && typeCustomerS == "PARTICULAR") {
+        errChildren = "*Campo obligatorio";
+        isValid = false;
+      } else {
+        errChildren = "";
+      }
+      if (numberAdults.text.isEmpty) {
+        errAdults = "*Campo obligatorio";
+       isValid = false;
+      } else {
+        errAdults = "";
+      }
     });
     return isValid;
   }
 
   funButtonContinue() async {
-    log("FUN BUTTON CONTINUE");
+    //prefs.urlBase=ipStage;
+    log("FUN BUTTON CONTINUE ${prefs.urlBase}");
     Map<String, dynamic> data = {};
     String tC = typeCustomerS.substring(0, 1);
     phoneEdit = phoneC.text.replaceAll(" ", "");
+    Fluttertoast.showToast(
+        msg: prefs.nameUserD,
+        timeInSecForIosWeb: 2,
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.TOP,
+        webShowClose: true,
+      );
     log("Tipo usuario : $tC");
-
     if (tC == "P") {
       data = {
         "action": "create",
         "id_ruta": prefs.idRouteD,
-        "envio_sms": true,
+        "envio_msg_otp": "S",
+        "usuario": prefs.nameUserD,
         "data": {
           "tipo": tC,
           "nombre": nameC.text,
-          "apellidos": lastNameC.text,
+          "ap_materno": lastNameMC.text,
+          "ap_paterno": lastNameC.text,
           "fecha_nacimiento": DateFormat('yyyy-MM-dd').format(dateBirth),
           "tel_movil": phoneEdit,
           "email": emailC.text,
@@ -1197,14 +1355,24 @@ class _NewCustomerState extends State<NewCustomer> {
           "lon": lng.toString(),
           "referencia_domicilio": referenceC.text,
           "id_empleado": employeeS.id,
-          "tipo_venta": typeSaleCs.id
+          "tipo_venta": typeSaleCs.id,
+          "entre_calle_1": streetR1.text,
+          "entre_calle_2": streetR2.text,
+          "observaciones": observacion.text,
+          "hora_inicio": /*inicio*/ DateTime.now().toString(),
+          "hora_fin": /*fin*/ DateTime.now().toString(),
+          "no_infantes": int.tryParse(numberChildren.text) ?? 0,
+          "no_adultos": int.tryParse(numberAdults.text) ?? 0,
+          "id_horario": schedule["id"],
+          "otros_horarios": otherSchedule.text
         }
       };
     } else {
       data = {
         "action": "create",
         "id_ruta": prefs.idRouteD,
-        "envio_sms": true,
+        "envio_msg_otp": "S",
+        "usuario": prefs.nameUserD,
         "data": {
           "tipo": tC,
           "razon_social": companyC.text,
@@ -1224,11 +1392,11 @@ class _NewCustomerState extends State<NewCustomer> {
           "referencia_domicilio": referenceC.text,
           "id_empleado": employeeS.id,
           "tipo_venta": typeSaleCs.id,
-          "entre_calle_1":streetR1.text,
-          "entre_calle_2":streetR2.text,
-          "observaciones":observacion.text,
-          "hora_inicio":inicio,
-          "hora_fin":fin
+          "entre_calle_1": streetR1.text,
+          "entre_calle_2": streetR2.text,
+          "observaciones": observacion.text,
+          "hora_inicio": inicio,
+          "hora_fin": fin
         }
       };
     }
@@ -1247,6 +1415,8 @@ class _NewCustomerState extends State<NewCustomer> {
       } else {
         setState(() {
           isOTP = true;
+          prefs.customerP = tC == "P";
+          prefs.channelValidation="";
         });
         Fluttertoast.showToast(
           msg: "Se envió código de verificación",
@@ -1267,9 +1437,10 @@ class _NewCustomerState extends State<NewCustomer> {
             child: Container(
           padding: const EdgeInsets.all(12),
           width: size.width * .8,
-          height: size.height * .36,
+          //height: size.height * .36,
           decoration: Decorations.whiteS1Card,
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               //Info Phone
@@ -1319,33 +1490,66 @@ class _NewCustomerState extends State<NewCustomer> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          SizedBox(
-                        width: size.width * 0.33,
-                        height: 35,
-                        child: ButtonJunghanns(
-                            fun: () {
-                              showYesNot(context, ()=>funResendCode(false), "¿Estas seguro de volver a enviar y generar un código de validación? Esto invalidará el código enviado anteriormente", true);
-                            },
-                            decoration: Decorations.greenJCard,
-                            style: TextStyles.white15R,
-                            label: "WhatsApp"),
-                      ),
-                      SizedBox(
-                        width: size.width * 0.33,
-                        height: 35,
-                        child: ButtonJunghanns(
-                            fun: () {
-                              showYesNot(context, ()=>funResendCode(false), "¿Estas seguro de volver a enviar y generar un código de validación? Esto invalidará el código enviado anteriormente", true);
-                            },
-                            decoration: Decorations.blueJ2Card,
-                            style: TextStyles.white15R,
-                            label: "SMS"),
-                      ),
-                        ],
-                      ),
+                      Visibility(
+                          visible: prefs.channelValidation != "llamada" &&
+                              prefs.channelValidation != "email",
+                          child: Container(
+                            padding: const EdgeInsets.only(
+                                top: 15, left: 10, bottom: 10),
+                            child: Text(
+                              "Selecciona el canal de reenvío",
+                              style: TextStyles.blue15SemiBold,
+                            ),
+                          )),
+                      prefs.channelValidation == "llamada" ||
+                              prefs.channelValidation == "email"
+                          ? SizedBox(
+                              height: 35,
+                              child: prefs.channelValidation == "email"
+                                  ? ButtonJunghanns(
+                                      fun: () {
+                                        showYesNot(
+                                            context,
+                                            () => funResendCode(false),
+                                            "¿Estas seguro de volver a enviar y generar un código de validación? Esto invalidará el código enviado anteriormente",
+                                            true);
+                                      },
+                                      decoration: Decorations.blueJ2Card,
+                                      style: TextStyles.white15R,
+                                      label: "Reenviar email")
+                                  : null)
+                          : chanels.isNotEmpty
+                              ? selectMap(context, (value) {
+                                  showYesNot(context, () {
+                                    setState(() {
+                                      prefs.channelValidation =
+                                        value["descripcion"];
+                                    });
+                                    funResendCode(false);
+                                  }, "¿Estas seguro de volver a enviar y generar un código de validación? Esto invalidará el código enviado anteriormente",
+                                      true);
+                                },
+                                  !prefs.customerP
+                                      ? chanels
+                                          .where(
+                                              (element) => element["id"] != 4)
+                                          .toList()
+                                      : prefs.channelValidation == "whastapp" ||
+                                              prefs.channelValidation == "sms"
+                                          ? chanels
+                                              .where((element) =>
+                                                  element["id"] != 3 &&
+                                                  element["id"] != 4)
+                                              .toList()
+                                          : chanels,
+                                  chanelValidation,
+                                  decoration: Decorations.whiteSblackCard,
+                                  style: TextStyles.blueJ15SemiBold)
+                              : Container(
+                                  color: ColorsJunghanns.blue,
+                                  width: 10,
+                                  height: 10,
+                                ),
                       const SizedBox(
                         height: 15,
                       ),
@@ -1353,7 +1557,11 @@ class _NewCustomerState extends State<NewCustomer> {
                         height: 35,
                         child: ButtonJunghanns(
                             fun: () {
-                              showYesNot(context, ()=>funCancelCode(), "¿Estas seguro de cancelar la validación?", true);
+                              showYesNot(
+                                  context,
+                                  () => funCancelCode(),
+                                  "¿Estas seguro de cancelar la validación?",
+                                  true);
                             },
                             decoration: Decorations.redCard,
                             style: TextStyles.white15R,
@@ -1460,13 +1668,14 @@ class _NewCustomerState extends State<NewCustomer> {
       "id_ruta": prefs.idRouteD,
       "lat": lat.toString(),
       "lon": lng.toString(),
-      "envio_sms": true,
-      "canal":isW?"whatsapp":"sms"
+      "envio_msg_otp": "S",
+      "canal": prefs.channelValidation.toUpperCase()
     };
 
     log("INFO RESEND: $data");
 
     await postResendCode(data).then((answer) {
+      log("${answer.body} ======> ${answer.status}");
       if (answer.error) {
         Fluttertoast.showToast(
           msg: answer.message,
@@ -1483,7 +1692,7 @@ class _NewCustomerState extends State<NewCustomer> {
           gravity: ToastGravity.TOP,
           webShowClose: true,
         );
-        idNewCustomer = int.parse((answer.body["id"] ?? -1).toString());
+        // idNewCustomer = int.parse((answer.body["id"] ?? -1).toString());
         log(idNewCustomer.toString());
       }
     });

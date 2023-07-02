@@ -2,9 +2,12 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:junghanns/components/modal/show_brand.dart';
+import 'package:junghanns/components/need_async.dart';
 import 'package:junghanns/database/async.dart';
 import 'package:junghanns/models/folio.dart';
 import 'package:junghanns/services/customer.dart';
@@ -65,6 +68,7 @@ class ShoppingCart extends StatefulWidget {
 class _ShoppingCartState extends State<ShoppingCart> {
   late ProviderJunghanns provider;
   late List<ProductModel> productsList, productListOther;
+  late List<MethodPayment> paymentsRecovery;
   late List<ConfigModel> configList = [];
   late List<FolioModel> folios = [];
   late NumberFormat formatMoney = NumberFormat("\$#,##0.00");
@@ -83,6 +87,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
     super.initState();
     productsList = [];
     productListOther = [];
+    paymentsRecovery=[];
     folios = [];
     secWayToPay = SecondWayToPay(wayToPay: "", typeWayToPay: "", cost: 0);
     distance = 0;
@@ -158,6 +163,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
     List<MethodPayment> paymentsListT = [];
     await getPaymentMethods(widget.customerCurrent.idClient, prefs.idRouteD)
         .then((answer) {
+          log("metodos de pago=====> ${answer.body}"); 
       if (!answer.error) {
         answer.body.map((e) {
           paymentsListT.add(MethodPayment.fromService(e));
@@ -175,6 +181,9 @@ class _ShoppingCartState extends State<ShoppingCart> {
     if (paymentsListT.isNotEmpty) {
       widget.customerCurrent.setPayment(paymentsListT);
     }
+    //respladamos la lista de formas de pago
+      paymentsRecovery=widget.customerCurrent.payment;
+    log("metodos de pago=====> ${widget.customerCurrent.payment.length}"); 
 
     if (provider.basketCurrent.authCurrent.idAuth != 0) {
       //Aqui se valida si existe la autorizacion para filtrar los metodos de pago
@@ -667,7 +676,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
         context: context,
         initialDate: provider.basketCurrent.datePrestamo,
         initialDatePickerMode: DatePickerMode.day,
-        firstDate: DateTime(2015),
+        firstDate: DateTime.now().add(const Duration(days: 1)),
         lastDate: DateTime(2038));
     if (picked != null) {
       provider.basketCurrent.datePrestamo = picked;
@@ -773,90 +782,6 @@ class _ShoppingCartState extends State<ShoppingCart> {
     }
   }
 
-  showBrand(List<Map<String,dynamic>> brands) {
-    showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return Center(
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              width: size.width * .75,
-              decoration: Decorations.whiteS1Card,
-              child: Material(
-                  child: Column(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  DefaultTextStyle(
-                      style: TextStyles.blueJ20Bold,
-                      textAlign: TextAlign.center,
-                      child: const Text("Selecciona la marca del garrafon")),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  Container(
-                    decoration: Decorations.whiteJCard,
-                    padding: const EdgeInsets.only(left: 10,right: 10),
-                    width: double.infinity,
-                  child:brands.length > 1
-                      ? DropdownButton<Map<String,dynamic>>(
-                          value: provider.basketCurrent.brandJug,
-                          isExpanded: true,
-                          underline: Container(),
-                          icon: const Icon(Icons.arrow_drop_down_sharp),
-                          elevation: 5,
-                          onChanged: (Map<String,dynamic>? value) {
-                            setState(() {
-                              provider.basketCurrent.brandJug = value!;
-                            });
-                          },
-                          items: brands
-                              .map<DropdownMenuItem<Map<String,dynamic>>>((Map<String, dynamic> value) {
-                            return DropdownMenuItem<Map<String,dynamic>>(
-                              value: value,
-                              child: Text(value["descripcion"],style: TextStyles.blue18SemiBoldIt,textAlign: TextAlign.center,),
-                            );
-                          }).toList(),
-                        )
-                      : brands.isNotEmpty
-                          ? Text(brands.first["descripcion"],style: TextStyles.blue18SemiBoldIt,textAlign: TextAlign.center,)
-                          : const Text("No se encontraron datos")),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      Expanded(
-                          child: ButtonJunghanns(
-                              fun: () async {
-                                Navigator.pop(context);
-                                showConfirmSale(widget.customerCurrent.payment.first);
-                              },
-                              decoration: Decorations.blueBorder12,
-                              style: TextStyles.white18SemiBoldIt,
-                              label: "Aceptar")),
-                      const SizedBox(
-                        width: 25,
-                      ),
-                      Expanded(
-                          child: ButtonJunghanns(
-                        fun: () {
-                          Navigator.pop(context);
-                        },
-                        decoration: Decorations.redCard,
-                        style: TextStyles.white18SemiBoldIt,
-                        label: "Cancelar",
-                      )),
-                    ],
-                  )
-                ],
-              )),
-            ),
-          );
-        });
-  }
-
   caseSale() async {
     if (widget.customerCurrent.payment.length > 1) {
       //si hay mas de un metodo agregamos select
@@ -873,23 +798,22 @@ class _ShoppingCartState extends State<ShoppingCart> {
           } else {
             if (provider.basketCurrent.authCurrent.authText.toUpperCase() ==
                 "GARRAFON A LA PAR") {
-              await getBrands().then((answer) {
-                if (answer.error) {
-                  Fluttertoast.showToast(
-                    msg: answer.message,
-                    timeInSecForIosWeb: 2,
-                    toastLength: Toast.LENGTH_LONG,
-                    gravity: ToastGravity.TOP,
-                    webShowClose: true,
-                  );
-                } else {
-                  //answer.body=[{"descripcion":"Epura"}];
-                  if (answer.body.isNotEmpty) {
-                    provider.basketCurrent.brandJug = answer.body.first;
-                    showBrand(List.from(answer.body));
+              List<Map<String,dynamic>> list=List.from(jsonDecode(prefs.brands!=""?prefs.brands:"[]"));
+              if (list.isNotEmpty) {
+                    provider.basketCurrent.brandJug = list.first;
+                    showBrand(context,()=>showConfirmSale(widget.customerCurrent.payment.first),provider, list);
+                  }else{
+                    Fluttertoast.showToast(
+          msg:
+              "No se encontraron marcas de garrafon",
+          timeInSecForIosWeb: 2,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+        );
+        provider.basketCurrent.brandJug={"id":0,"descripcion":"Sin marca"};
+        showConfirmSale(widget.customerCurrent.payment.first);
                   }
-                }
-              });
             } else {
               showConfirmSale(widget.customerCurrent.payment.first);
             }
@@ -911,7 +835,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
   funSale(MethodPayment methodPayment) async {
     if (secWayToPay.wayToPay.isEmpty) {
       provider.basketCurrent.waysToPay.add(WayToPay(
-          type: methodPayment.type, cost: provider.basketCurrent.totalPrice));
+          type: methodPayment.wayToPay, cost: provider.basketCurrent.totalPrice));
     } else {
       provider.basketCurrent.waysToPay.add(WayToPay(
           type: methodPayment.type, cost: widget.customerCurrent.purse));
@@ -933,7 +857,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
         "precio_unitario": widget.customerCurrent.priceS
       });
     }
-    List<Map> listWaysToPay = [];
+    List<Map<String,dynamic>> listWaysToPay = [];
     for (var ele in provider.basketCurrent.waysToPay) {
       listWaysToPay.add({
         "tipo": ele.type,
@@ -946,24 +870,27 @@ class _ShoppingCartState extends State<ShoppingCart> {
           (element) => element.idAuth == provider.basketCurrent.idAuth);
     }
 
-    Map<String, dynamic> data = {
-      "id_cliente": provider.basketCurrent.idCustomer,
-      "id_ruta": provider.basketCurrent.idRoute,
-      "latitud": "$latSale",
-      "longitud": "$lngSale",
-      "venta": List.from(listSales.toList()),
-      "id_autorizacion": provider.basketCurrent.idAuth != -1
-          ? provider.basketCurrent.idAuth
-          : null,
-      "formas_de_pago": listWaysToPay,
-      "id_data_origen": provider.basketCurrent.idDataOrigin,
-      "folio": provider.basketCurrent.folio != -1
-          ? provider.basketCurrent.folio
-          : null,
-      "fecha_entrega": provider.basketCurrent.datePrestamo.toString(),
-      "tipo_operacion": provider.basketCurrent.typeOperation,
-      "id_marca_garrafon":provider.basketCurrent.brandJug["id"]??-1
-    };
+    Map<String, dynamic> data = {};
+      data["id_cliente"]= provider.basketCurrent.idCustomer;
+      data["id_ruta"]= provider.basketCurrent.idRoute;
+      data["latitud"]= "$latSale";
+      data["longitud"]= "$lngSale";
+      data["venta"]= List.from(listSales.toList());
+      data["formas_de_pago"]=listWaysToPay;
+      data["id_data_origen"]=provider.basketCurrent.idDataOrigin;
+      data["tipo_operacion"]= provider.basketCurrent.typeOperation;
+      
+      if(provider.basketCurrent.brandJug["id"]!=null){
+        data["id_marca_garrafon"]=provider.basketCurrent.brandJug["id"];
+      }
+      if(provider.basketCurrent.idAuth != -1){
+      data["id_autorizacion"]=provider.basketCurrent.idAuth;
+      }
+      if(provider.basketCurrent.folio != -1){
+         data["folio"]= provider.basketCurrent.folio;
+      }
+        data["fecha_entrega"]=DateFormat('yyyy/MM/dd').format(provider.basketCurrent.datePrestamo);
+        
     Map<String, dynamic> dataLocal = {
       "idCustomer": provider.basketCurrent.idCustomer,
       "idRoute": provider.basketCurrent.idRoute,
@@ -980,10 +907,13 @@ class _ShoppingCartState extends State<ShoppingCart> {
           : null,
       "type": provider.basketCurrent.typeOperation,
       "isUpdate": 0,
-      "fecha_entrega": provider.basketCurrent.datePrestamo.toString(),
-      "id_marca_garrafon":provider.basketCurrent.brandJug["id"]??-1
+      "fecha":DateTime.now().toString(),
+      "fecha_entrega": provider.basketCurrent.idAuth != -1?DateFormat('yyyy/MM/dd').format(provider.basketCurrent.datePrestamo):null,
+      "id_marca_garrafon":provider.basketCurrent.brandJug["id"]
     };
     int id = await handler.insertSale(dataLocal);
+    data["id_local"]=id;
+    log("Request  post Venta =====> $data");
     for (var e in provider.basketCurrent.sales) {
       await handler.updateProductStock((e.stockLocal - e.number), e.idProduct);
     }
@@ -991,7 +921,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
       widget.customerCurrent.delete(provider.basketCurrent.idAuth);
     }
     if (provider.basketCurrent.waysToPay
-        .where((element) => element.type == "M")
+        .where((element) => element.type == "Monedero")
         .isNotEmpty) {
       log("metodo de pago Monedero ");
       widget.customerCurrent.setMoney(
@@ -1024,6 +954,11 @@ class _ShoppingCartState extends State<ShoppingCart> {
           .toList()
           .reduce((value, element) => value + element)
     });
+    //validamos la restauracion de los metodos de pago
+    if(provider.basketCurrent.idAuth!=0){
+      listWaysToPay.map((e) =>paymentsRecovery.removeWhere((element) => element.wayToPay.toUpperCase()==e["tipo"].toString().toUpperCase())).toList();
+      widget.customerCurrent.setPayment(paymentsRecovery);
+    }
     widget.customerCurrent.setType(7);
     log("se actualizo =====> ${widget.customerCurrent.type}  ${widget.customerCurrent.id}");
     setState(() {
@@ -1033,20 +968,32 @@ class _ShoppingCartState extends State<ShoppingCart> {
       setState(() {
         isLoading = false;
       });
+      log("Respuest de post venta =======> ${answer.body}");
       if (!answer.error) {
-        await handler.updateSale(1, id);
+        await handler.updateSale({'isUpdate': 1,
+      'fecha_update':DateTime.now().toString(),
+      'isError':0}, id);
+        Navigator.pop(context,true);
       } else {
-        Fluttertoast.showToast(
-          msg: answer.message,
-          timeInSecForIosWeb: 2,
-          backgroundColor: ColorsJunghanns.red,
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.TOP,
-          webShowClose: true,
-        );
+        if(answer.status==1002){
+        provider.isNeedAsync=true;
+        }else{
+          await handler.updateSale({'isUpdate': 1,
+      'fecha_update':DateTime.now().toString(),
+      'isError':1}, id);
+        }
+        return AwesomeDialog(
+            context: context,
+            dialogType: answer.status==1002?DialogType.warning:DialogType.error,
+            animType: AnimType.rightSlide,
+            title: answer.status==1002?'Venta registrada con exito':'¡Upss!',
+            dismissOnTouchOutside: false,
+            desc: answer.status==1002?messajeConnection:answer.message,
+            btnOkText: "Aceptar",
+            btnOkOnPress: ()=>Navigator.pop(context,true),
+            ).show();
       }
     });
-    Navigator.pop(context, true);
   }
 
   @override
@@ -1068,7 +1015,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
             alignment: Alignment.center,
             padding: const EdgeInsets.only(right: 15),
             child: Text(
-              "${urlBase == ipStage ? "Beta " : ""}V$version",
+              "${prefs.labelCedis} V$version",
               style: TextStyles.blue18SemiBoldIt,
             ),
           ),
@@ -1206,11 +1153,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Visibility(
-                  visible: provider.connectionStatus == 4,
-                  child: Container(
-                      margin: const EdgeInsets.only(bottom: 10),
-                      child: const WithoutInternet())),
+              provider.connectionStatus == 4? const WithoutInternet():provider.isNeedAsync?const NeedAsync():Container(),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -1491,14 +1434,35 @@ class _ShoppingCartState extends State<ShoppingCart> {
     return GestureDetector(
       onTap: () {
         Navigator.pop(context);
-        if (funCheckMethodPayment(methodCurrent)) {
-          if (methodCurrent.wayToPay == "Credito") {
-            log("Pedir Folio");
+
+         if (funCheckMethodPayment(methodCurrent)) {
+          if (methodCurrent.getIsFolio()) {
+            //habilitamos el modal para folio
             setState(() {
               isRequestFolio = true;
             });
           } else {
-            showConfirmSale(methodCurrent);
+            if (provider.basketCurrent.authCurrent.authText.toUpperCase() ==
+                "GARRAFON A LA PAR") {
+              List<Map<String,dynamic>> list=List.from(jsonDecode(prefs.brands!=""?prefs.brands:"[]"));
+              if (list.isNotEmpty) {
+                    provider.basketCurrent.brandJug = list.first;
+                    showBrand(context,()=>showConfirmSale(methodCurrent),provider, list);
+                  }else{
+                    Fluttertoast.showToast(
+          msg:
+              "No se encontraron marcas de garrafon",
+          timeInSecForIosWeb: 2,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+        );
+        provider.basketCurrent.brandJug={"id":0,"descripcion":"Sin marca"};
+        showConfirmSale(methodCurrent);
+                  }
+            } else {
+              showConfirmSale(methodCurrent);
+            }
           }
         }
       },

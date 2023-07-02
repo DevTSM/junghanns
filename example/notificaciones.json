@@ -1,9 +1,8 @@
 {
-    "tipo":"C",
+    "action":"",
     "objeto":{
         "estatus": "P",
         "validated": null,
         "folio": null
       }
-
 }

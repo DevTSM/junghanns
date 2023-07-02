@@ -15,6 +15,9 @@ class Decorations {
       static const BoxDecoration greenBorder12 = BoxDecoration(
       color: ColorsJunghanns.green,
       borderRadius: BorderRadius.all(Radius.circular(12)));
+  static const BoxDecoration green5 = BoxDecoration(
+      color: ColorsJunghanns.green,
+      borderRadius: BorderRadius.all(Radius.circular(5)));
   static BoxDecoration whiteBorder5Red = BoxDecoration(
       color: ColorsJunghanns.white,
       border: Border.all(color: ColorsJunghanns.red),
@@ -34,6 +37,9 @@ class Decorations {
 
   static const BoxDecoration blueBorder30 = BoxDecoration(
       color: ColorsJunghanns.blue,
+      borderRadius: BorderRadius.all(Radius.circular(30)));
+  static const BoxDecoration lighGreyBorder30 = BoxDecoration(
+      color: ColorsJunghanns.lighGrey,
       borderRadius: BorderRadius.all(Radius.circular(30)));
 
   static const BoxDecoration whiteBorder12 = BoxDecoration(
@@ -126,7 +132,12 @@ class Decorations {
       Radius.circular(10),
     ),
   );
-
+  static BoxDecoration red5 = const BoxDecoration(
+    color: ColorsJunghanns.red,
+    borderRadius: BorderRadius.all(
+      Radius.circular(5),
+    ),
+  );
   static BoxDecoration redCardB30 = const BoxDecoration(
     color: ColorsJunghanns.red,
     borderRadius: BorderRadius.all(

@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
+import 'package:junghanns/components/need_async.dart';
 import 'package:junghanns/widgets/card/product.dart';
 import 'package:location/location.dart';
 import 'package:flutter/material.dart';
@@ -245,24 +246,21 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
   }
   
   funSale() async {
-    Map<String, dynamic> data = {
-      "id_cliente": provider.basketCurrent.idCustomer,
-      "id_ruta": provider.basketCurrent.idRoute,
-      "latitud": "$latSale",
-      "longitud": "$lngSale",
-      "venta": List.from(provider.basketCurrent.sales.map((element) => {"cantidad": element.number,
+    Map<String, dynamic> data = {};
+      data["id_cliente"]= provider.basketCurrent.idCustomer;
+      data["id_ruta"]= provider.basketCurrent.idRoute;
+      data["latitud"]= "$latSale";
+      data["longitud"]="$lngSale";
+      data["venta"]= List.from(provider.basketCurrent.sales.map((element) => {"cantidad": element.number,
         "id_producto": element.idProduct,
         "precio_unitario": element.price
-      }).toList()),
-      "id_autorizacion": null,
-      "formas_de_pago": [{
+      }).toList());
+      data["formas_de_pago"]= [{
         "tipo": "E",
         "importe": (provider.basketCurrent.sales.map((e) => e.price).toList()).reduce((value, element) => value+element),
-      }],
-      "id_data_origen": provider.basketCurrent.idDataOrigin,
-      "folio": null,
-      "tipo_operacion": "R",
-    };
+      }];
+      data["id_data_origen"]= provider.basketCurrent.idDataOrigin;
+      data["tipo_operacion"]= "R";
     Map<String, dynamic> dataLocal = {
       "idCustomer": provider.basketCurrent.idCustomer,
       "idRoute": provider.basketCurrent.idRoute,
@@ -272,18 +270,16 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
         "id_producto": element.idProduct,
         "precio_unitario": element.price
       }).toList())),
-      "idAuth":  null,
       "paymentMethod": jsonEncode([{
         "tipo": "E",
         "importe": (provider.basketCurrent.sales.map((e) => e.price).toList()).reduce((value, element) => value+element),
       }]),
       "idOrigin": provider.basketCurrent.idDataOrigin,
-      "folio":  null,
       "type":"R",
       "isUpdate":0
     };
     int id= await handler.insertSale(dataLocal);
-    
+    data["id_local"]=id;
     widget.customerCurrent.setMoney(((provider.basketCurrent.sales.map((element) => element.price*element.number).toList()).reduce((value, element) => value+element))+widget.customerCurrent.purse,isOffline:true,type:0);
     widget.customerCurrent.addHistory({
     'fecha':DateTime.now().toString(),
@@ -293,12 +289,14 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
     'cantidad':provider.basketCurrent.sales .map((e) => e.number).toList().reduce((value, element) => value+element)
   });
     widget.customerCurrent.setType(7);
+    log("====> request $data");
     await postSale(data).then((answer) async {
       setState(() {
         isLoading = false;
       });
       if (!answer.error){
-        await handler.updateSale(1, id).then((value){
+        await handler.updateSale({'isUpdate': 1,
+      'fecha_update':DateTime.now().toString(),'isError':0}, id).then((value){
           Fluttertoast.showToast(
           msg: "Venta realizada con exito",
           timeInSecForIosWeb: 2,
@@ -350,11 +348,7 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Visibility(
-                  visible: provider.connectionStatus == 4,
-                  child: Container(
-                      margin: const EdgeInsets.only(bottom: 10),
-                      child: const WithoutInternet())),
+              provider.connectionStatus == 4? const WithoutInternet():provider.isNeedAsync?const NeedAsync():Container(),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

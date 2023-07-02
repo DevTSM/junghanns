@@ -22,6 +22,12 @@ class TextStyles {
     color: ColorsJunghanns.grey,
     fontFamily: 'Roboto',
   );
+  static const TextStyle green14_4 = TextStyle(
+    fontSize: 14,
+    fontWeight: FontWeight.w400,
+    color: ColorsJunghanns.green,
+    fontFamily: 'Roboto',
+  );
   static const TextStyle grey14_7 = TextStyle(
     fontSize: 14,
     fontWeight: FontWeight.w700,
@@ -326,5 +332,9 @@ class TextStyles {
   static TextStyle orangeJ20Bold = const TextStyle(
       fontSize: 20,
       fontFamily: 'MyriadPro-Bold',
+      color: ColorsJunghanns.orange);
+  static TextStyle orange14_4 = const TextStyle(
+      fontSize: 14,
+      fontWeight: FontWeight.w400,
       color: ColorsJunghanns.orange);
 }

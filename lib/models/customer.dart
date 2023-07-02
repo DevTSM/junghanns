@@ -4,6 +4,7 @@ import 'dart:math' as prefix;
 
 import 'package:flutter/material.dart';
 import 'package:junghanns/models/authorization.dart';
+import 'package:junghanns/models/billing.dart';
 import 'package:junghanns/models/config.dart';
 import 'package:junghanns/models/method_payment.dart';
 import 'package:junghanns/models/sale.dart';
@@ -34,6 +35,7 @@ class CustomerModel {
   List<SaleModel> history;
   List<AuthorizationModel> auth;
   List<ConfigModel> configList;
+  List<BillingModel> billing;
   String referenceAddress;
   String color;
   //
@@ -69,6 +71,7 @@ class CustomerModel {
       required this.img,
       required this.observation,
       required this.history,
+      required this.billing,
       //
       required this.referenceAddress,
       required this.color,
@@ -106,6 +109,7 @@ class CustomerModel {
         img: "",
         observation: "",
         history: [],
+        billing: [],
         //
         referenceAddress: "",
         color: "FF000000",
@@ -144,6 +148,7 @@ class CustomerModel {
         history: [],
         auth: [],
         configList: [],
+        billing: [],
         payment: [],
         referenceAddress: "",
         color: data["color"] ?? "FF000000",
@@ -157,9 +162,14 @@ class CustomerModel {
   }
   factory CustomerModel.fromService(
       Map<String, dynamic> data, int id, int type) {
+        List<BillingModel> billing=[];
+        if(data["billing"]!=null){
+      data["billing"].map((e)=>billing.add(BillingModel.fromService(e))).toList();
+    }
     return CustomerModel(
       phones: [],
-        invoice: false,
+      billing: billing,
+        invoice: billing.isNotEmpty,
         id: id,
         orden: data["orden"] ?? 0,
         idClient: data["idCliente"] ?? 0,
@@ -211,6 +221,7 @@ class CustomerModel {
     String descripcion="";
     String not="";
     String desc="";
+    List<BillingModel> billing=[];
     if(data["cargoAdicional"]!=null&&data["cargoAdicional"]!=""){
     Map<String,dynamic> data2=jsonDecode(data["cargoAdicional"]);
       cantidad=data2["cargosFijos"]!=null?int.parse((data2["cargosFijos"]["cantidad"]??0).toString()):0;
@@ -220,9 +231,13 @@ class CustomerModel {
       not=data2["notificacion"]??"";
       desc=data2["descServicio"]??"";
     }
+    if(data["billing"]!=null){
+      jsonDecode(data["billing"]).map((e)=>billing.add(BillingModel.fromService(e))).toList();
+    }
     return CustomerModel(
       phones: [],
-        invoice: false,
+        invoice: billing.isNotEmpty,
+        billing: billing,
         id: data["id"],
         orden: data["orden"] ?? 0,
         idClient: data["idCustomer"] ?? 0,
@@ -266,6 +281,7 @@ class CustomerModel {
     String descripcion="";
     String not="";
     String desc="";
+    List<BillingModel> billing=[];
     if((data["clue"]??"CR")=="ES"){
       cantidad=data["cargoAdicional"]!=null?data["cargoAdicional"]["cargosFijos"]!=null?int.parse((data["cargoAdicional"]["cargosFijos"]["cantidad"]??0).toString()):0:0;
       idProductoServicio=data["cargoAdicional"]!=null?data["cargoAdicional"]["cargosFijos"]!=null?int.parse((data["cargoAdicional"]["cargosFijos"]["idProductoServicio"]??0).toString()):0:0;
@@ -274,12 +290,16 @@ class CustomerModel {
       not=data["cargoAdicional"]!=null?data["cargoAdicional"]["notificacion"]??"":"";
       desc=data["cargoAdicional"]!=null?data["cargoAdicional"]["descServicio"]??"":"";
     }
+    if(data["billing"]!=null){
+      data["billing"].map((e)=>billing.add(BillingModel.fromService(e))).toList();
+    }
     return CustomerModel(
       phones: [],
       auth: List.from(data["auth"]).map((e)=>AuthorizationModel.fromService(e)).toList(), 
       configList: [ConfigModel.fromService(data["config"]??0)], 
       payment: data["payment"]!=""?List.from(data["payment"]).map((e)=>MethodPayment.fromService(e)).toList():[], 
-      invoice: false, 
+      invoice: billing.isNotEmpty,
+      billing: billing, 
       id: data["id"], 
       orden: data["orden"] ?? 0, 
       idClient:  data["id_client"] ?? 0, 
@@ -336,7 +356,8 @@ class CustomerModel {
       'config':configList.isNotEmpty?configList.last.valor:0,
       'history':history.isNotEmpty?jsonEncode(history.map((e) => e.getMap).toList()):"",
       'cargoAdicional':jsonEncode({"notificacion":notifS,"descServicio":descServiceS,"cargosFijos":{"cantidad":numberS,"idProductoServicio":idProdServS,"descripcion":descriptionS,"precioUnitario":priceS}}),
-      'referenciaDomicilio':referenceAddress
+      'referenciaDomicilio':referenceAddress,
+      'billing':jsonEncode(List.from(billing.map((e) => e.getMap).toList()))
     };
   }
   delete(int id){

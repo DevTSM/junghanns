@@ -9,6 +9,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:junghanns/components/bottom_bar.dart';
 import 'package:junghanns/components/loading.dart';
+import 'package:junghanns/components/need_async.dart';
 import 'package:junghanns/components/without_internet.dart';
 import 'package:junghanns/models/stop.dart';
 import 'package:junghanns/preferences/global_variables.dart';
@@ -139,16 +140,20 @@ class _StopsState extends State<Stops> {
             "lat": "${widget.customerCurrent.lat}",
             "lng": "${widget.customerCurrent.lng}",
             "idOrigin": widget.customerCurrent.id,
+            "fecha":DateTime.now().toString(),
             "type": widget.customerCurrent.typeVisit.characters.first,
             "isUpdate":0
           };
            int id=await handler.insertStopOff(dataOff);
+            data["id_local"]=id;
           await postStop(data).then((answer) {
             setState(() {
               isLoading = false;
             });
             if (!answer.error){
               handler.updateStopOff(1,id );
+            }else{
+              provider.isNeedAsync=true;
             }
           });
           log("aqui ................");
@@ -209,9 +214,7 @@ class _StopsState extends State<Stops> {
           child: Stack(children: [
             Column(
               children: [
-                Visibility(
-                    visible: provider.connectionStatus == 4,
-                    child: const WithoutInternet()),
+                provider.connectionStatus == 4? const WithoutInternet():provider.isNeedAsync?const NeedAsync():Container(),
                 fakeStop(),
                 typesOfStops(),
               ],

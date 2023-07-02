@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:junghanns/components/loading.dart';
+import 'package:junghanns/components/need_async.dart';
 import 'package:junghanns/components/without_internet.dart';
 import 'package:junghanns/components/without_location.dart';
 import 'package:junghanns/models/customer.dart';
@@ -64,7 +65,7 @@ class _RoutesState extends State<Routes> {
     Timer(const Duration(milliseconds: 800), () async {
       
       await getCustomers().then((answer) {
-        log("entrando al servicio");
+        
         if (prefs.token == "") {
           Fluttertoast.showToast(
             msg: "Las credenciales caducaron.",
@@ -149,9 +150,7 @@ class _RoutesState extends State<Routes> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Visibility(
-                    visible: provider.connectionStatus == 4,
-                    child: const WithoutInternet()),
+                provider.connectionStatus == 4? const WithoutInternet():provider.isNeedAsync?const NeedAsync():Container(),
                 Visibility(
                     visible: !provider.permission,
                     child: const WithoutLocation()),

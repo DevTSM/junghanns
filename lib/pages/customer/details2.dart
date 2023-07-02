@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:junghanns/components/modal/show_data.dart';
 import 'package:junghanns/models/stop_ruta.dart';
 import 'package:linear_progress_bar/linear_progress_bar.dart';
 import 'package:location/location.dart';
@@ -172,7 +173,7 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
     } catch (e) {
       log("***ERROR -- $e");
       Fluttertoast.showToast(
-          msg: "Conexion inestable con el back __",
+          msg: "Conexion inestable con el back.",
           timeInSecForIosWeb: 2,
           toastLength: Toast.LENGTH_LONG,
           gravity: ToastGravity.TOP,
@@ -207,11 +208,12 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
         answer.body
             .map((e) => authList.add(AuthorizationModel.fromService(e)))
             .toList();
+             widget.customerCurrent.setAuth(authList);
       } else {
         authList.addAll(widget.customerCurrent.auth);
       }
     });
-    widget.customerCurrent.setAuth(authList);
+   
   }
 
   showSelectPR() {
@@ -268,7 +270,7 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
               builder: (BuildContext context) => ShoppingCart(
                 index: widget.indexHome,
                     customerCurrent: widget.customerCurrent,
-                    authList: authList.isEmpty ? authList : [authList.first],
+                    authList: authList,
                   ))).then((value) => setState(() {
             log("se actualizo =====> ${widget.customerCurrent.auth.length}  ${widget.customerCurrent.id}");
             getHistory();
@@ -676,21 +678,14 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
                 SizedBox(
                   width: widget.customerCurrent.invoice ? 10 : 0,
                 ),
-                Visibility(
-                    visible: widget.customerCurrent.invoice,
-                    child: Expanded(
-                        child: Container(
-                      padding: const EdgeInsets.only(top: 10, bottom: 10),
-                      alignment: Alignment.center,
-                      decoration: Decorations.greenBorder5,
-                      child: const Text(
-                        "Datos de Facturacón",
-                        style: TextStyles.white17_5,
-                      ),
-                    )))
               ],
             ),
           ),
+          Visibility(
+                    visible: widget.customerCurrent.invoice,
+                    child:Container(
+            padding: const EdgeInsets.only(left: 15,right: 15,top: 10),
+            child:ButtonJunghanns(fun: ()=>showDataBilling(context,widget.customerCurrent.billing), decoration: Decorations.greenBorder5, style: TextStyles.white17_5, label: "Ver datos de Facturación"))),
           SizedBox(
             height: widget.customerCurrent.descServiceS != "" ? 15 : 0,
           ),

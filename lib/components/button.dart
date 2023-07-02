@@ -1,14 +1,19 @@
 //import 'dart:ffi';
 
 import 'package:flutter/material.dart';
+import 'package:junghanns/styles/decoration.dart';
+import 'package:junghanns/styles/text.dart';
 
 class ButtonJunghanns extends StatelessWidget {
   Widget? icon;
   BoxDecoration decoration;
+  BoxDecoration decorationInactive;
   Function fun;
   TextStyle style;
+  TextStyle styleInactive;
   String label;
   bool isIcon;
+  bool isActive;
   ButtonJunghanns(
       {Key? key,
       this.icon,
@@ -16,14 +21,17 @@ class ButtonJunghanns extends StatelessWidget {
       required this.decoration,
       required this.style,
       required this.label,
-      this.isIcon = false})
+      this.decorationInactive=Decorations.lighGreyBorder30,
+      this.styleInactive=TextStyles.grey14_7,
+      this.isIcon = false,
+      this.isActive=true})
       : super(key: key);
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-        onTap: () => fun(),
+        onTap: isActive?() => fun():(){},
         child: Container(
-          decoration: decoration,
+          decoration: isActive?decoration:decorationInactive,
           padding: const EdgeInsets.only(top: 10, bottom: 10),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -41,7 +49,7 @@ class ButtonJunghanns extends StatelessWidget {
                   )),
               Text(
                 label,
-                style: style,
+                style: isActive?style:styleInactive,
               ),
               const Expanded(
                   flex: 3,

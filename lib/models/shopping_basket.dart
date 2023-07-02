@@ -68,7 +68,7 @@ class BasketModel {
         typeOperation: "V",
         brandJug: {},
         authCurrent: AuthorizationModel.fromState(),
-        datePrestamo: DateTime.now(),
+        datePrestamo:DateTime.now().add(const Duration(days: 1)),
         totalPrice: 0);
   }
   factory BasketModel.fromInit(CustomerModel customerCurrent,AuthorizationModel? auth) {
@@ -86,7 +86,7 @@ class BasketModel {
         folio: -1,
         typeOperation: "V",
         totalPrice: 0,
-        datePrestamo: DateTime.parse("${DateTime.now().year}-${(DateTime.now().month+1)>9?(DateTime.now().month+1)<=12?DateTime.now().month+1:01:"0${(DateTime.now().month+1)}"}-01"),
+        datePrestamo: DateTime.now().add(const Duration(days: 1)),
         addPrice: (customerCurrent.priceS * customerCurrent.numberS)
         );
   }

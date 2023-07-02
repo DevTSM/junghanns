@@ -44,7 +44,7 @@ import 'package:junghanns/styles/text.dart';
                                     prefs.dayWorkD = "";
                                     prefs.dayWorkTextD = "";
                                     prefs.codeD = "";
-                                    prefs.asyncLast="";
+                                    //prefs.asyncLast="";
                                     //--------------------------*********
                                     Navigator.pushNamedAndRemoveUntil(
                                         context, '/', (route) => false);

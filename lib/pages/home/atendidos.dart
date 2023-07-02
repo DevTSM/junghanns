@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:junghanns/components/loading.dart';
+import 'package:junghanns/components/need_async.dart';
 import 'package:junghanns/components/without_internet.dart';
 import 'package:junghanns/components/without_location.dart';
 import 'package:junghanns/models/customer.dart';
@@ -156,9 +157,7 @@ getCustomerListDB() async {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Visibility(
-                    visible: provider.connectionStatus == 4,
-                    child: const WithoutInternet()),
+                provider.connectionStatus == 4? const WithoutInternet():provider.isNeedAsync?const NeedAsync():Container(),
                 Visibility(
                     visible: !provider.permission,
                     child: const WithoutLocation()),

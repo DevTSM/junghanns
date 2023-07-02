@@ -62,12 +62,19 @@ class PreferenciasUsuario {
   set credentials(String credentials) {
     prefs!.setString("credentials", credentials);
   }
-  String get stock {
-    return prefs!.getString("stock") ?? "";
+  String get brands {
+    return prefs!.getString("brands") ?? "";
   }
 
-  set stock(String stock) {
-    prefs!.setString("stock", stock);
+  set brands(String brands) {
+    prefs!.setString("brands", brands);
+  }
+  String get channelValidation {
+    return prefs!.getString("channelValidation") ?? "";
+  }
+
+  set channelValidation(String channelValidation) {
+    prefs!.setString("channelValidation", channelValidation);
   }
   String get dashboard {
     return prefs!.getString("dashboard") ?? "{}";
@@ -130,6 +137,13 @@ class PreferenciasUsuario {
 
   set isLogged(bool isLogged) {
     prefs!.setBool("isLogged", isLogged);
+  }
+  bool get customerP {
+    return prefs!.getBool("customerP") ?? false;
+  }
+
+  set customerP(bool customerP) {
+    prefs!.setBool("customerP", customerP);
   }
 
   bool get dataStop {
@@ -196,6 +210,13 @@ class PreferenciasUsuario {
 
   set idRouteD(int idRouteD) {
     prefs!.setInt("idRouteD", idRouteD);
+  }
+  int get lastIdRouteD {
+    return prefs!.getInt("lastIdRouteD") ?? 0;
+  }
+
+  set lastIdRouteD(int lastIdRouteD) {
+    prefs!.setInt("lastIdRouteD", lastIdRouteD);
   }
 
   String get nameRouteD {

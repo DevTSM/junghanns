@@ -1,8 +1,11 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:junghanns/components/button.dart';
 import 'package:junghanns/components/loading.dart';
+import 'package:junghanns/components/need_async.dart';
 import 'package:junghanns/components/without_internet.dart';
 import 'package:junghanns/models/product.dart';
 import 'package:junghanns/models/transfer.dart';
@@ -29,7 +32,7 @@ class _TransferState extends State<Transfer> {
   late List<TransferModel> transfers;
   late List<Map<String, dynamic>> products, routes;
   late Map<String, dynamic> product, route;
-  late TextEditingController count,descripcion;
+  late TextEditingController count, descripcion;
   late LocationData currentLocation;
   late Size size;
   late int itemBar;
@@ -40,14 +43,15 @@ class _TransferState extends State<Transfer> {
   void initState() {
     super.initState();
     transfers = [];
-    count=TextEditingController();
-    descripcion=TextEditingController();
+    count = TextEditingController();
+    descripcion = TextEditingController();
     currentLocation = LocationData.fromMap({});
-    amount=0;
+    amount = 0;
     itemBar = 1;
     isLoading = true;
     getDataTransfer();
   }
+
   setCurrentLocation() async {
     try {
       Location locationInstance = Location();
@@ -79,12 +83,14 @@ class _TransferState extends State<Transfer> {
       return false;
     }
   }
+
   getDataTransfer({String type = "E"}) async {
     setState(() {
-        isLoading = true;
-      });
+      isLoading = true;
+    });
     transfers.clear();
     await getTransfer(type: type).then((answer) {
+      log(answer.body.toString());
       setState(() {
         isLoading = false;
       });
@@ -106,38 +112,40 @@ class _TransferState extends State<Transfer> {
     });
   }
 
-  setStatus(TransferModel current,String type) async {
+  setStatus(TransferModel current, String type) async {
     List<ProductModel> dataList = await handler.retrieveProducts();
-    var exits=dataList.where((element) => element.idProduct==current.idProduct&&element.stock>=current.amount);
+    var exits = dataList.where((element) =>
+        element.idProduct == current.idProduct &&
+        element.stock >= current.amount);
     setState(() {
-      isLoading=true;
+      isLoading = true;
     });
-    if(type=="A"){
-    if(exits.isEmpty){
-      setState(() {
-        isLoading=false;
-      });
-      Fluttertoast.showToast(
+    if (type == "A") {
+      if (exits.isEmpty) {
+        setState(() {
+          isLoading = false;
+        });
+        Fluttertoast.showToast(
           msg: "No cuentas con stock suficiente para la solicitud",
           timeInSecForIosWeb: 2,
           toastLength: Toast.LENGTH_LONG,
           gravity: ToastGravity.TOP,
           webShowClose: true,
         );
-      return false;
-    }
+        return false;
+      }
     }
     await setStatusTransfer({
-      "id_solicitud":current.id,
-      "estatus":type,
-      "lat":currentLocation.latitude.toString(),
-      "lon":currentLocation.longitude.toString(),
-      "tipo":current.type=="ENVIADA"?"E":"R"
+      "id_solicitud": current.id,
+      "estatus": type,
+      "lat": currentLocation.latitude.toString(),
+      "lon": currentLocation.longitude.toString(),
+      "tipo": current.type == "ENVIADA" ? "E" : "R"
     }).then((answer) async {
       setState(() {
-      isLoading=false;
-    });
-      if(answer.error){
+        isLoading = false;
+      });
+      if (answer.error) {
         Fluttertoast.showToast(
           msg: answer.message,
           timeInSecForIosWeb: 2,
@@ -145,11 +153,12 @@ class _TransferState extends State<Transfer> {
           gravity: ToastGravity.TOP,
           webShowClose: true,
         );
-      }else{
-        if(type=="A"){
-          await handler.updateProductStock(exits.first.stockLocal-current.amount, exits.first.idProduct);
+      } else {
+        if (type == "A") {
+          await handler.updateProductStock(
+              exits.first.stockLocal - current.amount, exits.first.idProduct);
         }
-        getDataTransfer(type: itemBar==1?"E":"R");
+        getDataTransfer(type: itemBar == 1 ? "E" : "R");
         Fluttertoast.showToast(
           msg: "Se actualizo el estatus correctamente",
           timeInSecForIosWeb: 2,
@@ -160,6 +169,7 @@ class _TransferState extends State<Transfer> {
       }
     });
   }
+
   Widget touchBar() => Row(
         children: [
           Column(
@@ -234,56 +244,60 @@ class _TransferState extends State<Transfer> {
       provider = Provider.of<ProviderJunghanns>(context);
     });
     return Scaffold(
-      appBar: AppBar(
-          backgroundColor: ColorsJunghanns.whiteJ,
-          systemOverlayStyle: const SystemUiOverlayStyle(
-              statusBarColor: ColorsJunghanns.whiteJ,
-              statusBarIconBrightness: Brightness.dark,
-              statusBarBrightness: Brightness.dark),
-          elevation: 0,
-          leading: IconButton(
-              onPressed: () => Navigator.pop(context),
-              icon: const Icon(
-                Icons.arrow_back_ios,
-                color: ColorsJunghanns.blue,
-              ))),
-      body: Stack(
-        children: [
-          Container(
-        padding: const EdgeInsets.all(10),
-        height: double.infinity,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        appBar: AppBar(
+            backgroundColor: ColorsJunghanns.whiteJ,
+            systemOverlayStyle: const SystemUiOverlayStyle(
+                statusBarColor: ColorsJunghanns.whiteJ,
+                statusBarIconBrightness: Brightness.dark,
+                statusBarBrightness: Brightness.dark),
+            elevation: 0,
+            leading: IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(
+                  Icons.arrow_back_ios,
+                  color: ColorsJunghanns.blue,
+                ))),
+        body: Stack(
           children: [
-            Visibility(
-                visible: provider.connectionStatus == 4,
-                child: const WithoutInternet()),
-            touchBar(),
-            const SizedBox(
-              height: 15,
+            Container(
+              padding: const EdgeInsets.all(10),
+              child: RefreshIndicator(
+                    onRefresh: ()=>getDataTransfer(type: itemBar==2?"R":"E"),
+                    child: 
+              SingleChildScrollView(
+                child:Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  provider.connectionStatus == 4? const WithoutInternet():provider.isNeedAsync?const NeedAsync():Container(),
+                  touchBar(),
+                  const SizedBox(
+                    height: 15,
+                  ),
+                  Visibility(
+                      visible: itemBar == 1,
+                      child: ButtonJunghanns(
+                          fun: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (builder) =>
+                                      const TransferNew())).then((value) =>
+                              getDataTransfer(type: itemBar == 1 ? "E" : "R")),
+                          decoration: Decorations.blueBorder30,
+                          style: TextStyles.white16SemiBoldIt,
+                          label: "Nueva solicitud")),
+                  SizedBox(
+                    height: size.height * .9,
+                    child: Column(
+                      children: transfers
+                          .map((e) => transferItem(context, setStatus, e))
+                          .toList(),
+                    ),
+                  )
+                ],
+              ))),
             ),
-            Visibility(
-                visible: itemBar == 1,
-                child: ButtonJunghanns(
-                    fun: ()=>Navigator.push(context, MaterialPageRoute(builder: (builder)=>const TransferNew())).then((value) =>  getDataTransfer(type: itemBar==1?"E":"R")),
-                    decoration: Decorations.blueBorder30,
-                    style: TextStyles.white16SemiBoldIt,
-                    label: "Nueva solicitud")),
-            Expanded(
-                child: SingleChildScrollView(
-              child: Column(
-                children: transfers.map((e) => transferItem(context,setStatus,e)).toList(),
-              ),
-            ))
+            Visibility(visible: isLoading, child: const LoadingJunghanns())
           ],
-        ),
-      ),
-      Visibility(
-        visible: isLoading,
-        child: const LoadingJunghanns())
-        ],
-      )
-      
-    );
+        ));
   }
 }

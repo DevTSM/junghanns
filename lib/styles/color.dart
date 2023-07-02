@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 abstract class ColorsJunghanns {
   static const Color green = Color(0xFF78bc24);
+  static const Color yellow = Color.fromARGB(255, 159, 142, 7);
   static const Color blue = Color(0xFF0434a4);
   static const Color orange = Color.fromARGB(255, 238, 145, 69);
   static const Color white = Color(0xFFFFFFFF);

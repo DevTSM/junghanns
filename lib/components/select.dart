@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:junghanns/components/button.dart';
+import 'package:junghanns/styles/color.dart';
 import 'package:junghanns/styles/decoration.dart';
 import 'package:junghanns/styles/text.dart';
 
@@ -117,9 +119,9 @@ class _ShowBrandState extends State<ShowBrand> {
 
 selectMap(BuildContext context, Function onChange,
     List<Map<String, dynamic>> items, Map<String, dynamic> current,
-    {Function? cancel}) {
+    {Function? cancel,BoxDecoration? decoration,TextStyle? style}) {
   return Container(
-      decoration: Decorations.whiteJCard,
+      decoration: decoration??Decorations.whiteJCard,
       padding: const EdgeInsets.only(left: 10, right: 10),
       width: double.infinity,
       child: items.length > 1
@@ -127,7 +129,10 @@ selectMap(BuildContext context, Function onChange,
               value: current,
               isExpanded: true,
               underline: Container(),
-              icon: const Icon(Icons.arrow_drop_down_sharp),
+              icon: const Icon(
+                  FontAwesomeIcons.caretDown,
+                  color: ColorsJunghanns.blue,
+                ),
               elevation: 10,
               onChanged: (Map<String, dynamic>? value) => onChange(value),
               items: items.map<DropdownMenuItem<Map<String, dynamic>>>(
@@ -136,7 +141,7 @@ selectMap(BuildContext context, Function onChange,
                   value: value,
                   child: Text(
                     value["descripcion"],
-                    style: TextStyles.blue18SemiBoldIt,
+                    style: style??TextStyles.blue18SemiBoldIt,
                     textAlign: TextAlign.center,
                   ),
                 );
@@ -145,7 +150,7 @@ selectMap(BuildContext context, Function onChange,
           : items.isNotEmpty
               ? Text(
                   items.first["descripcion"],
-                  style: TextStyles.blue18SemiBoldIt,
+                  style: style??TextStyles.blue18SemiBoldIt,
                   textAlign: TextAlign.center,
                 )
               : const Text("No se encontraron datos"));

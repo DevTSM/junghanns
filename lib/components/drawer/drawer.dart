@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:developer';
+
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -9,6 +12,7 @@ import 'package:junghanns/models/stop_ruta.dart';
 import 'package:junghanns/pages/debug/debug.dart';
 import 'package:junghanns/pages/home/atendidos.dart';
 import 'package:junghanns/pages/home/call.dart';
+import 'package:junghanns/pages/home/qr.dart';
 import 'package:junghanns/pages/transfer/transfer.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/provider/provider.dart';
@@ -81,10 +85,9 @@ updateStatus(ProviderJunghanns provider, String status) async {
   }
 }
 
-
 drawer(ProviderJunghanns provider, BuildContext context,
-    Function setIndexCurrent,bool isFinRuta){
-  item(Function navigator, String icon, String title) {
+    Function setIndexCurrent, bool isFinRuta) {
+  item(Function navigator, String icon, String title, {Widget? image}) {
     return Builder(
         builder: (context) => GestureDetector(
             onTap: () {
@@ -94,11 +97,12 @@ drawer(ProviderJunghanns provider, BuildContext context,
             child: Column(children: [
               Row(
                 children: [
-                  Image.asset(
-                    icon,
-                    width: 24,
-                    height: 24,
-                  ),
+                  image ??
+                      Image.asset(
+                        icon,
+                        width: 24,
+                        height: 24,
+                      ),
                   const SizedBox(
                     width: 10,
                   ),
@@ -115,8 +119,6 @@ drawer(ProviderJunghanns provider, BuildContext context,
               )
             ])));
   }
-
-  
 
   return Drawer(
       child: Container(
@@ -145,7 +147,7 @@ drawer(ProviderJunghanns provider, BuildContext context,
                                             const Call())),
                                 "assets/icons/menuOp5B.png",
                                 "Cliente llama"),
-                                item(
+                            item(
                                 () => Navigator.push(
                                     context,
                                     MaterialPageRoute<void>(
@@ -169,7 +171,54 @@ drawer(ProviderJunghanns provider, BuildContext context,
                                             const Debug())),
                                 "assets/icons/observationIcon.png",
                                 "Debug"),
-                            
+                            item(
+                              () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute<void>(
+                                      builder: (BuildContext context) =>
+                                          const QRSeller())),
+                              "",
+                              "QR",
+                              image: const Icon(
+                                Icons.qr_code_2,
+                                size: 24,
+                                color: ColorsJunghanns.blue,
+                              ),
+                            ),
+                            item(
+                              () async {
+                                provider.asyncProcess=true;
+                                provider.labelAsync="Verificando la integridad de la base de datos...";
+                                provider.totalAsync=2;
+                                provider.currentAsync=1;
+                                bool verified = await handler.checkValidate();
+                                Timer(const Duration(seconds: 2), () {
+                                  provider.currentAsync=2;
+                                  if (verified) {
+                                    provider.labelAsync="Base de datos integra";
+                                  } else {
+                                    provider.labelAsync="La base de datos está corrupta";
+                                    Fluttertoast.showToast(
+                                        msg: "La base de datos está corrupta",
+                                        timeInSecForIosWeb: 2,
+                                        toastLength: Toast.LENGTH_LONG,
+                                        gravity: ToastGravity.TOP,
+                                        webShowClose: true,
+                                        backgroundColor: ColorsJunghanns.red);
+                                  }
+                                });
+                                Timer(const Duration(seconds: 4), () {
+                                  provider.asyncProcess=false;
+                                });
+                              },
+                              "",
+                              "Verificar BD",
+                              image: const Icon(
+                                Icons.data_object,
+                                size: 24,
+                                color: ColorsJunghanns.blue,
+                              ),
+                            ),
                           ],
                         ),
                       )),
@@ -187,7 +236,8 @@ drawer(ProviderJunghanns provider, BuildContext context,
                                                 context,
                                                 () => updateStatus(
                                                     provider, "inicio_comida"),
-                                                "inicio_comida",false);
+                                                "inicio_comida",
+                                                false);
                                           },
                                           child: Container(
                                               padding: const EdgeInsets.all(10),
@@ -214,38 +264,42 @@ drawer(ProviderJunghanns provider, BuildContext context,
                                 width: 20,
                               ),
                               Visibility(
-                                visible: isFinRuta&&prefs.statusRoute!="",
-                                child: 
-                              Expanded(
-                                  child: GestureDetector(
-                                      onTap: () async {
-                                        Scaffold.of(context).closeDrawer();
+                                  visible: isFinRuta && prefs.statusRoute != "",
+                                  child: Expanded(
+                                      child: GestureDetector(
+                                          onTap: () async {
+                                            Scaffold.of(context).closeDrawer();
 
-                                        await showYesNot(
-                                            context,
-                                            () => updateStatus(provider, "fin"),
-                                            "fin",false);
-                                      },
-                                      child: Container(
-                                          padding: const EdgeInsets.all(10),
-                                          decoration: Decorations.blueBorder12,
-                                          child: Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceAround,
-                                            children: [
-                                              const Icon(
-                                                Icons.close,
-                                                color: ColorsJunghanns.white,
-                                              ),
-                                              AutoSizeText(
-                                                prefs.statusRoute == "FNCM"
-                                                    ? "Finalizar ruta"
-                                                    : "Fin",
-                                                style:
-                                                    TextStyles.white14SemiBold,
-                                              ),
-                                            ],
-                                          ))))),
+                                            await showYesNot(
+                                                context,
+                                                () => updateStatus(
+                                                    provider, "fin"),
+                                                "fin",
+                                                false);
+                                          },
+                                          child: Container(
+                                              padding: const EdgeInsets.all(10),
+                                              decoration:
+                                                  Decorations.blueBorder12,
+                                              child: Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceAround,
+                                                children: [
+                                                  const Icon(
+                                                    Icons.close,
+                                                    color:
+                                                        ColorsJunghanns.white,
+                                                  ),
+                                                  AutoSizeText(
+                                                    prefs.statusRoute == "FNCM"
+                                                        ? "Finalizar ruta"
+                                                        : "Fin",
+                                                    style: TextStyles
+                                                        .white14SemiBold,
+                                                  ),
+                                                ],
+                                              ))))),
                             ],
                           )),
                     ],

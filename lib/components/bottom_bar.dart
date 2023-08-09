@@ -44,16 +44,18 @@ Widget bottomBar(Function setIndexCurrent, int indexCurrent,{BuildContext? conte
         ),
         label: 'Rutas',
       ),
-      const BottomNavigationBarItem(
-        icon: Icon(
-          Icons.qr_code_2,
-          size: 24,
+      BottomNavigationBarItem(
+        icon: Image.asset(
+          "assets/icons/menuOp5W.png",
+          width: 25,
+          height: 25,
         ),
-        activeIcon: Icon(
-          Icons.qr_code_2,
-          size: 24,
+        activeIcon: Image.asset(
+          "assets/icons/menuOp5B.png",
+          width: 25,
+          height: 25,
         ),
-        label: 'QR',
+        label: 'Notificaciones',
       ),
       BottomNavigationBarItem(
         icon: Image.asset(

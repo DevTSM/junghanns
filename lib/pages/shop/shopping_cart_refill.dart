@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
+import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:junghanns/components/need_async.dart';
 import 'package:junghanns/widgets/card/product.dart';
 import 'package:location/location.dart';
@@ -62,7 +63,7 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
   @override
   void dispose(){
     super.dispose();
-    provider.initShopping(CustomerModel.fromState());
+    //provider.initShopping(CustomerModel.fromState());
   }
 
   getDataRefill() async {
@@ -280,7 +281,15 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
     };
     int id= await handler.insertSale(dataLocal);
     data["id_local"]=id;
-    widget.customerCurrent.setMoney(((provider.basketCurrent.sales.map((element) => element.price*element.number).toList()).reduce((value, element) => value+element))+widget.customerCurrent.purse,isOffline:true,type:0);
+    
+    await postSale(data).then((answer) async {
+      setState(() {
+        isLoading = false;
+      });
+      if (!answer.error){
+        await handler.updateSale({'isUpdate': 1,
+      'fecha':DateTime.now().toString()}, id).then((value){
+        widget.customerCurrent.setMoney(((provider.basketCurrent.sales.map((element) => element.price*element.number).toList()).reduce((value, element) => value+element))+widget.customerCurrent.purse,isOffline:true,type:0);
     widget.customerCurrent.addHistory({
     'fecha':DateTime.now().toString(),
     'tipo':"RECARGA",
@@ -289,27 +298,32 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
     'cantidad':provider.basketCurrent.sales .map((e) => e.number).toList().reduce((value, element) => value+element)
   });
     widget.customerCurrent.setType(7);
-    log("====> request $data");
-    await postSale(data).then((answer) async {
-      setState(() {
-        isLoading = false;
-      });
-      if (!answer.error){
-        await handler.updateSale({'isUpdate': 1,
-      'fecha_update':DateTime.now().toString(),'isError':0}, id).then((value){
-          Fluttertoast.showToast(
-          msg: "Venta realizada con exito",
-          timeInSecForIosWeb: 2,
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.TOP,
-          webShowClose: true,
-        );
-        
+        return AwesomeDialog(
+          context: context,
+          dialogType:
+             DialogType.success,
+          animType: AnimType.rightSlide,
+          title:'Recarga registrada con exito',
+          dismissOnTouchOutside: false,
+          btnOkText: "Aceptar",
+          btnOkOnPress: () => Navigator.pop(context, true),
+        ).show();
         });
+      }else{
+        await handler.updateSale({"isError":1,'isUpdate': 1,},id).then((value) => AwesomeDialog(
+          context: context,
+          dialogType: DialogType.error,
+          animType: AnimType.rightSlide,
+          title:'¡Upss!',
+          dismissOnTouchOutside: false,
+          desc: answer.status == 1002 ? "No es posible registrar una recarga sin red, verifica tu conexion." : answer.message,
+          btnOkText: "Aceptar",
+          btnOkOnPress: () => Navigator.pop(context, true),
+        ).show());
         
       }
     });
-        Navigator.pop(context,true);
+        //Navigator.pop(context,true);
   }
 
   @override

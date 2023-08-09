@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/models/folio.dart';
+import 'package:junghanns/models/notification.dart';
 import 'package:junghanns/models/product.dart';
 import 'package:junghanns/models/refill.dart';
 import 'package:junghanns/models/stop.dart';
@@ -14,9 +15,9 @@ import 'package:path/path.dart';
 class DataBase {
   Future<Database> initializeDB() async {
     String path = await getDatabasesPath();
-    path = (await getExternalStorageDirectory())!.path;
+    //path = (await getExternalStorageDirectory())!.path;
     return openDatabase(
-      join(path, 'junghanns.db'),
+      join(path, 'junny.db'),
       onCreate: (database, version) async {
         //lista de clientes
         //autorizaciones en jsonEncode
@@ -31,7 +32,7 @@ class DataBase {
         // 8=Eliminados
 
         await database.execute(
-          "CREATE TABLE customer(id INTEGER PRIMARY KEY, orden INTEGER , idCustomer INTEGER, idRoute INTEGER,type INTEGER, lat DOUBLE, lng DOUBLE, priceLiquid DOUBLE, byCollet DOUBLE, purse DOUBLE, name TEXT NOT NULL, address TEXT NOT NULL , nameRoute TEXT NOT NULL,typeVisit TEXT NOT NULL, category TEXT NOT NULL,days TEXT NOT NULL, img TEXT NOT NULL, observacion TEXT,auth TEXT,payment TEXT,color TEXT,config INTEGER,history TEXT,cargoAdicional TEXT,referenciaDomicilio TEXT,billing TEXT)",
+          "CREATE TABLE customer(id INTEGER PRIMARY KEY, orden INTEGER , idCustomer INTEGER, idRoute INTEGER,type INTEGER, lat DOUBLE, lng DOUBLE, priceLiquid DOUBLE, byCollet DOUBLE, purse DOUBLE, name TEXT NOT NULL, address TEXT NOT NULL , nameRoute TEXT NOT NULL,typeVisit TEXT NOT NULL, category TEXT NOT NULL,days TEXT NOT NULL, img TEXT NOT NULL, observacion TEXT,auth TEXT,payment TEXT,color TEXT,config INTEGER,history TEXT,cargoAdicional TEXT,referenciaDomicilio TEXT,billing TEXT,creditos TEXT)",
         );
         //lista de paradas en falso
         await database.execute(
@@ -43,11 +44,15 @@ class DataBase {
         );
         //paradas en falso offLine
         await database.execute(
-          "CREATE TABLE stopOff(id INTEGER PRIMARY KEY AUTOINCREMENT,idCustomer INTEGER ,idStop INTEGER, lat DOUBLE, lng DOUBLE, idOrigin INTEGER, type TEXT NOT NULL,isUpdate INTEGER)",
+          "CREATE TABLE stopOff(id INTEGER PRIMARY KEY AUTOINCREMENT,idCustomer INTEGER ,idStop INTEGER, lat DOUBLE, lng DOUBLE, idOrigin INTEGER, type TEXT NOT NULL,isUpdate INTEGER,fecha TEXT)",
         );
         //folio
         await database.execute(
           "CREATE TABLE folios(id INTEGER PRIMARY KEY AUTOINCREMENT,serie TEXT, numero INTEGER, tipo TEXT, status INTEGER)",
+        );
+        //notificaciones
+        await database.execute(
+          "CREATE TABLE notification(id INTEGER PRIMARY KEY AUTOINCREMENT,data TEXT ,date TEXT, name TEXT,description TEXT,status INTEGER)",
         );
         //paradas de ruta
         await database.execute(
@@ -61,9 +66,16 @@ class DataBase {
         //ventas offLine
         //formas de pago y productos en jsonEncode
         await database.execute(
-          "CREATE TABLE sale(id INTEGER PRIMARY KEY AUTOINCREMENT,idCustomer INTEGER ,idRoute INTEGER, lat DOUBLE, lng DOUBLE, saleItems TEXT, idAuth INTEGER,paymentMethod TEXT,idOrigin INTEGER,folio INTEGER,type TEXT,isUpdate INTEGER,fecha_entrega TEXT,id_marca_garrafon INTEGER,isError INTEGER,fecha_update TEXT)",
+          "CREATE TABLE sale(id INTEGER PRIMARY KEY AUTOINCREMENT,idCustomer INTEGER ,idRoute INTEGER, lat DOUBLE, lng DOUBLE, saleItems TEXT, idAuth INTEGER,paymentMethod TEXT,idOrigin INTEGER,folio INTEGER,type TEXT,isUpdate INTEGER,fecha_entrega TEXT,id_marca_garrafon INTEGER,isError INTEGER,fecha_update TEXT,fecha TEXT)",
         );
-        //
+        // Bitacora
+        await database.execute(
+          "CREATE TABLE bitacora(id INTEGER PRIMARY KEY AUTOINCREMENT,lat DOUBLE, lng DOUBLE,date TEXT,status TEXT,desc TEXT)",
+        );
+        // prefs
+        await database.execute(
+          "CREATE TABLE preferencias(id INTEGER PRIMARY KEY AUTOINCREMENT,url TEXT,clientSecret TEXT)",
+        );
       },
       version: 1,
     );
@@ -128,6 +140,13 @@ class DataBase {
     log("se inserto la venta $result");
     return result;
   }
+  Future<int> insertNotification(Map<String, dynamic> notification) async {
+    int result = 0;
+    final Database db = await initializeDB();
+    result = await db.insert('notification', notification);
+    log("se inserto la notificacion $result");
+    return result;
+  }
   Future<int> insertBrand(Map<String, dynamic> brand) async {
     int result = 0;
     final Database db = await initializeDB();
@@ -135,14 +154,36 @@ class DataBase {
     log("se inserto la venta $result");
     return result;
   }
-
+  Future<int> inserBitacora(Map<String, dynamic> item) async {
+    int result = 0;
+    final Database db = await initializeDB();
+    result = await db.insert('bitacora', item);
+    log("se inserto  $result en la bitacora");
+    return result;
+  }
+  Future<int> inserPrefs(Map<String, dynamic> item) async {
+    int result = 0;
+    try{
+    final Database db = await initializeDB();
+    result = await db.insert('preferencias', item);
+    log("se inserto  $result en la prefs");
+    print("se inserto  $result en la prefs");
+    return result;
+    }catch(e){
+      log("Error inesperado: ${e.toString()}");
+      return 0;
+    }
+  }
   deleteTable({bool isInit=true}) async {
+    try{
     final db = await initializeDB();
     if(isInit){
       db.delete('sale');
       db.delete('stopRuta');
       db.delete('stopOff');
       db.delete('customer');
+      db.delete('notification');
+      db.delete('bitacora');
     }else{
       List<CustomerModel> dataAtendidos=await retrieveUsersType(7);
       db.delete('customer');
@@ -152,7 +193,9 @@ class DataBase {
     db.delete('refill');
     db.delete('product');
     db.delete('folios');
-    
+    }catch(e){
+      log(e.toString());
+    }
   }
   deleteCustomers() async {
      final db = await initializeDB();
@@ -194,6 +237,10 @@ class DataBase {
     final db = await initializeDB();
     db.delete('sale');
   }
+  deleteNotification() async {
+    final db = await initializeDB();
+    db.delete('notification');
+  }
   deleteRefill() async {
     final db = await initializeDB();
     db.delete('refill');
@@ -220,12 +267,23 @@ class DataBase {
         );
     }
   }
-
+  Future<bool> checkValidate()async{
+    String path = await getDatabasesPath();
+    bool isValid=await databaseExists("$path/junghanns.db");
+    log("IsValid: $isValid");
+    return isValid;
+  }
   Future<List<FolioModel>> retrieveFolios() async {
     final Database db = await initializeDB();
     final List<Map<String, Object?>> queryResult =
         await db.query('folios');
     return queryResult.map((e) => FolioModel.fromDataBase(e)).toList();
+  }
+  Future<List<NotificationModel>> retrieveNotification() async {
+    final Database db = await initializeDB();
+    final List<Map<String, Object?>> queryResult =
+        await db.query('notification');
+    return queryResult.map((e) => NotificationModel.fromDataBase(e)).toList();
   }
   Future<List<ProductModel>> retrieveProducts() async {
     final Database db = await initializeDB();
@@ -287,6 +345,20 @@ class DataBase {
     final Database db = await initializeDB();
     return await db.query('sale');
   }
+  Future<List<Map<String, dynamic>>> retrieveBitacora() async {
+    final Database db = await initializeDB();
+    return await db.query('bitacora');
+  }
+  Future<List<Map<String, dynamic>>> retrievePrefs() async {
+    try{
+    final Database db = await initializeDB();
+    return await db.query('preferencias');
+    }catch(e){
+      log("Error inesperado: ${e.toString()}");
+
+      return [];
+    }
+  }
   Future<void> deleteUser(int id) async {
     final db = await initializeDB();
     await db.delete(
@@ -304,7 +376,6 @@ class DataBase {
     );
     return res.isNotEmpty ? CustomerModel.fromDataBase(res.first) : null;
   }
-
   Future<void> updateUser(CustomerModel customerCurrent) async {
     // Get a reference to the database.
     final db = await initializeDB();
@@ -319,14 +390,13 @@ class DataBase {
       whereArgs: [customerCurrent.id],
     );
   }
-
   Future<void> updateFolio(FolioModel folioCurrent) async {
     // Get a reference to the database.
     final db = await initializeDB();
 
     // Update the given Dog.
     await db.update(
-      'customer',
+      'folios',
       folioCurrent.getMap(),
       // Ensure that the Dog has a matching id.
       where: 'id = ?',
@@ -334,7 +404,20 @@ class DataBase {
       whereArgs: [folioCurrent.id],
     );
   }
+  Future<void> updateNotification(NotificationModel notification) async {
+    // Get a reference to the database.
+    final db = await initializeDB();
 
+    // Update the given Dog.
+    await db.update(
+      'notification',
+      notification.getMap,
+      // Ensure that the Dog has a matching id.
+      where: 'id = ?',
+      // Pass the Dog's id as a whereArg to prevent SQL injection.
+      whereArgs: [notification.id],
+    );
+  }
   Future<void> updateSale(Map<String,dynamic>data, int id) async {
     // Get a reference to the database.
     final db = await initializeDB();
@@ -348,6 +431,20 @@ class DataBase {
       whereArgs: [id],
     );
     log("venta $id actualizada con $data");
+  }
+  Future<void> deleteTemporalySale(int id) async {
+    // Get a reference to the database.
+    final db = await initializeDB();
+    // Update the given Dog.
+    await db.update(
+      'sale',
+      {'isError':-1},
+      // Ensure that the Dog has a matching id.
+      where: 'id = ?',
+      // Pass the Dog's id as a whereArg to prevent SQL injection.
+      whereArgs: [id],
+    );
+    log("venta $id actualizada sub eliminada");
   }
   Future<void> updateStopOff(int update, int id) async {
     // Get a reference to the database.
@@ -363,7 +460,6 @@ class DataBase {
     );
     log("venta $id actualizada con $update");
   }
-  
   Future<void> updateProductStock(int update, int id) async {
     // Get a reference to the database.
     final db = await initializeDB();
@@ -378,7 +474,6 @@ class DataBase {
     );
     log("Producto $id actualizada con $update");
   }
-  
   Future<void> updateStopRuta(int update, int id) async {
     // Get a reference to the database.
     final db = await initializeDB();

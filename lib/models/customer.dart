@@ -7,6 +7,7 @@ import 'package:junghanns/models/authorization.dart';
 import 'package:junghanns/models/billing.dart';
 import 'package:junghanns/models/config.dart';
 import 'package:junghanns/models/method_payment.dart';
+import 'package:junghanns/models/operation_customer.dart';
 import 'package:junghanns/models/sale.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 
@@ -36,6 +37,7 @@ class CustomerModel {
   List<AuthorizationModel> auth;
   List<ConfigModel> configList;
   List<BillingModel> billing;
+  List<OperationCustomerModel> operation;
   String referenceAddress;
   String color;
   //
@@ -72,6 +74,7 @@ class CustomerModel {
       required this.observation,
       required this.history,
       required this.billing,
+      required this.operation,
       //
       required this.referenceAddress,
       required this.color,
@@ -110,6 +113,7 @@ class CustomerModel {
         observation: "",
         history: [],
         billing: [],
+        operation: [],
         //
         referenceAddress: "",
         color: "FF000000",
@@ -149,6 +153,7 @@ class CustomerModel {
         auth: [],
         configList: [],
         billing: [],
+        operation: [],
         payment: [],
         referenceAddress: "",
         color: data["color"] ?? "FF000000",
@@ -169,6 +174,7 @@ class CustomerModel {
     return CustomerModel(
       phones: [],
       billing: billing,
+      operation: [],
         invoice: billing.isNotEmpty,
         id: id,
         orden: data["orden"] ?? 0,
@@ -222,6 +228,7 @@ class CustomerModel {
     String not="";
     String desc="";
     List<BillingModel> billing=[];
+    List<OperationCustomerModel>operations=[];
     if(data["cargoAdicional"]!=null&&data["cargoAdicional"]!=""){
     Map<String,dynamic> data2=jsonDecode(data["cargoAdicional"]);
       cantidad=data2["cargosFijos"]!=null?int.parse((data2["cargosFijos"]["cantidad"]??0).toString()):0;
@@ -233,6 +240,11 @@ class CustomerModel {
     }
     if(data["billing"]!=null){
       jsonDecode(data["billing"]).map((e)=>billing.add(BillingModel.fromService(e))).toList();
+    }
+    if(data["creditos"]!=""&& data["creditos"]!=null){
+      log(data["creditos"].toString());
+      List<dynamic> operationMap=jsonDecode(data["creditos"]);
+      operationMap.map((e) => operations.add(OperationCustomerModel.fromServices(e))).toList();
     }
     return CustomerModel(
       phones: [],
@@ -264,6 +276,7 @@ class CustomerModel {
         configList: [ConfigModel.fromDatabase(data["config"]??0)],
         payment: data["payment"]!=""?List.from(jsonDecode(data["payment"]).map((e)=>MethodPayment.fromService(e)).toList()):[],
         //payment: [],
+        operation: operations,
         referenceAddress: data["referenciaDomicilio"] ?? "",
         color: data["color"] ?? "000000",
         //
@@ -295,6 +308,7 @@ class CustomerModel {
     }
     return CustomerModel(
       phones: [],
+      operation: [],
       auth: List.from(data["auth"]).map((e)=>AuthorizationModel.fromService(e)).toList(), 
       configList: [ConfigModel.fromService(data["config"]??0)], 
       payment: data["payment"]!=""?List.from(data["payment"]).map((e)=>MethodPayment.fromService(e)).toList():[], 
@@ -357,7 +371,8 @@ class CustomerModel {
       'history':history.isNotEmpty?jsonEncode(history.map((e) => e.getMap).toList()):"",
       'cargoAdicional':jsonEncode({"notificacion":notifS,"descServicio":descServiceS,"cargosFijos":{"cantidad":numberS,"idProductoServicio":idProdServS,"descripcion":descriptionS,"precioUnitario":priceS}}),
       'referenciaDomicilio':referenceAddress,
-      'billing':jsonEncode(List.from(billing.map((e) => e.getMap).toList()))
+      'billing':jsonEncode(List.from(billing.map((e) => e.getMap).toList())),
+      'creditos':jsonEncode(List.from(operation.map((e) => e.getMap).toList()))
     };
   }
   delete(int id){
@@ -382,6 +397,10 @@ class CustomerModel {
   }
   setType(int type) async {
     this.type=type;
+     await handler.updateUser(this);
+  }
+  setCreditos(List<OperationCustomerModel> operation) async {
+    this.operation=operation;
      await handler.updateUser(this);
   }
   setPayment(List<MethodPayment> payment) {

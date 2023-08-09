@@ -5,6 +5,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:junghanns/database/async.dart';
 import 'package:junghanns/pages/auth/get_branch.dart';
 import 'package:junghanns/pages/home/home_principal.dart';
@@ -25,8 +26,8 @@ class Opening extends StatefulWidget {
 }
 
 class _OpeningState extends State<Opening> {
-  static const platform = const MethodChannel('example.com/channel');
-  String _batteryLevel = 'Unknown battery level.';
+  // static const platform = const MethodChannel('example.com/channel');
+  // String _batteryLevel = 'Unknown battery level.';
   late ProviderJunghanns provider;
   late Connectivity _connectivity;
   late StreamSubscription<ConnectivityResult> _connectivitySubscription;
@@ -39,13 +40,15 @@ class _OpeningState extends State<Opening> {
     isAsync = false;
     log("cliente secret =====> ${prefs.clientSecret}");
     log("token de acceso =====> ${prefs.token}");
-    //TODO: URL
+    log("Version: ${prefs.version}");
+    //handler.checkValidate();
+    // //TODO: URL
     // prefs.urlBase=urlBaseManuality;
     // prefs.labelCedis="BETA W";
     //prefs.qr="";
     //prefs.version="8.11";
     //getAndroidID();
-    log("Version: ${prefs.version}");
+    
     if (prefs.version != version ) {
       String urlBaseSafe=prefs.urlBase;
       String nameCEDIS=prefs.labelCedis;
@@ -54,9 +57,9 @@ class _OpeningState extends State<Opening> {
       prefs.urlBase=urlBaseSafe;
       prefs.labelCedis=nameCEDIS;
       log("limpiando cache =====> ${prefs.urlBase}");
-      if(version==validVersion){
-      handler.addColumn();
-      }
+      // if(version==validVersion){
+      // handler.addColumn();
+      // }
     }
     initConnectivity();
   }
@@ -68,18 +71,18 @@ class _OpeningState extends State<Opening> {
    log("#################################################### $androidId");
   }
 }
-  Future<void> _generateRandomNumber() async {
-    String random;
-    try {
-      random = (await platform.invokeMethod('getRandomNumber')).toString();
-    } on PlatformException catch (e) {
-      random = "0";
-    }
-setState(() {
-      _batteryLevel = random.toString();
-    });
-    log("#################################################### $_batteryLevel");
-  }
+//   Future<void> _generateRandomNumber() async {
+//     String random;
+//     try {
+//       random = (await platform.invokeMethod('getRandomNumber')).toString();
+//     } on PlatformException catch (e) {
+//       random = "0";
+//     }
+// setState(() {
+//       _batteryLevel = random.toString();
+//     });
+//     log("#################################################### $_batteryLevel");
+//   }
   asyncDB() async {
     //_generateRandomNumber();
     //validamos si ya se hizo la sincronizacion
@@ -161,12 +164,33 @@ setState(() {
     provider.path=await getDatabasesPath();
     log("url base: ${prefs.urlBase}");
     log("id Route: ${prefs.idRouteD}");
-    
+    List<Map<String,dynamic>> list=[];
+      list= await handler.retrievePrefs();
+      //validamos que haya una url en prefs
+    if(prefs.urlBase==""){
+      if(list.isNotEmpty){
+        prefs.urlBase=list.last["url"]??"";
+        prefs.clientSecret=list.last["clientSecret"]??"";
+      }else{
+         log("No se encontraron url guardadas en DB ni en prefs");
+         print("No se encontraron url guardadas en DB ni en prefs");
+      }
+    }else{
+      //si se tiene guardado se valida si no se han guardado las url
+      if(list.isEmpty){
+        await handler.inserPrefs({"url":prefs.urlBase,"clientSecret":prefs.clientSecret});
+      }else{
+        log("ya estaban las url guardadas en DB y en prefs");
+        print("ya estaban las url guardadas en DB y en prefs");
+      }
+    }
     if(prefs.urlBase!=""){
     if (result.index < 4) {
-      asyncDB();
+      await asyncDB();
     }else{
+      if(mounted){
       if(prefs.isLogged){
+        
         Navigator.pushReplacement<void, void>(
                 context,
                 MaterialPageRoute<void>(
@@ -180,12 +204,15 @@ setState(() {
               );
       }
     }
+    }
   }else{
+    if(mounted){
     Navigator.pushReplacement<void, void>(
                 context,
                 MaterialPageRoute<void>(
                     builder: (BuildContext context) => const GetBranch()),
               );
+    }
   }
   }
 

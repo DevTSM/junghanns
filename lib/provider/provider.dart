@@ -1,14 +1,35 @@
 // ignore_for_file: unnecessary_getters_setters
 
+import 'dart:async';
+import 'dart:convert';
+import 'dart:developer';
+
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:intl/intl.dart';
 import 'package:junghanns/models/authorization.dart';
 import 'package:junghanns/models/customer.dart';
+import 'package:junghanns/models/method_payment.dart';
+import 'package:junghanns/models/notification.dart';
 import 'package:junghanns/models/product.dart';
 import 'package:junghanns/models/shopping_basket.dart';
 import 'package:junghanns/preferences/global_variables.dart';
+import 'package:junghanns/services/store.dart';
+import 'package:junghanns/util/push_notifications_provider.dart';
 
 class ProviderJunghanns extends ChangeNotifier {
+  ProviderJunghanns(){
+    messaging.subscribeToTopic("messaging");
+    requestPermissions();
+    notificationService.init();
+    listen();
+  }
   //VARIABLES
+  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin= FlutterLocalNotificationsPlugin();
+  NotificationService notificationService=NotificationService();
+  FirebaseMessaging messaging = FirebaseMessaging.instance;
+  Function _updateComodato=(){};
   BasketModel basketCurrent = BasketModel.fromState();
   String _path = "";
   String _labelAsync = "Sincronizando datos, no cierres la app";
@@ -20,8 +41,10 @@ class ProviderJunghanns extends ChangeNotifier {
   bool _asyncProcess = false;
   bool _isStatusloading = false;
   bool _isNeedAsync=false;
+  bool _isProcessValidate=false;
 
   //GETS
+  bool get isProcessValidate=>_isProcessValidate;
   bool get isNeedAsync=>_isNeedAsync;
   bool get permission => _permission;
   bool get isStatusloading => _isStatusloading;
@@ -33,11 +56,18 @@ class ProviderJunghanns extends ChangeNotifier {
   String get labelAsync => _labelAsync;
   String get path => _path;
   Map<String,dynamic> get brand=> basketCurrent.brandJug;
+  Function get updateComodato =>_updateComodato;
   //SETS
+  set isProcessValidate(bool isProcess){
+    _isProcessValidate=isProcess;
+    notifyListeners();
+  }
+
   set isNeedAsync(bool isNeedAsync){
     _isNeedAsync=isNeedAsync;
     notifyListeners();
   }
+  
   set isStatusloading(bool isStatusloading) {
     _isStatusloading = isStatusloading;
     notifyListeners();
@@ -86,10 +116,50 @@ class ProviderJunghanns extends ChangeNotifier {
     basketCurrent.brandJug=data;
     notifyListeners();
   }
+  set updateComodato(Function update){
+    _updateComodato=update;
+    notifyListeners();
+  }
 
   //FUNCTIONS
+  void requestPermissions() {
+    flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin>()
+        ?.requestPermissions(
+          alert: true,
+          badge: true,
+          sound: true,
+        );
+    flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<
+            MacOSFlutterLocalNotificationsPlugin>()
+        ?.requestPermissions(
+          alert: true,
+          badge: true,
+          sound: true,
+        );
+  }
+  listen(){
+    FirebaseMessaging.onMessage.listen((RemoteMessage event) {
+      log("message recieved\n${event.notification!.body}\n${event.data.values}");
+      NotificationModel notification=NotificationModel.fromEvent(event);
+      handler.insertNotification(notification.getMap);
+      if(event.data.isNotEmpty){
+        isProcessValidate=true;
+        Timer(const Duration(seconds: 1), () {_updateComodato(); });
+      }
+      NotificationService _notificationService = NotificationService();
+      _notificationService.showNotifications(
+          "${event.notification!.title}", "${event.notification!.body}");
+    });
+    FirebaseMessaging.onMessageOpenedApp.listen((message) {
+      log('Message clicked!');
+    });
+  }
   initShopping(CustomerModel customerCurrent,{AuthorizationModel? auth}) {
     basketCurrent = BasketModel.fromInit(customerCurrent,auth);
+    notifyListeners();
   }
   updateProductShopping(ProductModel productCurrent, int isAdd) {
     //TODO: verificacion de Autorizacion
@@ -131,5 +201,5 @@ class ProviderJunghanns extends ChangeNotifier {
     List<Map<String,dynamic>> stopPen=await handler.retrieveStopOffUpdate();
     _isNeedAsync=salesPen.isNotEmpty||stopPen.isNotEmpty;
     notifyListeners();
-  }
+  }  
 }

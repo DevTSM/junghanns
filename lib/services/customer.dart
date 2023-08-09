@@ -73,6 +73,26 @@ Future<Answer> getPhonesCustomer(int id) async {
         error: true);
   }
 }
+Future<Answer> getCreditos(int id) async {
+  log("/CustomerServices <getCreditos>");
+  try {
+    var response = await http
+        .get(Uri.parse("${prefs.urlBase}credit?idCliente=$id"), headers: {
+      "Content-Type": "aplication/json",
+      "x-api-key": apiKey,
+      "client_secret": prefs.clientSecret,
+      "Authorization": "Bearer ${prefs.token}",
+    });
+    return Answer.fromService(response,200);
+  } catch (e) {
+    log("/CustomerServices <getCreditos> Catch");
+    return Answer(
+        body: e,
+        message: "Algo salio mal, revisa tu conexion a internet.",
+        status: 1002,
+        error: true);
+  }
+}
 
 ////////////////////
 Future<Answer> getHistoryCustomer(int id) async {

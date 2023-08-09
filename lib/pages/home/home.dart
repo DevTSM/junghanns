@@ -8,6 +8,7 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:intl/intl.dart';
 import 'package:junghanns/components/loading.dart';
 import 'package:junghanns/components/need_async.dart';
 import 'package:junghanns/components/without_internet.dart';
@@ -15,14 +16,12 @@ import 'package:junghanns/database/async.dart';
 import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/models/dashboard.dart';
 import 'package:junghanns/models/product.dart';
-import 'package:junghanns/models/stop_ruta.dart';
-import 'package:junghanns/pages/home/specials.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/provider/provider.dart';
 import 'package:junghanns/styles/color.dart';
 import 'package:junghanns/styles/decoration.dart';
 import 'package:junghanns/styles/text.dart';
-import 'package:junghanns/widgets/card/dashboard.dart';
+import 'package:junghanns/util/location.dart';
 import 'package:provider/provider.dart';
 
 import '../../services/store.dart';
@@ -71,7 +70,7 @@ class _HomeState extends State<Home> {
     rutaA = 0;
     llamaC = 0;
     llamaCA = 0;
-    secon=0;
+    secon = 0;
     getDashboarR();
     getAsync();
   }
@@ -124,21 +123,17 @@ class _HomeState extends State<Home> {
           isLoading = false;
         });
       }
-      List<Map<String, dynamic>> dataList = await handler.retrieveSalesAll();
+      List<ProductModel> dataList = await handler.retrieveProducts();
       dataList.map((e) {
-        List<dynamic> data = jsonDecode(e["saleItems"]);
-        data.map((e1) {
-          var exits = dashboardR.stock.where((element) =>
-              element["id"] == e1["id_producto"] && (e["isError"] ?? 0) != 1);
-          if (exits.isNotEmpty) {
-            log(e1.toString());
-            setState(() {
-              exits.first["venta_local"] =
-                  int.parse((exits.first["venta_local"] ?? 0).toString()) +
-                      int.parse((e1["cantidad"] ?? 0).toString());
-            });
-          }
-        }).toList();
+        var exits =
+            dashboardR.stock.where((element) => element["id"] == e.idProduct);
+        if (exits.isNotEmpty) {
+          setState(() {
+            exits.first["venta_local"] =
+                int.parse((exits.first["stock"] ?? 0).toString()) -
+                    int.parse((e.stock).toString());
+          });
+        }
       }).toList();
     });
   }
@@ -151,7 +146,7 @@ class _HomeState extends State<Home> {
           case 2:
             specials++;
             break;
-            case 3:
+          case 3:
             secon++;
             break;
           case 4:
@@ -161,8 +156,8 @@ class _HomeState extends State<Home> {
             entrega++;
             break;
           case 6:
-          llama++;
-          break;
+            llama++;
+            break;
           case 7:
             if (e.typeVisit == "ESPECIALES") {
               specialsA++;
@@ -196,26 +191,46 @@ class _HomeState extends State<Home> {
     provider = Provider.of<ProviderJunghanns>(context);
     return Stack(
       children: [
-        Container(
-            height: double.infinity,
+        RefreshIndicator(
+                onRefresh: () async {
+                  dashboardR = DashboardModel.fromPrefs();
+                  isLoading = false;
+                  isLoadingAsync = false;
+                  atendidos = 0;
+                  routeTotal = 0;
+                  specials = 0;
+                  specialsA = 0;
+                  entrega = 0;
+                  entregaA = 0;
+                  llama = 0;
+                  llamaA = 0;
+                  rutaA = 0;
+                  llamaC = 0;
+                  llamaCA = 0;
+                  secon = 0;
+                  getDashboarR();
+                  getAsync();
+                },child:SingleChildScrollView(
+        child:
+                Container(
+            height: size.height*1.01,
             color: ColorsJunghanns.lightBlue,
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  provider.connectionStatus == 4
-                      ? const WithoutInternet()
-                      : provider.isNeedAsync
-                          ? const NeedAsync()
-                          : Container(),
-                  deliveryMenZone(),
-                  const SizedBox(
-                    height: 20,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      provider.connectionStatus == 4
+                          ? const WithoutInternet()
+                          : provider.isNeedAsync
+                              ? const NeedAsync()
+                              : Container(),
+                      deliveryMenZone(),
+                      const SizedBox(
+                        height: 20,
+                      ),
+                      customersZone()
+                    ],
                   ),
-                  customersZone()
-                ],
-              ),
-            )),
+                ))),
         isLoadingAsync
             ? const Align(
                 alignment: Alignment.bottomCenter,
@@ -358,7 +373,16 @@ class _HomeState extends State<Home> {
               ],
             ),
             const SizedBox(
-              height: 20,
+              height: 10,
+            ),
+            Visibility(
+                visible: prefs.lastBitacoraUpdate != "",
+                child: Text(
+                  "Ultima actualización: ${DateFormat('hh:mm a').format(prefs.lastBitacoraUpdate != "" ? DateTime.parse(prefs.lastBitacoraUpdate) : DateTime.now())}",
+                  style: TextStyles.blue13It,
+                )),
+            const SizedBox(
+              height: 10,
             ),
             item(
                 "VISITAS",
@@ -366,7 +390,7 @@ class _HomeState extends State<Home> {
                   {
                     "type": "Ruta",
                     "atendidos": rutaA,
-                    "faltantes": routeTotal +rutaA,
+                    "faltantes": routeTotal + rutaA,
                   },
                   {
                     "type": "Especiales",
@@ -376,16 +400,16 @@ class _HomeState extends State<Home> {
                   {
                     "type": "Entregas",
                     "atendidos": entregaA,
-                    "faltantes": entrega+entregaA,
+                    "faltantes": entrega + entregaA,
                   },
                   {
                     "type": "C. Llama Conf.",
                     "atendidos": llamaCA,
-                    "faltantes": llamaC+llamaCA,
+                    "faltantes": llamaC + llamaCA,
                   },
                   {
-                    "type":"C. Llama",
-                     "atendidos": llamaA,
+                    "type": "C. Llama",
+                    "atendidos": llamaA,
                     "faltantes": llamaA,
                   }
                 ],
@@ -520,14 +544,25 @@ class _HomeState extends State<Home> {
               ],
             ),
           ),
-          onTap: () {
+          onTap: () async {
+            Position? currentLocation =
+                await LocationJunny().getCurrentLocation();
             setState(() {
               isLoadingAsync = true;
             });
             provider.asyncProcess = true;
             provider.isNeedAsync = false;
+            prefs.lastBitacoraUpdate = DateTime.now().toString();
             Async async = Async(provider: provider);
-            async.initAsync().then((value) {
+            await async.initAsync().then((value) async {
+              log(" ////////// $value");
+              await handler.inserBitacora({
+                "lat": (currentLocation != null ? currentLocation.latitude : 0),
+                "lng": currentLocation != null ? currentLocation.longitude : 0,
+                "date": DateTime.now().toString(),
+                "status": value ? "1" : "0",
+                "desc": jsonEncode({"text": "Sincronizacion Manual"})
+              });
               setState(() {
                 isLoading = false;
                 isLoadingAsync = false;

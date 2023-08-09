@@ -62,7 +62,7 @@ class Answer {
         dynamic body = jsonDecode(response.body);
         return Answer(
                 body: response.body,
-                message: body["message"] ?? "Código de error ${response.statusCode}",
+                message: body["message"] ?? "La solicitud se proceso correctamente, pero jusoft la rechazo o cancelo la operación",
                 status: response.statusCode,
                 error: true);
       }

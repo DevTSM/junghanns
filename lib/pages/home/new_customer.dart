@@ -1177,6 +1177,12 @@ class _NewCustomerState extends State<NewCustomer> {
       } else {
         errLastN = "";
       }
+      if (typeCustomerS == "PARTICULAR" && lastNameMC.text.isEmpty) {
+        errMaterno = "*Campo obligatorio";
+        isValid = false;
+      } else {
+        errMaterno = "";
+      }
 
       if (typeCustomerS == "PARTICULAR" && !isDate) {
         errDateB = "*Campo obligatorio";

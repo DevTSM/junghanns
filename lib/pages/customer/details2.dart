@@ -4,6 +4,8 @@ import 'dart:developer';
 import 'dart:io';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:junghanns/components/modal/show_data.dart';
+import 'package:junghanns/components/select.dart';
+import 'package:junghanns/models/operation_customer.dart';
 import 'package:junghanns/models/stop_ruta.dart';
 import 'package:linear_progress_bar/linear_progress_bar.dart';
 import 'package:location/location.dart';
@@ -55,8 +57,12 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
   late dynamic pickedImageFile;
   late List<ConfigModel> configList;
   late List<AuthorizationModel> authList;
+  late List<OperationCustomerModel> operations;
+  late List<Map<String,dynamic>> items;
   late LocationData currentLocation;
+  late Map<String,dynamic> currentItem;
   late Size size;
+  late int itemBar;
   late double dif;
   late bool isRange;
   late bool isLoading, isLoadingHistory, isLoadingRange;
@@ -67,7 +73,11 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
     pickedImageFile = null;
     configList = [];
     authList = [];
+    operations=[];
+    items=[];
+    currentItem={};
     dif = 0;
+    itemBar=0;
     isRange = false;
     isLoading = false;
     isLoadingHistory = false;
@@ -75,7 +85,7 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
     currentLocation = LocationData.fromMap({});
     setCurrentLocation();
     getHistory();
-    log("/////////${widget.customerCurrent.notifS}  ${widget.customerCurrent.typeVisit}");
+    getDataP();
   }
 
   setCurrentLocation() async {
@@ -199,11 +209,58 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
       }
     });
   }
+  
+  getDataP() async {
+    await getCreditos(widget.customerCurrent.idClient).then((answer) {
+      if (!answer.error) {
+        operations.clear();
+        for(var e in answer.body){
+        setState(()=>
+          operations.add(OperationCustomerModel.fromServices(e)));
+        }
+        widget.customerCurrent.setCreditos(operations);
+        if(operations.where((element) => element.typeInt==1).isNotEmpty){
+          items.add({"id":1,"descripcion":"Comodato"});
+        }
+        if(operations.where((element) => element.typeInt==2).isNotEmpty){
+          items.add({"id":2,"descripcion":"Prestamo"});
+        }
+        if(operations.where((element) => element.typeInt==3).isNotEmpty){
+          items.add({"id":3,"descripcion":"Credito"});
+        }
+        if(items.isNotEmpty){
+          currentItem=items.first;
+        }
+      }else{
+        setState(()=>operations=widget.customerCurrent.operation); 
+        if(operations.where((element) => element.typeInt==1).isNotEmpty){
+          items.add({"id":1,"descripcion":"Comodato"});
+        }
+        if(operations.where((element) => element.typeInt==2).isNotEmpty){
+          items.add({"id":2,"descripcion":"Prestamo"});
+        }
+        if(operations.where((element) => element.typeInt==3).isNotEmpty){
+          items.add({"id":3,"descripcion":"Credito"});
+        }
+        if(items.isNotEmpty){
+          currentItem=items.first;
+        }
+        Fluttertoast.showToast(
+          msg: "Conexión inestable con la planta jusoft",
+          timeInSecForIosWeb: 2,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+        );
+      }
+    });
+  }
 
   getAuth() async {
     authList.clear();
     await getAuthorization(widget.customerCurrent.idClient, prefs.idRouteD)
         .then((answer) {
+          log(answer.body.toString());
       if (!answer.error) {
         answer.body
             .map((e) => authList.add(AuthorizationModel.fromService(e)))
@@ -511,7 +568,35 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
                         "Sin conexion a internet",
                         style: TextStyles.white14_5,
                       ))),
-              balances(),
+              Visibility(
+                visible: operations.isNotEmpty,
+                child: Container(
+                  decoration: Decorations.green16Bottom,
+                  child:Row(
+                  children: [
+                    Expanded(
+                      child:GestureDetector(
+                      onTap: ()=>setState(()=>itemBar=0),
+                      child:Container(
+                        alignment: Alignment.center,
+                        decoration: itemBar==0?Decorations.blue16Bottom:const BoxDecoration(color: Colors.transparent),
+                        padding: const EdgeInsets.all(5),
+                      child:AutoSizeText("Venta",style: TextStyles.white18SemiBold,)
+                    ))),
+                    Visibility(
+                      visible: operations.isNotEmpty,
+                      child: Expanded(
+                        child:GestureDetector(
+                          onTap: ()=>setState(()=>itemBar=1),
+                          child:Container(
+                            alignment: Alignment.center,
+                            decoration: itemBar==1?Decorations.blue16Bottom:const BoxDecoration(color: Colors.transparent),
+                        padding: const EdgeInsets.all(5),
+                      child:AutoSizeText("Por cobrar",style: TextStyles.white18SemiBold,)
+                    )))),
+                  ],
+                ))),
+              itemBar==0?balances():creditosWidget(),
               const SizedBox(
                 height: 20,
               ),
@@ -520,6 +605,7 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
         ),
         onRefresh: () async {
           setCurrentLocation();
+          getDataP();
         });
   }
 
@@ -826,6 +912,18 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
         ],
       ),
     );
+  }
+
+  Widget creditosWidget(){
+    return Column(
+      children: [
+        Padding(padding: const EdgeInsets.only(left: 10,right: 10,top: 20),child:selectMap(context, (){}, items, currentItem)),
+        Column(
+      children:operations.where((element) => element.typeInt==currentItem["id"]).toList().map((e) => OperationsCard(current: e),).toList()
+    )
+      ],
+    );
+    
   }
 
   Widget observation(String titleO, String textO) {

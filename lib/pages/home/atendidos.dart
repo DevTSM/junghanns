@@ -72,7 +72,6 @@ getCustomerListDB() async {
         isLoading = true;
       });
       await getCustomersAtendidos().then((answer) {
-        log(answer.body.toString());
         if (prefs.token == "") {
           Fluttertoast.showToast(
             msg: "Las credenciales caducaron.",

@@ -532,7 +532,7 @@ Future<Answer> getPaymentMethods(int idClient, int idR) async {
           "Authorization": "Bearer ${prefs.token}",
         });
     if (response.statusCode == 200) {
-      log("/StoreServices <getPaymentMethods> Successfull");
+      log("/StoreServices <getPaymentMethods> Successfull ${response.body} ");
       return Answer(body: jsonDecode(response.body), message: "",status: response.statusCode, error: false);
     } else {
       log("/StoreServices <getPaymentMethods> Fail");

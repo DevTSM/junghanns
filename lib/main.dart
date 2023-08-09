@@ -43,52 +43,9 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
-  late NotificationService _notificationService;
-  late FirebaseMessaging messaging;
-  late String notificationText;
   @override
   void initState() {
     super.initState();
-    notificationText="";
-    flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-    _notificationService=NotificationService();
-    messaging = FirebaseMessaging.instance;
-    messaging.subscribeToTopic("messaging");
-    messaging.getToken().then((value) {
-      log(value.toString());
-    });
-    _requestPermissions();
-    _notificationService.init();
-    FirebaseMessaging.onMessage.listen((RemoteMessage event) {
-      log("message recieved\n${event.notification!.body}\n${event.data.values}");
-      log(event.data.isEmpty.toString());
-      NotificationService _notificationService = NotificationService();
-      _notificationService.showNotifications(
-          "${event.notification!.title}", "${event.notification!.body}");
-    });
-    FirebaseMessaging.onMessageOpenedApp.listen((message) {
-      log('Message clicked!');
-    });
-  }
-
-  void _requestPermissions() {
-    flutterLocalNotificationsPlugin
-        .resolvePlatformSpecificImplementation<
-            IOSFlutterLocalNotificationsPlugin>()
-        ?.requestPermissions(
-          alert: true,
-          badge: true,
-          sound: true,
-        );
-    flutterLocalNotificationsPlugin
-        .resolvePlatformSpecificImplementation<
-            MacOSFlutterLocalNotificationsPlugin>()
-        ?.requestPermissions(
-          alert: true,
-          badge: true,
-          sound: true,
-        );
   }
 
   @override

@@ -123,6 +123,7 @@ class _HomeState extends State<Home> {
           isLoading = false;
         });
       }
+      await Async(provider: provider).getStock();
       List<ProductModel> dataList = await handler.retrieveProducts();
       dataList.map((e) {
         var exits =

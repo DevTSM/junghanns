@@ -79,19 +79,33 @@ class _RoutesState extends State<Routes> {
             });
         } else {
           if (!answer.error) {
+            //lista que se va a guardar
             List<CustomerModel> list = [];
+            //Lista de clientes eliminados
             List<CustomerModel> listDelete=[];
+            //se recorre el arreglo de la respuesta
             for (var item in answer.body) {
               CustomerModel customer = CustomerModel.fromPayload(item);
               listDelete.add(customer);
+              //se busca si ya existe en los registros locales
               var exits = users
                   .where((element) => element.idClient == customer.idClient);
+              //si no existe se agrega 
               if (exits.isEmpty) {
                 list.add(customer);
                 if (customer.type == 1 ||
                     customer.type == 2 ||
                     customer.type == 3 ||
                     customer.type == 4) {
+                      //esta es la lista que se muestra en ruta con 1 => ruta, 2 => especiales, 
+                      //3 => segundas vueltas y 4 => clientes llama confirmados
+                  customerList.add(customer);
+                }
+              }else{
+                //si existe pero es segunda vuelta se actualiza su tipo a no atendido
+                //tipo 3 => Segunda vuelta
+                if(customer.type==3){
+                  exits.first.setType(3);
                   customerList.add(customer);
                 }
               }

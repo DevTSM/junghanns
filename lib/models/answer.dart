@@ -18,7 +18,8 @@ class Answer {
   ///200
   factory Answer.fromService(Response response, int statusOk,{String? message}) {
     try{
-    log("Status => ${response.statusCode}");
+    log("Status => ${response.statusCode} ${response.body.toString()}");
+
     if(response.statusCode==statusOk){
       log("/Respuesta exitosa");
       dynamic body = jsonDecode(response.body);

@@ -130,11 +130,10 @@ class _ShoppingCartState extends State<ShoppingCart> {
                       : e.stock,
                   e.stock);
               //validamos que la autorización sea de precio especial para asignar el precio correspondiente
-              if (provider.basketCurrent.authCurrent.authText == "PRECIO ESPECIAL") {
-                if (widget.customerCurrent.priceLiquid < e.price) {
-                  product.setPrice = widget.customerCurrent.priceLiquid;
-                }
-              }
+              //TODO: quitar esta validacion
+              // if (provider.basketCurrent.authCurrent.authText == "PRECIO ESPECIAL") {
+              //     product.setPrice = widget.customerCurrent.priceLiquid;
+              // }
                 productsList.add(product);
             });
           }
@@ -946,7 +945,6 @@ class _ShoppingCartState extends State<ShoppingCart> {
     if (provider.basketCurrent.folio != -1) {
       data["folio"] = provider.basketCurrent.folio;
     }
-    
     data["fecha_entrega"] =
         DateFormat('yyyy/MM/dd').format(provider.basketCurrent.datePrestamo);
     //se crea la data local
@@ -1558,6 +1556,19 @@ class _ShoppingCartState extends State<ShoppingCart> {
                   //validamos que sea credito ocasional para terminar la venta
                   if (widget.authList.first.authText == "CREDITO OCASIONAL") {
                     showConfirmSale(widget.customerCurrent.payment.first);
+                  }else{
+                  // validamos que sea precio especial
+                  if (widget.authList.first.authText == "PRECIO ESPECIAL") {
+                    showConfirmSale(widget.customerCurrent.payment.first);
+                  }else{
+                    Fluttertoast.showToast(
+          msg: "No se ha encontrado un procedimiento para esta venta",
+          timeInSecForIosWeb: 2,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+        );
+                  }
                   }
                 }
               } else {

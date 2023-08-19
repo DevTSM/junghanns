@@ -31,10 +31,16 @@ class _DebugState extends State<Debug> {
     super.initState();
     sales = [];
     itemBar=1;
-    getDataSales();
   }
 
-  getDataSales() async {}
+  getMethod(Map<String,dynamic>data){
+    if(data["tipo"]!=null){
+      if(data["tipo"]=="E"){
+        data["tipo"]="Efectivo";
+      }
+    }
+    return data;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -174,6 +180,9 @@ class _DebugState extends State<Debug> {
       Expanded(
           child:
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                const SizedBox(
+          height: 5,
+        ),
         RichText(
             text: TextSpan(children: [
               const TextSpan(text: "id Cliente: ", style: TextStyles.blue16_7),
@@ -182,22 +191,17 @@ class _DebugState extends State<Debug> {
                   style: TextStyles.blue19_7),
             ]),
             overflow: TextOverflow.ellipsis),
-        const SizedBox(
-          height: 5,
-        ),
+        
         Text(
           "Id registro: ${data["id"] ?? 0}",
           style: TextStyles.blue16_4,
         ),
         Text(
-          "Productos: ${jsonDecode(data["saleItems"])}",
+          "Productos: ${data["saleItems"]!=null?jsonDecode(data["saleItems"]):{"test":"Sin datos"}}",
           style: TextStyles.blue16_4,
         ),
-        const SizedBox(
-          height: 5,
-        ),
         Text(
-          "Metodos: ${jsonDecode(data["paymentMethod"])}",
+          "Metodos: ${data["paymentMethod"]!=null?jsonDecode(data["paymentMethod"]).map((e)=>getMethod(e)).toList():{"test":"Sin datos"}}",
           style: TextStyles.blue16_4,
         ),
         data["fecha"] != null
@@ -205,7 +209,9 @@ class _DebugState extends State<Debug> {
                 "Hora venta: ${DateFormat('hh:mm:ss a').format(DateTime.parse(data["fecha"]))}",
                 style: TextStyles.blue16_4,
               )
-            : Container()
+            : Container(),
+            const Divider(thickness: 1,
+            color: ColorsJunghanns.green,)
       ])),
       IconButton(
           onPressed: () {},
@@ -238,11 +244,8 @@ class _DebugState extends State<Debug> {
           style: TextStyles.blue16_4,
         ),
         Text(
-          "Descripcion: ${jsonDecode((data["desc"]??{"test:""sin datos"}))}",
+          "Descripcion: ${data["desc"]!=null?jsonDecode((data["desc"])):{"test:""sin datos"}}",
           style: TextStyles.blue16_4,
-        ),
-        const SizedBox(
-          height: 5,
         ),
         data["date"] != null
             ? Text(
@@ -250,7 +253,7 @@ class _DebugState extends State<Debug> {
                 style: TextStyles.blue16_4,
               )
             : Container(),
-            Divider(thickness: 1,
+            const Divider(thickness: 1,
             color: ColorsJunghanns.green,)
       ])),
       // IconButton(

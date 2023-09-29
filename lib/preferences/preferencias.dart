@@ -39,6 +39,12 @@ class PreferenciasUsuario {
   set lastBitacoraUpdate(String lastBitacoraUpdate) {
     prefs!.setString("lastBitacoraUpdate", lastBitacoraUpdate);
   }
+   String get lastRouteUpdate {
+    return prefs!.getString("lastRouteUpdate") ?? "";
+  }
+  set lastRouteUpdate(String lastRouteUpdate) {
+    prefs!.setString("lastRouteUpdate", lastRouteUpdate);
+  }
   String get statusRoute {
     return prefs!.getString("statusRoute") ?? "";
   }

@@ -15,11 +15,11 @@ String ipPueOr="https://pue-ote.jusoftdelivery.com/";
 String apiKeyStage = "76b2f0a4784e47d5d3ff89b1fd110984ea9f02bf";
 String clientSecretStage = "baea25384fe9c8e5140aa49e72a6a841";
 String messajeConnection="Error de comunicación con la Planta. La atención se completó correctamente de manera local. Por favor, sincronice.";
-String version = "23.9.12";
+String version = "23.9.35";
 String validVersion = "9.04";
 int timerDuration=28;
 
-String urlBaseManuality = ipPueOr;
+String urlBaseManuality = ipStage2;
 //String urlBase = ipCDMX;
 //String urlBase=prefs.urlBase;
 String apiKey = apiKeyStage;

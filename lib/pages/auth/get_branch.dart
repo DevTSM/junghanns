@@ -204,7 +204,7 @@ class _GetBranchState extends State<GetBranch> {
           alignment: Alignment.center,
           color: ColorsJunghanns.greenJ,
           child: Text(
-            "Iniciar sesión",
+            "Activar",
             style: TextStyles.white16SemiBoldIt,
           ),
         ),
@@ -267,7 +267,8 @@ class _GetBranchState extends State<GetBranch> {
             children: [
               Container(
                 alignment: Alignment.centerLeft,
-                child:IconButton(onPressed: ()=>setState((){isValitedOtp=false;}), icon: Icon(Icons.arrow_back_ios,color: ColorsJunghanns.green,))),
+                child:IconButton(onPressed: ()=>setState((){isValitedOtp=false;
+                pinC.clear();}), icon: Icon(Icons.arrow_back_ios,color: ColorsJunghanns.green,))),
               //Info Phone
               Container(
                       padding: const EdgeInsets.only(bottom: 5),

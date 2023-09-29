@@ -18,8 +18,7 @@ class Answer {
   ///200
   factory Answer.fromService(Response response, int statusOk,{String? message}) {
     try{
-    log("Status => ${response.statusCode} ${response.body.toString()}");
-
+    log("Status => ${response.statusCode} ${response.body}");
     if(response.statusCode==statusOk){
       log("/Respuesta exitosa");
       dynamic body = jsonDecode(response.body);
@@ -41,6 +40,7 @@ class Answer {
         log("/Respuesta satisfactoria");
         if (response.statusCode == 203) {
           log("/Respuesta Non-Authoritative Information");
+          dynamic body = jsonDecode(response.body==""?'{}':response.body);
           String urlBaseSafe = prefs.urlBase;
           String nameCEDIS = prefs.labelCedis;
           prefs.prefs!.clear();
@@ -49,7 +49,7 @@ class Answer {
           prefs.labelCedis = nameCEDIS;
           return Answer(
               body: {},
-              message: "Código de error ${response.statusCode}",
+              message: body["message"]??"Código de error ${response.statusCode}",
               status: response.statusCode,
               error: true);
         }
@@ -78,6 +78,7 @@ class Answer {
           prefs.labelCedis = nameCEDIS;
         }
         dynamic body = jsonDecode(response.body);
+        
         return Answer(
                 body: response.body,
                 message: response.statusCode==422?(body.map((e)=>e["message"]).toString()).toString():body["message"] ?? "Código de error ${response.statusCode}",

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:junghanns/models/answer.dart';
@@ -89,6 +90,28 @@ Future<Answer> getCreditos(int id) async {
     return Answer(
         body: e,
         message: "Algo salio mal, revisa tu conexion a internet.",
+        status: 1002,
+        error: true);
+  }
+}
+Future<Answer> setPrestamoOrComodato(Map<String,dynamic> data) async {
+  log("/CustomerServices <setPrestamoOrComodato>");
+  try {
+    var response = await http
+        .put(Uri.parse("${prefs.urlBase}devolucion"), headers: {
+          HttpHeaders.contentTypeHeader: 'application/json; charset=UTF-8',
+      "x-api-key": apiKey,
+      "client_secret": prefs.clientSecret,
+      "Authorization": "Bearer ${prefs.token}",
+    },
+    body: jsonEncode(data)
+    );
+    return Answer.fromService(response,202);
+  } catch (e) {
+    log("/CustomerServices <setPrestamoOrComodato> Catch");
+    return Answer(
+        body: e,
+        message: messajeConnection,
         status: 1002,
         error: true);
   }

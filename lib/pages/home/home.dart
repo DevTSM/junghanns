@@ -163,7 +163,7 @@ class _HomeState extends State<Home> {
             if (e.typeVisit == "ESPECIALES") {
               specialsA++;
             }
-            if (e.typeVisit == "CTE LLAMA") {
+            if (e.typeVisit == "SEGUNDA") {
               llamaA++;
             }
             if (e.typeVisit == "RUTA") {
@@ -176,6 +176,8 @@ class _HomeState extends State<Home> {
               entregaA++;
             }
             atendidos++;
+            break;
+            case 8:
             break;
           default:
             routeTotal++;
@@ -266,20 +268,9 @@ class _HomeState extends State<Home> {
             children: [
               Expanded(
                   flex: 4,
-                  child: Container(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
+                  child: Text(
                           checkDate(DateTime.now()),
                           style: TextStyles.blue19_7,
-                        ),
-                        Text(
-                          "${routeTotal + specials + llamaC + entrega} clientes para visitar",
-                          style: TextStyles.grey14_4,
-                        )
-                      ],
-                    ),
                   )),
               const SizedBox(
                 width: 10,
@@ -326,7 +317,7 @@ class _HomeState extends State<Home> {
                       Column(
                         children: [
                           Text(
-                            "${routeTotal + specials + llamaC + entrega}",
+                            "${routeTotal + specials + llamaC + entrega+secon}",
                             style: TextStyles.white40_7,
                           ),
                           const Text(
@@ -409,9 +400,9 @@ class _HomeState extends State<Home> {
                     "faltantes": llamaC + llamaCA,
                   },
                   {
-                    "type": "C. Llama",
+                    "type": "S. Vueltas",
                     "atendidos": llamaA,
-                    "faltantes": llamaA,
+                    "faltantes": secon+llamaA,
                   }
                 ],
                 Image.asset(

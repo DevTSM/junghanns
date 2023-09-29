@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:junghanns/components/empty/empty.dart';
 import 'package:junghanns/components/loading.dart';
 import 'package:junghanns/components/need_async.dart';
 import 'package:junghanns/components/without_internet.dart';
@@ -135,6 +136,22 @@ class _SpecialsState extends State<Specials> {
     }
   }
 
+  funSearch(CustomerModel value) {
+    if (buscadorC.text != "") {
+      if(value.name.toLowerCase().contains(buscadorC.text.toLowerCase()) ){
+        return true;
+      }
+      if(value.address.toLowerCase().contains(buscadorC.text.toLowerCase()) ){
+        return true;
+      }
+      if(value.idClient.toString().toLowerCase().contains(buscadorC.text.toLowerCase()) ){
+        return true;
+      }
+    } else {
+      return true;
+    }
+    return false;
+  }
   @override
   Widget build(BuildContext context) {
     setState(() {
@@ -159,16 +176,12 @@ class _SpecialsState extends State<Specials> {
                 const SizedBox(
                   height: 15,
                 ),
-                Visibility(
-                    visible: provider.connectionStatus < 4 &&
-                        customerList.isNotEmpty,
-                    child: buscador()),
+                buscador(),
                 customerList.isNotEmpty
                     ? Expanded(
                         child: SingleChildScrollView(
                             child: Column(
-                        children: searchList.map((e) {
-                          return Column(children: [
+                        children: customerList.map((e) =>funSearch(e)?Column(children: [
                             RoutesCard(
                                 updateList: getCustomerListDB,
                                 indexHome: 1,
@@ -199,15 +212,9 @@ class _SpecialsState extends State<Specials> {
                                 height: 15,
                               )
                             ])
-                          ]);
-                        }).toList(),
+                          ]):Container()).toList(),
                       )))
-                    : Expanded(
-                        child: Center(
-                            child: Text(
-                        "Sin clientes",
-                        style: TextStyles.blue18SemiBoldIt,
-                      )))
+                    : Expanded(child:empty(context))
               ],
             ),
           )),
@@ -282,8 +289,9 @@ class _SpecialsState extends State<Specials> {
         margin: const EdgeInsets.only(left: 15, right: 15, top: 5, bottom: 5),
         child: TextFormField(
             controller: buscadorC,
-            onEditingComplete: funSearch,
-            onChanged: (value) => funEmpty(value),
+            onChanged: (value) => setState(() {
+              
+            }),
             textAlignVertical: TextAlignVertical.center,
             style: TextStyles.blueJ15SemiBold,
             decoration: InputDecoration(
@@ -307,47 +315,5 @@ class _SpecialsState extends State<Specials> {
                     color: ColorsJunghanns.blue,
                   )),
             )));
-  }
-
-  funEmpty(String value) {
-    if (value == "") {
-      setState(() {
-        searchList = customerList;
-      });
-    }
-  }
-
-  funSearch() {
-    log("Cliente : ${buscadorC.text}");
-
-    if (buscadorC.text != "") {
-      searchList = [];
-      setState(() {
-        for (var element in customerList) {
-          if (element.name
-              .toLowerCase()
-              .startsWith(buscadorC.text.toLowerCase())) {
-            searchList.add(element);
-          } else {
-            if (element.address
-                .toLowerCase()
-                .startsWith(buscadorC.text.toLowerCase())) {
-              searchList.add(element);
-            } else {
-              if (element.idClient
-                  .toString()
-                  .toLowerCase()
-                  .startsWith(buscadorC.text.toLowerCase())) {
-                searchList.add(element);
-              }
-            }
-          }
-        }
-      });
-    } else {
-      setState(() {
-        searchList = customerList;
-      });
-    }
   }
 }

@@ -17,12 +17,12 @@ class DataBase {
     String path = await getDatabasesPath();
     //path = (await getExternalStorageDirectory())!.path;
     return openDatabase(
-      join(path, 'junny.db'),
+      join(path, 'junny2.db'),
       onCreate: (database, version) async {
         //lista de clientes
         //autorizaciones en jsonEncode
         //payment en jsonEncode
-        // 1= Ruta =>CR
+        // 1= Ruta =>CRs
         // 2= Especiales =>ES 
         // 3=Segundas V => SV 
         // 4=clientes llama confirmados => LC
@@ -32,7 +32,7 @@ class DataBase {
         // 8=Eliminados
 
         await database.execute(
-          "CREATE TABLE customer(id INTEGER PRIMARY KEY, orden INTEGER , idCustomer INTEGER, idRoute INTEGER,type INTEGER, lat DOUBLE, lng DOUBLE, priceLiquid DOUBLE, byCollet DOUBLE, purse DOUBLE, name TEXT NOT NULL, address TEXT NOT NULL , nameRoute TEXT NOT NULL,typeVisit TEXT NOT NULL, category TEXT NOT NULL,days TEXT NOT NULL, img TEXT NOT NULL, observacion TEXT,auth TEXT,payment TEXT,color TEXT,config INTEGER,history TEXT,cargoAdicional TEXT,referenciaDomicilio TEXT,billing TEXT,creditos TEXT)",
+          "CREATE TABLE customer(id INTEGER PRIMARY KEY, orden INTEGER , idCustomer INTEGER, idRoute INTEGER,type INTEGER, lat DOUBLE, lng DOUBLE, priceLiquid DOUBLE, byCollet DOUBLE, purse DOUBLE, name TEXT NOT NULL, address TEXT NOT NULL , nameRoute TEXT NOT NULL,typeVisit TEXT NOT NULL, category TEXT NOT NULL,days TEXT NOT NULL, img TEXT NOT NULL, observacion TEXT,auth TEXT,payment TEXT,color TEXT,config INTEGER,history TEXT,cargoAdicional TEXT,referenciaDomicilio TEXT,billing TEXT,creditos TEXT,isAuthPrice INTEGER)",
         );
         //lista de paradas en falso
         await database.execute(
@@ -68,6 +68,10 @@ class DataBase {
         await database.execute(
           "CREATE TABLE sale(id INTEGER PRIMARY KEY AUTOINCREMENT,idCustomer INTEGER ,idRoute INTEGER, lat DOUBLE, lng DOUBLE, saleItems TEXT, idAuth INTEGER,paymentMethod TEXT,idOrigin INTEGER,folio INTEGER,type TEXT,isUpdate INTEGER,fecha_entrega TEXT,id_marca_garrafon INTEGER,isError INTEGER,fecha_update TEXT,fecha TEXT)",
         );
+        //devoluciones offline
+        await database.execute(
+          "CREATE TABLE devolucion(id INTEGER PRIMARY KEY AUTOINCREMENT,idDocumento INTEGER,cantidad INTEGER, lat DOUBLE, lng DOUBLE,isUpdate INTEGER,isError INTEGER)",
+        );
         // Bitacora
         await database.execute(
           "CREATE TABLE bitacora(id INTEGER PRIMARY KEY AUTOINCREMENT,lat DOUBLE, lng DOUBLE,date TEXT,status TEXT,desc TEXT)",
@@ -79,6 +83,11 @@ class DataBase {
       },
       version: 1,
     );
+  }
+  Future<int> insertDevolucion(Map<String,dynamic> devolucion) async {
+    final Database db = await initializeDB();
+     return  await db.insert('devolucion', devolucion);
+
   }
   Future<int> insertStopRuta(StopRuta stop) async {
     final Database db = await initializeDB();
@@ -184,6 +193,7 @@ class DataBase {
       db.delete('customer');
       db.delete('notification');
       db.delete('bitacora');
+      db.delete('devolucion');
     }else{
       List<CustomerModel> dataAtendidos=await retrieveUsersType(7);
       db.delete('customer');
@@ -197,10 +207,19 @@ class DataBase {
       log(e.toString());
     }
   }
+  deleteDevoluciones() async {
+     final db = await initializeDB();
+    db.delete('devolucion');
+  }
+  deleteBitacora() async {
+     final db = await initializeDB();
+    db.delete('bitacora');
+  }
   deleteCustomers() async {
      final db = await initializeDB();
     db.delete('customer');
   }
+  
   deleteFolios() async {
      final db = await initializeDB();
     db.delete('folios');
@@ -269,9 +288,17 @@ class DataBase {
   }
   Future<bool> checkValidate()async{
     String path = await getDatabasesPath();
-    bool isValid=await databaseExists("$path/junghanns.db");
+    bool isValid=await databaseExists("$path/junny2.db");
     log("IsValid: $isValid");
     return isValid;
+  }
+  Future<List<Map<String, dynamic>>> retrieveDevolucion() async {
+    final Database db = await initializeDB();
+    return await db.query('devolucion');
+  }
+  Future<List<Map<String, dynamic>>> retrieveDevolucionAsync() async {
+    final Database db = await initializeDB();
+    return await db.query('devolucion',where: "isUpdate = ? and isError=?",whereArgs: [0,0]);
   }
   Future<List<FolioModel>> retrieveFolios() async {
     final Database db = await initializeDB();
@@ -390,6 +417,20 @@ class DataBase {
       whereArgs: [customerCurrent.id],
     );
   }
+  Future<void> updateDevolucion(Map<String,dynamic> devolucion) async {
+    // Get a reference to the database.
+    final db = await initializeDB();
+
+    // Update the given Dog.
+    await db.update(
+      'devolucion',
+      devolucion,
+      // Ensure that the Dog has a matching id.
+      where: 'id = ?',
+      // Pass the Dog's id as a whereArg to prevent SQL injection.
+      whereArgs: [devolucion["id"]],
+    );
+  }
   Future<void> updateFolio(FolioModel folioCurrent) async {
     // Get a reference to the database.
     final db = await initializeDB();
@@ -404,6 +445,7 @@ class DataBase {
       whereArgs: [folioCurrent.id],
     );
   }
+  
   Future<void> updateNotification(NotificationModel notification) async {
     // Get a reference to the database.
     final db = await initializeDB();

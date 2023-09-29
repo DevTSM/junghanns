@@ -139,6 +139,12 @@ class _ShoppingCartState extends State<ShoppingCart> {
           }
         }
       }).toList();
+      var priceEspecialList=productsList.where((e)=>e.idProduct==22);
+      if(priceEspecialList.isNotEmpty&& widget.customerCurrent.isAuthPrice==0){
+        setState(() {
+          priceEspecialList.first.setPrice=widget.customerCurrent.priceLiquid;
+        });
+      }
       setState(() {
         var exits = productsList.where((element) => element.rank == "");
         productListOther = exits.toList();
@@ -150,18 +156,18 @@ class _ShoppingCartState extends State<ShoppingCart> {
     });
   }
 
-  // checkPriceCvsPriceS() {
-  //   if (productsList.isNotEmpty) {
-  //     int index = productsList.indexWhere((element) => element.idProduct == 22);
-  //     if (index != -1) {
-  //       log("Index de liquido es: $index");
-  //       log("Price liquid: ${widget.customerCurrent.priceLiquid}");
-  //       if (widget.customerCurrent.priceLiquid < productsList[index].price) {
-  //         productsList[index].price = widget.customerCurrent.priceLiquid;
-  //       }
-  //     }
-  //   }
-  // }
+  checkPriceCvsPriceS() {
+    if (productsList.isNotEmpty) {
+      int index = productsList.indexWhere((element) => element.idProduct == 22);
+      if (index != -1) {
+        log("Index de liquido es: $index");
+        log("Price liquid: ${widget.customerCurrent.priceLiquid}");
+        if (widget.customerCurrent.priceLiquid < productsList[index].price) {
+          productsList[index].price = widget.customerCurrent.priceLiquid;
+        }
+      }
+    }
+  }
 
   getDataPayment() async {
     List<MethodPayment> paymentsList = [];
@@ -640,7 +646,8 @@ class _ShoppingCartState extends State<ShoppingCart> {
                                             .idProduct,
                                         provider
                                             .basketCurrent.sales.first.number,
-                                        widget.authList.first.idAuth)
+                                        widget.authList.first.idAuth,
+                                        phoneCurrent)
                                     .then((answer) {
                                   if (answer.error) {
                                     Fluttertoast.showToast(
@@ -1169,25 +1176,9 @@ class _ShoppingCartState extends State<ShoppingCart> {
     provider = Provider.of<ProviderJunghanns>(context);
     return Scaffold(
       backgroundColor: ColorsJunghanns.white,
-      appBar: AppBar(
-        backgroundColor: ColorsJunghanns.greenJ,
-        systemOverlayStyle: const SystemUiOverlayStyle(
-            statusBarColor: ColorsJunghanns.greenJ,
-            statusBarIconBrightness: Brightness.light,
-            statusBarBrightness: Brightness.light),
-        leading: Container(),
-        elevation: 0,
-        actions: [
-          Container(
-            alignment: Alignment.center,
-            padding: const EdgeInsets.only(right: 15),
-            child: Text(
-              "${prefs.labelCedis} V$version",
-              style: TextStyles.blue18SemiBoldIt,
-            ),
-          ),
-        ],
-      ),
+      appBar: PreferredSize(
+                preferredSize: const Size.fromHeight(0),
+                child: Container(),),
       body: Stack(
         children: [
           header(),

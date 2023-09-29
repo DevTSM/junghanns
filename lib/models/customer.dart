@@ -13,14 +13,18 @@ import 'package:junghanns/preferences/global_variables.dart';
 
 class CustomerModel {
   bool invoice;
+  int isAuthPrice;
   int id;
   int orden;
   int idClient;
   int idRoute;
   int type;
+  int numberS;
+  int idProdServS;
   double lat;
   double lng;
   double priceLiquid;
+  double priceS;
   double byCollect;
   double purse;
   String name;
@@ -31,6 +35,11 @@ class CustomerModel {
   String days;
   String img;
   String observation;
+  String referenceAddress;
+  String color;
+  String descServiceS;
+  String descriptionS;
+  String notifS;
   List<String> phones;
   List<MethodPayment> payment;
   List<SaleModel> history;
@@ -38,18 +47,11 @@ class CustomerModel {
   List<ConfigModel> configList;
   List<BillingModel> billing;
   List<OperationCustomerModel> operation;
-  String referenceAddress;
-  String color;
-  //
-  String descServiceS;
-  int numberS;
-  int idProdServS;
-  String descriptionS;
-  double priceS;
-  String notifS;
+  
 
   CustomerModel(
-      {required this.phones,
+      {required this.isAuthPrice,
+        required this.phones,
         required this.auth,
       required this.configList,
       required this.payment,
@@ -88,6 +90,7 @@ class CustomerModel {
 
   factory CustomerModel.fromState() {
     return CustomerModel(
+      isAuthPrice: 0,
       phones: [],
         auth: [],
         payment: [],
@@ -131,6 +134,7 @@ class CustomerModel {
     return CustomerModel(
       phones: [],
         invoice: false,
+        isAuthPrice: (data["price_auth"]??false)?0:1,
         id: data["id"],
         orden: data["orden"] ?? 0,
         idClient: data["idCliente"],
@@ -172,6 +176,7 @@ class CustomerModel {
       data["billing"].map((e)=>billing.add(BillingModel.fromService(e))).toList();
     }
     return CustomerModel(
+      isAuthPrice: (data["price_auth"]??false)?0:1,
       phones: [],
       billing: billing,
       operation: [],
@@ -247,6 +252,7 @@ class CustomerModel {
       operationMap.map((e) => operations.add(OperationCustomerModel.fromServices(e))).toList();
     }
     return CustomerModel(
+      isAuthPrice: data["isAuthPrice"]??0,
       phones: [],
         invoice: billing.isNotEmpty,
         billing: billing,
@@ -307,6 +313,7 @@ class CustomerModel {
       data["billing"].map((e)=>billing.add(BillingModel.fromService(e))).toList();
     }
     return CustomerModel(
+      isAuthPrice: (data["price_auth"]??false)?1:0,
       phones: [],
       operation: [],
       auth: List.from(data["auth"]).map((e)=>AuthorizationModel.fromService(e)).toList(), 
@@ -347,6 +354,7 @@ class CustomerModel {
   Map<String, dynamic> getMap() {
     return {
       'id': id,
+      'isAuthPrice':isAuthPrice,
       'orden': orden,
       'idCustomer': idClient,
       'idRoute': idRoute,
@@ -387,7 +395,6 @@ class CustomerModel {
   addHistory(Map<String, dynamic> data) {
     history.insert(0,SaleModel.fromService(data));
   }
-
   setMoney(double purse,{bool isOffline=false,int type=0}) async {
     this.purse = purse;
     if(isOffline){
@@ -454,7 +461,19 @@ class CustomerModel {
             : 0;
         notifS= data["notificacion"] ?? "";
   }
-  
+  updateData(CustomerModel current){
+    color= current.color; 
+      numberS= current.numberS; 
+      idProdServS= current.idProdServS; 
+      descriptionS= current.descriptionS; 
+      priceS= current.priceS;
+      notifS= current.notifS; 
+      descServiceS= current.descServiceS;
+      isAuthPrice= current.isAuthPrice;
+      invoice= current.invoice;
+      billing= current.billing;
+      orden= current.orden;
+  }
 }
 int getType(type){
   switch (type) {

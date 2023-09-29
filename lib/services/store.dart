@@ -140,7 +140,7 @@ Future<Answer> postResendCode(Map<String, dynamic> data) async {
   }
 }
 Future<Answer> setComodato(AndroidDeviceInfo build, int id, double lat,
-    double lng, int idProduct,int cantidad,int idAuth) async {
+    double lng, int idProduct,int cantidad,int idAuth,String phone) async {
   log("/StoreServices <setComodato> $cantidad");
   try {
     var response = await http.post(Uri.parse("${prefs.urlBase}rutasolicitud"),
@@ -152,7 +152,7 @@ Future<Answer> setComodato(AndroidDeviceInfo build, int id, double lat,
         },
         body: jsonEncode({
           "tipo": "FC",
-          //"telefono": phone.toString(),
+          "phone": phone,
           "lat": lat.toString(),
           "lon": lng.toString(),
           "id_cliente": id,
@@ -773,6 +773,26 @@ Future<Answer> putCancelOTP(Map<String, dynamic> data) async {
       log("/StoreServices <PutCancelOTP> 2-Fail");
       return Answer(body: dataOTP, message: dataOTP["message"]??"Error inesperado",status: response.statusCode, error: true);
     }
+  } catch (e) {
+    return Answer(
+        body: {"error": e},
+        message: "Conexion inestable con el back",
+        status: 1002,
+        error: true);
+  }
+}
+Future<Answer> getCancelAuth(Map<String, dynamic> data) async {
+  log("/StoreServices <getCancelAuth> $data");
+  try {
+    var response = await http.delete(Uri.parse("${prefs.urlBase}clienteautorizacion"),
+        headers: {
+          HttpHeaders.contentTypeHeader: 'application/json; charset=UTF-8',
+          "x-api-key": apiKey,
+          "client_secret": prefs.clientSecret,
+          "Authorization": "Bearer ${prefs.token}"
+        },
+        body: jsonEncode(data)).timeout(Duration(seconds: timerDuration+5));
+        return Answer.fromService(response, 202);
   } catch (e) {
     return Answer(
         body: {"error": e},

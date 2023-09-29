@@ -147,6 +147,18 @@ class _StopsState extends State<Stops> {
           setState(() {
             isLoading = false;
           });
+          if (prefs.token == "") {
+          Fluttertoast.showToast(
+            msg: "Las credenciales caducaron.",
+            timeInSecForIosWeb: 2,
+            toastLength: Toast.LENGTH_LONG,
+            gravity: ToastGravity.TOP,
+            webShowClose: true,
+          );
+          Timer(const Duration(milliseconds: 2000), () async {
+              Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+            });
+        }else{
           if (!answer.error) {
             handler.updateStopOff(1, id);
           } else {
@@ -171,7 +183,8 @@ class _StopsState extends State<Stops> {
           btnOkText: "Aceptar",
           btnOkOnPress: () => Navigator.pop(context, true),
         ).show();
-        });
+        }
+        }); 
       } else {
         Navigator.pop(context);
         Fluttertoast.showToast(
@@ -194,20 +207,9 @@ class _StopsState extends State<Stops> {
     provider = Provider.of<ProviderJunghanns>(context);
     return Scaffold(
       backgroundColor: ColorsJunghanns.white,
-      appBar: AppBar(
-        backgroundColor: ColorsJunghanns.whiteJ,
-        systemOverlayStyle: const SystemUiOverlayStyle(
-            statusBarColor: ColorsJunghanns.whiteJ,
-            statusBarIconBrightness: Brightness.dark,
-            statusBarBrightness: Brightness.dark),
-        leading: GestureDetector(
-          child: Container(
-              padding: const EdgeInsets.only(left: 24),
-              child: Image.asset("assets/icons/menu.png")),
-          onTap: () {},
-        ),
-        elevation: 0,
-      ),
+      appBar:  PreferredSize(
+                preferredSize: const Size.fromHeight(0),
+                child: Container(),),
       body: Container(
           color: ColorsJunghanns.whiteJ,
           child: Stack(children: [

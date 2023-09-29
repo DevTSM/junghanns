@@ -332,20 +332,9 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
     provider = Provider.of<ProviderJunghanns>(context);
     return Scaffold(
       backgroundColor: ColorsJunghanns.white,
-      appBar: AppBar(
-        backgroundColor: ColorsJunghanns.greenJ,
-        systemOverlayStyle: const SystemUiOverlayStyle(
-            statusBarColor: ColorsJunghanns.greenJ,
-            statusBarIconBrightness: Brightness.light,
-            statusBarBrightness: Brightness.light),
-        leading: GestureDetector(
-          child: Container(
-              padding: const EdgeInsets.only(left: 24),
-              child: Image.asset("assets/icons/menuWhite.png")),
-          onTap: () {},
-        ),
-        elevation: 0,
-      ),
+      appBar: PreferredSize(
+                preferredSize: const Size.fromHeight(0),
+                child: Container(),),
       body: Stack(
         children: [header(), isLoading ? const LoadingJunghanns() : itemList()],
       ),

@@ -10,6 +10,7 @@ import 'package:junghanns/models/stop.dart';
 import 'package:junghanns/models/stop_ruta.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/provider/provider.dart';
+import 'package:junghanns/services/customer.dart';
 import 'package:junghanns/services/store.dart';
 
 class Async {
@@ -102,6 +103,7 @@ class Async {
   Future <bool> getAsyncData() async {
     bool isNotSuccess=false;
     List<Map<String,dynamic>> salesPen= await handler.retrieveSales();
+    List<Map<String,dynamic>> devolucionesPen= await handler.retrieveDevolucionAsync();
     List<Map<String,dynamic>> stopPen=await handler.retrieveStopOffUpdate();
     List<StopRuta> stopRuta=await handler.retrieveStopRuta();
     if(salesPen.isNotEmpty){
@@ -171,6 +173,25 @@ class Async {
         
       }
     }
+    if(devolucionesPen.isNotEmpty){
+      provider.labelAsync = "Sincronizando devoluciones";
+      for(var e in devolucionesPen){
+        Map<String, dynamic> data = {
+          "id_documento":e["idDocumento"],
+            "cantidad": e["cantidad"],
+            "lat": e["lat"].toString(),
+            "lon": e["lng"].toString(),
+            "id_ruta": prefs.idRouteD,
+          };
+        await setPrestamoOrComodato(data).then((value) async {
+          if(!value.error){
+            await handler.updateDevolucion({"id":e["id"],"isUpdate":1});
+          }else{
+            isNotSuccess=true;
+          }
+        });
+      }
+    }
     if(stopRuta.isNotEmpty){
        provider.labelAsync = "Sincronizando paradas de ruta";
       for(var e in stopRuta){
@@ -216,6 +237,7 @@ class Async {
               webShowClose: true);
         return false;
       } else {
+        log("====> <==== ${answer.body}");
         List<CustomerModel> dataAtendidos=await handler.retrieveUsersType(7);
         await handler.deleteCustomers();
         await handler.insertUser(dataAtendidos);

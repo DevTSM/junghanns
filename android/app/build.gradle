@@ -58,8 +58,8 @@ android {
         applicationId "com.devts.junghanns"
         minSdkVersion 26
         targetSdkVersion 33
-        versionCode 67
-        versionName "23.9.12"
+        versionCode 75
+        versionName "23.9.35"
     }
 
     signingConfigs {

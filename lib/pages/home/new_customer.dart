@@ -1402,6 +1402,9 @@ class _NewCustomerState extends State<NewCustomer> {
           "entre_calle_2": streetR2.text,
           "observaciones": observacion.text,
           "hora_inicio": inicio,
+          "id_horario": schedule["id"],
+          "no_infantes": 0,
+          "no_adultos": int.tryParse(numberAdults.text) ?? 0,
           "hora_fin": fin
         }
       };

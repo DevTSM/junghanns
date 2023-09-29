@@ -192,3 +192,12 @@ class Decorations {
         )
       ]);
 }
+class JunnyDecoration{
+  static BoxDecoration orange255(double border) => BoxDecoration(
+      color: JunnyColor.orange_255,
+      borderRadius: BorderRadius.all(Radius.circular(border)));
+  static BoxDecoration blueCEOpacity_5Blue(double border) => BoxDecoration(
+      color: JunnyColor.blueCE.withOpacity(.5),
+      border: Border.all(color: JunnyColor.bluea4),
+      borderRadius: BorderRadius.all(Radius.circular(border)));
+}

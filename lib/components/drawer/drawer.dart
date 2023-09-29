@@ -11,7 +11,9 @@ import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/models/stop_ruta.dart';
 import 'package:junghanns/pages/debug/debug.dart';
 import 'package:junghanns/pages/home/atendidos.dart';
+import 'package:junghanns/pages/home/autorizaciones.dart';
 import 'package:junghanns/pages/home/call.dart';
+import 'package:junghanns/pages/home/cuentas.dart';
 import 'package:junghanns/pages/home/qr.dart';
 import 'package:junghanns/pages/transfer/transfer.dart';
 import 'package:junghanns/preferences/global_variables.dart';
@@ -102,6 +104,7 @@ drawer(ProviderJunghanns provider, BuildContext context,
                         icon,
                         width: 24,
                         height: 24,
+                        color: JunnyColor.blueC2,
                       ),
                   const SizedBox(
                     width: 10,
@@ -144,22 +147,6 @@ drawer(ProviderJunghanns provider, BuildContext context,
                                     context,
                                     MaterialPageRoute<void>(
                                         builder: (BuildContext context) =>
-                                            const Call())),
-                                "assets/icons/menuOp5B.png",
-                                "Cliente llama"),
-                            item(
-                                () => Navigator.push(
-                                    context,
-                                    MaterialPageRoute<void>(
-                                        builder: (BuildContext context) =>
-                                            const Transfer())),
-                                "assets/icons/menuOp4B.png",
-                                "Transferencias"),
-                            item(
-                                () => Navigator.push(
-                                    context,
-                                    MaterialPageRoute<void>(
-                                        builder: (BuildContext context) =>
                                             const Atendidos())),
                                 "assets/icons/iconCheck.png",
                                 "Atendidos"),
@@ -168,10 +155,34 @@ drawer(ProviderJunghanns provider, BuildContext context,
                                     context,
                                     MaterialPageRoute<void>(
                                         builder: (BuildContext context) =>
+                                            const Autorizaciones())),
+                                "assets/icons/auth.png",
+                                "Autorizaciones"),
+                            item(
+                                () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute<void>(
+                                        builder: (BuildContext context) =>
+                                            const Call())),
+                                "assets/icons/menuOp5B.png",
+                                "Cliente llama"),
+                                // item(
+                                // () => Navigator.push(
+                                //     context,
+                                //     MaterialPageRoute<void>(
+                                //         builder: (BuildContext context) =>
+                                //             const Cuentas())),
+                                // "assets/icons/transfer.png",
+                                // "Cuentas"),
+                            item(
+                                () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute<void>(
+                                        builder: (BuildContext context) =>
                                             const Debug())),
                                 "assets/icons/observationIcon.png",
                                 "Debug"),
-                            item(
+                                item(
                               () => Navigator.push(
                                   context,
                                   MaterialPageRoute<void>(
@@ -185,6 +196,14 @@ drawer(ProviderJunghanns provider, BuildContext context,
                                 color: ColorsJunghanns.blue,
                               ),
                             ),
+                            item(
+                                () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute<void>(
+                                        builder: (BuildContext context) =>
+                                            const Transfer())),
+                                "assets/icons/menuOp4B.png",
+                                "Transferencias"),
                             item(
                               () async {
                                 provider.asyncProcess=true;

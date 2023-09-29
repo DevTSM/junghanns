@@ -24,3 +24,22 @@ Future<Answer> getSchedules() async {
         error: true);
   }
 }
+Future<Answer> getCuentas(int id) async {
+  log("/StoreServices <getCuentas>");
+  try {
+    var body = await http.get(Uri.parse("${prefs.urlBase}empresa?id=$id"), headers: {
+      "Content-Type": "aplication/json",
+      "x-api-key": apiKey,
+      "client_secret": prefs.clientSecret,
+      "Authorization": "Bearer ${prefs.token}",
+    },).timeout(Duration(seconds: timerDuration));
+    return Answer.fromService(body,200,message: "Error inesperado");
+  } catch (e) {
+    log("/StoreServices <getSchedules> Catch ${e.toString()}");
+    return Answer(
+        body: e,
+        message: "Conexion inestable con el back",
+        status: 1002,
+        error: true);
+  }
+}

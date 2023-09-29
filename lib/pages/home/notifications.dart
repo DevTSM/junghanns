@@ -4,6 +4,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:junghanns/components/empty/empty.dart';
 import 'package:junghanns/components/loading.dart';
 import 'package:junghanns/components/need_async.dart';
 import 'package:junghanns/components/without_internet.dart';
@@ -57,8 +58,9 @@ class _NotificactionsState extends State<Notificactions> {
           onRefresh: () async {
             getData();
           },
-          child: SizedBox(
+          child: Container(
               height: double.infinity,
+              color: JunnyColor.white,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -70,9 +72,9 @@ class _NotificactionsState extends State<Notificactions> {
                   const SizedBox(
                     height: 15,
                   ),
-                  Column(
+                  notifications.isNotEmpty?Column(
                     children: notifications.map((e) => NotificationCard(current: e)).toList(),
-                  )
+                  ):Expanded(child:empty(context))
                 ],
               ))),
       Visibility(visible: isLoading, child: const LoadingJunghanns())

@@ -3,6 +3,8 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:intl/intl.dart';
+import 'package:junghanns/components/empty/empty.dart';
 import 'package:junghanns/components/loading.dart';
 import 'package:junghanns/components/need_async.dart';
 import 'package:junghanns/components/without_internet.dart';
@@ -43,7 +45,24 @@ class _RoutesState extends State<Routes> {
     searchList = [];
     getCustomerListDB();
   }
-
+  
+  funSearch(CustomerModel value) {
+    if (buscadorC.text != "") {
+      if(value.name.toLowerCase().contains(buscadorC.text.toLowerCase()) ){
+        return true;
+      }
+      if(value.address.toLowerCase().contains(buscadorC.text.toLowerCase()) ){
+        return true;
+      }
+      if(value.idClient.toString().toLowerCase().contains(buscadorC.text.toLowerCase()) ){
+        return true;
+      }
+    } else {
+      return true;
+    }
+    return false;
+  }
+  
   getCustomerListDB() async {
     customerList.clear();
     searchList.clear();
@@ -63,9 +82,8 @@ class _RoutesState extends State<Routes> {
   getListUpdate(List<CustomerModel> users, int id) {
     log("Ultimo cliente $id");
     Timer(const Duration(milliseconds: 800), () async {
-      
-      await getCustomers().then((answer) {
-        
+      await getCustomers().then((answer) async {
+        prefs.lastRouteUpdate = DateTime.now().toString();
         if (prefs.token == "") {
           Fluttertoast.showToast(
             msg: "Las credenciales caducaron.",
@@ -79,7 +97,7 @@ class _RoutesState extends State<Routes> {
             });
         } else {
           if (!answer.error) {
-            //lista que se va a guardar
+            //lista que se va a agregar a local
             List<CustomerModel> list = [];
             //Lista de clientes eliminados
             List<CustomerModel> listDelete=[];
@@ -101,12 +119,30 @@ class _RoutesState extends State<Routes> {
                       //3 => segundas vueltas y 4 => clientes llama confirmados
                   customerList.add(customer);
                 }
-              }else{
-                //si existe pero es segunda vuelta se actualiza su tipo a no atendido
-                //tipo 3 => Segunda vuelta
+              }
+              //el registro del cliente ya existe
+              else{
+                //se pregunta si el nuevo es segunda vuelta (3)
                 if(customer.type==3){
-                  exits.first.setType(3);
+                  //buscamos que de las visitas que tiene el cliente el id ya exista 
+                  var exits2=exits.where((element) => element.id==customer.id);
+                  if(exits2.isEmpty){
+                    //si no existe el id al ultimo se le asigna el type 8 para sacarlo del universo visible
+                    //TODO: lo comentamos para segir viendolo en atendidos
+                    //exits.first.setType(8);
+                    //agregamos a la nueva visita a la lista de nuevos
+                  list.add(customer);
                   customerList.add(customer);
+                  }else{
+                    //si existe no lo agregamos
+                    log("El registro ya existe");
+                  }
+                  log("===> ${exits.first.id} ::: ${customer.id}");
+                }
+                else{
+                  //se actualiza solo una parte de la data del cliente
+                  exits.first.updateData(customer);
+                  await handler.updateUser(exits.first);
                 }
               }
             }
@@ -173,12 +209,18 @@ class _RoutesState extends State<Routes> {
                   height: 15,
                 ),
                 buscador(),
+                Visibility(
+                visible: prefs.lastRouteUpdate != "",
+                child: Padding(padding: const EdgeInsets.only(left: 15,top: 5,bottom: 5),
+                child:Text(
+                  "Ultima actualización: ${DateFormat('hh:mm a').format(prefs.lastBitacoraUpdate != "" ? DateTime.parse(prefs.lastBitacoraUpdate) : DateTime.now())}",
+                  style: TextStyles.blue13It,
+                ))),
                 customerList.isNotEmpty
                     ? Expanded(
                         child: SingleChildScrollView(
                             child: Column(
-                        children: searchList.map((e) {
-                          return Column(children: [
+                        children: customerList.map((e)=>funSearch(e)?Column(children: [
                             RoutesCard(
                                 updateList: getCustomerListDB,
                                 indexHome: 2,
@@ -209,15 +251,10 @@ class _RoutesState extends State<Routes> {
                                 height: 15,
                               )
                             ])
-                          ]);
-                        }).toList(),
+                          ]):Container()
+                        ).toList(),
                       )))
-                    : Expanded(
-                        child: Center(
-                            child: Text(
-                        "Sin clientes en ruta",
-                        style: TextStyles.blue18SemiBoldIt,
-                      )))
+                    : Expanded(child:empty(context))
               ],
             ),
           )),
@@ -231,9 +268,9 @@ class _RoutesState extends State<Routes> {
           color: ColorsJunghanns.lightBlue,
           padding: EdgeInsets.only(
               right: 15, left: 15, top: 10, bottom: size.height * .06),
-          child: Column(
+          child: const Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
+            children: [
               Text(
                 "Ruta de trabajo",
                 style: TextStyles.blue27_7,
@@ -290,7 +327,9 @@ class _RoutesState extends State<Routes> {
         margin: const EdgeInsets.only(left: 15, right: 15, top: 5, bottom: 5),
         child: TextFormField(
             controller: buscadorC,
-            onChanged: (value) => funSearch(value),
+            onChanged: (value) => setState(() {
+              
+            }),
             textAlignVertical: TextAlignVertical.center,
             style: TextStyles.blueJ15SemiBold,
             decoration: InputDecoration(
@@ -316,35 +355,5 @@ class _RoutesState extends State<Routes> {
             )));
   }
 
-  funSearch(String value) {
-    if (buscadorC.text != "") {
-      searchList = [];
-      setState(() {
-        for (var element in customerList) {
-          if (element.name
-              .toLowerCase()
-              .startsWith(buscadorC.text.toLowerCase())) {
-            searchList.add(element);
-          } else {
-            if (element.address
-                .toLowerCase()
-                .startsWith(buscadorC.text.toLowerCase())) {
-              searchList.add(element);
-            } else {
-              if (element.idClient
-                  .toString()
-                  .toLowerCase()
-                  .startsWith(buscadorC.text.toLowerCase())) {
-                searchList.add(element);
-              }
-            }
-          }
-        }
-      });
-    } else {
-      setState(() {
-        searchList = customerList;
-      });
-    }
-  }
+  
 }

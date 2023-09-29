@@ -110,7 +110,7 @@ Future<Answer> tokenKernelActive(String token, double lat, double lng) async {
           status: responseAwait.statusCode,
           error: false);
     } else {
-      log("/AuthServices <tokenKernelActive> Fail");
+      log("/AuthServices <tokenKernelActive> Fail $response");
       return Answer(
           body: response,
           message: response["message"] ?? "",
@@ -127,47 +127,7 @@ Future<Answer> tokenKernelActive(String token, double lat, double lng) async {
   }
 }
 
-Future<Answer> validateOTP(
-    String token, String code, double lat, double lng) async {
-  log("/AuthServices <validateOTP>");
-  try {
-    var responseAwait =
-        await http.put(Uri.parse("https://junghannskernel.com/otp"),
-            headers: {
-              HttpHeaders.contentTypeHeader: 'application/json; charset=UTF-8',
-              "x-api-key": "4c190588c5f7dd27369308c1c1c4545924ddd02d",
-              "Authorization": "Bearer $token"
-            },
-            body: jsonEncode({
-              "code": code,
-              "lat": lat.toString(),
-              "lon": lng.toString(),
-            }));
-    var response = jsonDecode(responseAwait.body);
-    if (responseAwait.statusCode == 200) {
-      log("/AuthServices <validateOTP> Successfull");
-      return Answer(
-          body: response,
-          message: "",
-          status: responseAwait.statusCode,
-          error: false);
-    } else {
-      log("/AuthServices <validateOTP> Fail ${response.toString()}");
-      return Answer(
-          body: response,
-          message: response.toString(),
-          status: responseAwait.statusCode,
-          error: true);
-    }
-  } catch (e) {
-    log("/AuthServices <validateOTP> Catch ${e.toString()}");
-    return Answer(
-        body: e,
-        message: "Algo salio mal, revisa tu conexion a internet.",
-        status: 1002,
-        error: true);
-  }
-}
+
 
 Future<Answer> getToken(String user) async {
   log("/AuthServices <getToken>");
@@ -309,6 +269,33 @@ Future<Answer> getFolio(String folio, int idProduct, int idRoute) async {
   } catch (e) {
     return Answer(
         body: {"error": e},
+        message: "Algo salio mal, revisa tu conexion a internet.",
+        status: 1002,
+        error: true);
+  }
+}
+//////
+Future<Answer> validateOTP(
+    String token, String code, double lat, double lng) async {
+  log("/AuthServices <validateOTP>");
+  try {
+    var responseAwait =
+        await http.put(Uri.parse("https://junghannskernel.com/otp"),
+            headers: {
+              HttpHeaders.contentTypeHeader: 'application/json; charset=UTF-8',
+              "x-api-key": "4c190588c5f7dd27369308c1c1c4545924ddd02d",
+              "Authorization": "Bearer $token"
+            },
+            body: jsonEncode({
+              "code": code,
+              "lat": lat.toString(),
+              "lon": lng.toString(),
+            }));
+            return Answer.fromService(responseAwait, 200);
+  } catch (e) {
+    log("/AuthServices <validateOTP> Catch ${e.toString()}");
+    return Answer(
+        body: e,
         message: "Algo salio mal, revisa tu conexion a internet.",
         status: 1002,
         error: true);

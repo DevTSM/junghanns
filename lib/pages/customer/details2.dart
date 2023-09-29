@@ -7,6 +7,7 @@ import 'package:junghanns/components/modal/show_data.dart';
 import 'package:junghanns/components/select.dart';
 import 'package:junghanns/models/operation_customer.dart';
 import 'package:junghanns/models/stop_ruta.dart';
+import 'package:junghanns/pages/home/cuentas.dart';
 import 'package:linear_progress_bar/linear_progress_bar.dart';
 import 'package:location/location.dart';
 import 'package:auto_size_text/auto_size_text.dart';
@@ -87,6 +88,8 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
     getHistory();
     getDataP();
   }
+
+  
 
   setCurrentLocation() async {
     try {
@@ -211,12 +214,34 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
   }
   
   getDataP() async {
+    if(itemBar==1){
+      setState(() {
+        isLoading=true;
+      });
+    }
+    //obtenemos la lista de operaciones por sincronizar
+    List<Map<String,dynamic>> listOperationHandler=await handler.retrieveDevolucionAsync();
     await getCreditos(widget.customerCurrent.idClient).then((answer) {
+      setState(() {
+        isLoading=false;
+      });
       if (!answer.error) {
         operations.clear();
         for(var e in answer.body){
-        setState(()=>
-          operations.add(OperationCustomerModel.fromServices(e)));
+          OperationCustomerModel currentOperation = OperationCustomerModel.fromServices(e);
+          //validamos que no exista en un registro local
+          if(listOperationHandler.where((element) => (element["idDocumento"]??"")==currentOperation.folio).isEmpty){
+            setState((){
+              operations.add(OperationCustomerModel.fromServices(e));
+            });
+          }
+        
+        }
+        //si no hay operaciones y el itembar este en "por cobrar" se regresa al dashboard
+        if(itemBar==1&&operations.isEmpty){
+          setState(() {
+            itemBar=0;
+          });
         }
         widget.customerCurrent.setCreditos(operations);
         if(operations.where((element) => element.typeInt==1).isNotEmpty){
@@ -232,7 +257,13 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
           currentItem=items.first;
         }
       }else{
-        setState(()=>operations=widget.customerCurrent.operation); 
+        setState((){
+          operations=widget.customerCurrent.operation;
+          //si no hay operaciones y el itembar este en "por cobrar" se regresa al dashboard
+          if(itemBar==1&&operations.isEmpty){
+            itemBar=0;
+          }
+        }); 
         if(operations.where((element) => element.typeInt==1).isNotEmpty){
           items.add({"id":1,"descripcion":"Comodato"});
         }
@@ -478,16 +509,11 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
     return !provider.asyncProcess
         ? Stack(children: [
             Scaffold(
-              appBar: AppBar(
-                leadingWidth: 30,
-                backgroundColor: ColorsJunghanns.blueJ,
-                systemOverlayStyle: const SystemUiOverlayStyle(
-                    statusBarColor: ColorsJunghanns.blueJ,
-                    statusBarIconBrightness: Brightness.light,
-                    statusBarBrightness: Brightness.light),
-                leading: Container(),
-                elevation: 0,
-              ),
+              appBar: PreferredSize(
+                preferredSize: const Size.fromHeight(10),
+                child: Container(
+                  color: JunnyColor.bluea4,
+                ),),
               backgroundColor: ColorsJunghanns.lightBlue,
               body: refreshScroll(),
               bottomNavigationBar: bottomBar(() {}, widget.indexHome,
@@ -788,6 +814,23 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
             height: 10,
           ),
           Container(
+            padding: const EdgeInsets.only(left: 15,right: 15),
+            width: double.infinity,
+                                    child: ButtonJunghanns(
+                                        decoration: JunnyDecoration.blueCEOpacity_5Blue(10),
+                                        style: JunnyText.bluea4(FontWeight.w500, 16),
+                                        fun: ()=>showCuentas(context, widget.customerCurrent.idClient),
+                                        isIcon: true,
+                                        icon: Image.asset(
+                                          "assets/icons/transfer.png",
+                                          color: JunnyColor.green24,
+                                          height: 30,
+                                        ),
+                                        label: "Cuentas para transferencia")),
+          const SizedBox(
+            height: 10,
+          ),
+          Container(
               padding: const EdgeInsets.only(left: 10, right: 10),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -919,7 +962,7 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
       children: [
         Padding(padding: const EdgeInsets.only(left: 10,right: 10,top: 20),child:selectMap(context, (){}, items, currentItem)),
         Column(
-      children:operations.where((element) => element.typeInt==currentItem["id"]).toList().map((e) => OperationsCard(current: e),).toList()
+      children:operations.where((element) => element.typeInt==currentItem["id"]).toList().map((e) => OperationsCard(current: e,update:getDataP,currentClient:widget.customerCurrent)).toList()
     )
       ],
     );

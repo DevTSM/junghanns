@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:junghanns/components/empty/empty.dart';
 import 'package:junghanns/components/need_async.dart';
 import 'package:junghanns/components/without_internet.dart';
 import 'package:junghanns/models/customer.dart';
@@ -89,7 +90,7 @@ class _DebugState extends State<Debug> {
                               return cardDebug(snapshot.data?[index] ?? {});
                             });
                       } else {
-                        return Container();
+                        return empty(context);
                       }
                     }):FutureBuilder(
                     future: handler.retrieveBitacora(),
@@ -102,7 +103,7 @@ class _DebugState extends State<Debug> {
                               return cardBitacora(snapshot.data?[index] ?? {});
                             });
                       } else {
-                        return Container();
+                        return empty(context);
                       }
                     }))
           ],

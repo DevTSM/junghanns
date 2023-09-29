@@ -49,6 +49,8 @@ class RoutesCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis),
                   Text("${customerCurrent.orden} | ${customerCurrent.name}",
                       style: TextStyles.grey14_4),
+                  Text("N.T. ${customerCurrent.id}",
+                      style: TextStyles.grey12_4),
                 ],
               )),
             ],

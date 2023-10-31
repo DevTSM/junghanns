@@ -121,37 +121,39 @@ selectMap(BuildContext context, Function onChange,
     List<Map<String, dynamic>> items, Map<String, dynamic> current,
     {Function? cancel,BoxDecoration? decoration,TextStyle? style}) {
   return Container(
-      decoration: decoration??Decorations.whiteJCard,
-      padding: const EdgeInsets.only(left: 10, right: 10),
-      width: double.infinity,
-      child: items.length > 1
-          ? DropdownButton<Map<String, dynamic>>(
-              value: current,
-              isExpanded: true,
-              underline: Container(),
-              icon: const Icon(
-                  FontAwesomeIcons.caretDown,
-                  color: ColorsJunghanns.blue,
-                ),
-              elevation: 10,
-              onChanged: (Map<String, dynamic>? value) => onChange(value),
-              items: items.map<DropdownMenuItem<Map<String, dynamic>>>(
-                  (Map<String, dynamic> value) {
-                return DropdownMenuItem<Map<String, dynamic>>(
-                  value: value,
-                  child: Text(
-                    value["descripcion"],
-                    style: style??TextStyles.blue18SemiBoldIt,
-                    textAlign: TextAlign.center,
-                  ),
-                );
-              }).toList(),
-            )
-          : items.isNotEmpty
-              ? Text(
-                  items.first["descripcion"],
-                  style: style??TextStyles.blue18SemiBoldIt,
-                  textAlign: TextAlign.center,
-                )
-              : const Text("No se encontraron datos"));
+    decoration: decoration??Decorations.blueOpacity(.1, 16) ,
+    padding: const EdgeInsets.only(left: 10, right: 10),
+    width: double.infinity,
+    child: items.length > 1
+      ? DropdownButton<Map<String, dynamic>>(
+        value: current,
+        isExpanded: true,
+        underline: Container(),
+        icon: const Icon(
+          FontAwesomeIcons.caretDown,
+          color: ColorsJunghanns.blue,
+        ),
+        elevation: 30,
+        onChanged: (Map<String, dynamic>? value) => onChange(value),
+        items: items.map<DropdownMenuItem<Map<String, dynamic>>>(
+          (Map<String, dynamic> value) {
+            return DropdownMenuItem<Map<String, dynamic>>(
+              value: value,
+              child: Text(
+                value["descripcion"],
+                style: style??TextStyles.blue18SemiBoldIt,
+                textAlign: TextAlign.center,
+              ),
+            );
+          }).toList(),
+      )
+      : items.isNotEmpty
+        ? Text(
+          items.first["descripcion"],
+          style: style??TextStyles.blue18SemiBoldIt,
+          textAlign: TextAlign.center,
+        )
+        : const Text("No se encontraron datos")
+  );
 }
+

@@ -200,4 +200,16 @@ class JunnyDecoration{
       color: JunnyColor.blueCE.withOpacity(.5),
       border: Border.all(color: JunnyColor.bluea4),
       borderRadius: BorderRadius.all(Radius.circular(border)));
+  static BoxDecoration whiteBox(double size) =>BoxDecoration(
+    color: Colors.white,
+    borderRadius: BorderRadius.all(
+      Radius.circular(size),
+    ),
+    boxShadow: const [
+      BoxShadow(
+        color: Colors.black38,
+        blurRadius: 1.0,
+      )
+    ]
+  );
 }

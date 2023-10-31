@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:developer';
 
 import 'package:auto_size_text/auto_size_text.dart';
@@ -14,6 +13,7 @@ import 'package:junghanns/services/auth.dart';
 import 'package:location/location.dart';
 import 'package:pin_code_text_field/pin_code_text_field.dart';
 import 'package:provider/provider.dart';
+
 import '../../components/loading.dart';
 import '../../styles/color.dart';
 import '../../styles/decoration.dart';
@@ -119,7 +119,7 @@ class _GetBranchState extends State<GetBranch> {
     });
       if(answer.error){
         Fluttertoast.showToast(
-          msg: answer.message,
+          msg: "La sesión ha expirado o el código es incorrecto.",
           timeInSecForIosWeb: 2,
           toastLength: Toast.LENGTH_LONG,
           gravity: ToastGravity.TOP,

@@ -78,7 +78,7 @@ class OperationsCard extends StatelessWidget {
       };
       int id = await handler.insertDevolucion(data);
       await setPrestamoOrComodato({
-        "id_documento": current.folio,
+        "id_documento": current.idDocument,
         "cantidad": count,
         "lat": currentLocation.latitude.toString(),
         "lon": currentLocation.longitude.toString(),
@@ -112,7 +112,7 @@ class OperationsCard extends StatelessWidget {
           }));
           } else {
             //se elimina la operacion del cliente 
-            currentClient.operation.removeWhere((element) => element.folio==current.folio);
+            (currentClient.operation.where((element) => element.folio==current.folio).firstOrNull??OperationCustomerModel.fromState()).updateCount=current.amount-count;
             //se actualiza en la base local
           await handler.updateUser(currentClient).then((value){
             update();

@@ -1,7 +1,7 @@
 // ignore_for_file: avoid_unnecessary_containers
 import 'dart:async';
 import 'dart:convert';
-import 'dart:developer';
+
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -544,10 +544,9 @@ class _HomeState extends State<Home> {
             });
             provider.asyncProcess = true;
             provider.isNeedAsync = false;
-            prefs.lastBitacoraUpdate = DateTime.now().toString();
+            
             Async async = Async(provider: provider);
             await async.initAsync().then((value) async {
-              log(" ////////// $value");
               await handler.inserBitacora({
                 "lat": (currentLocation != null ? currentLocation.latitude : 0),
                 "lng": currentLocation != null ? currentLocation.longitude : 0,

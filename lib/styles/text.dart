@@ -363,4 +363,9 @@ class JunnyText {
     color: JunnyColor.grey_255,
     fontFamily: 'Roboto',
   );
+  static TextStyle semiBoldBlueA1(double size) => TextStyle(
+    fontSize: size,
+    fontFamily: 'MyriadPro-SemiBold',
+    color: JunnyColor.blueA1
+  );
 }

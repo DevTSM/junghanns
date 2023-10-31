@@ -38,7 +38,7 @@ class _ShowCodeAuth extends State<ShowCodeAuth> {
         Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-          Text("Ingresa el codigo que te proporciono operaciones",style: JunnyText.bluea4(FontWeight.w700, 18),textAlign: TextAlign.center,),
+          Text("Ingresa el código que te proporcionó Operaciones",style: JunnyText.bluea4(FontWeight.w700, 18),textAlign: TextAlign.center,),
           Container(
             margin: const EdgeInsets.only(top: 18),
             child: TextFormField(

@@ -1,11 +1,10 @@
 import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
+
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:junghanns/database/async.dart';
 import 'package:junghanns/pages/auth/get_branch.dart';
 import 'package:junghanns/pages/home/home_principal.dart';
@@ -15,6 +14,7 @@ import 'package:junghanns/styles/color.dart';
 import 'package:linear_progress_bar/linear_progress_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:sqflite/sqflite.dart';
+
 import 'auth/login.dart';
 
 class Opening extends StatefulWidget {

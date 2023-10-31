@@ -8,16 +8,16 @@ import 'package:junghanns/models/product.dart';
 import 'package:junghanns/models/refill.dart';
 import 'package:junghanns/models/stop.dart';
 import 'package:junghanns/models/stop_ruta.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:sqflite/sqflite.dart';
+import 'package:junghanns/preferences/global_variables.dart';
 import 'package:path/path.dart';
+import 'package:sqflite/sqflite.dart';
 
 class DataBase {
   Future<Database> initializeDB() async {
     String path = await getDatabasesPath();
     //path = (await getExternalStorageDirectory())!.path;
     return openDatabase(
-      join(path, 'junny2.db'),
+      join(path, nameDB),
       onCreate: (database, version) async {
         //lista de clientes
         //autorizaciones en jsonEncode
@@ -32,7 +32,7 @@ class DataBase {
         // 8=Eliminados
 
         await database.execute(
-          "CREATE TABLE customer(id INTEGER PRIMARY KEY, orden INTEGER , idCustomer INTEGER, idRoute INTEGER,type INTEGER, lat DOUBLE, lng DOUBLE, priceLiquid DOUBLE, byCollet DOUBLE, purse DOUBLE, name TEXT NOT NULL, address TEXT NOT NULL , nameRoute TEXT NOT NULL,typeVisit TEXT NOT NULL, category TEXT NOT NULL,days TEXT NOT NULL, img TEXT NOT NULL, observacion TEXT,auth TEXT,payment TEXT,color TEXT,config INTEGER,history TEXT,cargoAdicional TEXT,referenciaDomicilio TEXT,billing TEXT,creditos TEXT,isAuthPrice INTEGER)",
+          "CREATE TABLE customer(id INTEGER PRIMARY KEY, orden INTEGER , idCustomer INTEGER, idRoute INTEGER,type INTEGER, lat DOUBLE, lng DOUBLE, priceLiquid DOUBLE, byCollet DOUBLE, purse DOUBLE, name TEXT NOT NULL, address TEXT NOT NULL , nameRoute TEXT NOT NULL,typeVisit TEXT NOT NULL, category TEXT NOT NULL,days TEXT NOT NULL, img TEXT NOT NULL, observacion TEXT,auth TEXT,payment TEXT,color TEXT,config INTEGER,history TEXT,cargoAdicional TEXT,referenciaDomicilio TEXT,billing TEXT,creditos TEXT,isAuthPrice INTEGER,ventaPermitida INTEGER)",
         );
         //lista de paradas en falso
         await database.execute(
@@ -288,7 +288,7 @@ class DataBase {
   }
   Future<bool> checkValidate()async{
     String path = await getDatabasesPath();
-    bool isValid=await databaseExists("$path/junny2.db");
+    bool isValid=await databaseExists("$path/$nameDB");
     log("IsValid: $isValid");
     return isValid;
   }

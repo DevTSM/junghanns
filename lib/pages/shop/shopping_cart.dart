@@ -113,12 +113,14 @@ class _ShoppingCartState extends State<ShoppingCart> {
       List<ProductModel> dataList = await handler.retrieveProducts();
       dataList.map((e) {
         if (provider.basketCurrent.authCurrent.idAuth == 0) {
+          
           if (e.stock > 0) {
             setState(() {
               productsList.add(e);
             });
           }
         } else {
+          
           if (e.idProduct ==
              provider.basketCurrent.authCurrent.product.idProduct) {
             setState(() {
@@ -129,6 +131,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
                       ? product.stock
                       : e.stock,
                   e.stock);
+                  log("========> Producto ${product.getMap()}");
               //validamos que la autorización sea de precio especial para asignar el precio correspondiente
               //TODO: quitar esta validacion
               // if (provider.basketCurrent.authCurrent.authText == "PRECIO ESPECIAL") {
@@ -140,7 +143,8 @@ class _ShoppingCartState extends State<ShoppingCart> {
         }
       }).toList();
       var priceEspecialList=productsList.where((e)=>e.idProduct==22);
-      if(priceEspecialList.isNotEmpty&& widget.customerCurrent.isAuthPrice==0){
+      if(priceEspecialList.isNotEmpty&& widget.customerCurrent.isAuthPrice==0&&provider.basketCurrent.authCurrent.idAuth == 0){
+        log("========> Producto ${widget.customerCurrent.isAuthPrice}");
         setState(() {
           priceEspecialList.first.setPrice=widget.customerCurrent.priceLiquid;
         });

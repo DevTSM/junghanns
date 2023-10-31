@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:math' as prefix;
 
-import 'package:flutter/material.dart';
 import 'package:junghanns/models/authorization.dart';
 import 'package:junghanns/models/billing.dart';
 import 'package:junghanns/models/config.dart';
@@ -13,6 +12,7 @@ import 'package:junghanns/preferences/global_variables.dart';
 
 class CustomerModel {
   bool invoice;
+  int ventaPermitida;
   int isAuthPrice;
   int id;
   int orden;
@@ -51,8 +51,9 @@ class CustomerModel {
 
   CustomerModel(
       {required this.isAuthPrice,
-        required this.phones,
-        required this.auth,
+      required this.ventaPermitida,
+      required this.phones,
+      required this.auth,
       required this.configList,
       required this.payment,
       required this.invoice,
@@ -90,6 +91,7 @@ class CustomerModel {
 
   factory CustomerModel.fromState() {
     return CustomerModel(
+      ventaPermitida: 1,
       isAuthPrice: 0,
       phones: [],
         auth: [],
@@ -132,6 +134,7 @@ class CustomerModel {
   factory CustomerModel.fromList(
       Map<String, dynamic> data, int idRoute, int type) {
     return CustomerModel(
+      ventaPermitida: (data["ventaPermitida"]??true)?1:0,
       phones: [],
         invoice: false,
         isAuthPrice: (data["price_auth"]??false)?0:1,
@@ -176,6 +179,7 @@ class CustomerModel {
       data["billing"].map((e)=>billing.add(BillingModel.fromService(e))).toList();
     }
     return CustomerModel(
+      ventaPermitida: (data["ventaPermitida"]??true)?1:0,
       isAuthPrice: (data["price_auth"]??false)?0:1,
       phones: [],
       billing: billing,
@@ -252,6 +256,7 @@ class CustomerModel {
       operationMap.map((e) => operations.add(OperationCustomerModel.fromServices(e))).toList();
     }
     return CustomerModel(
+      ventaPermitida: data["ventaPermitida"]??1,
       isAuthPrice: data["isAuthPrice"]??0,
       phones: [],
         invoice: billing.isNotEmpty,
@@ -313,6 +318,7 @@ class CustomerModel {
       data["billing"].map((e)=>billing.add(BillingModel.fromService(e))).toList();
     }
     return CustomerModel(
+      ventaPermitida: (data["ventaPermitida"]??true)?1:0,
       isAuthPrice: (data["price_auth"]??false)?1:0,
       phones: [],
       operation: [],
@@ -354,6 +360,7 @@ class CustomerModel {
   Map<String, dynamic> getMap() {
     return {
       'id': id,
+      'ventaPermitida':ventaPermitida,
       'isAuthPrice':isAuthPrice,
       'orden': orden,
       'idCustomer': idClient,
@@ -426,6 +433,7 @@ class CustomerModel {
     this.phones=phones;
   }
   set setData(Map<String,dynamic> data){
+    ventaPermitida=data["ventaPermitida"]??ventaPermitida;
         invoice= false;
         lat= double.parse((data["latitud"]??"0") != "" ? (data["latitud"]??"0").replaceAll(",", "") : "0");
         lng= double.parse((data["longitud"]??"0") != "" ? (data["longitud"]??"0").replaceAll(",", ""):"0");
@@ -462,6 +470,7 @@ class CustomerModel {
         notifS= data["notificacion"] ?? "";
   }
   updateData(CustomerModel current){
+    ventaPermitida=current.ventaPermitida;
     color= current.color; 
       numberS= current.numberS; 
       idProdServS= current.idProdServS; 
@@ -576,4 +585,46 @@ double calculateDistance(lat1, lon1, lat2, lon2) {
       prefix.cos((lat2 - lat1) * p) / 2 +
       prefix.cos(lat1 * p) * prefix.cos(lat2 * p) * (1 - prefix.cos((lon2 - lon1) * p)) / 2;
   return 12742 * prefix.asin(prefix.sqrt(a));
+}
+
+enum NewTypeUser{
+  particular,
+  empresa,
+  deposito
+}
+NewTypeUser getNewTypeUserCambaceo(String type){
+  switch (type){
+    case "PARTICULAR":
+    return NewTypeUser.particular;
+    case "DEPOSITO":
+    return NewTypeUser.deposito;
+    case "EMPRESA":
+    return NewTypeUser.empresa;
+    default:
+    return NewTypeUser.particular;
+  }
+}
+String getTypeUserCambaceo(NewTypeUser type){
+  switch (type){
+    case NewTypeUser.particular:
+    return "PARTICULAR";
+    case NewTypeUser.deposito:
+    return "DEPOSITO";
+    case NewTypeUser.empresa:
+    return "EMPRESA";
+    default:
+    return "NO ESPECIFICADO";
+  }
+}
+String getCharUserCambaceo(NewTypeUser type){
+  switch (type){
+    case NewTypeUser.particular:
+    return "P";
+    case NewTypeUser.deposito:
+    return "D";
+    case NewTypeUser.empresa:
+    return "E";
+    default:
+    return "NO ESPECIFICADO";
+  }
 }

@@ -1,30 +1,28 @@
 // ignore_for_file: sized_box_for_whitespace, avoid_unnecessary_containers, must_be_immutable
-import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:junghanns/components/modal/show_data.dart';
-import 'package:junghanns/components/select.dart';
-import 'package:junghanns/models/operation_customer.dart';
-import 'package:junghanns/models/stop_ruta.dart';
-import 'package:junghanns/pages/home/cuentas.dart';
-import 'package:linear_progress_bar/linear_progress_bar.dart';
-import 'package:location/location.dart';
+
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 //import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:intl/intl.dart';
 import 'package:junghanns/components/bottom_bar.dart';
 import 'package:junghanns/components/button.dart';
 import 'package:junghanns/components/loading.dart';
+import 'package:junghanns/components/modal/show_data.dart';
+import 'package:junghanns/components/select.dart';
 import 'package:junghanns/models/authorization.dart';
 import 'package:junghanns/models/config.dart';
 import 'package:junghanns/models/customer.dart';
+import 'package:junghanns/models/operation_customer.dart';
+import 'package:junghanns/models/stop_ruta.dart';
 import 'package:junghanns/pages/address/edit_address.dart';
+import 'package:junghanns/pages/home/cuentas.dart';
 import 'package:junghanns/pages/shop/shopping_cart.dart';
 import 'package:junghanns/pages/shop/shopping_cart_refill.dart';
 import 'package:junghanns/pages/shop/stops.dart';
@@ -37,10 +35,11 @@ import 'package:junghanns/styles/decoration.dart';
 import 'package:junghanns/styles/text.dart';
 import 'package:junghanns/widgets/card/balance.dart';
 import 'package:junghanns/widgets/card/sales.dart';
+import 'package:linear_progress_bar/linear_progress_bar.dart';
+import 'package:location/location.dart';
 import 'package:map_launcher/map_launcher.dart';
 import 'package:provider/provider.dart';
-import 'package:http/http.dart' as http;
-import 'package:http_parser/http_parser.dart';
+
 import '../../services/auth.dart';
 
 class DetailsCustomer2 extends StatefulWidget {
@@ -243,14 +242,16 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
             itemBar=0;
           });
         }
+
         widget.customerCurrent.setCreditos(operations);
-        if(operations.where((element) => element.typeInt==1).isNotEmpty){
+        items.clear();
+        if(operations.where((element) => element.typeInt == 1).isNotEmpty){
           items.add({"id":1,"descripcion":"Comodato"});
         }
-        if(operations.where((element) => element.typeInt==2).isNotEmpty){
+        if(operations.where((element) => element.typeInt == 2).isNotEmpty){
           items.add({"id":2,"descripcion":"Prestamo"});
         }
-        if(operations.where((element) => element.typeInt==3).isNotEmpty){
+        if(operations.where((element) => element.typeInt == 3).isNotEmpty){
           items.add({"id":3,"descripcion":"Credito"});
         }
         if(items.isNotEmpty){
@@ -263,7 +264,8 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
           if(itemBar==1&&operations.isEmpty){
             itemBar=0;
           }
-        }); 
+        });
+        items.clear(); 
         if(operations.where((element) => element.typeInt==1).isNotEmpty){
           items.add({"id":1,"descripcion":"Comodato"});
         }
@@ -568,89 +570,112 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
 
   Widget refreshScroll() {
     return RefreshIndicator(
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              Visibility(
-                  visible: !provider.permission,
-                  child: Container(
-                      width: double.infinity,
-                      alignment: Alignment.center,
-                      color: ColorsJunghanns.red,
-                      padding: const EdgeInsets.only(top: 5, bottom: 5),
-                      child: const Text(
-                        "No has proporcionado permisos de ubicación",
-                        style: TextStyles.white14_5,
-                      ))),
-              header(),
-              Visibility(
-                  visible: provider.connectionStatus == 4,
-                  child: Container(
-                      width: double.infinity,
-                      alignment: Alignment.center,
-                      color: ColorsJunghanns.red,
-                      padding: const EdgeInsets.only(top: 5, bottom: 5),
-                      child: const Text(
-                        "Sin conexion a internet",
-                        style: TextStyles.white14_5,
-                      ))),
-              Visibility(
-                visible: operations.isNotEmpty,
-                child: Container(
-                  decoration: Decorations.green16Bottom,
-                  child:Row(
+      child: SingleChildScrollView(
+        child: Column(
+          children: [
+            Visibility(
+              visible: !provider.permission,
+              child: Container(
+                width: double.infinity,
+                alignment: Alignment.center,
+                color: ColorsJunghanns.red,
+                padding: const EdgeInsets.only(top: 5, bottom: 5),
+                child: const Text(
+                  "No has proporcionado permisos de ubicación",
+                  style: TextStyles.white14_5,
+                )
+              )
+            ),
+            header(),
+            Visibility(
+              visible: provider.connectionStatus == 4,
+              child: Container(
+                width: double.infinity,
+                alignment: Alignment.center,
+                color: ColorsJunghanns.red,
+                padding: const EdgeInsets.only(top: 5, bottom: 5),
+                child: const Text(
+                  "Sin conexion a internet",
+                  style: TextStyles.white14_5,
+                )
+              )
+            ),
+            Visibility(
+              visible: operations.isNotEmpty,
+              child: Container(
+                decoration: Decorations.green16Bottom,
+                child:Row(
                   children: [
                     Expanded(
                       child:GestureDetector(
-                      onTap: ()=>setState(()=>itemBar=0),
-                      child:Container(
-                        alignment: Alignment.center,
-                        decoration: itemBar==0?Decorations.blue16Bottom:const BoxDecoration(color: Colors.transparent),
-                        padding: const EdgeInsets.all(5),
-                      child:AutoSizeText("Venta",style: TextStyles.white18SemiBold,)
-                    ))),
+                        onTap: ()=>setState(()=>itemBar=0),
+                        child:Container(
+                          alignment: Alignment.center,
+                          decoration: itemBar==0
+                            ?Decorations.blue16Bottom
+                            :const BoxDecoration(color: Colors.transparent),
+                          padding: const EdgeInsets.all(5),
+                          child:AutoSizeText(
+                            "Venta",
+                            style: TextStyles.white18SemiBold,
+                          )
+                        )
+                      )
+                    ),
                     Visibility(
                       visible: operations.isNotEmpty,
                       child: Expanded(
                         child:GestureDetector(
-                          onTap: ()=>setState(()=>itemBar=1),
+                          onTap: ()=>setState( ()=> itemBar = 1),
                           child:Container(
                             alignment: Alignment.center,
-                            decoration: itemBar==1?Decorations.blue16Bottom:const BoxDecoration(color: Colors.transparent),
-                        padding: const EdgeInsets.all(5),
-                      child:AutoSizeText("Por cobrar",style: TextStyles.white18SemiBold,)
-                    )))),
+                            decoration: itemBar==1
+                              ? Decorations.blue16Bottom
+                              : const BoxDecoration(color: Colors.transparent),
+                            padding: const EdgeInsets.all(5),
+                            child:AutoSizeText(
+                              "Por cobrar",
+                              style: TextStyles.white18SemiBold,
+                            )
+                          )
+                        )
+                      )
+                    ),
                   ],
-                ))),
-              itemBar==0?balances():creditosWidget(),
-              const SizedBox(
-                height: 20,
-              ),
-            ],
-          ),
+                )
+              )
+            ),
+            itemBar==0?balances():creditosWidget(),
+            const SizedBox(
+              height: 20,
+            ),
+          ],
         ),
-        onRefresh: () async {
-          setCurrentLocation();
-          getDataP();
-        });
+      ),
+      onRefresh: () async {
+        setCurrentLocation();
+        getDataP();
+      }
+    );
   }
 
   Widget header() {
     return Container(
       color: ColorsJunghanns.blue,
       padding: EdgeInsets.only(
-          right: 15, left: 23, top: 5, bottom: size.height * .03),
+        right: 15, left: 23, top: 5, bottom: size.height * .03),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           GestureDetector(
-              onTap: () => Navigator.pop(context),
-              child: const Icon(
-                Icons.arrow_back_ios,
-                color: ColorsJunghanns.white,
-              )),
+            onTap: () => Navigator.pop(context),
+            child: const Icon(
+              Icons.arrow_back_ios,
+              color: ColorsJunghanns.white,
+            )
+          ),
           Expanded(
-              child: Column(
+            child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               GestureDetector(
@@ -663,56 +688,64 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
                       size: 28,
                     ),
                     Expanded(
-                        child: AutoSizeText(
-                      widget.customerCurrent.address,
-                      style: TextStyles.white20SemiBoldIt,
-                    ))
+                      child: AutoSizeText(
+                        widget.customerCurrent.address,
+                        style: TextStyles.white20SemiBoldIt,
+                      )
+                    )
                   ],
                 ),
                 onTap: () => funGoMaps(),
               ),
               Container(
-                  padding: const EdgeInsets.only(top: 8, bottom: 8),
-                  child: RichText(
-                    text: TextSpan(
-                      text: "Ref. Domicilio: ",
-                      style: TextStyles.green16Itw,
-                      children: <TextSpan>[
-                        TextSpan(
-                            text: widget.customerCurrent.referenceAddress,
-                            style: TextStyles.white16SemiBoldIt),
-                      ],
-                    ),
-                  )),
-              RichText(
-                  text: TextSpan(children: [
-                TextSpan(
-                  text: "${widget.customerCurrent.idClient}",
-                  style: TextStyles.green18Itw,
-                ),
-                TextSpan(
-                  text: "  |  ",
-                  style: TextStyles.white60It18,
-                ),
-                TextSpan(
-                  text: widget.customerCurrent.name,
-                  style: TextStyles.white15It,
+                padding: const EdgeInsets.only(top: 8, bottom: 8),
+                child: RichText(
+                  text: TextSpan(
+                    text: "Ref. Domicilio: ",
+                    style: TextStyles.green16Itw,
+                    children: <TextSpan>[
+                      TextSpan(
+                        text: widget.customerCurrent.referenceAddress,
+                        style: TextStyles.white16SemiBoldIt
+                      ),
+                    ],
+                  ),
                 )
-              ]))
+              ),
+              RichText(
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text: "${widget.customerCurrent.idClient}",
+                      style: TextStyles.green18Itw,
+                    ),
+                    TextSpan(
+                      text: "  |  ",
+                      style: TextStyles.white60It18,
+                    ),
+                    TextSpan(
+                      text: widget.customerCurrent.name,
+                      style: TextStyles.white15It,
+                    )
+                  ]
+                )
+              )
             ],
-          )),
-          const SizedBox(
-            width: 10,
-          ),
-          GestureDetector(
-              onTap: () => _pickImage(1),
-              child: Image.asset(
-                "assets/icons/photo.png",
-                width: size.width * .13,
-              ))
-        ],
-      ),
-    );
+          )
+        ),
+        const SizedBox(
+          width: 10,
+        ),
+        GestureDetector(
+          onTap: () => _pickImage(1),
+          child: Image.asset(
+            "assets/icons/photo.png",
+            width: size.width * .13,
+          )
+        )
+      ],
+    ),
+  );
   }
 
   Widget balances() {
@@ -725,44 +758,52 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
             height: 20,
           ),
           Container(
-              padding: const EdgeInsets.only(left: 15, right: 15),
-              child: Row(
-                children: [
-                  Expanded(
-                      flex: 4,
-                      child: Container(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              checkDate(DateTime.now()),
-                              style: TextStyles.blue19_7,
-                            ),
-                            Text(
-                              widget.customerCurrent.category,
-                              style: TextStyles.grey14_4,
-                            )
-                          ],
+            padding: const EdgeInsets.only(left: 15, right: 15),
+            child: Row(
+              children: [
+                Expanded(
+                  flex: 4,
+                  child: Container(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          checkDate(DateTime.now()),
+                          style: TextStyles.blue19_7,
                         ),
-                      )),
-                  const SizedBox(
-                    width: 10,
-                  ),
-                  Expanded(
-                      flex: 2,
-                      child: Container(
-                          alignment: Alignment.center,
-                          decoration: Decorations.orangeBorder5,
-                          padding: const EdgeInsets.only(
-                              left: 5, right: 5, top: 5, bottom: 5),
-                          child: RichText(
-                              text: TextSpan(children: [
-                            TextSpan(
-                                text: widget.customerCurrent.nameRoute,
-                                style: TextStyles.white17_5),
-                          ])))),
-                ],
-              )),
+                        Text(
+                          widget.customerCurrent.category,
+                          style: TextStyles.grey14_4,
+                        )
+                      ],
+                    ),
+                  )
+                ),
+                const SizedBox(
+                  width: 10,
+                ),
+                Expanded(
+                  flex: 2,
+                  child: Container(
+                    alignment: Alignment.center,
+                    decoration: Decorations.orangeBorder5,
+                    padding: const EdgeInsets.only(
+                      left: 5, right: 5, top: 5, bottom: 5),
+                    child: RichText(
+                      text: TextSpan(
+                        children: [
+                          TextSpan(
+                            text: widget.customerCurrent.nameRoute,
+                            style: TextStyles.white17_5
+                          ),
+                        ]
+                      )
+                    )
+                  )
+                ),
+              ],
+            )
+          ),
           const SizedBox(
             height: 15,
           ),
@@ -772,21 +813,23 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
             child: Row(
               children: [
                 Expanded(
-                    child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Image.asset(
-                      "assets/icons/invoice${widget.customerCurrent.invoice ? "Green" : "Red"}.png",
-                      width: 40,
-                    ),
-                    Text(
-                      widget.customerCurrent.invoice
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Image.asset(
+                        "assets/icons/invoice${widget.customerCurrent.invoice 
+                        ? "Green" : "Red"}.png",
+                        width: 40,
+                      ),
+                      Text(
+                        widget.customerCurrent.invoice
                           ? "Solicita Factura"
                           : "No Solicita Factura",
-                      style: TextStyles.grey14_4,
-                    )
-                  ],
-                )),
+                        style: TextStyles.grey14_4,
+                      )
+                    ],
+                  )
+                ),
                 SizedBox(
                   width: widget.customerCurrent.invoice ? 10 : 0,
                 ),
@@ -794,160 +837,211 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
             ),
           ),
           Visibility(
-                    visible: widget.customerCurrent.invoice,
-                    child:Container(
-            padding: const EdgeInsets.only(left: 15,right: 15,top: 10),
-            child:ButtonJunghanns(fun: ()=>showDataBilling(context,widget.customerCurrent.billing), decoration: Decorations.greenBorder5, style: TextStyles.white17_5, label: "Ver datos de Facturación"))),
+            visible: widget.customerCurrent.invoice,
+            child:Container(
+              padding: const EdgeInsets.only(left: 15,right: 15,top: 10),
+              child:ButtonJunghanns(
+                fun: ()=>showDataBilling(context,widget.customerCurrent.billing), 
+                decoration: Decorations.greenBorder5, 
+                style: TextStyles.white17_5, 
+                label: "Ver datos de Facturación"
+              )
+            )
+          ),
           SizedBox(
             height: widget.customerCurrent.descServiceS != "" ? 15 : 0,
           ),
           Visibility(
-              visible: widget.customerCurrent.descServiceS != "",
-              child: observation("Descripción de servicio",
-                  widget.customerCurrent.descServiceS)),
+            visible: widget.customerCurrent.descServiceS != "",
+            child: observation(
+              "Descripción de servicio",
+              widget.customerCurrent.descServiceS
+            )
+          ),
           const SizedBox(
             height: 10,
           ),
           observation(
-              "Observaciones de servicio", widget.customerCurrent.observation),
+            "Observaciones de servicio", 
+            widget.customerCurrent.observation
+          ),
           const SizedBox(
             height: 10,
           ),
           Container(
             padding: const EdgeInsets.only(left: 15,right: 15),
             width: double.infinity,
-                                    child: ButtonJunghanns(
-                                        decoration: JunnyDecoration.blueCEOpacity_5Blue(10),
-                                        style: JunnyText.bluea4(FontWeight.w500, 16),
-                                        fun: ()=>showCuentas(context, widget.customerCurrent.idClient),
-                                        isIcon: true,
-                                        icon: Image.asset(
-                                          "assets/icons/transfer.png",
-                                          color: JunnyColor.green24,
-                                          height: 30,
-                                        ),
-                                        label: "Cuentas para transferencia")),
+            child: ButtonJunghanns(
+              decoration: JunnyDecoration.blueCEOpacity_5Blue(10),
+              style: JunnyText.bluea4(FontWeight.w500, 16),
+              fun: ()=>showCuentas(context, widget.customerCurrent.idClient),
+              isIcon: true,
+              icon: Image.asset(
+                "assets/icons/transfer.png",
+                color: JunnyColor.green24,
+                height: 30,
+              ),
+              label: "Cuentas para transferencia"
+            )
+          ),
           const SizedBox(
             height: 10,
           ),
           Container(
-              padding: const EdgeInsets.only(left: 10, right: 10),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  Expanded(
-                      child: itemBalance("liquitIcon.png", "Precio Liquido",
-                          widget.customerCurrent.priceLiquid, size.width - 40)),
-                  Expanded(
-                      child: itemBalance("cashIcon.png", "Monedero",
-                          widget.customerCurrent.purse, size.width - 40)),
-                  Expanded(
-                      child: itemBalance("creditIcon.png", "Por cobrar",
-                          widget.customerCurrent.byCollect, size.width - 40))
-                ],
-              )),
+            padding: const EdgeInsets.only(left: 10, right: 10),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                Expanded(
+                  child: itemBalance(
+                    "liquitIcon.png", 
+                    "Precio Liquido",
+                    widget.customerCurrent.priceLiquid, 
+                    size.width - 40
+                  )
+                ),
+                Expanded(
+                  child: itemBalance(
+                    "cashIcon.png", 
+                    "Monedero",
+                    widget.customerCurrent.purse, 
+                    size.width - 40
+                  )
+                ),
+                Expanded(
+                  child: itemBalance(
+                    "creditIcon.png", 
+                    "Por cobrar",
+                    widget.customerCurrent.byCollect, 
+                    size.width - 40
+                  )
+                )
+              ],
+            )
+          ),
           const SizedBox(
             height: 15,
           ),
           Visibility(
-              visible: widget.customerCurrent.notifS != "",
-              child: observation(
-                  "Notificación de servicio", widget.customerCurrent.notifS)),
+            visible: widget.customerCurrent.notifS != ""
+              && widget.customerCurrent.ventaPermitida!=0,
+            child: observation(
+              "Notificación de servicio", 
+              widget.customerCurrent.notifS
+            )
+          ),
+          Visibility(
+            visible: widget.customerCurrent.ventaPermitida==0,
+            child: observation(
+              "CREDITO SUSPENDIDO",
+              ""
+            )
+          ),
           SizedBox(
             height: widget.customerCurrent.notifS != "" ? 15 : 0,
           ),
           Container(
-              padding: const EdgeInsets.only(left: 15, right: 15),
-              child: isLoadingRange
-                  ? const SpinKitCircle(
-                      color: ColorsJunghanns.blue,
-                    )
-                  : isRange 
-                      ? prefs.statusRoute == "INRT" ||
-                              prefs.statusRoute == "FNCM"||prefs.statusRoute == "FNRT"
-                          ? Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceAround,
-                              children: [
-                                Expanded(
-                                    child: ButtonJunghanns(
-                                        decoration: Decorations.greenBorder5,
-                                        style: TextStyles.white17_5,
-                                        fun: () {
-                                          funCheckDistanceSale(true);
-                                        },
-                                        isIcon: true,
-                                        icon: Image.asset(
-                                          "assets/icons/shoppingCardWhiteIcon.png",
-                                          height: 30,
-                                        ),
-                                        label: "Venta")),
-                                const SizedBox(
-                                  width: 10,
-                                ),
-                                Expanded(
-                                    child: ButtonJunghanns(
-                                        decoration: Decorations.whiteBorder5Red,
-                                        style: TextStyles.red17_6,
-                                        fun: () {
-                                          funCheckDistanceSale(false);
-                                        },
-                                        isIcon: true,
-                                        icon: Container(
-                                          width: 0,
-                                          height: 30,
-                                        ),
-                                        label: "Parada"))
-                              ],
+            padding: const EdgeInsets.only(left: 15, right: 15),
+            child: isLoadingRange
+              ? const SpinKitCircle(
+                  color: ColorsJunghanns.blue,
+                )
+              : isRange 
+                ? prefs.statusRoute == "INRT" ||
+                prefs.statusRoute == "FNCM" || prefs.statusRoute == "FNRT"
+                  ? Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        Visibility(
+                          visible: widget.customerCurrent.ventaPermitida==1,
+                          child:Expanded(
+                            child: ButtonJunghanns(
+                              decoration: Decorations.greenBorder5,
+                              style: TextStyles.white17_5,
+                              fun: ()=> funCheckDistanceSale(true),
+                              isIcon: true,
+                              icon: Image.asset(
+                                "assets/icons/shoppingCardWhiteIcon.png",
+                                height: 30,
+                              ),
+                              label: "Venta"
                             )
-                          : ButtonJunghanns(
-                                  fun: () async {
-                                    setState(() {
-                                      isLoading = true;
-                                    });
-                                    StopRuta stop = StopRuta(
-                                        id: 1,
-                                        update: 0,
-                                        lat: currentLocation.latitude!,
-                                        lng: currentLocation.longitude!,
-                                        status: "INRT");
-                                    int id = 0;
-                                    try {
-                                      id = await handler.insertStopRuta(stop);
-                                    } catch (e) {
-                                      Fluttertoast.showToast(
-                                        msg: "Local:$e",
-                                        timeInSecForIosWeb: 2,
-                                        toastLength: Toast.LENGTH_LONG,
-                                        gravity: ToastGravity.TOP,
-                                        webShowClose: true,
-                                      );
-                                    }
-                                    await setInitRoute(
-                                            currentLocation.latitude!,
-                                            currentLocation.longitude!)
-                                        .then((answer) {
-                                      setState(() {
-                                        isLoading = false;
-                                      });
-                                      if (!answer.error) {
-                                        log("se inicio la Ruta");
-                                        handler.updateStopRuta(1, id);
-                                      } else {
-                                        log("StopRuta por actualizar");
-                                      }
-                                    });
-                                    setState(() {
-                                      prefs.statusRoute = "INRT";
-                                    });
-                                  },
-                                  decoration: Decorations.greenBorder5,
-                                  style: TextStyles.white17_6,
-                                  label: "Iniciar ruta")
-                      : ButtonJunghanns(
-                          fun: () {},
-                          decoration: Decorations.whiteBorder5Red,
-                          style: TextStyles.red17_6,
-                          label: "ESTÁS A ${dif.ceil()} mtrs DEL CLIENTE !!")),
+                          )
+                        ),
+                        Visibility(
+                          visible: widget.customerCurrent.ventaPermitida==1,
+                          child:const SizedBox(
+                          width: 10,
+                          )
+                        ),
+                        Expanded(
+                          child: ButtonJunghanns(
+                            decoration: Decorations.whiteBorder5Red,
+                            style: TextStyles.red17_6,
+                            fun: () => funCheckDistanceSale(false),
+                            isIcon: true,
+                            icon: Container(
+                              width: 0,
+                              height: 30,
+                            ),
+                            label: "Parada"
+                          )
+                        )
+                      ],
+                    )
+                  : ButtonJunghanns(
+                      fun: () async {
+                        setState(() {
+                          isLoading = true;
+                        });
+                        StopRuta stop = StopRuta(
+                          id: 1,
+                          update: 0,
+                          lat: currentLocation.latitude!,
+                          lng: currentLocation.longitude!,
+                          status: "INRT"
+                        );
+                        int id = 0;
+                        try {
+                          id = await handler.insertStopRuta(stop);
+                        } catch (e) {
+                          Fluttertoast.showToast(
+                            msg: "Local:$e",
+                            timeInSecForIosWeb: 2,
+                            toastLength: Toast.LENGTH_LONG,
+                            gravity: ToastGravity.TOP,
+                            webShowClose: true,
+                          );
+                        }
+                        await setInitRoute(
+                          currentLocation.latitude!,
+                          currentLocation.longitude!
+                        ).then((answer) {
+                          setState(() {
+                            isLoading = false;
+                          });
+                          if (!answer.error) {
+                            log("se inicio la Ruta");
+                            handler.updateStopRuta(1, id);
+                          } else {
+                            log("StopRuta por actualizar");
+                          }
+                        });
+                        setState(() {
+                          prefs.statusRoute = "INRT";
+                        });
+                      },
+                      decoration: Decorations.greenBorder5,
+                      style: TextStyles.white17_6,
+                      label: "Iniciar ruta"
+                    )
+                  : ButtonJunghanns(
+                      fun: () {},
+                      decoration: Decorations.whiteBorder5Red,
+                      style: TextStyles.red17_6,
+                      label: "ESTÁS A ${dif.ceil()} mtrs DEL CLIENTE !!"
+                    )
+          ),
           const SizedBox(
             height: 20,
           ),
@@ -960,10 +1054,25 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
   Widget creditosWidget(){
     return Column(
       children: [
-        Padding(padding: const EdgeInsets.only(left: 10,right: 10,top: 20),child:selectMap(context, (){}, items, currentItem)),
+        Padding(
+          padding: const EdgeInsets.only(left: 10,right: 10,top: 20),
+          child:selectMap(
+            context, 
+            (value)=>setState(()=>currentItem=value), 
+            items, 
+            currentItem
+          )
+        ),
         Column(
-      children:operations.where((element) => element.typeInt==currentItem["id"]).toList().map((e) => OperationsCard(current: e,update:getDataP,currentClient:widget.customerCurrent)).toList()
-    )
+          children:
+            operations.where((element) => 
+              element.typeInt==currentItem["id"]&&element.amount>0)
+              .toList().map((e) => 
+                OperationsCard(
+                  current: e,
+                  update:getDataP,
+                  currentClient:widget.customerCurrent)).toList()
+        )
       ],
     );
     

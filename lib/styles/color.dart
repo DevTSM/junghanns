@@ -25,4 +25,5 @@ abstract class JunnyColor{
   static const Color grey_255 = Color.fromARGB(255, 145, 144, 143);
   static const Color red5c = Color(0xFFdc1c5c);
   static const Color green24 = Color(0xFF78bc24);
+  static const Color blueA1=Color(0xFF0033A1);
 }

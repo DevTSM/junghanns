@@ -7,6 +7,7 @@ class OperationCustomerModel {
   int typeInt;
   int folio;
   int isProduct;
+  int idDocument;
   int amount;
   OperationCustomerModel(
       {required this.date,
@@ -17,13 +18,18 @@ class OperationCustomerModel {
       required this.typeInt,
       required this.folio,
       required this.isProduct,
+      required this.idDocument,
       required this.amount});
+      factory OperationCustomerModel.fromState(){
+        return OperationCustomerModel(date: DateTime.now(), entrega: DateTime.now(), description: "", type: "", total: 0, typeInt: 0, folio: 0, isProduct: 1, idDocument: 0, amount: 0);
+      }
   factory OperationCustomerModel.fromServices(Map<String, dynamic> data) {
     return OperationCustomerModel(
         date: DateTime.parse(data["createdAt"] ?? DateTime.now().toString()),
         entrega:
             DateTime.parse(data["fecha_entrega"] ?? DateTime.now().toString()),
         description: data["desc"] ?? "",
+        idDocument: data["id_documento"]??0,
         type: data["tipo"] ?? "PRÉSTAMO",
         total: double.parse((data["total"] ?? 0).toString()),
         typeInt: getType(data["tipo"] ?? "PRÉSTAMO"),
@@ -38,9 +44,11 @@ class OperationCustomerModel {
     "tipo":type,
     "total":total,
     "folio":folio,
+    "id_documento":idDocument,
     "id_producto":isProduct,
     "cantidad":amount
   };
+  set updateCount(int current)=>amount=current;
 }
 
 int getType(String type) {

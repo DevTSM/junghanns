@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
+
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:junghanns/models/answer.dart';
 import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/models/folio.dart';
 import 'package:junghanns/models/product.dart';
@@ -237,7 +237,7 @@ class Async {
               webShowClose: true);
         return false;
       } else {
-        log("====> <==== ${answer.body}");
+        prefs.lastBitacoraUpdate = DateTime.now().toString();
         List<CustomerModel> dataAtendidos=await handler.retrieveUsersType(7);
         await handler.deleteCustomers();
         await handler.insertUser(dataAtendidos);

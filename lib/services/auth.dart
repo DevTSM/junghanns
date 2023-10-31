@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
+
 import 'package:http/http.dart' as http;
 import 'package:junghanns/models/answer.dart';
-import 'package:junghanns/models/authorization.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 
 Future<Answer> getClientSecret(String user, String password) async {
@@ -91,7 +91,7 @@ Future<Answer> getTokenKernel(String user, String cedis) async {
 }
 
 Future<Answer> tokenKernelActive(String token, double lat, double lng) async {
-  log("/AuthServices <tokenKernelActive>");
+  log("/AuthServices <tokenKernelActive> ${{"lat": lat, "lon": lng}} Bearer $token");
   try {
     var responseAwait =
         await http.put(Uri.parse("https://junghannskernel.com/activacion"),

@@ -49,6 +49,7 @@ class _AutorizacionesState extends State<Autorizaciones> {
   }
 
   getAuth() async {
+    authList.clear();
     await handler.retrieveUsers().then((value) {
       value.map((e) {
         e.auth.map((e1) => e1.setClient = e).toList();
@@ -182,6 +183,7 @@ class _AutorizacionesState extends State<Autorizaciones> {
                 setState(() {
                   isLoading = false;
                 });
+                getAuth();
               });
             },
             child: isLoading

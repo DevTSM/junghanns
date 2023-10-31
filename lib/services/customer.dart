@@ -95,7 +95,7 @@ Future<Answer> getCreditos(int id) async {
   }
 }
 Future<Answer> setPrestamoOrComodato(Map<String,dynamic> data) async {
-  log("/CustomerServices <setPrestamoOrComodato>");
+  log("/CustomerServices <setPrestamoOrComodato> ${data.toString()}");
   try {
     var response = await http
         .put(Uri.parse("${prefs.urlBase}devolucion"), headers: {
@@ -105,7 +105,7 @@ Future<Answer> setPrestamoOrComodato(Map<String,dynamic> data) async {
       "Authorization": "Bearer ${prefs.token}",
     },
     body: jsonEncode(data)
-    );
+    ).timeout(Duration(seconds: timerDuration));
     return Answer.fromService(response,202);
   } catch (e) {
     log("/CustomerServices <setPrestamoOrComodato> Catch");

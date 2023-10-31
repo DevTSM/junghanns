@@ -1,8 +1,8 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/pages/customer/details2.dart';
+import 'package:junghanns/styles/color.dart';
+import 'package:junghanns/styles/decoration.dart';
 import 'package:junghanns/styles/text.dart';
 
 class RoutesCard extends StatelessWidget {
@@ -24,8 +24,15 @@ class RoutesCard extends StatelessWidget {
                       customerCurrent: customerCurrent,
                     ),)).whenComplete(()=>updateList()),
         child: Container(
-          padding:
-              const EdgeInsets.only(left: 15, right: 15, top: 12, bottom: 12),
+          margin:
+              const EdgeInsets.only(left: 5, right: 5, top: 7, bottom: 7),
+          padding: const EdgeInsets.only(left: 10, right: 10, top: 5, bottom: 5),
+          decoration: customerCurrent.idClient==414?
+            JunnyDecoration.orange255(13).copyWith(
+              color: JunnyColor.red5c.withOpacity(.1),
+              border: Border.all(color: JunnyColor.red5c)
+            )
+            :null,
           child: Row(
             children: [
               icon,

@@ -6,7 +6,7 @@ import 'package:junghanns/preferences/preferencias.dart';
 
 PreferenciasUsuario prefs = PreferenciasUsuario();
 DataBase handler = DataBase();
-String ipProd = "https://qro.jusoftdelivery.com/";
+String ipProd = "https://qro.jusoftdelivery.com/v2/";
 String ipCDMX="https://cdmx-norte.jusoftdelivery.com/";
 String ipStage = "https://api-delivery-sandbox.junghanns.app/";
 String ipStage2 = "https://api-delivery-sandbox.junghanns.app/v2/";
@@ -15,7 +15,8 @@ String ipPueOr="https://pue-ote.jusoftdelivery.com/";
 String apiKeyStage = "76b2f0a4784e47d5d3ff89b1fd110984ea9f02bf";
 String clientSecretStage = "baea25384fe9c8e5140aa49e72a6a841";
 String messajeConnection="Error de comunicación con la Planta. La atención se completó correctamente de manera local. Por favor, sincronice.";
-String version = "23.9.35";
+String nameDB="junny3.db";
+String version = "23.9.41";
 String validVersion = "9.04";
 int timerDuration=28;
 

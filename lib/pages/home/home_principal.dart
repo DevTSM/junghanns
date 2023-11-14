@@ -13,7 +13,6 @@ import 'package:junghanns/pages/home/call.dart';
 import 'package:junghanns/pages/home/home.dart';
 import 'package:junghanns/pages/home/new_customer.dart';
 import 'package:junghanns/pages/home/notifications.dart';
-import 'package:junghanns/pages/home/qr.dart';
 import 'package:junghanns/pages/home/routes.dart';
 import 'package:junghanns/pages/home/specials.dart';
 import 'package:junghanns/preferences/global_variables.dart';
@@ -65,6 +64,7 @@ class _HomePrincipalState extends State<HomePrincipal> {
   }
 
   void setIndexCurrent(int current) {
+     Provider.of<ProviderJunghanns>(context,listen: false).getPendingNotification();
     setState(() {
       indexCurrent = current;
     });
@@ -137,7 +137,7 @@ class _HomePrincipalState extends State<HomePrincipal> {
                     ? const Center(child: LoadingJunghanns())
                     : pages[indexCurrent]
                 : asyncProcess(),
-            bottomNavigationBar: bottomBar(setIndexCurrent, indexCurrent),
+            bottomNavigationBar: bottomBar(setIndexCurrent, indexCurrent,context),
           );
   }
 

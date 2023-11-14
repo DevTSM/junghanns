@@ -93,7 +93,7 @@ class _GetBranchState extends State<GetBranch> {
           });
           if(answer.error){
             Fluttertoast.showToast(
-          msg: answer.message,
+          msg: "Acceso denegado. El token ingresado es incorrecto.",
           timeInSecForIosWeb: 2,
           toastLength: Toast.LENGTH_LONG,
           gravity: ToastGravity.TOP,
@@ -119,7 +119,7 @@ class _GetBranchState extends State<GetBranch> {
     });
       if(answer.error){
         Fluttertoast.showToast(
-          msg: "La sesión ha expirado o el código es incorrecto.",
+          msg: "Acceso denegado. El token ingresado es incorrecto.",
           timeInSecForIosWeb: 2,
           toastLength: Toast.LENGTH_LONG,
           gravity: ToastGravity.TOP,

@@ -4,7 +4,6 @@ import 'dart:developer';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geolocator/geolocator.dart';
@@ -226,7 +225,7 @@ class _StopsState extends State<Stops> {
             ),
             Visibility(visible: isLoading, child: const LoadingJunghanns())
           ])),
-      bottomNavigationBar: bottomBar(() {}, 2, isHome: false, context: context),
+      bottomNavigationBar: bottomBar(() {}, 2,context, isHome: false),
     );
   }
 

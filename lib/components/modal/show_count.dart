@@ -3,10 +3,11 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:junghanns/components/loading.dart';
+import 'package:intl/intl.dart';
 import 'package:junghanns/components/modal/yes_not.dart';
 import 'package:junghanns/components/textfield/text_field.text.dart';
 import 'package:junghanns/models/operation_customer.dart';
+import 'package:junghanns/models/sale.dart';
 import 'package:junghanns/styles/color.dart';
 import 'package:junghanns/styles/decoration.dart';
 import 'package:junghanns/styles/text.dart';
@@ -33,120 +34,176 @@ class _ShowCount extends State<ShowCount>{
   Widget build(BuildContext context) {
     size=MediaQuery.of(context).size;
     return Container(
-                    padding: const EdgeInsets.all(12),
-                    width: size.width * .75,
-                    decoration: Decorations.whiteS1Card,
-                    child: isLoading?Container(
-                      height: size.height*.3,
-                      alignment: Alignment.center,
-                      child: const SpinKitCircle(color: ColorsJunghanns.blue,size: 100,)):Column(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        //PRODUCTO
-                        Container(
-                            margin: const EdgeInsets.only(top: 8),
-                            alignment: Alignment.center,
-                            child: DefaultTextStyle(
-                                style: TextStyles.blueJ18Bold,
-                                child:
-                                    Text(widget.current.description))),
-                        //BOTONES
-                        Container(
-                            padding: const EdgeInsets.only(left: 10, right: 10),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                //BOTON DE MENOS
-                                GestureDetector(
-                                    onTap: 1 !=int.tryParse(countController.text)
-                                        ? () {
-                                          int total=0;
-                                            setState((){
-                                              total =(int.tryParse(countController.text)??0)-1;
-                                            });
-                                                countController.text= total.toString();
-                                          }
-                                        : () {},
-                                    child: Container(
-                                        padding: const EdgeInsets.fromLTRB(
-                                            22, 12, 22, 12),
-                                        child: const Icon(
-                                          FontAwesomeIcons.minus,
-                                          size: 35,
-                                          color: ColorsJunghanns.red,
-                                        ))),
-                                    const SizedBox(width: 10,),
-                                //CANTIDAD
-                                Expanded(child:textField2(
-                                  ontap: (){
-                                    // count.text= widget.productCurrent.number.toString();
-                                  },
-                                  (String value){
-                                  if(value!=""){
-                                     int number=int.tryParse(value)??0;
-                                     if(number<widget.current.amount&&number>0){
-                                      log("operacion correcta");
-                                  }else{
-                                    countController.text=widget.current.amount.toString();
-                                  }
-                                  }
-                                },countController, "",type: TextInputType.number)),
-                                const SizedBox(width: 10,),
-
-                                //BOTON DE MAS
-                                GestureDetector(
-                                    onTap: widget.current.amount !=int.tryParse(countController.text)
-                                        ? () {
-                                          int total=0;
-                                            setState((){
-                                              total =(int.tryParse(countController.text)??0)+1;
-                                            });
-                                                countController.text= total.toString();
-                                          }
-                                        : () {},
-                                    child: Container(
-                                        padding: const EdgeInsets.fromLTRB(
-                                            22, 12, 22, 12),
-                                        child: const Icon(
-                                          FontAwesomeIcons.plus,
-                                          size: 35,
-                                          color: ColorsJunghanns.greenJ,
-                                        )))
-                              ],
-                            )),
-
-                        GestureDetector(
-                          child: Container(
-                            decoration: Decorations.blueBorder12,
-                            padding: const EdgeInsets.only(top: 8, bottom: 8),
-                            margin: const EdgeInsets.only(left: 5, right: 5),
-                            alignment: Alignment.center,
-                            child: const Text(
-                              "CONFIRMAR",
-                              style: TextStyles.white17_5,
-                            ),
-                          ),
-                          onTap: () =>
-                            showYesNot(context, (){
-                              setState(() {
-                                isLoading=true;
-                              });
-                              widget.setComodato(context,(int.tryParse(countController.text)??0));}, "¿Estás seguro de continuar con la operación?", true)
-                          ,
-                        )
-                      ],
-                    ),
-                  );
+      padding: const EdgeInsets.all(12),
+      width: size.width * .75,
+      decoration: Decorations.whiteS1Card,
+      child: isLoading
+        ? Container(
+          height: size.height*.3,
+          alignment: Alignment.center,
+          child: const SpinKitCircle(color: ColorsJunghanns.blue,size: 100,)
+          )
+        : Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            //PRODUCTO
+            Container(
+              margin: const EdgeInsets.only(top: 8),
+              alignment: Alignment.center,
+              child: DefaultTextStyle(
+                style: TextStyles.blueJ18Bold,
+                child:  Text(widget.current.description)
+              )
+            ),
+            Text(
+              "P.U: ${checkDouble((widget.current.total / widget.current.amount)
+                .toString())} | Total: ${
+              checkDouble(widget.current.total.toString())}",
+              style: JunnyText.grey_255(FontWeight.w400, 14),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                RichText(
+                  text: TextSpan(
+                    children: [
+                      TextSpan(
+                        text: "Cant. O: ",
+                        style: JunnyText.grey_255(FontWeight.w400, 14)
+                          .copyWith(color: JunnyColor.blueC2)
+                      ),
+                      TextSpan(
+                        text: "${widget.current.amount+widget.current.amountReturned}",
+                        style: JunnyText.grey_255(FontWeight.w400, 14)
+                      ),
+                    ]
+                  )
+                ),
+                const SizedBox(width: 10),
+                RichText(
+                  textAlign: TextAlign.center,
+                  text: TextSpan(
+                    children: [
+                      TextSpan(
+                        text: "Cant. D: ",
+                        style: JunnyText.grey_255(FontWeight.w400, 14)
+                          .copyWith(color: JunnyColor.blueC2)
+                      ),
+                      TextSpan(
+                        text: "${widget.current.amountReturned}",
+                        style: JunnyText.grey_255(FontWeight.w400, 14)
+                      ),
+                    ]
+                  )
+                ),
+              ],
+            ),
+            Text(
+              "${DateFormat('yyyy-MM-dd | HH:mm')
+                .format(widget.current.date)} hrs. (F${widget.current.folio})",
+              style: JunnyText.grey_255(FontWeight.w400, 14),
+            ),
+            const SizedBox(height: 15),
+            Text(
+              "Por favor ingrese la cantidad de artículos devueltos por el cliente",
+              style: JunnyText.grey_255(FontWeight.w600, 15),
+              textAlign: TextAlign.center,
+            ),
+            //BOTONES
+            Container(
+              padding: const EdgeInsets.only(left: 10, right: 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  //BOTON DE MENOS
+                  GestureDetector(
+                    onTap: 1 != int.tryParse(countController.text)
+                      ? () {
+                        int total=0;
+                        setState(()=>total =(int.tryParse(countController.text)??0)-1);
+                        countController.text= total.toString();
+                        }
+                      : null,
+                    child: Container(
+                      padding: const EdgeInsets.fromLTRB(22, 12, 22, 12),
+                      child: const Icon(
+                        FontAwesomeIcons.minus,
+                        size: 35,
+                        color: ColorsJunghanns.red,
+                      )
+                    )
+                  ),
+                  const SizedBox(width: 10,),
+                  //CANTIDAD
+                  Expanded(
+                    child:textField2(
+                      ontap:(){
+                        // count.text= widget.productCurrent.number.toString();
+                      },
+                      (String value){
+                        if(value!=""){
+                          int number=int.tryParse(value)??0;
+                          if(number<widget.current.amount&&number>0){
+                            log("operacion correcta");
+                          }else{
+                            countController.text=widget.current.amount.toString();
+                          }
+                        }
+                      },
+                      countController, "",type: TextInputType.number)
+                  ),
+                  const SizedBox(width: 10),
+                  //BOTON DE MAS
+                  GestureDetector(
+                    onTap: widget.current.amount !=int.tryParse(countController.text)
+                      ? () {
+                        int total=0;
+                        setState(()=>total =(int.tryParse(countController.text)??0)+1);
+                        countController.text= total.toString();
+                        }
+                      : null,
+                    child: Container(
+                      padding: const EdgeInsets.fromLTRB(22, 12, 22, 12),
+                      child: const Icon(
+                        FontAwesomeIcons.plus,
+                        size: 35,
+                        color: ColorsJunghanns.greenJ,
+                      )
+                    )
+                  )
+                ],
+              )
+            ),
+            GestureDetector(
+              child: Container(
+                decoration: Decorations.blueBorder12,
+                padding: const EdgeInsets.only(top: 8, bottom: 8),
+                margin: const EdgeInsets.only(left: 5, right: 5),
+                alignment: Alignment.center,
+                child: const Text(
+                  "CONFIRMAR",
+                  style: TextStyles.white17_5,
+                ),
+              ),
+              onTap: () => showYesNot(context, (){
+                setState(() =>isLoading=true);
+                widget.setComodato(context,(int.tryParse(countController.text)??0));
+                }, "¿Estás seguro de continuar con la operación?", true),
+            )
+          ],
+        ),
+    );
   }
-
 }
 showCount(BuildContext context,Function setComodato,OperationCustomerModel current) {
-    showDialog(
-        context: context,
-        builder: (context) => StatefulBuilder(
-            builder: (context, setState) => AlertDialog(
-                  contentPadding: EdgeInsets.zero,
-                  content: ShowCount(setComodato: setComodato, current: current)
-                )));
-  }
+  showDialog(
+    context: context,
+    builder: (context) => StatefulBuilder(
+      builder: (context, setState) => AlertDialog(
+        contentPadding: EdgeInsets.zero,
+        content: ShowCount(setComodato: setComodato, current: current)
+      )
+    )
+  );
+}

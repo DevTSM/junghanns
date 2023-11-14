@@ -15,6 +15,7 @@ import 'package:junghanns/components/modal/select.dart';
 import 'package:junghanns/components/modal/showlocation.dart';
 import 'package:junghanns/components/modal/yes_not.dart';
 import 'package:junghanns/components/select.dart';
+import 'package:junghanns/components/textfield/text_field.text.dart';
 import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/models/employee.dart';
 import 'package:junghanns/models/saleCambaceo.dart';
@@ -40,35 +41,11 @@ class _NewCustomerState extends State<NewCustomer> {
   late bool isLoading,isDate,isFracc,isOTP;
   late int idNewCustomer;
   late double lat, lng;
-  late String 
-    errLatLng, 
-    errName, 
-    errLastN, 
-    errDateB, 
-    errCompany, 
-    errContact,
-    errPhone, 
-    errEmail, 
-    errTypeStreet, 
-    errStreet, 
-    errNumE,
-    errColony,
-    errTown,
-    errState,
-    errCode,
-    errTypeSaleC,
-    errEmployee,
-    inicio,
-    fin,
-    errorInicio,
-    errorFin,
-    errorOtherSchedule,
-    errAdults, 
-    errChildren, 
-    errMaterno,
-    errFracc,
-    nameCustomerAPI;
-  late DateTime dateAux, dateBirth;
+  late String errLatLng, errName, errLastN, errDateB, errCompany, errContact, 
+    errPhone, errEmail, errTypeStreet, errStreet, errNumE, errColony, errTown,
+    errState, errCode, errTypeSaleC, errEmployee, errAdults, 
+    errChildren, errMaterno, errFracc, nameCustomerAPI;
+  late DateTime dateBirth;
   late NewTypeUser typeLeed;
   late EmployeeModel employeeS;
   late TypeOfStreetModel typeStreetS;
@@ -78,31 +55,10 @@ class _NewCustomerState extends State<NewCustomer> {
   late List<TypeOfStreetModel> typesStreetsList;
   late List<SaleCambaceoModel> typesSalesCList;
   late List<Map<String, dynamic>> chanels,schedules,genders,typesUser;
-  late TextEditingController 
-    nameC, 
-    lastNameC, 
-    lastNameMC, 
-    companyC, 
-    contactC,
-    phoneC,
-    emailC,
-    streetC,
-    numEc,
-    numIc,
-    otherSchedule,
-    colonyC,
-    townC,
-    codeC,
-    stateC,
-    referenceC,
-    streetR1,
-    streetR2,
-    observacion,
-    emailCo,
-    numberChildren, 
-    numberAdults,
-    pinC,
-    fraccionamiento;
+  late TextEditingController nameC, lastNameC, lastNameMC, companyC, contactC, phoneC,
+    emailC, streetC, numEc, numIc, otherSchedule, colonyC, townC, codeC, stateC, 
+    referenceC, streetR1, streetR2, observacion, emailCo, numberChildren, numberAdults,
+    pinC, fraccionamiento;
   late ProviderJunghanns provider;
   late Size size;
   @override
@@ -132,18 +88,12 @@ class _NewCustomerState extends State<NewCustomer> {
     errCode="";
     errTypeSaleC="";
     errEmployee="";
-    inicio = "Inicio";
-    fin = "Fin";
-    errorInicio="";
-    errorFin="";
-    errorOtherSchedule="";
     errAdults="";
     errChildren="";
     errMaterno="";
     errFracc="";
     nameCustomerAPI="";
-    dateBirth = DateTime(DateTime.now().year - 50);
-    dateAux = DateTime(DateTime.now().year - 50);
+    dateBirth = DateTime.now().subtract(const Duration(days:18250));
     typeLeed=NewTypeUser.particular;
     employeeS = EmployeeModel.fromState();
     typeStreetS = TypeOfStreetModel.fromState();
@@ -173,7 +123,8 @@ class _NewCustomerState extends State<NewCustomer> {
       {"id":3,"descripcion": getTypeUserCambaceo(NewTypeUser.deposito)}
     ];
     schedule = {"id": 0, "descripcion": "Selecciona una opción"};
-    scheduleOther = {"1": "", "2": "","3":"","4":""};
+    scheduleOther = {"1": "Inicio", "2": "Fin","3":"Inicio","4":"Fin",
+      "err1":"","err2":"","err3":"","err4":""};
     gender=genders.first;
     chanelValidation = chanels.first;
     nameC = TextEditingController();
@@ -204,7 +155,6 @@ class _NewCustomerState extends State<NewCustomer> {
     getListTypesOfStreets();
     funButtonLocation();
   }
-
   getPermission() async {
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.whileInUse ||
@@ -326,13 +276,557 @@ class _NewCustomerState extends State<NewCustomer> {
         setState(() {
           schedules = List.from(answer.body.map((e) => e).toList());
           schedule=schedules.first;
-          log(schedule.toString());
         });
       }
     });
     setState(() {
       isLoading = false;
     });
+  }
+
+  refreshLocation() {
+    Navigator.pop(context);
+    funButtonLocation();
+    showLocation(context, refreshLocation, lat, lng);
+  }
+  
+  funButtonLocation() async {
+    setState(() {
+      isLoading = true;
+    });
+    LocationPermission permission = await Geolocator.requestPermission();
+    if (permission == LocationPermission.whileInUse ||
+        permission == LocationPermission.always) {
+      provider.permission = true;
+      Position _currentLocation = await Geolocator.getCurrentPosition();
+      lat = _currentLocation.latitude;
+      lng = _currentLocation.longitude;
+      errLatLng = "*Coordenadas actualizadas";
+      Fluttertoast.showToast(
+        msg: "Ubicación actualizada con exito",
+        timeInSecForIosWeb: 2,
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.TOP,
+        webShowClose: true,
+      );
+    } else {
+      Fluttertoast.showToast(
+        msg: "No has proporcionado permisos de ubicación",
+        timeInSecForIosWeb: 2,
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.TOP,
+        webShowClose: true,
+      );
+    }
+    setState(() {
+      isLoading = false;
+    });
+  }
+
+  funCheckOTP(String code) async {
+    Map<String, dynamic> data = {
+      "id_lead": idNewCustomer,
+      "id_ruta": prefs.idRouteD,
+      "lat": lat.toString(),
+      "lon": lng.toString(),
+      "otp": code
+    };
+
+    await putValidateOTP(data).then((answer) {
+      if (answer.error) {
+        Fluttertoast.showToast(
+          msg: answer.message,
+          timeInSecForIosWeb: 2,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+        );
+      } else {
+        setState(() {
+          isOTP = false;
+          pinC.text = "";
+          errLatLng = "";
+          lat = lng = 0;
+          nameC.text = "";
+          lastNameC.text = "";
+          dateBirth = DateTime(1900);
+          companyC.text = "";
+          contactC.text = "";
+          phoneC.text = "";
+          emailC.text = "";
+          typeStreetS = TypeOfStreetModel.fromState();
+          streetC.text = "";
+          numEc.text = "";
+          numIc.text = "";
+          colonyC.text = "";
+          townC.text = "";
+          stateC.text = "";
+          codeC.text = "";
+          referenceC.text = "";
+          typeSaleCs = SaleCambaceoModel.fromState();
+          employeeS = EmployeeModel.fromState();
+        });
+        showOTPsuccess();
+      }
+    });
+  }
+
+  funCancelCode() async {
+    Map<String, dynamic> data = {
+      "id": idNewCustomer,
+    };
+    await putCancelOTP(data).then((answer) {
+      if (answer.error) {
+        Fluttertoast.showToast(
+          msg: answer.message,
+          timeInSecForIosWeb: 2,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+        );
+      } else {
+        setState(() {
+          isOTP = false;
+          pinC.text = "";
+        });
+        Fluttertoast.showToast(
+          msg: "Se canceló el registro",
+          timeInSecForIosWeb: 2,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+        );
+      }
+    });
+  }
+
+  showOTPsuccess() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Center(
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            width: size.width * .75,
+            decoration: Decorations.whiteS1Card,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  alignment: Alignment.center,
+                  child: DefaultTextStyle(
+                    style: TextStyles.blueJ20Bold,
+                    child: const Text("Código validado con exito")
+                  )
+                ),
+                Container(
+                  padding: const EdgeInsets.only(top: 12, bottom: 18),
+                  child: const Icon(
+                    FontAwesomeIcons.checkCircle,
+                    size: 50,
+                    color: ColorsJunghanns.greenJ,
+                  ),
+                ),
+                buttomConfirm(
+                  "Aceptar",
+                  () => () =>Navigator.pop(context),
+                  Decorations.greenJCard
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+    );
+  }
+
+  funResendCode(bool isW) async {
+    log("FUN RESEND CODE");
+
+    Map<String, dynamic> data = {
+      "id_lead": idNewCustomer,
+      "id_ruta": prefs.idRouteD,
+      "lat": lat.toString(),
+      "lon": lng.toString(),
+      "envio_msg_otp": "S",
+      "canal": prefs.channelValidation.toUpperCase()
+    };
+
+    log("INFO RESEND: $data");
+
+    await postResendCode(data).then((answer) {
+      log("${answer.body} ======> ${answer.status}");
+      if (answer.error) {
+        Fluttertoast.showToast(
+          msg: answer.message,
+          timeInSecForIosWeb: 2,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+        );
+      } else {
+        Fluttertoast.showToast(
+          msg: "Se reenvió el código de verificación",
+          timeInSecForIosWeb: 2,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+        );
+        // idNewCustomer = int.parse((answer.body["id"] ?? -1).toString());
+        log(idNewCustomer.toString());
+      }
+    });
+  }
+
+  funButtonContinue() async {
+    //prefs.urlBase=ipStage;
+    log("FUN BUTTON CONTINUE ${prefs.urlBase}");
+    Map<String, dynamic> data = {};
+    Fluttertoast.showToast(
+        msg: prefs.nameUserD,
+        timeInSecForIosWeb: 2,
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.TOP,
+        webShowClose: true,
+      );
+    if (typeLeed==NewTypeUser.particular) {
+      data = {
+        "action": "create",
+        "id_ruta": prefs.idRouteD,
+        "envio_msg_otp": "S",
+        "usuario": prefs.nameUserD,
+        "data": {
+          "tipo": 'P',
+          "nombre": nameC.text,
+          "ap_materno": lastNameMC.text,
+          "ap_paterno": lastNameC.text,
+          "fecha_nacimiento": DateFormat('yyyy-MM-dd').format(dateBirth),
+          "tel_movil": phoneC.text.replaceAll(" ", ""),
+          "email": emailC.text,
+          "id_vialidad": typeStreetS.id,
+          "calle": streetC.text,
+          "no_ext": numEc.text,
+          "no_int": numIc.text,
+          "colonia": colonyC.text,
+          "mun_alc": townC.text,
+          "estado": stateC.text,
+          "codigo_postal": codeC.text,
+          "lat": lat.toString(),
+          "lon": lng.toString(),
+          "referencia_domicilio": referenceC.text,
+          "id_empleado": employeeS.id,
+          "tipo_venta": typeSaleCs.id,
+          "entre_calle_1": streetR1.text,
+          "entre_calle_2": streetR2.text,
+          "observaciones": observacion.text,
+          "hora_inicio": scheduleOther["1"],
+          "hora_fin": scheduleOther["2"],
+          "no_infantes": int.tryParse(numberChildren.text) ?? 0,
+          "no_adultos": int.tryParse(numberAdults.text) ?? 0,
+          "id_horario": schedule["id"],
+          "otros_horarios": "${scheduleOther["3"]} HRS - ${scheduleOther["4"]} HRS"
+        }
+      };
+    } else {
+      data = {
+        "action": "create",
+        "id_ruta": prefs.idRouteD,
+        "envio_msg_otp": "S",
+        "usuario": prefs.nameUserD,
+        "data": {
+          "tipo": 'E',
+          "razon_social": companyC.text,
+          "contacto": contactC.text,
+          "tel_movil": phoneC.text.replaceAll(" ", ""),
+          "email": emailC.text,
+          "id_vialidad": typeStreetS.id,
+          "calle": streetC.text,
+          "no_ext": numEc.text,
+          "no_int": numIc.text,
+          "colonia": colonyC.text,
+          "mun_alc": townC.text,
+          "estado": stateC.text,
+          "codigo_postal": codeC.text,
+          "lat": lat.toString(),
+          "lon": lng.toString(),
+          "referencia_domicilio": referenceC.text,
+          "id_empleado": employeeS.id,
+          "tipo_venta": typeSaleCs.id,
+          "entre_calle_1": streetR1.text,
+          "entre_calle_2": streetR2.text,
+          "observaciones": observacion.text,
+          "hora_inicio": scheduleOther["1"],
+          "id_horario": schedule["id"],
+          "no_infantes": 0,
+          "no_adultos": int.tryParse(numberAdults.text) ?? 0,
+          "hora_fin": scheduleOther["2"],
+          "otros_horarios": "${scheduleOther["3"]} HRS - ${scheduleOther["4"]} HRS"
+        }
+      };
+    }
+
+    log("INFO NEW CUSTOMER: $data");
+
+    await postNewCustomer(data).then((answer) {
+      if (answer.error) {
+        Fluttertoast.showToast(
+          msg: answer.message,
+          timeInSecForIosWeb: 2,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+        );
+      } else {
+        setState(() {
+          isOTP = true;
+          prefs.customerP = typeLeed==NewTypeUser.particular;
+          prefs.channelValidation="";
+        });
+        Fluttertoast.showToast(
+          msg: "Se envió código de verificación",
+          timeInSecForIosWeb: 2,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+        );
+        idNewCustomer = int.parse((answer.body["id"] ?? -1).toString());
+      }
+    });
+  }
+
+  selectEmployee() async {
+    await showCupertinoModalPopup<int>(
+      context: context,
+      builder: (context) {
+        return CupertinoActionSheet(
+          actionScrollController: ScrollController(
+            initialScrollOffset: 1.0, keepScrollOffset: true),
+          actions: employeesList.map((item)=>showItemEmployee(item)).toList());
+      }
+    );
+  }
+  
+  selectTypeStreet() async {
+    await showCupertinoModalPopup<int>(
+      context: context,
+      builder: (context) {
+        return CupertinoActionSheet(
+          actionScrollController: ScrollController(
+            initialScrollOffset: 1.0, keepScrollOffset: true),
+          actions: typesStreetsList.map((item)=> showItemTypeStreet(item)).toList());
+      }
+    );
+  }
+  
+  selectTypeSaleC() async {
+    await showCupertinoModalPopup<int>(
+      context: context,
+      builder: (context) {
+        return CupertinoActionSheet(
+          actionScrollController: ScrollController(
+            initialScrollOffset: 1.0, keepScrollOffset: true),
+          actions: typesSalesCList.map((item)=> showItemTypeSaleC(item)).toList());
+      }
+    );
+  }
+
+  showConfirmR() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Center(
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            width: size.width * .75,
+            decoration: Decorations.whiteS1Card,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [textConfirm(), textPhoneConfirm(), buttomsConfirm()],
+            ),
+          ),
+        );
+      }
+    );
+  }
+  
+  void selectHour(String id) async {
+    await showCupertinoModalPopup<int>(
+      context: context,
+      builder: (context) {
+        return CupertinoActionSheet(
+          actionScrollController: ScrollController(
+            initialScrollOffset: 1.0, keepScrollOffset: true),
+          actions: ["07:00","07:30","08:00","08:30","09:00","09:30","10:00","10:30",
+            "11:00","11:30","12:00","12:30","13:00","13:30","14:00","14:30","15:00",
+            "15:30","16:00","16:30","17:00","17:30","18:00","18:30","19:00","19:30",
+            "20:00","20:30","21:00",
+            ].map((item)=> _showItemHour(item, id)).toList());
+      }
+    );
+  }
+  
+  bool checkValidField() {
+    bool isValid = true;
+    setState(() {
+      if (lat == 0 && lng == 0) {
+        errLatLng = "Coordenadas obligatorias";
+        isValid = false;
+      } else {
+        errLatLng = "Coordenadas actualizadas";
+      }
+
+      if (typeLeed==NewTypeUser.particular && nameC.text.isEmpty) {
+        errName = "Campo obligatorio";
+        isValid = false;
+      } else {
+        errName = "";
+      }
+
+      if (typeLeed==NewTypeUser.particular && lastNameC.text.isEmpty) {
+        errLastN = "Campo obligatorio";
+        isValid = false;
+      } else {
+        errLastN = "";
+      }
+      if (typeLeed==NewTypeUser.particular && lastNameMC.text.isEmpty) {
+        errMaterno = "Campo obligatorio";
+        isValid = false;
+      } else {
+        errMaterno = "";
+      }
+      if (typeLeed==NewTypeUser.particular && !isDate) {
+        errDateB = "Campo obligatorio";
+        isValid = false;
+      } else {
+        errDateB = "";
+      }
+      if (typeLeed==NewTypeUser.empresa && companyC.text.isEmpty) {
+        errCompany = "Campo obligatorio";
+        isValid = false;
+      } else {
+        errCompany = "";
+      }
+
+      if (typeLeed==NewTypeUser.empresa && contactC.text.isEmpty) {
+        errContact = "Campo obligatorio";
+        isValid = false;
+      } else {
+        errContact = "";
+      }
+
+      if (phoneC.text.isEmpty) {
+        errPhone = "Campo obligatorio";
+        isValid = false;
+      } else {
+        if (phoneC.text.length < 14) {
+          errPhone = "Télefono incompleto";
+          isValid = false;
+        } else {
+          errPhone = "";
+        }
+      }
+
+      if (emailC.text.isEmpty) {
+        errEmail = "Campo obligatorio";
+        isValid = false;
+      } else {
+        if (emailCo.text != emailC.text) {
+          errEmail = "el correo no coincide";
+        } else {
+          errEmail = "";
+        }
+      }
+
+      if (typeStreetS.id == -1) {
+        errTypeStreet = "Campo obligatorio";
+        isValid = false;
+      } else {
+        errTypeStreet = "";
+      }
+
+      if (streetC.text.isEmpty) {
+        errStreet = "Campo obligatorio";
+        isValid = false;
+      } else {
+        errStreet = "";
+      }
+
+      if (numEc.text.isEmpty) {
+        errNumE = "Campo obligatorio";
+        isValid = false;
+      } else {
+        errNumE = "";
+      }
+
+      if (colonyC.text.isEmpty) {
+        errColony = "Campo obligatorio";
+        isValid = false;
+      } else {
+        errColony = "";
+      }
+
+      if (townC.text.isEmpty) {
+        errTown = "Campo obligatorio";
+        isValid = false;
+      } else {
+        errTown = "";
+      }
+
+      if (stateC.text.isEmpty) {
+        errState = "Campo obligatorio";
+        isValid = false;
+      } else {
+        errState = "";
+      }
+
+      if (codeC.text.isEmpty) {
+        errCode = "Campo obligatorio";
+        isValid = false;
+      } else {
+        errCode = "";
+      }
+
+      if (typeSaleCs.id == -1) {
+        errTypeSaleC = "Campo obligatorio";
+        isValid = false;
+      } else {
+        errTypeSaleC = "";
+      }
+
+      if (employeeS.id == -1) {
+        errEmployee = "Campo obligatorio";
+        isValid = false;
+      } else {
+        errEmployee = "";
+      }
+      if ((scheduleOther["3"] == "Inicio" && scheduleOther["4"] != "Fin")
+        ||(scheduleOther["3"] != "Inicio" && scheduleOther["4"] == "Fin")) {
+        scheduleOther["err3"] = "Debes ingresar ambos campos";
+      }else{
+         scheduleOther["err3"] = "";
+      }
+      if (schedule["descripcion"] == "Otro horario" &&
+          (scheduleOther["1"]=="Inicio"||scheduleOther["2"]=="Fin")) {
+        scheduleOther["err1"] = "Campo obligatorio";
+        isValid = false;
+      } else {
+        scheduleOther["err1"] = "";
+      }
+      if (numberChildren.text.isEmpty && typeLeed==NewTypeUser.particular) {
+        errChildren = "Campo obligatorio";
+        isValid = false;
+      } else {
+        errChildren = "";
+      }
+      if (numberAdults.text.isEmpty) {
+        errAdults = "Campo obligatorio";
+       isValid = false;
+      } else {
+        errAdults = "";
+      }
+    });
+    return isValid;
   }
 
   @override
@@ -396,6 +890,7 @@ class _NewCustomerState extends State<NewCustomer> {
           ),
           buttonLocation(),
           SheetSelect(
+            isRequired: true,
             update: (value){
               setState(()=> typeLeed = getNewTypeUserCambaceo(value['descripcion']));
               Navigator.pop(context);
@@ -404,59 +899,74 @@ class _NewCustomerState extends State<NewCustomer> {
             current: (typesUser.where((element) => 
               element['descripcion']==getTypeUserCambaceo(typeLeed))
                 .first)??typesUser.first,
-            title:  "*Tipo Cliente"),
-           Visibility(
+            title:  "Tipo Cliente"
+          ),
+          Visibility(
             visible: typeLeed == NewTypeUser.particular,
             child:SheetSelect(
+              isRequired: true,
               update: (value){
                 setState(() => gender = value);
                 Navigator.pop(context);
               },
               items:genders,
               current:gender,
-              title: "*Genero")
-           ),
-          typeLeed == NewTypeUser.particular
-            ? textField("*Nombre(s)","Nombre(s)",errName,nameC,false,false,1)
-            : Container(),
-          typeLeed == NewTypeUser.particular
-            ? textField("*Apellidos paterno","Apellido paterno",errLastN,lastNameC,
-                false,false,1)
-            : Container(),
-          Visibility(
-            visible: typeLeed == NewTypeUser.particular,
-            child: textField("*Apellido materno","Apellido materno",errMaterno,
-              lastNameMC, false, false, 1)
+              title: "Genero"
+            )
           ),
           Visibility(
             visible: typeLeed == NewTypeUser.particular,
-            child: buttonField("*Fecha Nacimiento",
-              !isDate 
-                ? "Fecha Nacimiento" 
-                : DateFormat('dd/MM/yyyy').format(dateBirth),
-              errDateB != ""
-                ? Decorations.whiteBorder10Red
-                : Decorations.whiteSblackCard,
-              !isDate ? TextStyles.grey15Itw : TextStyles.blueJ15SemiBold,
-              selectDate,errDateB)
+            child: textFieldLabel(nameC,"Nombre(s)","Nombre(s)",errName,
+              isRequired: true)
+          ),
+          Visibility(
+            visible: typeLeed == NewTypeUser.particular,
+            child: textFieldLabel(lastNameC,"Apellidos paterno","Apellido paterno",
+              errLastN,isRequired: true)
+          ),
+          Visibility(
+            visible: typeLeed == NewTypeUser.particular,
+            child: textFieldLabel(lastNameMC,"Apellidos materno","Apellido materno",
+              errMaterno,isRequired: true)
+          ),
+          Visibility(
+            visible: typeLeed == NewTypeUser.particular,
+            child: Picker(
+              isRequired: true,
+              isDay: true,
+              error: errDateB,
+              update: (value)=> setState(() {
+                if(value!=null){
+                  dateBirth = value;
+                  isDate = true;
+                }
+              }), 
+              current: DateFormat('dd/MM/yyyy').format(dateBirth), 
+              title: "Fecha Nacimiento")
           ),
           Visibility(
             visible: [NewTypeUser.empresa,NewTypeUser.deposito].contains(typeLeed),
-            child:textField("*Nombre ${getTypeUserCambaceo(typeLeed).toLowerCase()}",
-              "Razón Social",errCompany,companyC,false, false, 1)
+            child: textFieldLabel(companyC, 
+              "Nombre ${getTypeUserCambaceo(typeLeed).toLowerCase()}", 
+              "Razón Social", errCompany,isRequired: true
+            )
           ),
           Visibility(
             visible: typeLeed == NewTypeUser.empresa,
-            child:textField(
-              "*Contacto","Contacto",errContact,contactC,false,false,1)
+            child: textFieldLabel(contactC, "Contacto", "Contacto", errContact,
+              isRequired: true
+            )
           ),
-          textField("*Télefono Móvil","555 555 5555",errPhone,phoneC,true,true,1),
-          textField(
-            "*E-mail","ejemplo@midominio.com", errEmail, emailC,false, false, 1),
-          textField("*Confirmacion de E-mail", "ejemplo@midominio.com",errEmail, 
-            emailCo, false, false, 1),
-          buttonField(
-            "*Tipo Vialidad",
+          textFieldLabel(phoneC, "Télefono Móvil", "555 555 5555", errPhone,
+            isRequired: true
+          ),
+          textFieldLabel(emailC,  "E-mail", "ejemplo@midominio.com", errEmail,
+            isRequired: true
+          ),
+          textFieldLabel(emailCo, "Confirmacion de E-mail", "ejemplo@midominio.com",
+            errEmail,isRequired: true
+          ),
+          _select("Tipo Vialidad",
             typeStreetS.id == -1
               ? "Tipo Vialidad"
               : typeStreetS.description,
@@ -466,43 +976,48 @@ class _NewCustomerState extends State<NewCustomer> {
             typeStreetS.id == -1
               ? TextStyles.grey15Itw
               : TextStyles.blueJ15SemiBold,
-            selectTypeStreet,
-            errTypeStreet
+            selectTypeStreet,errTypeStreet,isRequired: true
           ),
-          textField("*Calle", "Calle", errStreet, streetC, false, false, 1),
-          textField(
-            "*No. Exterior", "No. Exterior", errNumE, numEc, false,false, 1),
-          textField(
-            "No. Interior", "No, Interior", "", numIc, false, false, 1),
-          textField(
-            "*Colonia", "Colonia", errColony, colonyC, false, false, 1),
-          textField("*Municipio o Alcaldía", "Municipio o Alcaldia", 
-            errTown,townC, false,false, 1),
-          textField("*Estado", "Estado", errState, stateC, false, false, 1),
-          textField(
-            "*Código Postal", "Código Postal", errCode, codeC, true,false, 1),
+          textFieldLabel(streetC, "Calle", "Calle", errStreet,isRequired: true),
+          textFieldLabel(numEc, "No. Exterior", "No. Exterior", errNumE,
+            isRequired: true
+          ),
+          textFieldLabel(numIc, "No. Interior", "No. Interior", ""),
+          textFieldLabel(colonyC,  "Colonia",  "Colonia", errColony,isRequired: true),
+          textFieldLabel(townC, "Municipio o Alcaldía", "Municipio o Alcaldía", 
+            errTown,isRequired: true),
+          textFieldLabel(stateC, "Estado", "Estado", errState,isRequired: true),
+          textFieldLabel(codeC, "Código Postal", "Código Postal", errCode,
+            isRequired: true),
           Visibility(
             visible: typeLeed == NewTypeUser.particular,
-            child:textField("Fraccionamiento","Fraccionamiento",errFracc,
-              fraccionamiento,false,false,3)
+            child: textFieldLabel(fraccionamiento, "Fraccionamiento", 
+              "Fraccionamiento", errFracc,numLines: 3
+            )
           ),
-          Container(
+          Padding(
             padding: const EdgeInsets.only(top: 15, left: 10),
             child: Text(
               "Entre calles",
-              style: TextStyles.blue15SemiBold,
+              style: JunnyText.semiBoldBlueA1(15),
             ),
           ),
-          textField("Calle y ", "calle y calle", "", streetR1, false, false, 2),
-          textField("Calle ", "calle y calle", "", streetR2, false, false, 2),
-          textField("Referencias adicionales del domicilio",
-            "Referencias adicionales del domicilio","",referenceC,false,false,5),
-          Container(
+          textFieldLabel(streetR1, "Calle y", "calle y calle", "",numLines: 2),
+          textFieldLabel(streetR2, "Calle ", "calle y calle", "",numLines: 2),
+          textFieldLabel(referenceC, "Referencias adicionales del domicilio",
+            "Referencias adicionales del domicilio", "",numLines: 5),
+          Padding(
             padding: const EdgeInsets.only(top: 15, left: 10, bottom: 10),
-            child: Text(
-              "*Horario prefente de visita",
-              style: TextStyles.blue15SemiBold,
-            ),
+            child: RichText(
+              text: TextSpan(
+                children: [
+                  TextSpan(
+                    text: "Horario prefente de visita",
+                    style: JunnyText.semiBoldBlueA1(15)),
+                  TextSpan(text: "*",style: JunnyText.red5c(18))
+                ]
+              )
+            )
           ),
           schedules.isNotEmpty
             ? selectMap(context,(value)=> setState(() => schedule = value),schedules,
@@ -511,111 +1026,203 @@ class _NewCustomerState extends State<NewCustomer> {
                   : schedule,
                 decoration: Decorations.whiteSblackCard,
                 style: TextStyles.blueJ15SemiBold)
-            : Container(),
+            : const SizedBox.shrink(),
+          const SizedBox(height: 15),
           Visibility(
             visible: schedule["descripcion"] == "Otro horario",
-            child:Row(
-              children: [
-                Expanded(
-                  child:Picker(
-                    update: (TimeOfDay value)=>
-                      setState(()=>scheduleOther["1"]= value.format(context)), 
-                    current: scheduleOther["1"], 
-                    title: "*De"
-                  )
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child:Picker(
-                    update: (TimeOfDay value)=>
-                      setState(()=>scheduleOther["2"]= value.format(context)), 
-                    current: scheduleOther["2"], 
-                    title: "*Hasta"
-                  )
-                )
-              ],
-            ),
+            child: Text(
+              "1er Horario:",
+              style: JunnyText.semiBoldBlueA1(15)
+            )
           ),
           Visibility(
             visible: schedule["descripcion"] == "Otro horario",
             child:Row(
               children: [
                 Expanded(
-                  child:Picker(
-                    update: (TimeOfDay value)=>
-                      setState(()=>scheduleOther["3"]= value.format(context)), 
-                    current: scheduleOther["3"], 
-                    title: "De"
+                  child: _select(
+                    "Desde",
+                    scheduleOther["1"],
+                    scheduleOther["err1"] != ""
+                      ? Decorations.whiteBorder10Red
+                      : Decorations.whiteSblackCard,
+                    scheduleOther["1"] == "Inicio"
+                      ? TextStyles.grey15Itw
+                      : TextStyles.blueJ15SemiBold,
+                    () => selectHour("1"),
+                    "",
+                    isRequired: true
                   )
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(
+                  width: 20,
+                ),
                 Expanded(
-                  child:Picker(
-                    update: (TimeOfDay value)=>
-                      setState(()=>scheduleOther["4"]= value.format(context)), 
-                    current: scheduleOther["4"], 
-                    title: "Hasta"
+                  child: _select(
+                    "Hasta",
+                    scheduleOther["2"],
+                    scheduleOther["err1"] != ""
+                      ? Decorations.whiteBorder10Red
+                      : Decorations.whiteSblackCard,
+                    scheduleOther["2"] == "Fin"
+                      ? TextStyles.grey15Itw
+                      : TextStyles.blueJ15SemiBold,
+                    () => selectHour("2"),
+                    "",
+                    isRequired: true
                   )
-                )
+                ),
               ],
             ),
           ),
-            // Row(
-            //   children: [
-            //     Expanded(
-            //         child: buttonField(
-            //             "*Desde",
-            //             inicio,
-            //             errorInicio != ""
-            //                 ? Decorations.whiteBorder10Red
-            //                 : Decorations.whiteSblackCard,
-            //             inicio == "Inicio"
-            //                 ? TextStyles.grey15Itw
-            //                 : TextStyles.blueJ15SemiBold,
-            //             () => selectHour(true),
-            //             errorInicio)),
-            //     const SizedBox(
-            //       width: 20,
-            //     ),
-            //     Expanded(
-            //         child: buttonField(
-            //             "*Hasta",
-            //             fin,
-            //             errorFin != ""
-            //                 ? Decorations.whiteBorder10Red
-            //                 : Decorations.whiteSblackCard,
-            //             fin == "Fin"
-            //                 ? TextStyles.grey15Itw
-            //                 : TextStyles.blueJ15SemiBold,
-            //             () => selectHour(false),
-            //             errorFin)),
-            //   ],
-            // ),
+          Visibility(
+            visible: schedule["descripcion"] == "Otro horario" && 
+              scheduleOther["err1"]!="",
+            child: Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child:Text(
+                scheduleOther["err1"],
+                style: JunnyText.red5c(13)
+              )
+            )
+          ),
+          const SizedBox(height: 10),
+          Visibility(
+            visible: schedule["descripcion"] == "Otro horario",
+            child: Text(
+              "2do Horario (opcional):",
+              style: JunnyText.semiBoldBlueA1(15)
+            )
+          ),
+          Visibility(
+            visible: schedule["descripcion"] == "Otro horario",
+            child: Row(
+              children: [
+                Expanded(
+                  child: _select(
+                    "Desde",
+                    scheduleOther["3"],
+                    scheduleOther["err3"] != ""
+                      ? Decorations.whiteBorder10Red
+                      : Decorations.whiteSblackCard,
+                    scheduleOther["3"] == "Inicio"
+                      ? TextStyles.grey15Itw
+                      : TextStyles.blueJ15SemiBold,
+                    () => selectHour("3"),
+                    "",
+                  )
+                ),
+                const SizedBox(
+                  width: 20,
+                ),
+                Expanded(
+                  child: _select(
+                    "Hasta",
+                    scheduleOther["4"],
+                    scheduleOther["err3"] != ""
+                      ? Decorations.whiteBorder10Red
+                      : Decorations.whiteSblackCard,
+                    scheduleOther["4"] == "Fin"
+                      ? TextStyles.grey15Itw
+                      : TextStyles.blueJ15SemiBold,
+                    () => selectHour("4"),
+                    "",
+                  )
+                ),
+              ],
+            ),
+          ),
+          Visibility(
+            visible: schedule["descripcion"] == "Otro horario" && 
+              scheduleOther["err3"]!="",
+            child: Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child:Text(
+                scheduleOther["err3"],
+                style: JunnyText.red5c(13)
+              )
+            )
+          ),
           Visibility(
             visible: typeLeed == NewTypeUser.particular,
-            child: textField("* # de niños en casa (<12)","1", errChildren,
-              numberChildren,true,false,1,)
+            child: textFieldLabel(numberChildren, "# de niños en casa (<12)", "1", 
+              errChildren,isRequired: true
+            )
           ),
-          textField("* # ${typeLeed == NewTypeUser.particular
-              ? "de adultos en casa (12+)":"de personas"}", 
-            "1", errAdults,numberAdults, true, false, 1),
-          textField("Observación", "Observación", "", observacion, false, false, 3),
-          buttonField("*Tipo de Venta",typeSaleCs.id == -1 
+          textFieldLabel(numberAdults, "# ${typeLeed == NewTypeUser.particular
+              ? "de adultos en casa (12+)"
+              : "de personas"}", "1", errAdults,isRequired: true),
+          textFieldLabel(observacion, "Observación", "Observación", "",numLines: 3),
+          _select("Tipo de Venta",typeSaleCs.id == -1 
               ? "Tipo de Venta" : typeSaleCs.description, 
             errTypeSaleC != ""
               ? Decorations.whiteBorder10Red : Decorations.whiteSblackCard,
             typeSaleCs.id == -1
               ? TextStyles.grey15Itw: TextStyles.blueJ15SemiBold,selectTypeSaleC,
-            errTypeSaleC),
-          buttonField("*Personal de Alta",employeeS.id == -1 
+            errTypeSaleC,
+            isRequired: true),
+          _select("Personal de Alta",employeeS.id == -1 
               ? "Personal de Alta": employeeS.employee,
             errEmployee != ""
               ? Decorations.whiteBorder10Red: Decorations.whiteSblackCard,
             employeeS.id == -1? TextStyles.grey15Itw: TextStyles.blueJ15SemiBold,
-            selectEmployee,errEmployee),
+            selectEmployee,errEmployee,isRequired: true),
           buttonContinue()
         ],
       )
+    );
+  }
+  Widget _showItemHour(String item, String id) {
+    return GestureDetector(
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(28, 20, 10, 14),
+        child: DefaultTextStyle(
+          style: TextStyles.blueJ20Bold,
+          child: Text(
+            item,
+          )
+        )
+      ),
+      onTap: () {
+        bool condition = false;
+        if(id=="1"||id=="2"){
+          condition=int.parse(id=="1"
+            ? item.toString().replaceAll(":", "")
+            : (scheduleOther["1"]!="Inicio"
+              ? scheduleOther["1"].toString().replaceAll(":", "")
+              : "0"))
+            < int.parse(id=="2"
+            ? item.toString().replaceAll(":", "")
+            : (scheduleOther["2"]!="Fin"
+              ? scheduleOther["2"].toString().replaceAll(":", "")
+              : "2200"));
+        }else{
+          condition=int.parse(id=="3"
+            ? item.toString().replaceAll(":", "")
+            : (scheduleOther["3"]!="Inicio"
+              ? scheduleOther["3"].toString().replaceAll(":", "")
+              : "0"))
+            < int.parse(id=="4"
+            ? item.toString().replaceAll(":", "")
+            : (scheduleOther["4"]!="Fin"
+              ? scheduleOther["4"].toString().replaceAll(":", "")
+              : "2200"));
+        }
+        if(condition){
+        setState(() {
+          scheduleOther[id]=item;
+        });
+        Navigator.pop(context);
+        }else{
+          Fluttertoast.showToast(
+          msg: "La hora de inicio debe ser menor a la hora fin",
+          timeInSecForIosWeb: 2,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+        );
+        }
+      },
     );
   }
 
@@ -672,46 +1279,6 @@ class _NewCustomerState extends State<NewCustomer> {
         );
   }
 
-  void refreshLocation() {
-    Navigator.pop(context);
-    funButtonLocation();
-    showLocation(context, refreshLocation, lat, lng);
-  }
-
-  void funButtonLocation() async {
-    setState(() {
-      isLoading = true;
-    });
-    LocationPermission permission = await Geolocator.requestPermission();
-    if (permission == LocationPermission.whileInUse ||
-        permission == LocationPermission.always) {
-      provider.permission = true;
-      Position _currentLocation = await Geolocator.getCurrentPosition();
-      lat = _currentLocation.latitude;
-      lng = _currentLocation.longitude;
-      errLatLng = "*Coordenadas actualizadas";
-      Fluttertoast.showToast(
-        msg: "Ubicación actualizada con exito",
-        timeInSecForIosWeb: 2,
-        toastLength: Toast.LENGTH_LONG,
-        gravity: ToastGravity.TOP,
-        webShowClose: true,
-      );
-    } else {
-      Fluttertoast.showToast(
-        msg: "No has proporcionado permisos de ubicación",
-        timeInSecForIosWeb: 2,
-        toastLength: Toast.LENGTH_LONG,
-        gravity: ToastGravity.TOP,
-        webShowClose: true,
-      );
-    }
-    log("lat: $lat and lng: $lng");
-    setState(() {
-      isLoading = false;
-    });
-  }
-
   Widget textField(
       String titleT,
       String hintT,
@@ -719,13 +1286,24 @@ class _NewCustomerState extends State<NewCustomer> {
       TextEditingController controller,
       bool isNumber,
       bool isPhone,
-      int numLines) {
+      int numLines,{
+        bool isRequired=false
+      }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
           padding: const EdgeInsets.only(top: 15, bottom: 2, left: 10),
-          child: Text(
+          child: isRequired
+            ? RichText(
+              text: TextSpan(
+                children: [
+                  TextSpan(text: titleT,style: TextStyles.blue15SemiBold),
+                  TextSpan(text: "*",style: JunnyText.red5c(16))
+                ]
+              )
+            )
+            : Text(
             titleT,
             style: TextStyles.blue15SemiBold,
           ),
@@ -771,66 +1349,6 @@ class _NewCustomerState extends State<NewCustomer> {
     );
   }
 
-  void selectDate() {
-    showCupertinoModalPopup<int>(
-      context: context,
-      builder: (BuildContext context) {
-        return Container(
-          height: 255,
-          alignment: Alignment.bottomCenter,
-          child: Column(
-            children: [
-              Container(
-                color: Colors.white,
-                height: 200,
-                child: Expanded(
-                  child: CupertinoDatePicker(
-                    initialDateTime: dateBirth,
-                    maximumDate: DateTime(DateTime.now().year - 17),
-                    minimumDate: DateTime(DateTime.now().year - 80),
-                    mode: CupertinoDatePickerMode.date,
-                    onDateTimeChanged: (date) => dateAux = date,
-                  ),
-                )
-              ),
-              Container(
-                height: 55,
-                width: MediaQuery.of(context).size.width,
-                color: Colors.white,
-                padding:const EdgeInsets.only(left: 10, right: 10, bottom: 5),
-                child: CupertinoButton(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  borderRadius: BorderRadius.circular(15.0),
-                  color: ColorsJunghanns.blueJ,
-                  child:const Text('Seleccionar', style: TextStyles.white17_5),
-                  onPressed: () {
-                    setState(() {
-                      dateBirth = dateAux;
-                      isDate = true;
-                    });
-                    Navigator.pop(context);
-                  },
-                ),
-              )
-            ]
-          )
-        );
-      }
-    );
-  }
-
-  void selectTypeStreet() async {
-    await showCupertinoModalPopup<int>(
-      context: context,
-      builder: (context) {
-        return CupertinoActionSheet(
-          actionScrollController: ScrollController(
-            initialScrollOffset: 1.0, keepScrollOffset: true),
-          actions: typesStreetsList.map((item)=> showItemTypeStreet(item)).toList());
-      }
-    );
-  }
-
   Widget showItemTypeStreet(TypeOfStreetModel ts) {
     return GestureDetector(
       child: Container(
@@ -848,18 +1366,6 @@ class _NewCustomerState extends State<NewCustomer> {
         });
         Navigator.pop(context);
       },
-    );
-  }
-
-  void selectTypeSaleC() async {
-    await showCupertinoModalPopup<int>(
-      context: context,
-      builder: (context) {
-        return CupertinoActionSheet(
-          actionScrollController: ScrollController(
-            initialScrollOffset: 1.0, keepScrollOffset: true),
-          actions: typesSalesCList.map((item)=> showItemTypeSaleC(item)).toList());
-      }
     );
   }
 
@@ -883,16 +1389,25 @@ class _NewCustomerState extends State<NewCustomer> {
     );
   }
 
-  Widget buttonField(String titleB, String textB, BoxDecoration decoB,
-      TextStyle textSB, Function funB, String errB) {
+  Widget _select(String titleB, String textB, BoxDecoration decoB,
+      TextStyle textSB, Function funB, String errB,{bool isRequired=false}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          padding: const EdgeInsets.only(top: 15, bottom: 2, left: 10),
-          child: Text(
+          padding: const EdgeInsets.only(top: 10, bottom: 2, left: 10),
+          child: isRequired
+            ? RichText(
+              text: TextSpan(
+                children: [
+                  TextSpan(text: titleB,style: JunnyText.semiBoldBlueA1(15)),
+                  TextSpan(text: "*",style: JunnyText.red5c(18))
+                ]
+              )
+            )
+            : Text(
             titleB,
-            style: TextStyles.blue15SemiBold,
+            style: JunnyText.semiBoldBlueA1(15),
           ),
         ),
         GestureDetector(
@@ -924,34 +1439,6 @@ class _NewCustomerState extends State<NewCustomer> {
     );
   }
 
-  void selectEmployee() async {
-    await showCupertinoModalPopup<int>(
-      context: context,
-      builder: (context) {
-        return CupertinoActionSheet(
-          actionScrollController: ScrollController(
-            initialScrollOffset: 1.0, keepScrollOffset: true),
-          actions: employeesList.map((item)=>showItemEmployee(item)).toList());
-      }
-    );
-  }
-
-  void selectHour(bool isInicio) async {
-    await showCupertinoModalPopup<int>(
-      context: context,
-      builder: (context) {
-        return CupertinoActionSheet(
-          actionScrollController: ScrollController(
-            initialScrollOffset: 1.0, keepScrollOffset: true),
-          actions: ["06:00","07:00","08:00","09:00","10:00","11:00","12:00","13:00",
-            "14:00","15:00","16:00","17:00","18:00","19:00","20:00","21:00","22:00"
-            ].where((element) => isInicio ? true: int.parse(element.substring(0, 2)) 
-              >= int.parse((inicio == "Inicio" ? "0": inicio.substring(0, 2))))
-            .map((item)=>showItemHour(item, isInicio)).toList());
-      }
-    );
-  }
-
   Widget showItemEmployee(EmployeeModel emp) {
     return GestureDetector(
       child: Container(
@@ -966,31 +1453,6 @@ class _NewCustomerState extends State<NewCustomer> {
       onTap: () {
         setState(() {
           employeeS = emp;
-        });
-        Navigator.pop(context);
-      },
-    );
-  }
-
-  Widget showItemHour(String item, bool isInicio) {
-    return GestureDetector(
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(28, 20, 10, 14),
-        child: DefaultTextStyle(
-          style: TextStyles.blueJ20Bold,
-          child: Text(
-            item,
-          )
-        )
-      ),
-      onTap: () {
-        setState(() {
-          if (isInicio) {
-            inicio = item;
-            fin = "Fin";
-          } else {
-            fin = item;
-          }
         });
         Navigator.pop(context);
       },
@@ -1032,26 +1494,6 @@ class _NewCustomerState extends State<NewCustomer> {
         style: TextStyles.white17_5,
         label: "REGISTRAR"
       ),
-    );
-  }
-
-  showConfirmR() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Center(
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            width: size.width * .75,
-            decoration: Decorations.whiteS1Card,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [textConfirm(), textPhoneConfirm(), buttomsConfirm()],
-            ),
-          ),
-        );
-      }
     );
   }
 
@@ -1129,288 +1571,6 @@ class _NewCustomerState extends State<NewCustomer> {
         )
       ),
     );
-  }
-
-  bool checkValidField() {
-    bool isValid = true;
-    setState(() {
-      if (lat == 0 && lng == 0) {
-        errLatLng = "*Coordenadas obligatorias";
-        isValid = false;
-      } else {
-        errLatLng = "*Coordenadas actualizadas";
-      }
-
-      if (typeLeed==NewTypeUser.particular && nameC.text.isEmpty) {
-        errName = "*Campo obligatorio";
-        isValid = false;
-      } else {
-        errName = "";
-      }
-
-      if (typeLeed==NewTypeUser.particular && lastNameC.text.isEmpty) {
-        errLastN = "*Campo obligatorio";
-        isValid = false;
-      } else {
-        errLastN = "";
-      }
-      if (typeLeed==NewTypeUser.particular && lastNameMC.text.isEmpty) {
-        errMaterno = "*Campo obligatorio";
-        isValid = false;
-      } else {
-        errMaterno = "";
-      }
-
-      if (typeLeed==NewTypeUser.particular && !isDate) {
-        errDateB = "*Campo obligatorio";
-        isValid = false;
-      } else {
-        errDateB = "";
-      }
-
-      if (typeLeed==NewTypeUser.particular && companyC.text.isEmpty) {
-        errCompany = "*Campo obligatorio";
-        isValid = false;
-      } else {
-        errCompany = "";
-      }
-
-      if (typeLeed==NewTypeUser.particular && contactC.text.isEmpty) {
-        errContact = "*Campo obligatorio";
-        isValid = false;
-      } else {
-        errContact = "";
-      }
-
-      if (phoneC.text.isEmpty) {
-        errPhone = "*Campo obligatorio";
-        isValid = false;
-      } else {
-        if (phoneC.text.length < 14) {
-          errPhone = "*Télefono incompleto";
-          isValid = false;
-        } else {
-          errPhone = "";
-        }
-      }
-
-      if (emailC.text.isEmpty) {
-        errEmail = "*Campo obligatorio";
-        isValid = false;
-      } else {
-        if (emailCo.text != emailC.text) {
-          errEmail = "el correo no coincide";
-        } else {
-          errEmail = "";
-        }
-      }
-
-      if (typeStreetS.id == -1) {
-        errTypeStreet = "*Campo obligatorio";
-        isValid = false;
-      } else {
-        errTypeStreet = "";
-      }
-
-      if (streetC.text.isEmpty) {
-        errStreet = "*Campo obligatorio";
-        isValid = false;
-      } else {
-        errStreet = "";
-      }
-
-      if (numEc.text.isEmpty) {
-        errNumE = "*Campo obligatorio";
-        isValid = false;
-      } else {
-        errNumE = "";
-      }
-
-      if (colonyC.text.isEmpty) {
-        errColony = "*Campo obligatorio";
-        isValid = false;
-      } else {
-        errColony = "";
-      }
-
-      if (townC.text.isEmpty) {
-        errTown = "*Campo obligatorio";
-        isValid = false;
-      } else {
-        errTown = "";
-      }
-
-      if (stateC.text.isEmpty) {
-        errState = "*Campo obligatorio";
-        isValid = false;
-      } else {
-        errState = "";
-      }
-
-      if (codeC.text.isEmpty) {
-        errCode = "*Campo obligatorio";
-        isValid = false;
-      } else {
-        errCode = "";
-      }
-
-      if (typeSaleCs.id == -1) {
-        errTypeSaleC = "*Campo obligatorio";
-        isValid = false;
-      } else {
-        errTypeSaleC = "";
-      }
-
-      if (employeeS.id == -1) {
-        errEmployee = "*Campo obligatorio";
-        isValid = false;
-      } else {
-        errEmployee = "";
-      }
-      if (inicio == "Inicio") {
-        errorInicio = "*Campo obligatorio";
-      //  isValid = false;
-      }
-      if (fin == "Fin") {
-        errorFin = "*Campo obligatorio";
-       // isValid = false;
-      }
-      if (schedule["descripcion"] == "Otro horario" &&
-          otherSchedule.text.isEmpty) {
-        errorOtherSchedule = "debes ingresar un horario";
-        isValid = false;
-      } else {
-        errorOtherSchedule = "";
-      }
-      if (numberChildren.text.isEmpty && typeLeed==NewTypeUser.particular) {
-        errChildren = "*Campo obligatorio";
-        isValid = false;
-      } else {
-        errChildren = "";
-      }
-      if (numberAdults.text.isEmpty) {
-        errAdults = "*Campo obligatorio";
-       isValid = false;
-      } else {
-        errAdults = "";
-      }
-    });
-    return isValid;
-  }
-
-  funButtonContinue() async {
-    //prefs.urlBase=ipStage;
-    log("FUN BUTTON CONTINUE ${prefs.urlBase}");
-    Map<String, dynamic> data = {};
-    Fluttertoast.showToast(
-        msg: prefs.nameUserD,
-        timeInSecForIosWeb: 2,
-        toastLength: Toast.LENGTH_LONG,
-        gravity: ToastGravity.TOP,
-        webShowClose: true,
-      );
-    if (typeLeed==NewTypeUser.particular) {
-      data = {
-        "action": "create",
-        "id_ruta": prefs.idRouteD,
-        "envio_msg_otp": "S",
-        "usuario": prefs.nameUserD,
-        "data": {
-          "tipo": 'P',
-          "nombre": nameC.text,
-          "ap_materno": lastNameMC.text,
-          "ap_paterno": lastNameC.text,
-          "fecha_nacimiento": DateFormat('yyyy-MM-dd').format(dateBirth),
-          "tel_movil": phoneC.text.replaceAll(" ", ""),
-          "email": emailC.text,
-          "id_vialidad": typeStreetS.id,
-          "calle": streetC.text,
-          "no_ext": numEc.text,
-          "no_int": numIc.text,
-          "colonia": colonyC.text,
-          "mun_alc": townC.text,
-          "estado": stateC.text,
-          "codigo_postal": codeC.text,
-          "lat": lat.toString(),
-          "lon": lng.toString(),
-          "referencia_domicilio": referenceC.text,
-          "id_empleado": employeeS.id,
-          "tipo_venta": typeSaleCs.id,
-          "entre_calle_1": streetR1.text,
-          "entre_calle_2": streetR2.text,
-          "observaciones": observacion.text,
-          "hora_inicio": /*inicio*/ DateTime.now().toString(),
-          "hora_fin": /*fin*/ DateTime.now().toString(),
-          "no_infantes": int.tryParse(numberChildren.text) ?? 0,
-          "no_adultos": int.tryParse(numberAdults.text) ?? 0,
-          "id_horario": schedule["id"],
-          "otros_horarios": "${scheduleOther["1"]} HRS - ${scheduleOther["2"]} HRS"
-        }
-      };
-    } else {
-      data = {
-        "action": "create",
-        "id_ruta": prefs.idRouteD,
-        "envio_msg_otp": "S",
-        "usuario": prefs.nameUserD,
-        "data": {
-          "tipo": 'E',
-          "razon_social": companyC.text,
-          "contacto": contactC.text,
-          "tel_movil": phoneC.text.replaceAll(" ", ""),
-          "email": emailC.text,
-          "id_vialidad": typeStreetS.id,
-          "calle": streetC.text,
-          "no_ext": numEc.text,
-          "no_int": numIc.text,
-          "colonia": colonyC.text,
-          "mun_alc": townC.text,
-          "estado": stateC.text,
-          "codigo_postal": codeC.text,
-          "lat": lat.toString(),
-          "lon": lng.toString(),
-          "referencia_domicilio": referenceC.text,
-          "id_empleado": employeeS.id,
-          "tipo_venta": typeSaleCs.id,
-          "entre_calle_1": streetR1.text,
-          "entre_calle_2": streetR2.text,
-          "observaciones": observacion.text,
-          "hora_inicio": inicio,
-          "id_horario": schedule["id"],
-          "no_infantes": 0,
-          "no_adultos": int.tryParse(numberAdults.text) ?? 0,
-          "hora_fin": fin
-        }
-      };
-    }
-
-    log("INFO NEW CUSTOMER: $data");
-
-    await postNewCustomer(data).then((answer) {
-      if (answer.error) {
-        Fluttertoast.showToast(
-          msg: answer.message,
-          timeInSecForIosWeb: 2,
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.TOP,
-          webShowClose: true,
-        );
-      } else {
-        setState(() {
-          isOTP = true;
-          prefs.customerP = typeLeed==NewTypeUser.particular;
-          prefs.channelValidation="";
-        });
-        Fluttertoast.showToast(
-          msg: "Se envió código de verificación",
-          timeInSecForIosWeb: 2,
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.TOP,
-          webShowClose: true,
-        );
-        idNewCustomer = int.parse((answer.body["id"] ?? -1).toString());
-      }
-    });
   }
 
   Widget otpField() {
@@ -1556,157 +1716,5 @@ class _NewCustomerState extends State<NewCustomer> {
           ),
         )));
   }
-
-  funCheckOTP(String code) async {
-    Map<String, dynamic> data = {
-      "id_lead": idNewCustomer,
-      "id_ruta": prefs.idRouteD,
-      "lat": lat.toString(),
-      "lon": lng.toString(),
-      "otp": code
-    };
-
-    await putValidateOTP(data).then((answer) {
-      if (answer.error) {
-        Fluttertoast.showToast(
-          msg: answer.message,
-          timeInSecForIosWeb: 2,
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.TOP,
-          webShowClose: true,
-        );
-      } else {
-        setState(() {
-          isOTP = false;
-          pinC.text = "";
-          errLatLng = "";
-          lat = lng = 0;
-          nameC.text = "";
-          lastNameC.text = "";
-          dateBirth = DateTime(1900);
-          companyC.text = "";
-          contactC.text = "";
-          phoneC.text = "";
-          emailC.text = "";
-          typeStreetS = TypeOfStreetModel.fromState();
-          streetC.text = "";
-          numEc.text = "";
-          numIc.text = "";
-          colonyC.text = "";
-          townC.text = "";
-          stateC.text = "";
-          codeC.text = "";
-          referenceC.text = "";
-          typeSaleCs = SaleCambaceoModel.fromState();
-          employeeS = EmployeeModel.fromState();
-        });
-        showOTPsuccess();
-      }
-    });
-  }
-
-  showOTPsuccess() {
-    showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return Center(
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              width: size.width * .75,
-              decoration: Decorations.whiteS1Card,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                      alignment: Alignment.center,
-                      child: DefaultTextStyle(
-                          style: TextStyles.blueJ20Bold,
-                          child: const Text("Código validado con exito"))),
-                  Container(
-                    padding: const EdgeInsets.only(top: 12, bottom: 18),
-                    child: const Icon(
-                      FontAwesomeIcons.checkCircle,
-                      size: 50,
-                      color: ColorsJunghanns.greenJ,
-                    ),
-                  ),
-                  buttomConfirm(
-                      "Aceptar",
-                      () => () async {
-                            Navigator.pop(context);
-                          },
-                      Decorations.greenJCard),
-                ],
-              ),
-            ),
-          );
-        });
-  }
-
-  funResendCode(bool isW) async {
-    log("FUN RESEND CODE");
-
-    Map<String, dynamic> data = {
-      "id_lead": idNewCustomer,
-      "id_ruta": prefs.idRouteD,
-      "lat": lat.toString(),
-      "lon": lng.toString(),
-      "envio_msg_otp": "S",
-      "canal": prefs.channelValidation.toUpperCase()
-    };
-
-    log("INFO RESEND: $data");
-
-    await postResendCode(data).then((answer) {
-      log("${answer.body} ======> ${answer.status}");
-      if (answer.error) {
-        Fluttertoast.showToast(
-          msg: answer.message,
-          timeInSecForIosWeb: 2,
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.TOP,
-          webShowClose: true,
-        );
-      } else {
-        Fluttertoast.showToast(
-          msg: "Se reenvió el código de verificación",
-          timeInSecForIosWeb: 2,
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.TOP,
-          webShowClose: true,
-        );
-        // idNewCustomer = int.parse((answer.body["id"] ?? -1).toString());
-        log(idNewCustomer.toString());
-      }
-    });
-  }
-
-  funCancelCode() async {
-    Map<String, dynamic> data = {
-      "id": idNewCustomer,
-    };
-    await putCancelOTP(data).then((answer) {
-      if (answer.error) {
-        Fluttertoast.showToast(
-          msg: answer.message,
-          timeInSecForIosWeb: 2,
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.TOP,
-          webShowClose: true,
-        );
-      } else {
-        setState(() {
-          isOTP = false;
-          pinC.text = "";
-        });
-        Fluttertoast.showToast(
-          msg: "Se canceló el registro",
-          timeInSecForIosWeb: 2,
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.TOP,
-          webShowClose: true,
-        );
-      }
-    });
-  }
+ 
 }

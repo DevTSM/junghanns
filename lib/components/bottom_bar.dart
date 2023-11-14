@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:junghanns/pages/home/home_principal.dart';
+import 'package:junghanns/provider/provider.dart';
 import 'package:junghanns/styles/color.dart';
+import 'package:junghanns/styles/text.dart';
+import 'package:provider/provider.dart';
 
-Widget bottomBar(Function setIndexCurrent, int indexCurrent,{BuildContext? context,bool isHome=true}) {
+Widget bottomBar(Function setIndexCurrent, int indexCurrent,BuildContext context,{bool isHome=true}) {
   return BottomNavigationBar(
     items: <BottomNavigationBarItem>[
       BottomNavigationBarItem(
@@ -45,12 +48,31 @@ Widget bottomBar(Function setIndexCurrent, int indexCurrent,{BuildContext? conte
         label: 'Rutas',
       ),
       BottomNavigationBarItem(
-        icon: Image.asset(
-          "assets/icons/menuOp5W.png",
-          width: 25,
-          height: 25,
-        ),
-        activeIcon: Image.asset(
+        icon: Stack(
+          alignment: Alignment.topRight,
+          children:[
+            Image.asset(
+              "assets/icons/menuOp5W.png",
+              width: 25,
+              height: 25,
+            ),
+            Visibility(
+              visible:Provider.of<ProviderJunghanns>(context,listen: false).isNotificationPending,
+              child: ClipOval(
+                child: Container(
+                  width: 12,
+                  height: 12,
+                  alignment: Alignment.center,
+                  color: JunnyColor.red5c,
+                  child: Text(Provider.of<ProviderJunghanns>(context,listen: false).totalNotificationPending.toString(),style: JunnyText.bluea4(FontWeight.w400, 10)
+                      .copyWith(color: JunnyColor.white)
+                  ),
+                  ),
+                )
+              )
+            ]
+          ),
+        activeIcon:Image.asset(
           "assets/icons/menuOp5B.png",
           width: 25,
           height: 25,
@@ -75,10 +97,11 @@ Widget bottomBar(Function setIndexCurrent, int indexCurrent,{BuildContext? conte
     currentIndex: indexCurrent,
     unselectedItemColor: const Color.fromRGBO(188, 190, 192, 1),
     selectedItemColor: ColorsJunghanns.blueJ,
-    onTap: (value) => isHome?setIndexCurrent(value):navigator(context!,value,indexCurrent),
+    onTap: (value) => isHome?setIndexCurrent(value):navigator(context,value,indexCurrent),
   );
 }
 navigator(BuildContext context,int index,int indexCurrent){
+  Provider.of<ProviderJunghanns>(context,listen: false).getPendingNotification();
   if(index!=indexCurrent){
   Navigator.pushAndRemoveUntil(context, MaterialPageRoute<void>(
             builder: (BuildContext context) => HomePrincipal(index: index,)), (route) => false);

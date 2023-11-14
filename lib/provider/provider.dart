@@ -1,29 +1,28 @@
 // ignore_for_file: unnecessary_getters_setters
 
 import 'dart:async';
-import 'dart:convert';
 import 'dart:developer';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:intl/intl.dart';
 import 'package:junghanns/models/authorization.dart';
 import 'package:junghanns/models/customer.dart';
-import 'package:junghanns/models/method_payment.dart';
 import 'package:junghanns/models/notification.dart';
 import 'package:junghanns/models/product.dart';
 import 'package:junghanns/models/shopping_basket.dart';
 import 'package:junghanns/preferences/global_variables.dart';
-import 'package:junghanns/services/store.dart';
 import 'package:junghanns/util/push_notifications_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class ProviderJunghanns extends ChangeNotifier {
   ProviderJunghanns(){
     messaging.subscribeToTopic("messaging");
     requestPermissions();
+    requestAllPermissions();
     notificationService.init();
     listen();
+    getPendingNotification();
   }
   //VARIABLES
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin= FlutterLocalNotificationsPlugin();
@@ -37,19 +36,23 @@ class ProviderJunghanns extends ChangeNotifier {
   int _connectionStatus = 100;
   int _totalAsync = 1;
   int _currentAsync = 0;
+  int _totalNotificationPending=0;
   bool _permission = true;
   bool _asyncProcess = false;
   bool _isStatusloading = false;
   bool _isNeedAsync=false;
   bool _isProcessValidate=false;
+  bool _isNotificationPending=false;
 
   //GETS
+  bool get isNotificationPending=>_isNotificationPending;
   bool get isProcessValidate=>_isProcessValidate;
   bool get isNeedAsync=>_isNeedAsync;
   bool get permission => _permission;
   bool get isStatusloading => _isStatusloading;
   bool get asyncProcess => _asyncProcess;
   int get totalAsync => _totalAsync;
+  int get totalNotificationPending => _totalNotificationPending;
   int get currentAsync => _currentAsync;
   int get connectionStatus => _connectionStatus;
   double get downloadRate => _downloadRate;
@@ -58,6 +61,10 @@ class ProviderJunghanns extends ChangeNotifier {
   Map<String,dynamic> get brand=> basketCurrent.brandJug;
   Function get updateComodato =>_updateComodato;
   //SETS
+  set isNotificationPending(bool current){
+    _isNotificationPending=current;
+    notifyListeners();
+  }
   set isProcessValidate(bool isProcess){
     _isProcessValidate=isProcess;
     notifyListeners();
@@ -92,6 +99,10 @@ class ProviderJunghanns extends ChangeNotifier {
     _currentAsync = currentAsync;
     notifyListeners();
   }
+  set totalNotificationPending(int current) {
+    _totalNotificationPending = current;
+    notifyListeners();
+  }
 
   set connectionStatus(int connectionCurrent) {
     _connectionStatus = connectionCurrent;
@@ -122,6 +133,29 @@ class ProviderJunghanns extends ChangeNotifier {
   }
 
   //FUNCTIONS
+  Future<void> requestAllPermissions() async {
+    Timer(const Duration(seconds: 6), () async { 
+      Map<Permission, PermissionStatus> status = await [
+        Permission.locationWhenInUse,
+        Permission.location,
+        Permission.notification
+      ].request();
+
+        // Verifica el estado de los permisos
+      if (status[Permission.locationWhenInUse] == PermissionStatus.denied){
+        log("Solicitando 1 ====================>");
+        await Permission.locationWhenInUse.request();
+      }
+      if (status[Permission.location] == PermissionStatus.denied){
+        log("Solicitando 2 ====================>");
+        await Permission.location.request();
+      }
+      if (status[Permission.notification] == PermissionStatus.denied){
+        log("Solicitando 3 ====================>");
+        await Permission.notification.request();
+      }
+    });
+  }
   void requestPermissions() {
     flutterLocalNotificationsPlugin
         .resolvePlatformSpecificImplementation<
@@ -142,19 +176,17 @@ class ProviderJunghanns extends ChangeNotifier {
   }
   listen(){
     FirebaseMessaging.onMessage.listen((RemoteMessage event) {
-      log("message recieved\n${event.notification!.body}\n${event.data.values}");
-      NotificationModel notification=NotificationModel.fromEvent(event);
+      log("message recieved 1\n${event.notification!.body}\n${event.data.values}");
+      NotificationModel notification=NotificationModel.fromEvent(event,status: 0);
       handler.insertNotification(notification.getMap);
       if(event.data.isNotEmpty){
         isProcessValidate=true;
         Timer(const Duration(seconds: 1), () {_updateComodato(); });
       }
+      getPendingNotification();
       NotificationService _notificationService = NotificationService();
       _notificationService.showNotifications(
           "${event.notification!.title}", "${event.notification!.body}");
-    });
-    FirebaseMessaging.onMessageOpenedApp.listen((message) {
-      log('Message clicked!');
     });
   }
   initShopping(CustomerModel customerCurrent,{AuthorizationModel? auth}) {
@@ -195,6 +227,22 @@ class ProviderJunghanns extends ChangeNotifier {
     }
     
     notifyListeners();
+  }
+  getPendingNotification() async {
+    List<NotificationModel> list= await handler.retrieveNotification();
+    var exits= list.where((element) =>element.status==0);
+    isNotificationPending=exits.isNotEmpty;
+    totalNotificationPending=exits.length;
+  }
+  cleanPendingNotifications() async {
+    List<NotificationModel> notificationsGet = await handler.retrieveNotification();
+    List<NotificationModel> notificationsPending = 
+      notificationsGet.where((element) => element.status==0).toList();
+    notificationsPending.map((e){
+      e.status=1;
+      handler.updateNotification(e);
+    }).toList();
+    isNotificationPending=false;
   }
   getIsNeedAsync() async {
     List<Map<String,dynamic>> salesPen= await handler.retrieveSales();

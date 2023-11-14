@@ -1,43 +1,41 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
+
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:device_info_plus/device_info_plus.dart';
-import 'package:flutter/gestures.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:junghanns/components/modal/show_brand.dart';
-import 'package:junghanns/components/need_async.dart';
-import 'package:junghanns/database/async.dart';
-import 'package:junghanns/models/folio.dart';
-import 'package:junghanns/services/customer.dart';
-import 'package:junghanns/widgets/card/product.dart';
-import 'package:location/location.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:junghanns/components/bottom_bar.dart';
 import 'package:junghanns/components/button.dart';
 import 'package:junghanns/components/loading.dart';
+import 'package:junghanns/components/modal/show_brand.dart';
+import 'package:junghanns/components/need_async.dart';
 import 'package:junghanns/components/without_internet.dart';
 import 'package:junghanns/models/authorization.dart';
 import 'package:junghanns/models/config.dart';
 import 'package:junghanns/models/customer.dart';
+import 'package:junghanns/models/folio.dart';
 import 'package:junghanns/models/product.dart';
 import 'package:junghanns/models/shopping_basket.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/provider/provider.dart';
 import 'package:junghanns/services/auth.dart';
+import 'package:junghanns/services/customer.dart';
 import 'package:junghanns/services/store.dart';
 import 'package:junghanns/styles/color.dart';
 import 'package:junghanns/styles/decoration.dart';
 import 'package:junghanns/styles/text.dart';
-import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:junghanns/widgets/card/product.dart';
+import 'package:location/location.dart';
 import 'package:provider/provider.dart';
-import 'package:speed_test_dart/speed_test_dart.dart';
 
 import '../../models/method_payment.dart';
 
@@ -1191,7 +1189,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
         ],
       ),
       bottomNavigationBar:
-          bottomBar(() {}, widget.index, isHome: false, context: context),
+          bottomBar(() {}, widget.index,context, isHome: false),
     );
   }
 

@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:developer';
+
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
-////////////
 class NotificationService {
   //NotificationService a singleton object
   static final NotificationService _notificationService =

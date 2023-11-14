@@ -3,17 +3,16 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
+
 import 'package:awesome_dialog/awesome_dialog.dart';
-import 'package:junghanns/components/need_async.dart';
-import 'package:junghanns/widgets/card/product.dart';
-import 'package:location/location.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 import 'package:junghanns/components/bottom_bar.dart';
 import 'package:junghanns/components/button.dart';
 import 'package:junghanns/components/loading.dart';
+import 'package:junghanns/components/need_async.dart';
 import 'package:junghanns/components/without_internet.dart';
 import 'package:junghanns/models/config.dart';
 import 'package:junghanns/models/customer.dart';
@@ -25,7 +24,8 @@ import 'package:junghanns/services/store.dart';
 import 'package:junghanns/styles/color.dart';
 import 'package:junghanns/styles/decoration.dart';
 import 'package:junghanns/styles/text.dart';
-import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:junghanns/widgets/card/product.dart';
+import 'package:location/location.dart';
 import 'package:provider/provider.dart';
 
 class ShoppingCartRefill extends StatefulWidget {
@@ -338,7 +338,7 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
       body: Stack(
         children: [header(), isLoading ? const LoadingJunghanns() : itemList()],
       ),
-      bottomNavigationBar: bottomBar(() {}, 2, isHome: false, context: context),
+      bottomNavigationBar: bottomBar(() {}, 2,context, isHome: false),
     );
   }
 

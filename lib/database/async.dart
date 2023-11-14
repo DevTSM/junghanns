@@ -202,7 +202,6 @@ class Async {
     return !isNotSuccess;
   }
   
-
   Future <bool> getStock()async{
     return await getStockList(prefs.idRouteD).then((answer) async {
       if(answer.error){

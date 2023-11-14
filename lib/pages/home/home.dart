@@ -74,6 +74,10 @@ class _HomeState extends State<Home> {
     getDashboarR();
     getAsync();
   }
+  @override
+  void dispose(){
+    super.dispose();
+  }
 
   getPermission() async {
     await Geolocator.requestPermission();

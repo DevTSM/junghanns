@@ -8,11 +8,13 @@ class SheetSelect extends StatelessWidget{
   List<Map<String, dynamic>> items;
   Map<String, dynamic> current;
   String title;
+  bool isRequired;
   SheetSelect({super.key,
     required this.update,
     required this.items,
     required this.current,
-    required this.title
+    required this.title,
+    this.isRequired=false
   });
   sheetSelect(BuildContext context) async {
   await showCupertinoModalPopup<int>(
@@ -36,9 +38,18 @@ class SheetSelect extends StatelessWidget{
       children: [
         Container(
           padding: const EdgeInsets.only(top: 15, bottom: 2, left: 10),
-          child: Text(
+          child: isRequired
+            ? RichText(
+              text: TextSpan(
+                children: [
+                  TextSpan(text: title,style: JunnyText.semiBoldBlueA1(15)),
+                  TextSpan(text: "*",style: JunnyText.red5c(18))
+                ]
+              )
+            )
+            : Text(
             title,
-            style: JunnyText.semiBoldBlueA1(15)
+            style: JunnyText.semiBoldBlueA1(15),
           ),
         ),
         GestureDetector(

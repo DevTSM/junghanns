@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:developer';
 
 import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter/material.dart';
@@ -54,7 +53,14 @@ class _AutorizacionesState extends State<Autorizaciones> {
       value.map((e) {
         e.auth.map((e1) => e1.setClient = e).toList();
         setState(() {
-          authList.addAll(e.auth);
+          List<AuthorizationModel> temporally=[];
+          e.auth.map((element){
+            var exits = authList.where((element1) =>element.idAuth==element1.idAuth);
+            if(exits.isEmpty){
+              temporally.add(element);
+            }
+          }).toList();
+          authList.addAll(temporally);
         });
       }).toList();
     });

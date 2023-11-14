@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
-import 'package:flutter/material.dart';
+
+import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:junghanns/models/answer.dart';
-import 'package:http/http.dart' as http;
 import 'package:junghanns/preferences/global_variables.dart';
 
 Future<Answer> getListCustomer(int idR, DateTime date, String type) async {
@@ -129,7 +129,7 @@ Future<Answer> getHistoryCustomer(int id) async {
       "Authorization": "Bearer ${prefs.token}",
     });
     if (response.statusCode == 200) {
-      log("/CustomerServices <getHistoryCustomer> Successfull ${jsonDecode(response.body)}");
+      log("/CustomerServices <getHistoryCustomer> Successfull");
       return Answer(
           body: jsonDecode(response.body),
           message: "",

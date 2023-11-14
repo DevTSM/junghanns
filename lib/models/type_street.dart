@@ -5,7 +5,7 @@ class TypeOfStreetModel {
   TypeOfStreetModel({required this.id, required this.description});
 
   factory TypeOfStreetModel.fromState() {
-    return TypeOfStreetModel(id: -1, description: "test");
+    return TypeOfStreetModel(id: -1, description: "Selecciona una opción");
   }
 
   factory TypeOfStreetModel.fromService(Map<String, dynamic> data) {

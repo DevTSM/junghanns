@@ -368,4 +368,8 @@ class JunnyText {
     fontFamily: 'MyriadPro-SemiBold',
     color: JunnyColor.blueA1
   );
+  static TextStyle red5c(double size) => TextStyle(
+    fontSize: size,
+    color: JunnyColor.red5c,
+  );
 }

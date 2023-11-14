@@ -148,10 +148,13 @@ selectMap(BuildContext context, Function onChange,
           }).toList(),
       )
       : items.isNotEmpty
-        ? Text(
-          items.first["descripcion"],
-          style: style??TextStyles.blue18SemiBoldIt,
-          textAlign: TextAlign.center,
+        ? Padding(
+          padding: const EdgeInsets.only(top: 5,bottom: 5),
+          child:Text(
+            items.first["descripcion"],
+            style: style??TextStyles.blue18SemiBoldIt,
+            textAlign: TextAlign.center,
+          )
         )
         : const Text("No se encontraron datos")
   );

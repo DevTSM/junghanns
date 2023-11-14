@@ -216,48 +216,37 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
     if(itemBar==1){
       setState(() {
         isLoading=true;
+        operations.clear();
       });
     }
     //obtenemos la lista de operaciones por sincronizar
-    List<Map<String,dynamic>> listOperationHandler=await handler.retrieveDevolucionAsync();
-    await getCreditos(widget.customerCurrent.idClient).then((answer) {
+    List<Map<String,dynamic>> listOperationHandler = 
+      await handler.retrieveDevolucionAsync();
+    await getCreditos(widget.customerCurrent.idClient).then((answer) async {
       setState(() {
         isLoading=false;
       });
       if (!answer.error) {
-        operations.clear();
         for(var e in answer.body){
-          OperationCustomerModel currentOperation = OperationCustomerModel.fromServices(e);
-          //validamos que no exista en un registro local
-          if(listOperationHandler.where((element) => (element["idDocumento"]??"")==currentOperation.folio).isEmpty){
-            setState((){
-              operations.add(OperationCustomerModel.fromServices(e));
-            });
+          OperationCustomerModel currentOperation = 
+            OperationCustomerModel.fromServices(e);
+            //validamos que tenga algo que devolver 
+            if(currentOperation.amount>0){
+            //validamos que no exista en un registro local
+            if(listOperationHandler.where((element) => 
+              (element["idDocumento"]??"")==currentOperation.folio).isEmpty){
+              setState((){
+                operations.add(OperationCustomerModel.fromServices(e));
+              });
+            }
           }
-        
         }
         //si no hay operaciones y el itembar este en "por cobrar" se regresa al dashboard
         if(itemBar==1&&operations.isEmpty){
-          setState(() {
-            itemBar=0;
-          });
+          setState(()=> itemBar = 0);
         }
-
         widget.customerCurrent.setCreditos(operations);
-        items.clear();
-        if(operations.where((element) => element.typeInt == 1).isNotEmpty){
-          items.add({"id":1,"descripcion":"Comodato"});
-        }
-        if(operations.where((element) => element.typeInt == 2).isNotEmpty){
-          items.add({"id":2,"descripcion":"Prestamo"});
-        }
-        if(operations.where((element) => element.typeInt == 3).isNotEmpty){
-          items.add({"id":3,"descripcion":"Credito"});
-        }
-        if(items.isNotEmpty){
-          currentItem=items.first;
-        }
-      }else{
+      } else {
         setState((){
           operations=widget.customerCurrent.operation;
           //si no hay operaciones y el itembar este en "por cobrar" se regresa al dashboard
@@ -265,19 +254,6 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
             itemBar=0;
           }
         });
-        items.clear(); 
-        if(operations.where((element) => element.typeInt==1).isNotEmpty){
-          items.add({"id":1,"descripcion":"Comodato"});
-        }
-        if(operations.where((element) => element.typeInt==2).isNotEmpty){
-          items.add({"id":2,"descripcion":"Prestamo"});
-        }
-        if(operations.where((element) => element.typeInt==3).isNotEmpty){
-          items.add({"id":3,"descripcion":"Credito"});
-        }
-        if(items.isNotEmpty){
-          currentItem=items.first;
-        }
         Fluttertoast.showToast(
           msg: "Conexión inestable con la planta jusoft",
           timeInSecForIosWeb: 2,
@@ -285,6 +261,35 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
           gravity: ToastGravity.TOP,
           webShowClose: true,
         );
+      }
+      List<Map<String,dynamic>> currentList = await handler.retrieveDevolucion();
+      currentList = currentList.where((element) => element["idCliente"] 
+          == widget.customerCurrent.idClient).toList();
+      currentList.map((e){
+        var exits = operations.where((element) => 
+          element.idDocument==e["idDocumento"]);
+        if(exits.isNotEmpty){
+          exits.first.returnedAmount = 
+            exits.first.amountReturned + int.parse(e["cantidad"].toString());
+        }else{
+          OperationCustomerModel tem = OperationCustomerModel.fromDataBase(e);
+          tem.returnedAmount = tem.amount;
+          tem.updateCount=0;
+          setState(()=> operations.add(tem));
+        }
+      }).toList();
+      items.clear(); 
+      if(operations.where((element) => element.typeInt==1).isNotEmpty){
+          items.add({"id":1,"descripcion":"Comodato"});
+        }
+      if(operations.where((element) => element.typeInt==2).isNotEmpty){
+        items.add({"id":2,"descripcion":"Prestamo"});
+      }
+      if(operations.where((element) => element.typeInt==3).isNotEmpty){
+        items.add({"id":3,"descripcion":"Credito"});
+      }
+      if(items.isNotEmpty){
+        currentItem=items.first;
       }
     });
   }
@@ -518,8 +523,8 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
                 ),),
               backgroundColor: ColorsJunghanns.lightBlue,
               body: refreshScroll(),
-              bottomNavigationBar: bottomBar(() {}, widget.indexHome,
-                  isHome: false, context: context),
+              bottomNavigationBar: bottomBar(() {}, widget.indexHome,context,
+                  isHome: false),
             ),
             Visibility(visible: isLoading, child: const LoadingJunghanns())
           ])
@@ -1066,12 +1071,14 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
         Column(
           children:
             operations.where((element) => 
-              element.typeInt==currentItem["id"]&&element.amount>0)
-              .toList().map((e) => 
-                OperationsCard(
-                  current: e,
-                  update:getDataP,
-                  currentClient:widget.customerCurrent)).toList()
+                element.typeInt==currentItem["id"])
+                .toList().map((e) => 
+              OperationsCard(
+                current: e,
+                update:getDataP,
+                currentClient:widget.customerCurrent
+              )
+            ).toList()
         )
       ],
     );

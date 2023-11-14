@@ -35,13 +35,13 @@ class NotificationModel {
         status: data["status"],
         id: data["id"]);
   }
-  factory NotificationModel.fromEvent(RemoteMessage event) {
+  factory NotificationModel.fromEvent(RemoteMessage event,{int status=0}) {
     return NotificationModel(
         data: event.data.isNotEmpty ? event.data : {},
         date: DateTime.now(),
         name: event.notification!.title ?? "Sin titulo",
         description: event.notification!.body ?? "",
-        status: 0,
+        status: status,
         id: 0);
   }
   Map<String, dynamic> get getMap => {
@@ -51,4 +51,5 @@ class NotificationModel {
         "description": description,
         "status": status
       };
+  set updateStatus(int status)=>status=status;
 }

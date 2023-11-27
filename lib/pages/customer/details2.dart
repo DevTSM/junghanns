@@ -242,7 +242,7 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
           }
         }
         //si no hay operaciones y el itembar este en "por cobrar" se regresa al dashboard
-        if(itemBar==1&&operations.isEmpty){
+        if(itemBar==1 && operations.isEmpty){
           setState(()=> itemBar = 0);
         }
         widget.customerCurrent.setCreditos(operations);
@@ -264,7 +264,7 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
       }
       List<Map<String,dynamic>> currentList = await handler.retrieveDevolucion();
       currentList = currentList.where((element) => element["idCliente"] 
-          == widget.customerCurrent.idClient).toList();
+        == widget.customerCurrent.idClient).toList();
       currentList.map((e){
         var exits = operations.where((element) => 
           element.idDocument==e["idDocumento"]);

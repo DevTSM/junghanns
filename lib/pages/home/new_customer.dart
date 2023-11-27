@@ -4,6 +4,7 @@ import 'dart:developer';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_multi_formatter/flutter_multi_formatter.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
@@ -38,7 +39,7 @@ class NewCustomer extends StatefulWidget {
 }
 
 class _NewCustomerState extends State<NewCustomer> {
-  late bool isLoading,isDate,isFracc,isOTP;
+  late bool isLoading,isDate,isFracc,isOTP,isLoadingSchedule;
   late int idNewCustomer;
   late double lat, lng;
   late String errLatLng, errName, errLastN, errDateB, errCompany, errContact, 
@@ -64,6 +65,7 @@ class _NewCustomerState extends State<NewCustomer> {
   @override
   void initState() {
     super.initState();
+    isLoadingSchedule=true;
     isLoading = false;
     isDate = false;
     isFracc=false;
@@ -263,7 +265,9 @@ class _NewCustomerState extends State<NewCustomer> {
   }
 
   getDataSchedules() async {
+    setState(()=>isLoadingSchedule=true);
     await getSchedules().then((answer) {
+      setState(()=>isLoadingSchedule=false);
       if (answer.error) {
         Fluttertoast.showToast(
           msg: answer.message,
@@ -651,17 +655,18 @@ class _NewCustomerState extends State<NewCustomer> {
   }
   
   void selectHour(String id) async {
+    List<String> items=["07:00","07:30","08:00","08:30","09:00","09:30","10:00","10:30",
+      "11:00","11:30","12:00","12:30","13:00","13:30","14:00","14:30","15:00",
+      "15:30","16:00","16:30","17:00","17:30","18:00","18:30","19:00","19:30",
+      "20:00","20:30","21:00"];
+    id=="3"||id=="4"?items.insert(0,id=="3"?"Inicio":"Fin"):null;
     await showCupertinoModalPopup<int>(
       context: context,
       builder: (context) {
         return CupertinoActionSheet(
           actionScrollController: ScrollController(
             initialScrollOffset: 1.0, keepScrollOffset: true),
-          actions: ["07:00","07:30","08:00","08:30","09:00","09:30","10:00","10:30",
-            "11:00","11:30","12:00","12:30","13:00","13:30","14:00","14:30","15:00",
-            "15:30","16:00","16:30","17:00","17:30","18:00","18:30","19:00","19:30",
-            "20:00","20:30","21:00",
-            ].map((item)=> _showItemHour(item, id)).toList());
+          actions: items.map((item)=> _showItemHour(item, id)).toList());
       }
     );
   }
@@ -958,7 +963,7 @@ class _NewCustomerState extends State<NewCustomer> {
             )
           ),
           textFieldLabel(phoneC, "Télefono Móvil", "555 555 5555", errPhone,
-            isRequired: true
+            isRequired: true,isPhone: true
           ),
           textFieldLabel(emailC,  "E-mail", "ejemplo@midominio.com", errEmail,
             isRequired: true
@@ -988,7 +993,7 @@ class _NewCustomerState extends State<NewCustomer> {
             errTown,isRequired: true),
           textFieldLabel(stateC, "Estado", "Estado", errState,isRequired: true),
           textFieldLabel(codeC, "Código Postal", "Código Postal", errCode,
-            isRequired: true),
+            isRequired: true,isNumber: true),
           Visibility(
             visible: typeLeed == NewTypeUser.particular,
             child: textFieldLabel(fraccionamiento, "Fraccionamiento", 
@@ -1019,14 +1024,14 @@ class _NewCustomerState extends State<NewCustomer> {
               )
             )
           ),
-          schedules.isNotEmpty
+          !isLoadingSchedule
             ? selectMap(context,(value)=> setState(() => schedule = value),schedules,
                 schedule["descripcion"] == "Selecciona una opción"
                   ? schedules.first
                   : schedule,
                 decoration: Decorations.whiteSblackCard,
                 style: TextStyles.blueJ15SemiBold)
-            : const SizedBox.shrink(),
+            : const SpinKitCircle(color: ColorsJunghanns.blue,size: 30),
           const SizedBox(height: 15),
           Visibility(
             visible: schedule["descripcion"] == "Otro horario",
@@ -1034,6 +1039,13 @@ class _NewCustomerState extends State<NewCustomer> {
               "1er Horario:",
               style: JunnyText.semiBoldBlueA1(15)
             )
+          ),
+          Visibility(
+            visible: schedule["descripcion"] == "Otro horario",
+            child: const Divider(
+              thickness: 1,
+              color: JunnyColor.blueCE
+            ),
           ),
           Visibility(
             visible: schedule["descripcion"] == "Otro horario",
@@ -1096,6 +1108,13 @@ class _NewCustomerState extends State<NewCustomer> {
           ),
           Visibility(
             visible: schedule["descripcion"] == "Otro horario",
+            child: const Divider(
+              thickness: 1,
+              color: JunnyColor.blueCE
+            ),
+          ),
+          Visibility(
+            visible: schedule["descripcion"] == "Otro horario",
             child: Row(
               children: [
                 Expanded(
@@ -1146,12 +1165,12 @@ class _NewCustomerState extends State<NewCustomer> {
           Visibility(
             visible: typeLeed == NewTypeUser.particular,
             child: textFieldLabel(numberChildren, "# de niños en casa (<12)", "1", 
-              errChildren,isRequired: true
+              errChildren,isRequired: true,isNumber: true
             )
           ),
           textFieldLabel(numberAdults, "# ${typeLeed == NewTypeUser.particular
               ? "de adultos en casa (12+)"
-              : "de personas"}", "1", errAdults,isRequired: true),
+              : "de personas"}", "1", errAdults,isRequired: true,isNumber: true),
           textFieldLabel(observacion, "Observación", "Observación", "",numLines: 3),
           _select("Tipo de Venta",typeSaleCs.id == -1 
               ? "Tipo de Venta" : typeSaleCs.description, 
@@ -1172,6 +1191,7 @@ class _NewCustomerState extends State<NewCustomer> {
       )
     );
   }
+  
   Widget _showItemHour(String item, String id) {
     return GestureDetector(
       child: Container(
@@ -1196,7 +1216,7 @@ class _NewCustomerState extends State<NewCustomer> {
             : (scheduleOther["2"]!="Fin"
               ? scheduleOther["2"].toString().replaceAll(":", "")
               : "2200"));
-        }else{
+        }else if(item!="Inicio" && item!="Fin"){
           condition=int.parse(id=="3"
             ? item.toString().replaceAll(":", "")
             : (scheduleOther["3"]!="Inicio"
@@ -1207,6 +1227,8 @@ class _NewCustomerState extends State<NewCustomer> {
             : (scheduleOther["4"]!="Fin"
               ? scheduleOther["4"].toString().replaceAll(":", "")
               : "2200"));
+        }else{
+          condition=true;
         }
         if(condition){
         setState(() {

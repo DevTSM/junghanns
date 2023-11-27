@@ -35,9 +35,10 @@ class _NotificactionsState extends State<Notificactions> {
     isLoading = false;
     getData();
   }
+
   getData() async {
     List<NotificationModel> notificationsGet = await handler.retrieveNotification();
-    Provider.of<ProviderJunghanns>(context,listen: false).cleanPendingNotifications();
+    //Provider.of<ProviderJunghanns>(context,listen: false).cleanPendingNotifications();
     setState(() {
       notifications.clear();
       notifications.addAll(notificationsGet);
@@ -47,91 +48,119 @@ class _NotificactionsState extends State<Notificactions> {
   Widget build(BuildContext context) {
       size = MediaQuery.of(context).size;
       provider = Provider.of<ProviderJunghanns>(context);
-    return Stack(children: [
-      RefreshIndicator(
-          onRefresh: () async {
-            getData();
-          },
-          child: Container(
-              height: double.infinity,
-              color: JunnyColor.white,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  provider.connectionStatus == 4
-                  ? const WithoutInternet():provider.isNeedAsync?const NeedAsync():Container(),
-                  Visibility(
-                      visible: !provider.permission,
-                      child: const WithoutLocation()),
-                  header(),
-                  const SizedBox(
-                    height: 15,
-                  ),
-                  notifications.isNotEmpty?
-                    Expanded(
-                      child:FutureBuilder(
-                        future: handler.retrieveNotification(),
-                        builder: (BuildContext context,
-                            AsyncSnapshot<List<NotificationModel>> snapshot) {
-                          if (snapshot.hasData) {
-                            return ListView.builder(
-                              itemCount: snapshot.data?.length,
-                              itemBuilder: (BuildContext context, int index) {
-                                return NotificationCard(
-                                  current:snapshot.data?[index]
-                                    ??NotificationModel.fromState()
-                                );
-                              }
-                            );
-                          } else {
-                            return empty(context);
-                          }
-                        }
-                      )
-                    )
-                    :Expanded(child:empty(context))
-                ],
-              ))),
-      Visibility(visible: isLoading, child: const LoadingJunghanns())
-    ]);
+    return Scaffold(
+      body: Stack(
+        children: [
+          RefreshIndicator(
+            onRefresh: ()=> getData(),
+            child: SingleChildScrollView(
+              child:_body()
+            )
+          ),
+          Visibility(
+            visible: isLoading, 
+            child: const LoadingJunghanns()
+          )
+        ],
+      )
+    );
   }
 
+  Widget _body(){
+    return Container(
+      height: size.height*.9,
+      color: JunnyColor.white,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          provider.connectionStatus == 4
+            ? const WithoutInternet()
+            : provider.isNeedAsync
+              ? const NeedAsync()
+              : const SizedBox.shrink(),
+          Visibility(
+            visible: !provider.permission,
+            child: const WithoutLocation()
+          ),
+          header(),
+          const SizedBox(height: 15),
+          Expanded(
+            child: notifications.isNotEmpty 
+              ? _listNototifications()
+              : empty(context)
+          )
+        ],
+      )
+    );
+  }
+  
   Widget header() {
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Container(
-          padding: const EdgeInsets.only(right: 20, left: 20),
-          child: Row(
-            children: [
-              Expanded(
-                  flex: 4,
-                  child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          checkDate(DateTime.now()),
-                          style: TextStyles.blue19_7,
-                        ),
-                      ],
+    return Padding(
+      padding: const EdgeInsets.all(15),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start, 
+        children: [
+          Expanded(
+            flex: 4,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  checkDate(DateTime.now()),
+                  style: TextStyles.blue19_7,
+                ),
+                Text(
+                  "Notificaciones",
+                  style: JunnyText.green24(FontWeight.w400, 16),
+                )
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            flex: 2,
+            child: Container(
+              alignment: Alignment.center,
+              decoration: Decorations.orangeBorder5,
+              padding: const EdgeInsets.only(left: 5, right: 5, top: 5, bottom: 5),
+              child: RichText(
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text: prefs.nameRouteD,
+                      style: TextStyles.white17_5
                     ),
-                  ),
-              const SizedBox(
-                width: 10,
-              ),
-              Expanded(
-                  flex: 2,
-                  child: Container(
-                      alignment: Alignment.center,
-                      decoration: Decorations.orangeBorder5,
-                      padding: const EdgeInsets.only(
-                          left: 5, right: 5, top: 5, bottom: 5),
-                      child: RichText(
-                          text: TextSpan(children: [
-                        TextSpan(
-                            text: prefs.nameRouteD,
-                            style: TextStyles.white17_5),
-                      ])))),
-            ],
-          )),
-    ]);
+                  ]
+                )
+              )
+            )
+          ),
+        ]
+      )
+    );
+  }
+  
+  Widget _listNototifications(){
+    return FutureBuilder(
+      future: handler.retrieveNotification(),
+      builder: (
+        BuildContext context,
+        AsyncSnapshot<List<NotificationModel>> snapshot
+      ) {
+        if (snapshot.hasData) {
+          return ListView.builder(
+            itemCount: snapshot.data?.length,
+            itemBuilder: (BuildContext context, int index) {
+              return NotificationCard(
+                current: snapshot.data?[index]
+                  ?? NotificationModel.fromState()
+              );
+            }
+          );
+        } else {
+          return empty(context);
+        }
+      }
+    );
   }
 }

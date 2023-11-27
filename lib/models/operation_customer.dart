@@ -43,18 +43,18 @@ class OperationCustomerModel {
   }
   factory OperationCustomerModel.fromServices(Map<String, dynamic> data) {
     return OperationCustomerModel(
-        date: DateTime.parse(data["createdAt"] ?? DateTime.now().toString()),
-        entrega:
-            DateTime.parse(data["fecha_entrega"] ?? DateTime.now().toString()),
-        description: data["desc"] ?? "",
-        idDocument: data["id_documento"]??0,
-        type: data["tipo"] ?? "PRÉSTAMO",
-        total: double.parse((data["total"] ?? 0).toString()),
-        priceU: double.parse((data["precio_unitario"] ?? 0).toString()),
-        typeInt: getType(data["tipo"] ?? "PRÉSTAMO"),
-        folio: int.parse((data["folio"] ?? 0).toString()),
-        isProduct: int.parse((data["id_producto"] ?? 0).toString()),
-        amount: int.parse((data["cantidad"] ?? 0).toString()));
+      date: DateTime.parse(data["createdAt"] ?? DateTime.now().toString()),
+      entrega: DateTime.parse(data["fecha_entrega"] ?? DateTime.now().toString()),
+      description: data["desc"] ?? "",
+      idDocument: data["id_documento"]??0,
+      type: data["tipo"] ?? "PRÉSTAMO",
+      total: double.parse((data["total"] ?? 0).toString()),
+      priceU: double.parse((data["precio_unitario"] ?? 0).toString()),
+      typeInt: getType(data["tipo"] ?? "PRÉSTAMO"),
+      folio: int.parse((data["folio"] ?? 0).toString()),
+      isProduct: int.parse((data["id_producto"] ?? 0).toString()),
+      amount: int.parse((data["cantidad"] ?? 0).toString())
+    );
   }
   factory OperationCustomerModel.fromDataBase(Map<String, dynamic> data) {
     return OperationCustomerModel(
@@ -81,7 +81,8 @@ class OperationCustomerModel {
     "folio":folio,
     "id_documento":idDocument,
     "id_producto":isProduct,
-    "cantidad":amount
+    "cantidad":amount,
+    "precio_unitario":priceU
   };
   set updateCount(int current)=>amount=current;
   set returnedAmount(int current)=> amountReturned = current;

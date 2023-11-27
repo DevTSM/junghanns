@@ -106,10 +106,10 @@ Widget textField(
           controller: controller,
           textAlignVertical: TextAlignVertical.center,
           style: TextStyles.blueJ15SemiBold,
-          keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+          keyboardType: isNumber ||isPhone ? TextInputType.number : TextInputType.text,
           maxLines: numLines,
           maxLength: numLines == 5 ? 60 : null,
-          inputFormatters: isPhone ? [MaskedInputFormatter("###  ###  ####")] : [],
+          inputFormatters: isPhone ? [MaskedInputFormatter("###  ###  ####")] :null,
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyles.grey15Itw,

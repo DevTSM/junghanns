@@ -69,7 +69,7 @@ class _ShowCount extends State<ShowCount>{
                   text: TextSpan(
                     children: [
                       TextSpan(
-                        text: "Cant. O: ",
+                        text: "Original: ",
                         style: JunnyText.grey_255(FontWeight.w400, 14)
                           .copyWith(color: JunnyColor.blueC2)
                       ),
@@ -86,7 +86,7 @@ class _ShowCount extends State<ShowCount>{
                   text: TextSpan(
                     children: [
                       TextSpan(
-                        text: "Cant. D: ",
+                        text: "Devueltos: ",
                         style: JunnyText.grey_255(FontWeight.w400, 14)
                           .copyWith(color: JunnyColor.blueC2)
                       ),

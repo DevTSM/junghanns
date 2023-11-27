@@ -1,6 +1,7 @@
 // ignore_for_file: override_on_non_overriding_member, unnecessary_new
 
 import 'dart:async';
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:firebase_core/firebase_core.dart';
@@ -11,9 +12,33 @@ import 'package:junghanns/models/notification.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/provider/provider.dart';
 import 'package:junghanns/routes/routes.dart';
+import 'package:junghanns/styles/color.dart';
 import 'package:provider/provider.dart';
-import 'package:web_socket_channel/io.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:socket_io_client/socket_io_client.dart' as IO;
+
+// @pragma('vm:entry-point') // Mandatory if the App is obfuscated or using Flutter 3.1+
+// void callbackDispatcher() {
+//   Workmanager().executeTask((task, inputData) {
+//     var socket = IO.io('https://pue-sur.junghanns.app:3000', <String, dynamic>{
+//     'transports': ['websocket'],
+//     'autoConnect': true,
+//   });
+//   try{
+//     socket.connect();
+//     // Escucha eventos del servidor
+//     socket.on('junny_notify', (data) {
+//     log('Mensaje desde el servidor: $data');
+//     prefs.urlBase=urlBaseManuality;
+//     prefs.labelCedis=data.toString();
+//   });
+//   log("Conectado ${socket.acks.toString()}");
+//   socket.emit('catch_mobile', 'Hola, servidor!');
+//     }catch(e){
+//       log("ERORR: ${e.toString()}");
+//     }
+//   return Future.value(true);
+//   });
+// }
 
 @pragma('vm:entry-point')
 Future<void> messageHandler(RemoteMessage message) async {
@@ -30,6 +55,29 @@ Future<void> main() async {
   await prefs.initPrefs();
   HttpOverrides.global = new MyHttpOverrides();
   await handler.initializeDB();
+  // Workmanager().initialize(
+  //   callbackDispatcher, // The top level function, aka callbackDispatcher
+  //   isInDebugMode: true // If enabled it will post a notification whenever the task is running. Handy for debugging tasks
+  // );
+  //Workmanager().registerOneOffTask("task-identifier", "simpleTask");
+
+  var socket = IO.io('https://pue-sur.junghanns.app:3000', <String, dynamic>{
+    'transports': ['websocket'],
+    'autoConnect': true,
+  });
+  try{
+    socket.connect();
+    // Escucha eventos del servidor
+    socket.on('junny_notify', (data) {
+    log('Mensaje desde el servidor: $data');
+    prefs.urlBase=urlBaseManuality;
+    prefs.labelCedis=data.toString();
+  });
+  log("Conectado ${socket.acks.toString()}");
+  socket.emit('catch_mobile', 'Hola, servidor!');
+  }catch(e){
+    log(e.toString());
+  }
   runApp(const JunnyApp());
 }
 class MyHttpOverrides extends HttpOverrides {
@@ -47,34 +95,18 @@ class JunnyApp extends StatefulWidget {
 }
 
 class _JunnyAppState extends State<JunnyApp> with WidgetsBindingObserver{
-  WebSocketChannel channel = IOWebSocketChannel.connect(Uri.parse('ws://192.168.1.117:3000'));
+  
   final GlobalKey<ScaffoldMessengerState> _scaffoldKey = GlobalKey();
   final GlobalKey<NavigatorState> _navKey = GlobalKey();
   @override
   void initState() {
     WidgetsBinding.instance.addObserver(this);
-    print("======= Aqui ============= ");
-    channel.stream.listen((event) {
-      // Manejar las respuestas del servidor
-      print('Respuesta del servidor: $event');
-    },
-    onDone: () {
-      // Manejar la desconexión del servidor
-      print('Desconectado del servidor');
-    },
-    onError: (error) {
-      // Manejar errores de conexión
-      print('Error de conexión: $error');
-    });
-    channel.sink.add("Hola desde flutter");
-      print("Escribiendo");
     super.initState();
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    channel.sink.close();
     super.dispose();
   }
   @override
@@ -103,6 +135,9 @@ class _JunnyAppState extends State<JunnyApp> with WidgetsBindingObserver{
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           primarySwatch: Colors.blue,
+          colorScheme: ColorScheme.fromSwatch(
+            backgroundColor: JunnyColor.bluefe
+          )
         ),
         initialRoute: '/',
         routes: getApplicationRoutes(),

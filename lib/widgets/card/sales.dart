@@ -82,6 +82,7 @@ class OperationsCard extends StatelessWidget {
         "cantidad": count,
         "lat": currentLocation.latitude,
         "lng": currentLocation.longitude,
+        "precio_unitario":current.priceU,
         "isUpdate": 0,
         "isError": 0
       };
@@ -197,15 +198,15 @@ class OperationsCard extends StatelessWidget {
                   )
                   : ClipOval(
                     child: Container(
-                      width: 70,
-                      height: 70,
+                      width: 60,
+                      height: 60,
                       color: current.isReturned
                         ? JunnyColor.green24
                         : JunnyColor.yellow52,
                       child: const Icon(
                         FontAwesomeIcons.shoppingBasket,
                         color: JunnyColor.white,
-                        size: 35
+                        size: 33
                       ),
                     ),
                 ),
@@ -261,7 +262,7 @@ class OperationsCard extends StatelessWidget {
                           text: TextSpan(
                             children: [
                               TextSpan(
-                                text: "Cant. O: ",
+                                text: "Originales: ",
                                 style: JunnyText.grey_255(FontWeight.w400, 14)
                                   .copyWith(color: JunnyColor.blueC2)
                               ),
@@ -277,7 +278,7 @@ class OperationsCard extends StatelessWidget {
                           text: TextSpan(
                             children: [
                               TextSpan(
-                                text: "Cant. D: ",
+                                text: "Devueltos: ",
                                 style: JunnyText.grey_255(FontWeight.w400, 14)
                                   .copyWith(color: JunnyColor.blueC2)
                               ),
@@ -292,8 +293,8 @@ class OperationsCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    "${DateFormat(onlyView ? 'HH:mm' : 'yyyy-MM-dd | HH:mm')
-                      .format(current.date)} hrs. (F${current.folio})",
+                    "${DateFormat(onlyView ? 'HH:mm' : 'yyyy-MM-dd')
+                      .format(current.date)}   (F${current.folio})",
                     style: JunnyText.grey_255(FontWeight.w400, 14),
                   ),
                 ],

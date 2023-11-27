@@ -70,7 +70,7 @@ class DataBase {
         );
         //devoluciones offline
         await database.execute(
-          "CREATE TABLE devolucion(id INTEGER PRIMARY KEY AUTOINCREMENT,idDocumento INTEGER,cantidad INTEGER, lat DOUBLE, lng DOUBLE,isUpdate INTEGER,isError INTEGER,tipo TEXT,total DOUBLE,folio INTEGER,idCliente INTEGER,desc,date TEXT)",
+          "CREATE TABLE devolucion(id INTEGER PRIMARY KEY AUTOINCREMENT,idDocumento INTEGER,cantidad INTEGER, lat DOUBLE, lng DOUBLE,isUpdate INTEGER,isError INTEGER,tipo TEXT,total DOUBLE,folio INTEGER,idCliente INTEGER,desc,date TEXT,precio_unitario DOUBLE)",
         );
         // Bitacora
         await database.execute(

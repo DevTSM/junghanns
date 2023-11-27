@@ -60,11 +60,14 @@ Widget bottomBar(Function setIndexCurrent, int indexCurrent,BuildContext context
               visible:Provider.of<ProviderJunghanns>(context,listen: false).isNotificationPending,
               child: ClipOval(
                 child: Container(
-                  width: 12,
-                  height: 12,
+                  width: 13,
+                  height: 13,
                   alignment: Alignment.center,
                   color: JunnyColor.red5c,
-                  child: Text(Provider.of<ProviderJunghanns>(context,listen: false).totalNotificationPending.toString(),style: JunnyText.bluea4(FontWeight.w400, 10)
+                  child: Text(
+                    Provider.of<ProviderJunghanns>(context,listen: false)
+                      .totalNotificationPending.toString(),
+                    style: JunnyText.bluea4(FontWeight.w400, 10)
                       .copyWith(color: JunnyColor.white)
                   ),
                   ),
@@ -72,11 +75,33 @@ Widget bottomBar(Function setIndexCurrent, int indexCurrent,BuildContext context
               )
             ]
           ),
-        activeIcon:Image.asset(
-          "assets/icons/menuOp5B.png",
-          width: 25,
-          height: 25,
-        ),
+        activeIcon:Stack(
+          alignment: Alignment.topRight,
+          children:[
+            Image.asset(
+              "assets/icons/menuOp5B.png",
+              width: 25,
+              height: 25,
+            ),
+            Visibility(
+              visible:Provider.of<ProviderJunghanns>(context,listen: false).isNotificationPending,
+              child: ClipOval(
+                child: Container(
+                  width: 13,
+                  height: 13,
+                  alignment: Alignment.center,
+                  color: JunnyColor.red5c,
+                  child: Text(
+                    Provider.of<ProviderJunghanns>(context,listen: false)
+                      .totalNotificationPending.toString(),
+                    style: JunnyText.bluea4(FontWeight.w400, 10)
+                      .copyWith(color: JunnyColor.white)
+                  ),
+                  ),
+                )
+              )
+            ]
+          ),
         label: 'Notificaciones',
       ),
       BottomNavigationBarItem(

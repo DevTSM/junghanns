@@ -51,5 +51,5 @@ class NotificationModel {
         "description": description,
         "status": status
       };
-  set updateStatus(int status)=>status=status;
+  set updateStatus(int status)=>this.status=status;
 }

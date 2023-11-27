@@ -41,7 +41,9 @@ class _DevolucionesState extends State<Devoluciones> {
 
   getDevoluciones() async {
     devolucionesList.clear();
+    setState(()=> isLoading = true);
     await handler.retrieveDevolucion().then((value){
+      setState(()=> isLoading = false);
       setState(()=>
       devolucionesList = 
         value.map((e) => OperationCustomerModel.fromDataBase(e)).toList()
@@ -87,10 +89,7 @@ class _DevolucionesState extends State<Devoluciones> {
             )
         ),
         body: RefreshIndicator(
-          onRefresh: () async {
-            setState(()=> isLoading = true);
-            getDevoluciones();
-          },
+          onRefresh: ()=> getDevoluciones(),
             child: isLoading
                 ? const Center(
                   child: LoadingJunghanns(),

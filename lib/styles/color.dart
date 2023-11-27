@@ -17,8 +17,10 @@ abstract class ColorsJunghanns {
   static const Color whiteJ = Color.fromRGBO(243, 248, 254, 1);
 }
 abstract class JunnyColor{
+  static const Color black = Color(0xFF000000);
   static const Color blueC2 = Color(0xFF2D5CC2);
   static const Color bluea4 = Color(0xFF0434a4);
+  static const Color bluefe = Color(0xFFf3f8fe);
   static const Color orange_255 = Color.fromARGB(255, 238, 145, 69);
   static const Color blueCE = Color(0xFFA7B7CE);
   static const Color white = Color(0xFFFFFFFF);

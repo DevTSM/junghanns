@@ -650,7 +650,7 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
                 )
               )
             ),
-            itemBar==0?balances():creditosWidget(),
+            itemBar ==0 ?balances() : creditosWidget(),
             const SizedBox(
               height: 20,
             ),
@@ -812,6 +812,11 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
           const SizedBox(
             height: 15,
           ),
+          Visibility(
+            visible: widget.customerCurrent.horario1 != ""
+              && !widget.customerCurrent.horario1.contains("00:00"),
+            child: _horariosPref()
+          ),
           Container(
             decoration: Decorations.lightBlueBorder5,
             margin: const EdgeInsets.only(left: 15, right: 15),
@@ -849,7 +854,7 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
                 fun: ()=>showDataBilling(context,widget.customerCurrent.billing), 
                 decoration: Decorations.greenBorder5, 
                 style: TextStyles.white17_5, 
-                label: "Ver datos de Facturación"
+                label: "Ver datos de facturación"
               )
             )
           ),
@@ -883,10 +888,10 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
               isIcon: true,
               icon: Image.asset(
                 "assets/icons/transfer.png",
-                color: JunnyColor.green24,
+                color: JunnyColor.blueC2,
                 height: 30,
               ),
-              label: "Cuentas para transferencia"
+              label: "Cuentas bancarias"
             )
           ),
           const SizedBox(
@@ -936,122 +941,201 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
             )
           ),
           Visibility(
-            visible: widget.customerCurrent.ventaPermitida==0,
-            child: observation(
-              "CREDITO SUSPENDIDO",
-              ""
+            visible: widget.customerCurrent.ventaPermitida == 0,
+            child: _ventaSuspendida(
+              "VENTA NO PERMITIDA",
+              "El registro de ventas de crédito o contado se encuentra bloqueado debido a algún adeudo en su cuenta."
             )
           ),
           SizedBox(
-            height: widget.customerCurrent.notifS != "" ? 15 : 0,
+            height: widget.customerCurrent.notifS != "" ? 15 : 10,
           ),
-          Container(
-            padding: const EdgeInsets.only(left: 15, right: 15),
-            child: isLoadingRange
-              ? const SpinKitCircle(
-                  color: ColorsJunghanns.blue,
-                )
-              : isRange 
-                ? prefs.statusRoute == "INRT" ||
-                prefs.statusRoute == "FNCM" || prefs.statusRoute == "FNRT"
-                  ? Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        Visibility(
-                          visible: widget.customerCurrent.ventaPermitida==1,
-                          child:Expanded(
-                            child: ButtonJunghanns(
-                              decoration: Decorations.greenBorder5,
-                              style: TextStyles.white17_5,
-                              fun: ()=> funCheckDistanceSale(true),
-                              isIcon: true,
-                              icon: Image.asset(
-                                "assets/icons/shoppingCardWhiteIcon.png",
-                                height: 30,
-                              ),
-                              label: "Venta"
-                            )
-                          )
-                        ),
-                        Visibility(
-                          visible: widget.customerCurrent.ventaPermitida==1,
-                          child:const SizedBox(
-                          width: 10,
-                          )
-                        ),
-                        Expanded(
-                          child: ButtonJunghanns(
-                            decoration: Decorations.whiteBorder5Red,
-                            style: TextStyles.red17_6,
-                            fun: () => funCheckDistanceSale(false),
-                            isIcon: true,
-                            icon: Container(
-                              width: 0,
-                              height: 30,
-                            ),
-                            label: "Parada"
-                          )
-                        )
-                      ],
-                    )
-                  : ButtonJunghanns(
-                      fun: () async {
-                        setState(() {
-                          isLoading = true;
-                        });
-                        StopRuta stop = StopRuta(
-                          id: 1,
-                          update: 0,
-                          lat: currentLocation.latitude!,
-                          lng: currentLocation.longitude!,
-                          status: "INRT"
-                        );
-                        int id = 0;
-                        try {
-                          id = await handler.insertStopRuta(stop);
-                        } catch (e) {
-                          Fluttertoast.showToast(
-                            msg: "Local:$e",
-                            timeInSecForIosWeb: 2,
-                            toastLength: Toast.LENGTH_LONG,
-                            gravity: ToastGravity.TOP,
-                            webShowClose: true,
-                          );
-                        }
-                        await setInitRoute(
-                          currentLocation.latitude!,
-                          currentLocation.longitude!
-                        ).then((answer) {
-                          setState(() {
-                            isLoading = false;
-                          });
-                          if (!answer.error) {
-                            log("se inicio la Ruta");
-                            handler.updateStopRuta(1, id);
-                          } else {
-                            log("StopRuta por actualizar");
-                          }
-                        });
-                        setState(() {
-                          prefs.statusRoute = "INRT";
-                        });
-                      },
-                      decoration: Decorations.greenBorder5,
-                      style: TextStyles.white17_6,
-                      label: "Iniciar ruta"
-                    )
-                  : ButtonJunghanns(
-                      fun: () {},
-                      decoration: Decorations.whiteBorder5Red,
-                      style: TextStyles.red17_6,
-                      label: "ESTÁS A ${dif.ceil()} mtrs DEL CLIENTE !!"
-                    )
-          ),
+          _paradaVentaButtons(),
           const SizedBox(
             height: 20,
           ),
           history()
         ],
+      ),
+    );
+  }
+
+  Widget _paradaVentaButtons(){
+    return Container(
+      padding: const EdgeInsets.only(left: 15, right: 15),
+      child: isLoadingRange
+        ? const SpinKitCircle (color: ColorsJunghanns.blue)
+        : isRange 
+          ? prefs.statusRoute == "INRT" 
+            || prefs.statusRoute == "FNCM" 
+            || prefs.statusRoute == "FNRT"
+              ? Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    Visibility(
+                      visible: widget.customerCurrent.ventaPermitida==1,
+                      child: Expanded(
+                        child: ButtonJunghanns(
+                          decoration: Decorations.greenBorder5,
+                          style: TextStyles.white17_5,
+                          fun: ()=> funCheckDistanceSale(true),
+                          isIcon: true,
+                          icon: Image.asset(
+                            "assets/icons/shoppingCardWhiteIcon.png",
+                            height: 30,
+                          ),
+                          label: "Venta"
+                        )
+                      )
+                    ),
+                    Visibility(
+                      visible: widget.customerCurrent.ventaPermitida == 1,
+                      child: const SizedBox(width: 10)
+                    ),
+                    Expanded(
+                      child: ButtonJunghanns(
+                        decoration: Decorations.whiteBorder5Red,
+                        style: TextStyles.red17_6,
+                        fun: () => funCheckDistanceSale(false),
+                        isIcon: true,
+                        icon: const Icon(
+                          Icons.tour,
+                          color: JunnyColor.red5c,
+                          size: 30,),
+                        label: "Parada"
+                      )
+                    )
+                  ],
+                )
+              : ButtonJunghanns(
+                  fun: () async {
+                    setState(()=> isLoading = true);
+                    StopRuta stop = StopRuta(
+                      id: 1,
+                      update: 0,
+                      lat: currentLocation.latitude!,
+                      lng: currentLocation.longitude!,
+                      status: "INRT"
+                    );
+                    int id = 0;
+                    try {
+                      id = await handler.insertStopRuta(stop);
+                    } catch (e) {
+                      Fluttertoast.showToast(
+                        msg: "Local:$e",
+                        timeInSecForIosWeb: 2,
+                        toastLength: Toast.LENGTH_LONG,
+                        gravity: ToastGravity.TOP,
+                        webShowClose: true,
+                      );
+                    }
+                    await setInitRoute(
+                      currentLocation.latitude!,
+                      currentLocation.longitude!
+                    ).then((answer) {
+                      setState(()=> isLoading = false);
+                      if (!answer.error) {
+                        handler.updateStopRuta(1, id);
+                      } else {
+                        log("StopRuta por actualizar");
+                      }
+                    });
+                    setState(()=> prefs.statusRoute = "INRT");
+                  },
+                  decoration: Decorations.greenBorder5,
+                  style: TextStyles.white17_6,
+                  label: "Iniciar ruta"
+                )
+          : ButtonJunghanns(
+              fun: () {},
+              decoration: Decorations.whiteBorder5Red,
+              style: TextStyles.red17_6,
+              label: "ESTÁS A ${dif.ceil()} mtrs DEL CLIENTE !!"
+            )
+    );
+  }
+
+  Widget _horariosPref(){
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(left: 15,right: 15,bottom: 10),
+      decoration: JunnyDecoration.orange255(10)
+        .copyWith(color: JunnyColor.blueA1.withOpacity(.1)),
+      padding: const EdgeInsets.all(10),
+      child: Column(
+        children: [
+          Text(
+              "Horario preferente",
+              style: JunnyText.bluea4(FontWeight.w600, 14)
+          ),
+          const SizedBox(height: 3),
+          widget.customerCurrent.horario2!=""
+        ? Row(
+            children: [
+              Expanded(
+                child: AutoSizeText(
+                  "${widget.customerCurrent.horario1} o ",
+                  maxLines: 1,
+                  style: JunnyText.bluea4(FontWeight.w600, 14)
+                ),
+              ),
+              Expanded(
+                child: AutoSizeText(
+                  widget.customerCurrent.horario2,
+                  maxLines: 1,
+                  style: JunnyText.bluea4(FontWeight.w600, 14)
+                ),
+              ),
+            ],
+          )
+        : Text(
+            widget.customerCurrent.horario1,
+            style: JunnyText.bluea4(FontWeight.w600, 14)
+          ),
+        ],
+      )
+    );
+  }
+  
+   Widget _ventaSuspendida(String title, String descripcion) {
+    return Card(
+      elevation: 2,
+      margin: const EdgeInsets.only(left: 15, right: 15),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8)
+      ),
+      child: Container(
+        decoration: JunnyDecoration.orange255(8)
+          .copyWith(color: const Color.fromARGB(255, 211, 18, 82)),
+        padding: const EdgeInsets.all(15),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    title,
+                    style: JunnyText.bluea4(FontWeight.w600, 14)
+                      .copyWith(color: JunnyColor.white),
+                  )
+                ),
+                const Icon(
+                  Icons.lock_outline,
+                  color: JunnyColor.white,
+                  size: 30,
+                )
+              ],
+            ),
+            Container(
+              padding: const EdgeInsets.only(left: 4, right: 4, bottom: 5, top: 5),
+              child: Text(
+                descripcion,
+                style: JunnyText.grey_255(FontWeight.w300, 12)
+                  .copyWith(color: JunnyColor.white)
+              )
+            ),
+          ],
+        )
       ),
     );
   }

@@ -74,7 +74,7 @@ class OperationsCard extends StatelessWidget {
       Map<String, dynamic> data = {
         "idDocumento": current.idDocument,
         "tipo":current.type,
-        "total":count*(current.total/current.amount),
+        "total":count*current.priceU,
         "folio":current.folio,
         "idCliente":currentClient.idClient,
         "date":DateTime.now().toString(),

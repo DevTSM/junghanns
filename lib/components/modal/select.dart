@@ -8,12 +8,14 @@ class SheetSelect extends StatelessWidget{
   List<Map<String, dynamic>> items;
   Map<String, dynamic> current;
   String title;
+  String error;
   bool isRequired;
   SheetSelect({super.key,
     required this.update,
     required this.items,
     required this.current,
     required this.title,
+    required this.error,
     this.isRequired=false
   });
   sheetSelect(BuildContext context) async {
@@ -72,6 +74,13 @@ class SheetSelect extends StatelessWidget{
             ),
           ),
           onTap: ()=>sheetSelect(context),
+        ),
+        Visibility(
+          visible: error!="",
+          child:Text(
+            error,
+            style: JunnyText.red5c(12),
+          ),
         )
       ],
     );

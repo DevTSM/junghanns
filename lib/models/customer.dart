@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:developer';
 import 'dart:math' as prefix;
 
 import 'package:junghanns/models/authorization.dart';
@@ -27,6 +26,8 @@ class CustomerModel {
   double priceS;
   double byCollect;
   double purse;
+  String horario1;
+  String horario2;
   String name;
   String address;
   String nameRoute;
@@ -48,9 +49,11 @@ class CustomerModel {
   List<BillingModel> billing;
   List<OperationCustomerModel> operation;
   
-
   CustomerModel(
-      {required this.isAuthPrice,
+    { 
+      required this.horario1,
+      required this.horario2,
+      required this.isAuthPrice,
       required this.ventaPermitida,
       required this.phones,
       required this.auth,
@@ -91,6 +94,8 @@ class CustomerModel {
 
   factory CustomerModel.fromState() {
     return CustomerModel(
+      horario1: "",
+      horario2: "",
       ventaPermitida: 1,
       isAuthPrice: 0,
       phones: [],
@@ -130,10 +135,11 @@ class CustomerModel {
         priceS: 0,
         notifS: "");
   }
-
   factory CustomerModel.fromList(
       Map<String, dynamic> data, int idRoute, int type) {
     return CustomerModel(
+      horario1: "",
+      horario2: "",
       ventaPermitida: (data["ventaPermitida"]??true)?1:0,
       phones: [],
         invoice: false,
@@ -179,6 +185,8 @@ class CustomerModel {
       data["billing"].map((e)=>billing.add(BillingModel.fromService(e))).toList();
     }
     return CustomerModel(
+      horario1: "",
+      horario2:"",
       ventaPermitida: (data["ventaPermitida"]??true)?1:0,
       isAuthPrice: (data["price_auth"]??false)?0:1,
       phones: [],
@@ -230,120 +238,184 @@ class CustomerModel {
         notifS: data["notificacion"] ?? "");
   }
   factory CustomerModel.fromDataBase(Map<String, dynamic> data) {
-    int cantidad=0;
-    int idProductoServicio=0;
-    double precioU=0;
-    String descripcion="";
-    String not="";
-    String desc="";
-    List<BillingModel> billing=[];
-    List<OperationCustomerModel>operations=[];
-    if(data["cargoAdicional"]!=null&&data["cargoAdicional"]!=""){
-    Map<String,dynamic> data2=jsonDecode(data["cargoAdicional"]);
-      cantidad=data2["cargosFijos"]!=null?int.parse((data2["cargosFijos"]["cantidad"]??0).toString()):0;
-      idProductoServicio=data2["cargosFijos"]!=null?int.parse((data2["cargosFijos"]["idProductoServicio"]??0).toString()):0;
-      descripcion=data2["cargosFijos"]!=null?data2["cargosFijos"]["descripcion"]??"":"";
-      precioU=data2["cargosFijos"]!=null?double.parse((data2["cargosFijos"]["precioUnitario"]??0).toString()):0;
-      not=data2["notificacion"]??"";
-      desc=data2["descServicio"]??"";
+    int cantidad = 0;
+    int idProductoServicio = 0;
+    double precioU = 0;
+    String descripcion = "";
+    String not = "";
+    String desc = "";
+    List<BillingModel> billing = [];
+    List<OperationCustomerModel>operations = [];
+
+    if(data["cargoAdicional"] !=null && data["cargoAdicional"] != ""){
+    Map<String,dynamic> data2 = jsonDecode(data["cargoAdicional"]);
+      cantidad = data2["cargosFijos"] != null
+        ? int.parse((data2["cargosFijos"]["cantidad"] ?? 0).toString())
+        : 0;
+      idProductoServicio = data2["cargosFijos"] != null
+        ? int.parse((data2["cargosFijos"]["idProductoServicio"] ?? 0).toString())
+        : 0;
+      descripcion = data2["cargosFijos"]!=null
+        ? data2["cargosFijos"]["descripcion"] ?? "" 
+        : "";
+      precioU = data2["cargosFijos"]!=null
+        ? double.parse((data2["cargosFijos"]["precioUnitario"] ?? 0).toString())
+        : 0;
+      not = data2["notificacion"] ?? "";
+      desc = data2["descServicio"] ?? "";
     }
-    if(data["billing"]!=null){
-      jsonDecode(data["billing"]).map((e)=>billing.add(BillingModel.fromService(e))).toList();
+    if(data["billing"] != null){
+      jsonDecode(data["billing"]).map((e)=>
+        billing.add(BillingModel.fromService(e))
+      ).toList();
     }
-    if(data["creditos"]!=""&& data["creditos"]!=null){
-      log(data["creditos"].toString());
-      List<dynamic> operationMap=jsonDecode(data["creditos"]);
-      operationMap.map((e) => operations.add(OperationCustomerModel.fromServices(e))).toList();
+    if(data["creditos"] !="" && data["creditos"] != null){
+      List<dynamic> operationMap = jsonDecode(data["creditos"]);
+      operationMap.map((e) => 
+        operations.add(OperationCustomerModel.fromServices(e))
+      ).toList();
     }
+
     return CustomerModel(
-      ventaPermitida: data["ventaPermitida"]??1,
-      isAuthPrice: data["isAuthPrice"]??0,
+      horario1: data["horario1"] ?? "",
+      horario2: data["horario2"] ?? "",
+      ventaPermitida: data["ventaPermitida"] ?? 1,
+      isAuthPrice: data["isAuthPrice"] ?? 0,
       phones: [],
-        invoice: billing.isNotEmpty,
-        billing: billing,
-        id: data["id"],
-        orden: data["orden"] ?? 0,
-        idClient: data["idCustomer"] ?? 0,
-        idRoute: data["idRuta"] ?? 0,
-        type: data["type"] ?? 0,
-        lat: data["lat"],
-        lng: data["lng"],
-        priceLiquid: data["priceLiquid"] ?? 0,
-        byCollect: data["byCollet"] ?? 0,
-        purse: data["purse"] ?? 0,
-        name: data["name"] ?? "",
-        address: data["address"] ?? "",
-        nameRoute: data["nameRoute"] ?? "",
-        typeVisit: data["typeVisit"] ?? "",
-        category: (data["category"] ?? "C") == "C" ? "Cliente" : "Empresa",
-        days: data["days"] ?? "",
-        img: data["img"] ?? "",
-        observation: (data["observacion"] ?? "") == ""
-            ? "Sin observaciones"
-            : data["observacion"] ?? "",
-        history: [],
-        auth: data["auth"]!=""?List.from(jsonDecode(data["auth"]).map((e)=>AuthorizationModel.fromDataBase(e)).toList()):[],
-        //auth: [],
-        configList: [ConfigModel.fromDatabase(data["config"]??0)],
-        payment: data["payment"]!=""?List.from(jsonDecode(data["payment"]).map((e)=>MethodPayment.fromService(e)).toList()):[],
-        //payment: [],
-        operation: operations,
-        referenceAddress: data["referenciaDomicilio"] ?? "",
-        color: data["color"] ?? "000000",
-        //
-        descServiceS: desc,
-        numberS: cantidad,
-        idProdServS: idProductoServicio,
-        descriptionS: descripcion,
-        priceS: precioU,
-        notifS: not,);
+      invoice: billing.isNotEmpty,
+      billing: billing,
+      id: data["id"],
+      orden: data["orden"] ?? 0,
+      idClient: data["idCustomer"] ?? 0,
+      idRoute: data["idRuta"] ?? 0,
+      type: data["type"] ?? 0,
+      lat: data["lat"],
+      lng: data["lng"],
+      priceLiquid: data["priceLiquid"] ?? 0,
+      byCollect: data["byCollet"] ?? 0,
+      purse: data["purse"] ?? 0,
+      name: data["name"] ?? "",
+      address: data["address"] ?? "",
+      nameRoute: data["nameRoute"] ?? "",
+      typeVisit: data["typeVisit"] ?? "",
+      category: (data["category"] ?? "C") == "C" ? "Cliente" : "Empresa",
+      days: data["days"] ?? "",
+      img: data["img"] ?? "",
+      observation: (data["observacion"] ?? "") == ""
+        ? "Sin observaciones"
+        : data["observacion"] ?? "",
+      history: [],
+      auth: data["auth"]!=""
+        ? List.from(
+            jsonDecode(data["auth"]).map((e)=>
+              AuthorizationModel.fromDataBase(e)
+            ).toList()
+          )
+        : [],
+      configList: [ConfigModel.fromDatabase(data["config"] ?? 0)],
+      payment: data["payment"] != ""
+        ? List.from(
+            jsonDecode(data["payment"]).map((e)=>
+              MethodPayment.fromService(e)
+            ).toList()
+          )
+        : [],
+      operation: operations,
+      referenceAddress: data["referenciaDomicilio"] ?? "",
+      color: data["color"] ?? "000000",
+      descServiceS: desc,
+      numberS: cantidad,
+      idProdServS: idProductoServicio,
+      descriptionS: descripcion,
+      priceS: precioU,
+      notifS: not
+    );
   }
-  factory CustomerModel.fromPayload(Map<String,dynamic>data,{bool isAtendido=false}){
-    int cantidad=0;
-    int idProductoServicio=0;
-    double precioU=0;
-    String descripcion="";
-    String not="";
-    String desc="";
-    List<BillingModel> billing=[];
-    if((data["clue"]??"CR")=="ES"){
-      cantidad=data["cargoAdicional"]!=null?data["cargoAdicional"]["cargosFijos"]!=null?int.parse((data["cargoAdicional"]["cargosFijos"]["cantidad"]??0).toString()):0:0;
-      idProductoServicio=data["cargoAdicional"]!=null?data["cargoAdicional"]["cargosFijos"]!=null?int.parse((data["cargoAdicional"]["cargosFijos"]["idProductoServicio"]??0).toString()):0:0;
-      descripcion=data["cargoAdicional"]!=null?data["cargoAdicional"]["cargosFijos"]!=null?data["cargoAdicional"]["cargosFijos"]["descripcion"]??"":"":"";
-      precioU=data["cargoAdicional"]!=null?data["cargoAdicional"]["cargosFijos"]!=null?double.parse((data["cargoAdicional"]["cargosFijos"]["precioUnitario"]??0).toString()):0:0;
-      not=data["cargoAdicional"]!=null?data["cargoAdicional"]["notificacion"]??"":"";
-      desc=data["cargoAdicional"]!=null?data["cargoAdicional"]["descServicio"]??"":"";
+  factory CustomerModel.fromPayload(Map<String,dynamic>data,{bool isAtendido = false})
+  {
+    int cantidad = 0;
+    int idProductoServicio = 0;
+    double precioU = 0;
+    String descripcion = "";
+    String not = "";
+    String desc = "";
+    List<BillingModel> billing = [];
+
+    if((data["clue"]??"CR") == "ES"){
+      cantidad = data["cargoAdicional"] != null
+        ? data["cargoAdicional"]["cargosFijos"] != null
+          ? int.parse(
+              (data["cargoAdicional"]["cargosFijos"]["cantidad"]??0).toString()
+            )
+          : 0
+        : 0;
+      idProductoServicio = data["cargoAdicional"] != null 
+        ? data["cargoAdicional"]["cargosFijos"] != null
+          ? int.parse(
+              (data["cargoAdicional"]["cargosFijos"]["idProductoServicio"]
+                ?? 0).toString()
+            )
+          : 0
+        : 0;
+      descripcion = data["cargoAdicional"] != null
+        ? data["cargoAdicional"]["cargosFijos"] != null
+          ? data["cargoAdicional"]["cargosFijos"]["descripcion"] ?? ""
+          : ""
+        : "";
+      precioU = data["cargoAdicional"] !=null
+        ? data["cargoAdicional"]["cargosFijos"] !=null
+          ? double.parse(
+              (data["cargoAdicional"]["cargosFijos"]["precioUnitario"]
+                ?? 0).toString()
+            )
+          : 0
+        : 0;
+      not = data["cargoAdicional"] !=null
+        ? data["cargoAdicional"]["notificacion"] ?? "" 
+        : "";
+      desc = data["cargoAdicional"] !=null
+        ? data["cargoAdicional"]["descServicio"] ?? ""
+        : "";
     }
-    if(data["billing"]!=null){
-      data["billing"].map((e)=>billing.add(BillingModel.fromService(e))).toList();
+    if(data["billing"] != null){
+      data["billing"].map((e)=> billing.add(BillingModel.fromService(e))).toList();
     }
     return CustomerModel(
-      ventaPermitida: (data["ventaPermitida"]??true)?1:0,
-      isAuthPrice: (data["price_auth"]??false)?1:0,
+      horario1: data["horario1"] ?? "",
+      horario2: data["horario2"] ?? "",
+      ventaPermitida: (data["ventaPermitida"] ?? true) ? 1 : 0,
+      isAuthPrice: (data["price_auth"] ?? false) ? 1 : 0,
       phones: [],
       operation: [],
-      auth: List.from(data["auth"]).map((e)=>AuthorizationModel.fromService(e)).toList(), 
-      configList: [ConfigModel.fromService(data["config"]??0)], 
-      payment: data["payment"]!=""?List.from(data["payment"]).map((e)=>MethodPayment.fromService(e)).toList():[], 
+      auth: List.from(
+        data["auth"]).map((e)=> 
+          AuthorizationModel.fromService(e)
+        ).toList(), 
+      configList: [ConfigModel.fromService(data["config"] ?? 0)], 
+      payment: data["payment"] != ""
+        ? List.from(
+            data["payment"]
+          ).map((e)=> MethodPayment.fromService(e)).toList()
+        : [], 
       invoice: billing.isNotEmpty,
       billing: billing, 
       id: data["id"], 
       orden: data["orden"] ?? 0, 
       idClient:  data["id_client"] ?? 0, 
       idRoute: int.parse((data["id_route"] ?? 0).toString()), 
-      type: isAtendido?7:getType(data["clue"]??"CR"), 
-      lat:  double.parse((data["lat"]??0).toString()), 
-      lng:  double.parse((data["lon"]??0).toString()), 
-      priceLiquid: double.parse((data["price"]??0).toString()), 
-      byCollect:  double.parse((data["por_cobrar"]??0).toString()), 
-      purse:  double.parse((data["purse"]??0).toString()), 
-      name: data["name"]??"", 
-      address: data["address"]??"", 
-      nameRoute: data["nameRoute"]??"", 
-      typeVisit: data["typeVisit"]??"", 
-      category: data["category"]??"", 
-      days: data["days"]??"", 
-      img: data["img"]??"",
+      type: isAtendido ? 7 : getType(data["clue"] ?? "CR"), 
+      lat:  double.parse((data["lat"] ?? 0).toString()), 
+      lng:  double.parse((data["lon"] ?? 0).toString()), 
+      priceLiquid: double.parse((data["price"] ?? 0).toString()), 
+      byCollect:  double.parse((data["por_cobrar"] ?? 0).toString()), 
+      purse:  double.parse((data["purse"] ?? 0).toString()), 
+      name: data["name"] ?? "", 
+      address: data["address"] ?? "", 
+      nameRoute: data["nameRoute"] ?? "", 
+      typeVisit: data["typeVisit"] ?? "", 
+      category: data["category"] ?? "", 
+      days: data["days"] ?? "", 
+      img: data["img"] ?? "",
       observation: (data["observacion"] ?? "") == ""
             ? "Sin observaciones"
             : data["observacion"] ?? "",
@@ -355,10 +427,12 @@ class CustomerModel {
       descriptionS: descripcion, 
       priceS: precioU,
       notifS: not, 
-      descServiceS: desc);
+      descServiceS: desc
+    );
   }
   Map<String, dynamic> getMap() {
-    return {
+    return 
+    {
       'id': id,
       'ventaPermitida':ventaPermitida,
       'isAuthPrice':isAuthPrice,
@@ -379,15 +453,37 @@ class CustomerModel {
       'days': days,
       'img': img,
       'observacion': observation,
-      'auth': auth.isNotEmpty?jsonEncode(auth.map((e) => e.getMap()).toList()):"",
-      'payment': payment.isNotEmpty?jsonEncode(payment.map((e) => e.getMap()).toList()):"",
+      'auth': auth.isNotEmpty 
+        ? jsonEncode(auth.map((e) => e.getMap()).toList()) 
+        : "",
+      'payment': payment.isNotEmpty
+        ? jsonEncode(
+            payment.map((e) => e.getMap()).toList()
+          )
+        : "",
       'color': color,
-      'config':configList.isNotEmpty?configList.last.valor:0,
-      'history':history.isNotEmpty?jsonEncode(history.map((e) => e.getMap).toList()):"",
-      'cargoAdicional':jsonEncode({"notificacion":notifS,"descServicio":descServiceS,"cargosFijos":{"cantidad":numberS,"idProductoServicio":idProdServS,"descripcion":descriptionS,"precioUnitario":priceS}}),
-      'referenciaDomicilio':referenceAddress,
-      'billing':jsonEncode(List.from(billing.map((e) => e.getMap).toList())),
-      'creditos':jsonEncode(List.from(operation.map((e) => e.getMap).toList()))
+      'config': configList.isNotEmpty ? configList.last.valor : 0,
+      'history': history.isNotEmpty 
+        ? jsonEncode(history.map((e) => e.getMap).toList())
+        : "",
+      'cargoAdicional': jsonEncode(
+        {
+          "notificacion":notifS,
+          "descServicio":descServiceS,
+          "cargosFijos":
+            {
+              "cantidad":numberS,
+              "idProductoServicio":idProdServS,
+              "descripcion":descriptionS,
+              "precioUnitario":priceS
+            }
+        }
+      ),
+      'referenciaDomicilio': referenceAddress,
+      'billing': jsonEncode(List.from(billing.map((e) => e.getMap).toList())),
+      'creditos': jsonEncode(List.from(operation.map((e) => e.getMap).toList())),
+      'horario1': horario1,
+      'horario2': horario2
     };
   }
   delete(int id){
@@ -587,44 +683,3 @@ double calculateDistance(lat1, lon1, lat2, lon2) {
   return 12742 * prefix.asin(prefix.sqrt(a));
 }
 
-enum NewTypeUser{
-  particular,
-  empresa,
-  deposito
-}
-NewTypeUser getNewTypeUserCambaceo(String type){
-  switch (type){
-    case "PARTICULAR":
-    return NewTypeUser.particular;
-    case "DEPOSITO":
-    return NewTypeUser.deposito;
-    case "EMPRESA":
-    return NewTypeUser.empresa;
-    default:
-    return NewTypeUser.particular;
-  }
-}
-String getTypeUserCambaceo(NewTypeUser type){
-  switch (type){
-    case NewTypeUser.particular:
-    return "PARTICULAR";
-    case NewTypeUser.deposito:
-    return "DEPOSITO";
-    case NewTypeUser.empresa:
-    return "EMPRESA";
-    default:
-    return "NO ESPECIFICADO";
-  }
-}
-String getCharUserCambaceo(NewTypeUser type){
-  switch (type){
-    case NewTypeUser.particular:
-    return "P";
-    case NewTypeUser.deposito:
-    return "D";
-    case NewTypeUser.empresa:
-    return "E";
-    default:
-    return "NO ESPECIFICADO";
-  }
-}

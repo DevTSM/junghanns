@@ -38,13 +38,13 @@ class _OpeningState extends State<Opening> {
     super.initState();
     _connectivity = Connectivity();
     isAsync = false;
-    log("cliente secret =====> ${prefs.clientSecret}");
-    log("token de acceso =====> ${prefs.token}");
+    print("cliente secret =====> ${prefs.clientSecret}");
+    print("token de acceso =====> ${prefs.token}");
     log("Version: ${prefs.version}");
     //handler.checkValidate();
     // //TODO: URL
-    prefs.urlBase=urlBaseManuality;
-    prefs.labelCedis="BETA W";
+    // prefs.urlBase=urlBaseManuality;
+    // prefs.labelCedis="BETA W";
     //prefs.qr="";
     //prefs.version="8.11";
     //getAndroidID();

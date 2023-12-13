@@ -17,8 +17,8 @@ import 'package:junghanns/components/modal/showlocation.dart';
 import 'package:junghanns/components/modal/yes_not.dart';
 import 'package:junghanns/components/select.dart';
 import 'package:junghanns/components/textfield/text_field.text.dart';
-import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/models/employee.dart';
+import 'package:junghanns/models/enum/user.dart';
 import 'package:junghanns/models/saleCambaceo.dart';
 import 'package:junghanns/models/type_street.dart';
 import 'package:junghanns/preferences/global_variables.dart';
@@ -44,8 +44,8 @@ class _NewCustomerState extends State<NewCustomer> {
   late double lat, lng;
   late String errLatLng, errName, errLastN, errDateB, errCompany, errContact, 
     errPhone, errEmail, errTypeStreet, errStreet, errNumE, errColony, errTown,
-    errState, errCode, errTypeSaleC, errEmployee, errAdults, 
-    errChildren, errMaterno, errFracc, nameCustomerAPI;
+    errState, errCode, errTypeSaleC, errEmployee, errAdults, errMaterno, 
+    errFracc, nameCustomerAPI,errorNameComercial,errGender, errRef1, errRef2;
   late DateTime dateBirth;
   late NewTypeUser typeLeed;
   late EmployeeModel employeeS;
@@ -58,45 +58,48 @@ class _NewCustomerState extends State<NewCustomer> {
   late List<Map<String, dynamic>> chanels,schedules,genders,typesUser;
   late TextEditingController nameC, lastNameC, lastNameMC, companyC, contactC, phoneC,
     emailC, streetC, numEc, numIc, otherSchedule, colonyC, townC, codeC, stateC, 
-    referenceC, streetR1, streetR2, observacion, emailCo, numberChildren, numberAdults,
-    pinC, fraccionamiento;
+    referenceC, streetR1, streetR2, observacion, emailCo, numberAdults, pinC, 
+    fraccionamiento, nameComercial;
   late ProviderJunghanns provider;
   late Size size;
   @override
   void initState() {
     super.initState();
-    isLoadingSchedule=true;
+    isLoadingSchedule = true;
     isLoading = false;
     isDate = false;
-    isFracc=false;
-    isOTP=false;
-    idNewCustomer=0;
+    isFracc = false;
+    isOTP = false;
+    idNewCustomer = 0;
     lat = 0;
     lng = 0;
-    errLatLng="";
-    errName="";
-    errLastN="";
-    errDateB="";
-    errCompany="";
-    errContact="";
-    errPhone="";
-    errEmail="";
-    errTypeStreet="";
-    errStreet="";
-    errNumE="";
-    errColony="";
-    errTown="";
-    errState="";
-    errCode="";
-    errTypeSaleC="";
-    errEmployee="";
-    errAdults="";
-    errChildren="";
-    errMaterno="";
-    errFracc="";
-    nameCustomerAPI="";
+    errLatLng = "";
+    errName = "";
+    errLastN = "";
+    errDateB = "";
+    errCompany = "";
+    errContact = "";
+    errPhone = "";
+    errEmail = "";
+    errTypeStreet = "";
+    errStreet = "";
+    errNumE = "";
+    errColony = "";
+    errTown = "";
+    errState = "";
+    errCode = "";
+    errTypeSaleC = "";
+    errEmployee = "";
+    errAdults = "";
+    errMaterno = "";
+    errFracc = "";
+    nameCustomerAPI = "";
+    errorNameComercial = "";
+    errGender = "";
+    errRef1 = "";
+    errRef2 = "";
     dateBirth = DateTime.now().subtract(const Duration(days:18250));
-    typeLeed=NewTypeUser.particular;
+    typeLeed = NewTypeUser.particular;
     employeeS = EmployeeModel.fromState();
     typeStreetS = TypeOfStreetModel.fromState();
     typeSaleCs = SaleCambaceoModel.fromState();
@@ -112,30 +115,31 @@ class _NewCustomerState extends State<NewCustomer> {
       {"id": 4, "descripcion": "llamada"}
     ];
     genders = [
-      {"id": 0, "descripcion": "Selecciona una opción"},
-      {"id": 1, "descripcion": "Masculino"},
-      {"id": 2, "descripcion": "Femenino"},
-      {"id": 3, "descripcion": "Prefiere no decirlo"},
-      {"id": 4, "descripcion": "Otro"},
+      {"id": 0, "descripcion": "Selecciona una opción","data":""},
+      {"id": 1, "descripcion": "Masculino","data":"M"},
+      {"id": 2, "descripcion": "Femenino","data":"F"},
+      {"id": 3, "descripcion": "Prefiere no decirlo","data":"P"},
+      {"id": 4, "descripcion": "Otro","data":"O"},
     ];
-    typesUser= [
+    typesUser = [
       {"id":0,"descripcion": "Selecciona una opción"},
       {"id":1,"descripcion": getTypeUserCambaceo(NewTypeUser.particular)},
       {"id":2,"descripcion": getTypeUserCambaceo(NewTypeUser.empresa)},
-      {"id":3,"descripcion": getTypeUserCambaceo(NewTypeUser.deposito)}
+      {"id":3,"descripcion": getTypeUserCambaceo(NewTypeUser.deposito)},
+      {"id":4,"descripcion": getTypeUserCambaceo(NewTypeUser.colaborador)}
     ];
     schedule = {"id": 0, "descripcion": "Selecciona una opción"};
     scheduleOther = {"1": "Inicio", "2": "Fin","3":"Inicio","4":"Fin",
       "err1":"","err2":"","err3":"","err4":""};
-    gender=genders.first;
+    gender = genders.first;
     chanelValidation = chanels.first;
     nameC = TextEditingController();
     lastNameC = TextEditingController();
     lastNameMC = TextEditingController();
-    companyC=TextEditingController();
-    contactC=TextEditingController();
-    phoneC=TextEditingController();
-    emailC=TextEditingController();
+    companyC = TextEditingController();
+    contactC = TextEditingController();
+    phoneC = TextEditingController();
+    emailC = TextEditingController();
     streetC = TextEditingController();
     numEc = TextEditingController();
     numIc = TextEditingController();
@@ -149,10 +153,10 @@ class _NewCustomerState extends State<NewCustomer> {
     streetR2 = TextEditingController();
     observacion = TextEditingController();
     emailCo = TextEditingController();
-    fraccionamiento=TextEditingController();
-    numberChildren = TextEditingController();
+    fraccionamiento = TextEditingController();
     numberAdults = TextEditingController();
     pinC = TextEditingController();
+    nameComercial = TextEditingController();
     getPermission();
     getListTypesOfStreets();
     funButtonLocation();
@@ -277,6 +281,7 @@ class _NewCustomerState extends State<NewCustomer> {
           webShowClose: true,
         );
       } else {
+        log("    ${answer.body}");
         setState(() {
           schedules = List.from(answer.body.map((e) => e).toList());
           schedule=schedules.first;
@@ -373,6 +378,16 @@ class _NewCustomerState extends State<NewCustomer> {
         showOTPsuccess();
       }
     });
+  }
+  
+  String getScheduleFromCreate(String current,bool isFirts){
+    int indexCurrent = current.indexOf('-');
+    String newData = isFirts 
+      ? current.substring(0,indexCurrent > -1 ? indexCurrent : current.length)
+      : current.substring(indexCurrent > -1 
+          && indexCurrent < current.length ? indexCurrent+1 : 0,current.length);
+      log(newData);
+    return (newData.replaceAll('HRS', '')).replaceAll(' ', ''); 
   }
 
   funCancelCode() async {
@@ -484,93 +499,77 @@ class _NewCustomerState extends State<NewCustomer> {
 
   funButtonContinue() async {
     //prefs.urlBase=ipStage;
-    log("FUN BUTTON CONTINUE ${prefs.urlBase}");
-    Map<String, dynamic> data = {};
-    Fluttertoast.showToast(
-        msg: prefs.nameUserD,
-        timeInSecForIosWeb: 2,
-        toastLength: Toast.LENGTH_LONG,
-        gravity: ToastGravity.TOP,
-        webShowClose: true,
-      );
-    if (typeLeed==NewTypeUser.particular) {
-      data = {
-        "action": "create",
-        "id_ruta": prefs.idRouteD,
-        "envio_msg_otp": "S",
-        "usuario": prefs.nameUserD,
-        "data": {
-          "tipo": 'P',
-          "nombre": nameC.text,
-          "ap_materno": lastNameMC.text,
-          "ap_paterno": lastNameC.text,
-          "fecha_nacimiento": DateFormat('yyyy-MM-dd').format(dateBirth),
-          "tel_movil": phoneC.text.replaceAll(" ", ""),
-          "email": emailC.text,
-          "id_vialidad": typeStreetS.id,
-          "calle": streetC.text,
-          "no_ext": numEc.text,
-          "no_int": numIc.text,
-          "colonia": colonyC.text,
-          "mun_alc": townC.text,
-          "estado": stateC.text,
-          "codigo_postal": codeC.text,
-          "lat": lat.toString(),
-          "lon": lng.toString(),
-          "referencia_domicilio": referenceC.text,
-          "id_empleado": employeeS.id,
-          "tipo_venta": typeSaleCs.id,
-          "entre_calle_1": streetR1.text,
-          "entre_calle_2": streetR2.text,
-          "observaciones": observacion.text,
-          "hora_inicio": scheduleOther["1"],
-          "hora_fin": scheduleOther["2"],
-          "no_infantes": int.tryParse(numberChildren.text) ?? 0,
-          "no_adultos": int.tryParse(numberAdults.text) ?? 0,
-          "id_horario": schedule["id"],
-          "otros_horarios": "${scheduleOther["3"]} HRS - ${scheduleOther["4"]} HRS"
-        }
-      };
-    } else {
-      data = {
-        "action": "create",
-        "id_ruta": prefs.idRouteD,
-        "envio_msg_otp": "S",
-        "usuario": prefs.nameUserD,
-        "data": {
-          "tipo": 'E',
-          "razon_social": companyC.text,
-          "contacto": contactC.text,
-          "tel_movil": phoneC.text.replaceAll(" ", ""),
-          "email": emailC.text,
-          "id_vialidad": typeStreetS.id,
-          "calle": streetC.text,
-          "no_ext": numEc.text,
-          "no_int": numIc.text,
-          "colonia": colonyC.text,
-          "mun_alc": townC.text,
-          "estado": stateC.text,
-          "codigo_postal": codeC.text,
-          "lat": lat.toString(),
-          "lon": lng.toString(),
-          "referencia_domicilio": referenceC.text,
-          "id_empleado": employeeS.id,
-          "tipo_venta": typeSaleCs.id,
-          "entre_calle_1": streetR1.text,
-          "entre_calle_2": streetR2.text,
-          "observaciones": observacion.text,
-          "hora_inicio": scheduleOther["1"],
-          "id_horario": schedule["id"],
-          "no_infantes": 0,
-          "no_adultos": int.tryParse(numberAdults.text) ?? 0,
-          "hora_fin": scheduleOther["2"],
-          "otros_horarios": "${scheduleOther["3"]} HRS - ${scheduleOther["4"]} HRS"
-        }
-      };
+    print("FUN BUTTON CONTINUE ${prefs.urlBase}");
+    Map<String, dynamic> data = {
+      "action": "create",
+      "id_ruta": prefs.idRouteD,
+      "envio_msg_otp": "S",
+      "usuario": prefs.nameUserD,
+      "data": 
+      {
+        "tipo": getCharUserCambaceo(typeLeed),
+        "tel_movil": phoneC.text,
+        "email": emailC.text,
+        "id_vialidad": typeStreetS.id,
+        "calle": streetC.text,
+        "no_ext": numEc.text,
+        "no_int": numIc.text,
+        "colonia": colonyC.text,
+        "mun_alc": townC.text,
+        "estado": stateC.text,
+        "codigo_postal": codeC.text,
+        "lat": lat.toString(),
+        "lon": lng.toString(),
+        "referencia_domicilio": referenceC.text,
+        "id_empleado": employeeS.id,
+        "tipo_venta": typeSaleCs.id,
+        "entre_calle_1": streetR1.text,
+        "entre_calle_2": streetR2.text,
+        "observaciones": observacion.text,
+        "id_horario_1": schedule["id"],
+        "hora_inicio_1": schedule["set"] != "MANUAL" 
+          ? getScheduleFromCreate(schedule["descripcion"],true) 
+          : scheduleOther["1"],
+        "hora_fin_1": schedule["set"] != "MANUAL" 
+          ? getScheduleFromCreate(schedule["descripcion"],false) 
+          : scheduleOther["2"],
+        "no_adultos": int.tryParse(numberAdults.text) ?? 0,
+        "fraccionamiento": fraccionamiento.text
+      }
+    };
+    if(scheduleOther["3"] != "Inicio"){
+      data["hora_inicio_2"] = scheduleOther["3"];
     }
-
+    if(scheduleOther["4"] != "Fin"){
+      data["hora_fin_2"] = scheduleOther["4"];
+    }
+    switch (typeLeed){
+      case NewTypeUser.colaborador:
+        data["data"]["nombre"] = nameC.text;
+        data["data"]["ap_paterno"] = lastNameC.text;
+        data["data"]["ap_materno"] = lastNameMC.text;
+        data["data"]["genero"] = gender["data"];
+        data["data"]["fecha_nacimiento"] = DateFormat('yyyy-MM-dd').format(dateBirth);
+        break;
+      case NewTypeUser.particular:
+        data["data"]["nombre"] = nameC.text;
+        data["data"]["ap_paterno"] = lastNameC.text;
+        data["data"]["ap_materno"] = lastNameMC.text;
+        data["data"]["genero"] = gender["data"];
+        data["data"]["fecha_nacimiento"] = DateFormat('yyyy-MM-dd').format(dateBirth);
+        break;
+      case NewTypeUser.empresa:
+        data["data"]["razon_social"] = companyC.text;
+        data["data"]["nombre_comercial"] = nameComercial.text;
+        data["data"]["contacto"] = contactC.text;
+        break;
+      case NewTypeUser.deposito:
+        data["data"]["razon_social"] = companyC.text;
+        data["data"]["nombre_comercial"] = nameComercial.text;
+        data["data"]["contacto"] = contactC.text;
+        break;
+    }
     log("INFO NEW CUSTOMER: $data");
-
     await postNewCustomer(data).then((answer) {
       if (answer.error) {
         Fluttertoast.showToast(
@@ -580,6 +579,7 @@ class _NewCustomerState extends State<NewCustomer> {
           gravity: ToastGravity.TOP,
           webShowClose: true,
         );
+        print(answer.body.toString());
       } else {
         setState(() {
           isOTP = true;
@@ -681,45 +681,63 @@ class _NewCustomerState extends State<NewCustomer> {
         errLatLng = "Coordenadas actualizadas";
       }
 
-      if (typeLeed==NewTypeUser.particular && nameC.text.isEmpty) {
+      if ([NewTypeUser.particular, NewTypeUser.colaborador].contains(typeLeed)
+        && nameC.text.isEmpty) 
+      {
         errName = "Campo obligatorio";
         isValid = false;
       } else {
         errName = "";
       }
 
-      if (typeLeed==NewTypeUser.particular && lastNameC.text.isEmpty) {
+      if ([NewTypeUser.particular, NewTypeUser.colaborador].contains(typeLeed) 
+        && lastNameC.text.isEmpty) 
+      {
         errLastN = "Campo obligatorio";
         isValid = false;
       } else {
         errLastN = "";
       }
-      if (typeLeed==NewTypeUser.particular && lastNameMC.text.isEmpty) {
+      if ([NewTypeUser.particular, NewTypeUser.colaborador].contains(typeLeed) 
+        && lastNameMC.text.isEmpty) 
+      {
         errMaterno = "Campo obligatorio";
         isValid = false;
       } else {
         errMaterno = "";
       }
-      if (typeLeed==NewTypeUser.particular && !isDate) {
+      if([NewTypeUser.particular, NewTypeUser.colaborador].contains(typeLeed)
+        && gender["id"] == 0)
+      {
+        errGender = "Campo obligatorio";
+        isValid = false;
+      }else{
+        errGender = "";
+      }
+      if ([NewTypeUser.particular, NewTypeUser.colaborador].contains(typeLeed) 
+        && !isDate) 
+      {
         errDateB = "Campo obligatorio";
         isValid = false;
       } else {
         errDateB = "";
       }
-      if (typeLeed==NewTypeUser.empresa && companyC.text.isEmpty) {
-        errCompany = "Campo obligatorio";
+      if ([NewTypeUser.empresa, NewTypeUser.deposito].contains(typeLeed) 
+        && nameComercial.text.isEmpty) 
+      {
+        errorNameComercial = "Campo obligatorio";
         isValid = false;
       } else {
-        errCompany = "";
+        errorNameComercial = "";
       }
-
-      if (typeLeed==NewTypeUser.empresa && contactC.text.isEmpty) {
+      if ([NewTypeUser.empresa, NewTypeUser.deposito].contains(typeLeed) 
+        && contactC.text.isEmpty) 
+      {
         errContact = "Campo obligatorio";
         isValid = false;
       } else {
         errContact = "";
       }
-
       if (phoneC.text.isEmpty) {
         errPhone = "Campo obligatorio";
         isValid = false;
@@ -731,18 +749,17 @@ class _NewCustomerState extends State<NewCustomer> {
           errPhone = "";
         }
       }
-
       if (emailC.text.isEmpty) {
         errEmail = "Campo obligatorio";
         isValid = false;
       } else {
         if (emailCo.text != emailC.text) {
           errEmail = "el correo no coincide";
+          isValid = false;
         } else {
           errEmail = "";
         }
       }
-
       if (typeStreetS.id == -1) {
         errTypeStreet = "Campo obligatorio";
         isValid = false;
@@ -756,58 +773,64 @@ class _NewCustomerState extends State<NewCustomer> {
       } else {
         errStreet = "";
       }
-
       if (numEc.text.isEmpty) {
         errNumE = "Campo obligatorio";
         isValid = false;
       } else {
         errNumE = "";
       }
-
       if (colonyC.text.isEmpty) {
         errColony = "Campo obligatorio";
         isValid = false;
       } else {
         errColony = "";
       }
-
       if (townC.text.isEmpty) {
         errTown = "Campo obligatorio";
         isValid = false;
       } else {
         errTown = "";
       }
-
       if (stateC.text.isEmpty) {
         errState = "Campo obligatorio";
         isValid = false;
       } else {
         errState = "";
       }
-
       if (codeC.text.isEmpty) {
         errCode = "Campo obligatorio";
         isValid = false;
       } else {
         errCode = "";
       }
-
       if (typeSaleCs.id == -1) {
         errTypeSaleC = "Campo obligatorio";
         isValid = false;
       } else {
         errTypeSaleC = "";
       }
-
       if (employeeS.id == -1) {
         errEmployee = "Campo obligatorio";
         isValid = false;
       } else {
         errEmployee = "";
       }
+      if (streetR1.text.isEmpty){
+        errRef1 = "Campo obligatorio";
+        isValid = false;
+      }else{
+        errRef1 = "";
+      }
+      if (streetR2.text.isEmpty){
+        errRef2 = "Campo obligatorio";
+        isValid = false;
+      }else{
+        errRef2 = "";
+      }
       if ((scheduleOther["3"] == "Inicio" && scheduleOther["4"] != "Fin")
         ||(scheduleOther["3"] != "Inicio" && scheduleOther["4"] == "Fin")) {
         scheduleOther["err3"] = "Debes ingresar ambos campos";
+        isValid = false;
       }else{
          scheduleOther["err3"] = "";
       }
@@ -817,12 +840,6 @@ class _NewCustomerState extends State<NewCustomer> {
         isValid = false;
       } else {
         scheduleOther["err1"] = "";
-      }
-      if (numberChildren.text.isEmpty && typeLeed==NewTypeUser.particular) {
-        errChildren = "Campo obligatorio";
-        isValid = false;
-      } else {
-        errChildren = "";
       }
       if (numberAdults.text.isEmpty) {
         errAdults = "Campo obligatorio";
@@ -902,12 +919,14 @@ class _NewCustomerState extends State<NewCustomer> {
             },
             items:typesUser,
             current: (typesUser.where((element) => 
-              element['descripcion']==getTypeUserCambaceo(typeLeed))
-                .first)??typesUser.first,
-            title:  "Tipo Cliente"
+              element['descripcion'] == getTypeUserCambaceo(typeLeed))
+                .first) ?? typesUser.first,
+            title:  "Tipo Cliente",
+            error: "",
           ),
           Visibility(
-            visible: typeLeed == NewTypeUser.particular,
+            visible: [NewTypeUser.particular,NewTypeUser.colaborador]
+              .contains(typeLeed),
             child:SheetSelect(
               isRequired: true,
               update: (value){
@@ -916,26 +935,31 @@ class _NewCustomerState extends State<NewCustomer> {
               },
               items:genders,
               current:gender,
-              title: "Genero"
+              title: "Genero",
+              error: errGender,
             )
           ),
           Visibility(
-            visible: typeLeed == NewTypeUser.particular,
+            visible: [NewTypeUser.particular,NewTypeUser.colaborador]
+              .contains(typeLeed),
             child: textFieldLabel(nameC,"Nombre(s)","Nombre(s)",errName,
               isRequired: true)
           ),
           Visibility(
-            visible: typeLeed == NewTypeUser.particular,
+            visible: [NewTypeUser.particular,NewTypeUser.colaborador]
+              .contains(typeLeed),
             child: textFieldLabel(lastNameC,"Apellidos paterno","Apellido paterno",
               errLastN,isRequired: true)
           ),
           Visibility(
-            visible: typeLeed == NewTypeUser.particular,
+            visible: [NewTypeUser.particular,NewTypeUser.colaborador]
+              .contains(typeLeed),
             child: textFieldLabel(lastNameMC,"Apellidos materno","Apellido materno",
               errMaterno,isRequired: true)
           ),
           Visibility(
-            visible: typeLeed == NewTypeUser.particular,
+            visible: [NewTypeUser.particular,NewTypeUser.colaborador]
+              .contains(typeLeed),
             child: Picker(
               isRequired: true,
               isDay: true,
@@ -951,13 +975,17 @@ class _NewCustomerState extends State<NewCustomer> {
           ),
           Visibility(
             visible: [NewTypeUser.empresa,NewTypeUser.deposito].contains(typeLeed),
-            child: textFieldLabel(companyC, 
-              "Nombre ${getTypeUserCambaceo(typeLeed).toLowerCase()}", 
-              "Razón Social", errCompany,isRequired: true
+            child: textFieldLabel(companyC,"Razón Social","Razón Social", errCompany)
+          ),
+          Visibility(
+            visible: [NewTypeUser.empresa,NewTypeUser.deposito].contains(typeLeed),
+            child: textFieldLabel(nameComercial, 
+              "Nombre comercial", 
+              "Nombre", errorNameComercial,isRequired: true
             )
           ),
           Visibility(
-            visible: typeLeed == NewTypeUser.empresa,
+            visible: [NewTypeUser.empresa,NewTypeUser.deposito].contains(typeLeed),
             child: textFieldLabel(contactC, "Contacto", "Contacto", errContact,
               isRequired: true
             )
@@ -994,11 +1022,8 @@ class _NewCustomerState extends State<NewCustomer> {
           textFieldLabel(stateC, "Estado", "Estado", errState,isRequired: true),
           textFieldLabel(codeC, "Código Postal", "Código Postal", errCode,
             isRequired: true,isNumber: true),
-          Visibility(
-            visible: typeLeed == NewTypeUser.particular,
-            child: textFieldLabel(fraccionamiento, "Fraccionamiento", 
-              "Fraccionamiento", errFracc,numLines: 3
-            )
+          textFieldLabel(fraccionamiento, "Fraccionamiento", 
+            "Fraccionamiento", errFracc,numLines: 3
           ),
           Padding(
             padding: const EdgeInsets.only(top: 15, left: 10),
@@ -1007,8 +1032,17 @@ class _NewCustomerState extends State<NewCustomer> {
               style: JunnyText.semiBoldBlueA1(15),
             ),
           ),
-          textFieldLabel(streetR1, "Calle y", "calle y calle", "",numLines: 2),
-          textFieldLabel(streetR2, "Calle ", "calle y calle", "",numLines: 2),
+          textFieldLabel(streetR1, "Calle ", "calle 1", "",numLines: 2,
+            isRequired: true),
+          Padding(
+            padding: const EdgeInsets.only(top: 15, left: 10),
+            child: Text(
+              "Y",
+              style: JunnyText.semiBoldBlueA1(15),
+            ),
+          ),
+          textFieldLabel(streetR2, "Calle ", "calle 2", "",numLines: 2,
+          isRequired: true),
           textFieldLabel(referenceC, "Referencias adicionales del domicilio",
             "Referencias adicionales del domicilio", "",numLines: 5),
           Padding(
@@ -1162,13 +1196,8 @@ class _NewCustomerState extends State<NewCustomer> {
               )
             )
           ),
-          Visibility(
-            visible: typeLeed == NewTypeUser.particular,
-            child: textFieldLabel(numberChildren, "# de niños en casa (<12)", "1", 
-              errChildren,isRequired: true,isNumber: true
-            )
-          ),
-          textFieldLabel(numberAdults, "# ${typeLeed == NewTypeUser.particular
+          textFieldLabel(numberAdults, "# ${
+            [NewTypeUser.particular,NewTypeUser.colaborador].contains(typeLeed)
               ? "de adultos en casa (12+)"
               : "de personas"}", "1", errAdults,isRequired: true,isNumber: true),
           textFieldLabel(observacion, "Observación", "Observación", "",numLines: 3),
@@ -1206,7 +1235,7 @@ class _NewCustomerState extends State<NewCustomer> {
       onTap: () {
         bool condition = false;
         if(id=="1"||id=="2"){
-          condition=int.parse(id=="1"
+          condition = int.parse(id=="1"
             ? item.toString().replaceAll(":", "")
             : (scheduleOther["1"]!="Inicio"
               ? scheduleOther["1"].toString().replaceAll(":", "")
@@ -1568,10 +1597,17 @@ class _NewCustomerState extends State<NewCustomer> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          buttomConfirm("Si", () => () async {
-            Navigator.pop(context);funButtonContinue();},Decorations.blueBorder12),
-          buttomConfirm("No",() => () {
-            Navigator.pop(context);},Decorations.redCard),
+          buttomConfirm("Si", 
+            () => () async {
+              Navigator.pop(context);
+              funButtonContinue();
+            },
+            Decorations.blueBorder12),
+          buttomConfirm("No",
+            () => () {
+              Navigator.pop(context);
+            },
+            Decorations.redCard),
         ],
       ),
     );

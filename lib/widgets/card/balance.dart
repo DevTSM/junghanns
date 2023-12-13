@@ -1,7 +1,6 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:junghanns/models/sale.dart';
 import 'package:junghanns/styles/text.dart';
 
 Widget itemBalance(String image, String label, double count,double width) {
@@ -24,20 +23,20 @@ Widget itemBalance(String image, String label, double count,double width) {
           height: (width)/7,
         ),
         const SizedBox(
-          height: 5,
+          height: 3,
         ),
         Expanded(
-          flex:2,
+          flex: 2,
           child: AutoSizeText(
           formatMoney.format(count),
           style: TextStyles.blue27_7,
           maxLines: 1,
         )),
         Expanded(
-          flex:1,
+          flex: 1,
           child:AutoSizeText(label, style: TextStyles.grey14_7)),
         const SizedBox(
-          height: 10,
+          height: 7,
         ),
       ])),
     );

@@ -1,12 +1,11 @@
 import 'dart:async';
 import 'dart:developer';
+
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:junghanns/components/bottom_bar.dart';
 import 'package:junghanns/components/empty/empty.dart';
-import 'package:junghanns/components/loading.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/provider/provider.dart';
 import 'package:junghanns/services/catalogue.dart';
@@ -98,55 +97,68 @@ class _Cuentas extends State<Cuentas> {
   Widget build(BuildContext context) {
     size = MediaQuery.of(context).size;
     provider = Provider.of<ProviderJunghanns>(context);
-    return Stack(children: [
-      body(),
-      Visibility(visible: isLoading, child: SizedBox(
-                height: size.height*.5,
-                width: double.infinity,
-                child:const SpinKitCircle(color: ColorsJunghanns.blue,size: 100,)))
-    ]);
+    return Stack(
+      children: [
+        body(),
+        Visibility(
+          visible: isLoading, 
+          child: SizedBox(
+            height: size.height*.5,
+            width: double.infinity,
+            child:const SpinKitCircle(
+              color: ColorsJunghanns.blue,
+              size: 100
+            )
+          )
+        )
+      ]
+    );
   }
 
   Widget body() {
     return RefreshIndicator(
-        onRefresh: () async {
-          getData();
-        },
-        child: SizedBox(
-                height: size.height*.5,
-                width: double.infinity,
-                child: 
-                    !isLoading&&cuentas.isEmpty?empty(context): Column(
-                      children: cuentas
-                          .map((e) => Card(
-                                child: Container(
-                                    padding: const EdgeInsets.all(15),
-                                    child: Column(
-                                      children: [
-                                        Image.network(
-                                          e["image"],
-                                          height: 35,
-                                          width: size.width * .6,
-                                          fit: BoxFit.fitWidth,
-                                        ),
-                                        Container(
-                                            width: double.infinity,
-                                            decoration: JunnyDecoration
-                                                .blueCEOpacity_5Blue(5),
-                                            margin: const EdgeInsets.all(15),
-                                            padding: const EdgeInsets.only(
-                                                left: 10,
-                                                right: 10,
-                                                top: 3,
-                                                bottom: 3),
-                                            child: Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment
-                                                      .spaceBetween,
-                                              children: [
-                                                Text(e["clave"],
-                                                    style: JunnyText.bluea4(
-                                                        FontWeight.w500, 18)),
+      onRefresh: ()=> getData(),
+      child: SizedBox(
+        height: size.height*.5,
+        width: double.infinity,
+        child: !isLoading && cuentas.isEmpty
+          ? empty(context)
+          : Column(
+              children: cuentas.map((e) => 
+                Card(
+                  child: Container(
+                    padding: const EdgeInsets.all(15),
+                    decoration: JunnyDecoration.whiteBox(5),
+                    child: Column(
+                      children: [
+                        Image.network(
+                          e["image"],
+                          height: 35,
+                          width: size.width * .6,
+                          fit: BoxFit.fitWidth,
+                        ),
+                        const SizedBox(height: 10),
+                        Container(
+                          width: double.infinity,
+                          decoration: JunnyDecoration.blueCEOpacity_5Blue(5),
+                          margin: const EdgeInsets.all(5),
+                          padding: const EdgeInsets.only(
+                            left: 5,
+                            right: 5,
+                            top: 3,
+                            bottom: 3
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child:AutoSizeText(
+                                  e["clave"],
+                                  style: JunnyText.bluea4(FontWeight.w500, 18),
+                                  textAlign: TextAlign.center,
+                                  maxLines: 1,
+                                )
+                              ),
                                                 // GestureDetector(
                                                 //     onTap: () {
                                                 //       Clipboard.setData(
@@ -166,19 +178,29 @@ class _Cuentas extends State<Cuentas> {
                                                 //       Icons.copy,
                                                 //       size: 18,
                                                 //     ))
-                                              ],
-                                            ))
-                                      ],
-                                    )),
-                              ))
-                          .toList(),
+                            ],
+                          )
+                        )
+                      ],
                     )
-                  ));
+                  ),
+                )
+              ).toList(),
+            )
+      )
+    );
   }
 }
 showCuentas(BuildContext context,int id){
-    showDialog(
+  showDialog(
     context: context,
-    builder: (_) => AlertDialog(content: Cuentas(id:id),),
+    builder: (_) => 
+      AlertDialog(
+        shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8)
+      ),
+        backgroundColor: JunnyColor.white,
+        content: Cuentas(id:id)
+      ),
   );
-  }
+}

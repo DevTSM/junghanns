@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
 
+//import 'package:background_fetch/background_fetch.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -13,32 +14,10 @@ import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/provider/provider.dart';
 import 'package:junghanns/routes/routes.dart';
 import 'package:junghanns/styles/color.dart';
+import 'package:junghanns/util/push_notifications_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
-
-// @pragma('vm:entry-point') // Mandatory if the App is obfuscated or using Flutter 3.1+
-// void callbackDispatcher() {
-//   Workmanager().executeTask((task, inputData) {
-//     var socket = IO.io('https://pue-sur.junghanns.app:3000', <String, dynamic>{
-//     'transports': ['websocket'],
-//     'autoConnect': true,
-//   });
-//   try{
-//     socket.connect();
-//     // Escucha eventos del servidor
-//     socket.on('junny_notify', (data) {
-//     log('Mensaje desde el servidor: $data');
-//     prefs.urlBase=urlBaseManuality;
-//     prefs.labelCedis=data.toString();
-//   });
-//   log("Conectado ${socket.acks.toString()}");
-//   socket.emit('catch_mobile', 'Hola, servidor!');
-//     }catch(e){
-//       log("ERORR: ${e.toString()}");
-//     }
-//   return Future.value(true);
-//   });
-// }
+import 'package:workmanager/workmanager.dart';
 
 @pragma('vm:entry-point')
 Future<void> messageHandler(RemoteMessage message) async {
@@ -46,6 +25,43 @@ Future<void> messageHandler(RemoteMessage message) async {
   NotificationModel notification=NotificationModel.fromEvent(message);
   handler.insertNotification(notification.getMap);
 }
+@pragma('vm:entry-point') // Mandatory if the App is obfuscated or using Flutter 3.1+
+void callbackDispatcher() {
+  Workmanager().executeTask((task, inputData) {
+    initWebSocket();
+    print("Native called background task: $task"); //simpleTask will be emitted here.
+    return Future.value(true);
+  });
+}
+
+
+void initWebSocket() {
+  var socket = IO.io('https://pue-sur.junghanns.app:3000', 
+    <String, dynamic>{
+      'transports': ['websocket'],
+      'autoConnect': true,
+    }
+  );
+  try{
+    socket.connect();
+    // Escucha eventos del servidor
+    socket.on('junny_notify', (data) 
+      async {
+        log('Mensaje desde el servidor: $data');
+        prefs.urlBase=urlBaseManuality;
+        prefs.labelCedis=data.toString();
+        NotificationService _notificationService = NotificationService();
+      _notificationService.showNotifications(
+          "Notify", data.toString());
+      }
+    );
+    log("Conectado ${socket.acks.toString()}");
+    socket.emit('catch_mobile', 'Hola, servidor!');
+  }catch(e){
+    log("ERORR: ${e.toString()}");
+  }
+}
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
@@ -55,29 +71,11 @@ Future<void> main() async {
   await prefs.initPrefs();
   HttpOverrides.global = new MyHttpOverrides();
   await handler.initializeDB();
-  // Workmanager().initialize(
-  //   callbackDispatcher, // The top level function, aka callbackDispatcher
-  //   isInDebugMode: true // If enabled it will post a notification whenever the task is running. Handy for debugging tasks
-  // );
-  //Workmanager().registerOneOffTask("task-identifier", "simpleTask");
-
-  var socket = IO.io('https://pue-sur.junghanns.app:3000', <String, dynamic>{
-    'transports': ['websocket'],
-    'autoConnect': true,
-  });
-  try{
-    socket.connect();
-    // Escucha eventos del servidor
-    socket.on('junny_notify', (data) {
-    log('Mensaje desde el servidor: $data');
-    prefs.urlBase=urlBaseManuality;
-    prefs.labelCedis=data.toString();
-  });
-  log("Conectado ${socket.acks.toString()}");
-  socket.emit('catch_mobile', 'Hola, servidor!');
-  }catch(e){
-    log(e.toString());
-  }
+  Workmanager().initialize(
+    callbackDispatcher,
+    isInDebugMode: true 
+  );
+  Workmanager().registerOneOffTask("task-identifier", "notification");
   runApp(const JunnyApp());
 }
 class MyHttpOverrides extends HttpOverrides {
@@ -88,6 +86,7 @@ class MyHttpOverrides extends HttpOverrides {
         (X509Certificate cert, String host, int port) => true;
   }
 }
+
 class JunnyApp extends StatefulWidget {
   const JunnyApp({Key? key}) : super(key: key);
   @override
@@ -135,8 +134,17 @@ class _JunnyAppState extends State<JunnyApp> with WidgetsBindingObserver{
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           primarySwatch: Colors.blue,
+          dialogBackgroundColor: JunnyColor.white,
+          cardColor: JunnyColor.white,
           colorScheme: ColorScheme.fromSwatch(
-            backgroundColor: JunnyColor.bluefe
+            cardColor: JunnyColor.white,
+            backgroundColor: JunnyColor.bluefe,
+          ),
+          dialogTheme: DialogTheme(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8)
+            ),
+            backgroundColor: JunnyColor.white
           )
         ),
         initialRoute: '/',

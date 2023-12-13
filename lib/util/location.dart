@@ -2,7 +2,18 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class LocationJunny{
-  Position _currentLocation=Position(altitude: 1,longitude: 0, accuracy: 1, heading: 1, latitude: 0, speed: 1, speedAccuracy: 1, timestamp: DateTime.now(),);
+  Position _currentLocation = Position(
+    altitudeAccuracy: 1,
+    headingAccuracy: 1,
+    altitude: 1,
+    longitude: 0, 
+    accuracy: 1, 
+    heading: 1, 
+    latitude: 0, 
+    speed: 1, 
+    speedAccuracy: 1, 
+    timestamp: DateTime.now()
+  );
 Future<Position?>getCurrentLocation() async {
   await Geolocator.requestPermission();
   LocationPermission permission = await Geolocator.checkPermission();

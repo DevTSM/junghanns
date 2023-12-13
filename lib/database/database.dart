@@ -32,7 +32,7 @@ class DataBase {
         // 8=Eliminados
 
         await database.execute(
-          "CREATE TABLE customer(id INTEGER PRIMARY KEY, orden INTEGER , idCustomer INTEGER, idRoute INTEGER,type INTEGER, lat DOUBLE, lng DOUBLE, priceLiquid DOUBLE, byCollet DOUBLE, purse DOUBLE, name TEXT NOT NULL, address TEXT NOT NULL , nameRoute TEXT NOT NULL,typeVisit TEXT NOT NULL, category TEXT NOT NULL,days TEXT NOT NULL, img TEXT NOT NULL, observacion TEXT,auth TEXT,payment TEXT,color TEXT,config INTEGER,history TEXT,cargoAdicional TEXT,referenciaDomicilio TEXT,billing TEXT,creditos TEXT,isAuthPrice INTEGER,ventaPermitida INTEGER)",
+          "CREATE TABLE customer(id INTEGER PRIMARY KEY, orden INTEGER , idCustomer INTEGER, idRoute INTEGER,type INTEGER, lat DOUBLE, lng DOUBLE, priceLiquid DOUBLE, byCollet DOUBLE, purse DOUBLE, name TEXT NOT NULL, address TEXT NOT NULL , nameRoute TEXT NOT NULL,typeVisit TEXT NOT NULL, category TEXT NOT NULL,days TEXT NOT NULL, img TEXT NOT NULL, observacion TEXT,auth TEXT,payment TEXT,color TEXT,config INTEGER,history TEXT,cargoAdicional TEXT,referenciaDomicilio TEXT,billing TEXT,creditos TEXT,isAuthPrice INTEGER,ventaPermitida INTEGER,horario1 TEXT,horario2 TEXT)",
         );
         //lista de paradas en falso
         await database.execute(

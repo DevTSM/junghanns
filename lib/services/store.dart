@@ -1,16 +1,14 @@
 // ignore_for_file: depend_on_referenced_packages
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
-import 'dart:async';
+
 import 'package:device_info_plus/device_info_plus.dart';
-import 'package:image_cropper/image_cropper.dart';
-import 'package:intl/intl.dart';
-import 'package:path/path.dart';
-import 'package:async/async.dart';
-import 'package:junghanns/models/answer.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
+import 'package:junghanns/models/answer.dart';
 
 import '../preferences/global_variables.dart';
 Future<Answer> getDataQr() async {
@@ -48,7 +46,7 @@ Future<Answer> postSale(Map<String, dynamic> data) async {
         body: jsonEncode(data)).timeout(Duration(seconds: timerDuration));
         return Answer.fromService(response,201);
   } catch (e) {
-    log("/StoreServices <setSale> Catch ${e.toString()}");
+    print("/StoreServices <setSale> Catch ${e.toString()}");
     return Answer(
         body: e,
         message: "Conexion inestable con el back",

@@ -68,7 +68,7 @@ class _NotificactionsState extends State<Notificactions> {
 
   Widget _body(){
     return Container(
-      height: size.height*.9,
+      height: size.height * .9,
       color: JunnyColor.white,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -97,46 +97,51 @@ class _NotificactionsState extends State<Notificactions> {
   Widget header() {
     return Padding(
       padding: const EdgeInsets.all(15),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start, 
-        children: [
-          Expanded(
-            flex: 4,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  checkDate(DateTime.now()),
-                  style: TextStyles.blue19_7,
-                ),
-                Text(
-                  "Notificaciones",
-                  style: JunnyText.green24(FontWeight.w400, 16),
-                )
-              ],
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            flex: 2,
-            child: Container(
-              alignment: Alignment.center,
-              decoration: Decorations.orangeBorder5,
-              padding: const EdgeInsets.only(left: 5, right: 5, top: 5, bottom: 5),
-              child: RichText(
-                text: TextSpan(
-                  children: [
-                    TextSpan(
-                      text: prefs.nameRouteD,
-                      style: TextStyles.white17_5
+      child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                "Ruta de trabajo",
+                style: TextStyles.blue27_7,
+              ),
+              const Text(
+                "  Notificaciones",
+                style: TextStyles.green15_4,
+              ),
+              const SizedBox(height: 10),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start, 
+                children: [
+                  Expanded(
+                    flex: 4,
+                    child: Text(
+                      checkDate(DateTime.now()),
+                      style: TextStyles.blue19_7,
                     ),
-                  ]
-                )
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    flex: 2,
+                    child: Container(
+                      alignment: Alignment.center,
+                      decoration: Decorations.orangeBorder5,
+                      padding: const EdgeInsets.only(left: 5, right: 5, top: 5, bottom: 5),
+                      child: RichText(
+                        text: TextSpan(
+                          children: [
+                            TextSpan(
+                              text: prefs.nameRouteD,
+                              style: TextStyles.white17_5
+                            ),
+                          ]
+                        )
+                      )
+                    )
+                  ),
+                ]
               )
-            )
-          ),
-        ]
-      )
+            ],
+          )
     );
   }
   
@@ -148,14 +153,17 @@ class _NotificactionsState extends State<Notificactions> {
         AsyncSnapshot<List<NotificationModel>> snapshot
       ) {
         if (snapshot.hasData) {
-          return ListView.builder(
-            itemCount: snapshot.data?.length,
-            itemBuilder: (BuildContext context, int index) {
-              return NotificationCard(
-                current: snapshot.data?[index]
-                  ?? NotificationModel.fromState()
-              );
-            }
+          return  RefreshIndicator(
+            onRefresh: ()=> getData(),
+            child: ListView.builder(
+              itemCount: snapshot.data?.length,
+              itemBuilder: (BuildContext context, int index) {
+                return NotificationCard(
+                  current: snapshot.data?[index]
+                    ?? NotificationModel.fromState()
+                );
+              }
+            )
           );
         } else {
           return empty(context);

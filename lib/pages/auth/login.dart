@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:developer';
+
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:device_information/device_information.dart';
@@ -8,7 +9,6 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:junghanns/components/without_internet.dart';
-import 'package:junghanns/pages/home/home_principal.dart';
 import 'package:junghanns/pages/opening.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/provider/provider.dart';
@@ -17,6 +17,7 @@ import 'package:junghanns/util/location.dart';
 import 'package:mac_address/mac_address.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
+
 import '../../components/loading.dart';
 import '../../styles/color.dart';
 import '../../styles/decoration.dart';
@@ -41,7 +42,18 @@ class _LoginState extends State<Login> {
   @override
   void initState() {
     super.initState();
-    _currentLocation=Position(altitude: 1,longitude: 0, accuracy: 1, heading: 1, latitude: 0, speed: 1, speedAccuracy: 1, timestamp: DateTime.now(),);
+    _currentLocation = Position(
+      altitudeAccuracy: 1,
+      headingAccuracy: 1,
+      altitude: 1,
+      longitude: 0, 
+      accuracy: 1, 
+      heading: 1, 
+      latitude: 0, 
+      speed: 1, 
+      speedAccuracy: 1, 
+      timestamp: DateTime.now()
+    );
     userC = TextEditingController();
     passC = TextEditingController();
   }
@@ -200,7 +212,7 @@ class _LoginState extends State<Login> {
                     });
                     FirebaseMessaging messaging = FirebaseMessaging.instance;
                     messaging.getToken().then((value) async {
-                      log("Token Messaging =======> ${value.toString()}");
+                      print("Token Messaging =======> ${value.toString()}");
                       await updateToken(value.toString()).then((answer) {
                         if (answer.error) {
                           Fluttertoast.showToast(

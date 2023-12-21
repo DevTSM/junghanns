@@ -121,11 +121,11 @@ Widget textField(
               borderSide: err != ""
                 ? const BorderSide(width: 1, color: Colors.red)
                 : const BorderSide(width: 1, color: ColorsJunghanns.lighGrey),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(8),
             ),
             focusedBorder: OutlineInputBorder(
               borderSide: const BorderSide(width: 1, color: ColorsJunghanns.blueJ),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(8),
             ),
           )
         ),

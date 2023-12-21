@@ -193,9 +193,25 @@ class Decorations {
       ]);
 }
 class JunnyDecoration{
-  static BoxDecoration orange255(double border) => BoxDecoration(
+  static BoxDecoration orange255(double border) => 
+    BoxDecoration(
       color: JunnyColor.orange_255,
-      borderRadius: BorderRadius.all(Radius.circular(border)));
+      borderRadius: BorderRadius.all(Radius.circular(border))
+    );
+  static BoxDecoration bottomRight(double border) => 
+    BoxDecoration(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.only(
+        bottomRight: Radius.circular(border) 
+      )
+    );
+  static BoxDecoration bottomLeft(double border) => 
+    BoxDecoration(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.only(
+        bottomLeft: Radius.circular(border) 
+      )
+    );
   static BoxDecoration blueCEOpacity_5Blue(double border) => BoxDecoration(
       color: JunnyColor.blueCE.withOpacity(.5),
       border: Border.all(color: JunnyColor.bluea4),

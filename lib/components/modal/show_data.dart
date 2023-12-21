@@ -25,11 +25,11 @@ import 'package:junghanns/styles/text.dart';
                         children: [
                           Text(
                             "Nombre o Razón social: ",
-                            style: JunnyText.grey_255(FontWeight.w500, 12)
+                            style: JunnyText.grey_255(FontWeight.w500, 11)
                           ),
                           Text(
                             e.razonSocial,
-                            style: JunnyText.bluea4(FontWeight.w400, 14)
+                            style: JunnyText.bluea4(FontWeight.w400, 13)
                           ),
                           Text(
                             "RFC:",

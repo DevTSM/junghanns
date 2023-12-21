@@ -1506,12 +1506,12 @@ class _ShoppingCartState extends State<ShoppingCart> {
               borderSide: errFolio == ""
                   ? const BorderSide(width: 1, color: ColorsJunghanns.blueJ3)
                   : const BorderSide(width: 1, color: Colors.red),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(8),
             ),
             focusedBorder: OutlineInputBorder(
               borderSide:
                   const BorderSide(width: 2, color: ColorsJunghanns.blueJ),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(8),
             ),
           )),
     );

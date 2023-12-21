@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:junghanns/components/loading.dart';
 import 'package:junghanns/models/authorization.dart';
-import 'package:junghanns/services/store.dart';
 import 'package:junghanns/styles/color.dart';
 import 'package:junghanns/styles/decoration.dart';
 import 'package:junghanns/styles/text.dart';
@@ -57,12 +55,12 @@ class _ShowCodeAuth extends State<ShowCodeAuth> {
                         ? const BorderSide(
                             width: 1, color: ColorsJunghanns.blueJ3)
                         : const BorderSide(width: 1, color: Colors.red),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderSide: const BorderSide(
                         width: 2, color: ColorsJunghanns.blueJ),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                 )),
           ),

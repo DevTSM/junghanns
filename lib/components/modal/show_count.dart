@@ -186,10 +186,16 @@ class _ShowCount extends State<ShowCount>{
                   style: TextStyles.white17_5,
                 ),
               ),
-              onTap: () => showYesNot(context, (){
-                setState(() =>isLoading=true);
-                widget.setComodato(context,(int.tryParse(countController.text)??0));
-                }, "¿Estás seguro de continuar con la operación?", true),
+              onTap: () => showYesNot(context, 
+                (){
+                  setState(() => isLoading = true);
+                  widget.setComodato(
+                    context,
+                    (int.tryParse(countController.text) ?? 0)
+                  );
+                }, "¿Estás seguro de continuar con la operación?", 
+                true
+              ),
             )
           ],
         ),

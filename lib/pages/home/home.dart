@@ -1,6 +1,7 @@
 // ignore_for_file: avoid_unnecessary_containers
 import 'dart:async';
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
@@ -39,6 +40,7 @@ class _HomeState extends State<Home> {
   late bool isLoading;
   late bool isLoadingAsync;
   late ProviderJunghanns provider;
+  late AutoSizeGroup group;
   late int atendidos;
   late int routeTotal;
   late int specials,
@@ -59,6 +61,7 @@ class _HomeState extends State<Home> {
     dashboardR = DashboardModel.fromPrefs();
     isLoading = false;
     isLoadingAsync = false;
+    group = AutoSizeGroup();
     atendidos = 0;
     routeTotal = 0;
     specials = 0;
@@ -161,9 +164,9 @@ class _HomeState extends State<Home> {
             entrega++;
             break;
           case 6:
-            llama++;
             break;
           case 7:
+          log(e.typeVisit);
             if (e.typeVisit == "ESPECIALES") {
               specialsA++;
             }
@@ -175,6 +178,9 @@ class _HomeState extends State<Home> {
             }
             if (e.typeVisit == "CTE LLAMA C") {
               llamaCA++;
+            }
+            if (e.typeVisit == "CTE LLAMA") {
+              llama++;
             }
             if (e.typeVisit == "ENTREGA") {
               entregaA++;
@@ -340,7 +346,7 @@ class _HomeState extends State<Home> {
                     child: Card(
                         elevation: 1.5,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12.0),
+                          borderRadius: BorderRadius.circular(8),
                         ),
                         child: Container(
                           padding: const EdgeInsets.only(top: 8, bottom: 8),
@@ -404,6 +410,11 @@ class _HomeState extends State<Home> {
                     "faltantes": llamaC + llamaCA,
                   },
                   {
+                    "type": "C. Llama",
+                    "atendidos": llama,
+                    "faltantes": llama,
+                  },
+                  {
                     "type": "S. Vueltas",
                     "atendidos": llamaA,
                     "faltantes": secon+llamaA,
@@ -452,20 +463,26 @@ class _HomeState extends State<Home> {
                 children: [
                   Row(
                     children: [
-                      const Expanded(
-                          flex: 2,
-                          child: Text("Tipo", style: TextStyles.grey14_7)),
+                      Expanded(
+                        flex: 2,
+                        child: AutoSizeText(
+                          "Tipo", 
+                          style: JunnyText.grey_255(FontWeight.w600, 12),
+                          maxLines: 1,
+                        )
+                      ),
                       Expanded(
                           child: AutoSizeText(
                         label == "ALMACÉN" ? "Total" : "Programadas",
-                        style: TextStyles.grey14_7,
+                        style: JunnyText.grey_255(FontWeight.w600, 12),
+                        group: group,
                         maxLines: 1,
                         textAlign: TextAlign.center,
                       )),
                       Expanded(
                           child: Text(
                         label == "ALMACÉN" ? "Vendidos" : "Atendidas",
-                        style: TextStyles.grey14_7,
+                        style: JunnyText.grey_255(FontWeight.w600, 12),
                         textAlign: TextAlign.center,
                       ))
                     ],
@@ -479,7 +496,8 @@ class _HomeState extends State<Home> {
                   ? Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: description
-                          .map((e) => Row(
+                          .map((e) => e["type"] != null
+                            ? Row(
                                 children: [
                                   Expanded(
                                       flex: 2,
@@ -496,7 +514,9 @@ class _HomeState extends State<Home> {
                                           style: TextStyles.grey14_4,
                                           textAlign: TextAlign.center)),
                                 ],
-                              ))
+                              )
+                              :const SizedBox.shrink()
+                            )
                           .toList(),
                     )
                   : const SizedBox(

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -149,7 +150,7 @@ class _QRSellerState extends State<QRSeller> {
                             isExpanded: true,
                             dropdownColor: ColorsJunghanns.lighGrey,
                             borderRadius:
-                                const BorderRadius.all(Radius.circular(12)),
+                                const BorderRadius.all(Radius.circular(8)),
                             underline: Container(),
                             value: nameCurrent,
                             icon: const Icon(Icons.arrow_drop_down_sharp),

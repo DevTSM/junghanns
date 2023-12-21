@@ -851,7 +851,7 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
             child:Container(
               padding: const EdgeInsets.only(left: 15,right: 15,top: 10),
               child:ButtonJunghanns(
-                fun: ()=>showDataBilling(context,widget.customerCurrent.billing), 
+                fun: ()=> showDataBilling(context,widget.customerCurrent.billing), 
                 decoration: Decorations.greenBorder5, 
                 style: TextStyles.white17_5, 
                 label: "Ver datos de facturación"
@@ -882,9 +882,9 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
             padding: const EdgeInsets.only(left: 15,right: 15),
             width: double.infinity,
             child: ButtonJunghanns(
-              decoration: JunnyDecoration.blueCEOpacity_5Blue(10),
+              decoration: JunnyDecoration.blueCEOpacity_5Blue(8),
               style: JunnyText.bluea4(FontWeight.w500, 16),
-              fun: ()=>showCuentas(context, widget.customerCurrent.idClient),
+              fun: ()=> showCuentas(context, widget.customerCurrent.idClient),
               isIcon: true,
               icon: Image.asset(
                 "assets/icons/transfer.png",
@@ -1181,7 +1181,7 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
                       ? const BorderSide(
                           color: ColorsJunghanns.greenJ, width: 1)
                       : const BorderSide(color: Colors.orange, width: 1),
-              borderRadius: BorderRadius.circular(5.0)),
+              borderRadius: BorderRadius.circular(8)),
           child: Container(
               padding: const EdgeInsets.only(
                   left: 15, right: 15, top: 10, bottom: 10),
@@ -1238,7 +1238,7 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
         width: double.infinity,
         height: size.width * .50,
         decoration: BoxDecoration(
-            borderRadius: const BorderRadius.all(Radius.circular(10)),
+            borderRadius: const BorderRadius.all(Radius.circular(8)),
             image: widget.customerCurrent.img == "" ||
                     widget.customerCurrent.img ==
                         "https://sandbox.junghanns.app/img/clientes/address/SANDBOX/"

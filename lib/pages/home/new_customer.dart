@@ -498,50 +498,56 @@ class _NewCustomerState extends State<NewCustomer> {
   }
 
   funButtonContinue() async {
-    //prefs.urlBase=ipStage;
-    print("FUN BUTTON CONTINUE ${prefs.urlBase}");
     Map<String, dynamic> data = {
       "action": "create",
       "id_ruta": prefs.idRouteD,
       "envio_msg_otp": "S",
       "usuario": prefs.nameUserD,
       "data": 
-      {
-        "tipo": getCharUserCambaceo(typeLeed),
-        "tel_movil": phoneC.text,
-        "email": emailC.text,
-        "id_vialidad": typeStreetS.id,
-        "calle": streetC.text,
-        "no_ext": numEc.text,
-        "no_int": numIc.text,
-        "colonia": colonyC.text,
-        "mun_alc": townC.text,
-        "estado": stateC.text,
-        "codigo_postal": codeC.text,
-        "lat": lat.toString(),
-        "lon": lng.toString(),
-        "referencia_domicilio": referenceC.text,
-        "id_empleado": employeeS.id,
-        "tipo_venta": typeSaleCs.id,
-        "entre_calle_1": streetR1.text,
-        "entre_calle_2": streetR2.text,
-        "observaciones": observacion.text,
-        "id_horario_1": schedule["id"],
-        "hora_inicio_1": schedule["set"] != "MANUAL" 
-          ? getScheduleFromCreate(schedule["descripcion"],true) 
-          : scheduleOther["1"],
-        "hora_fin_1": schedule["set"] != "MANUAL" 
-          ? getScheduleFromCreate(schedule["descripcion"],false) 
-          : scheduleOther["2"],
-        "no_adultos": int.tryParse(numberAdults.text) ?? 0,
-        "fraccionamiento": fraccionamiento.text
-      }
+        {
+          "tipo": getCharUserCambaceo(typeLeed),
+          "tel_movil": phoneC.text.replaceAll(" ", ""),
+          "email": emailC.text,
+          "id_vialidad": typeStreetS.id,
+          "calle": streetC.text,
+          "no_ext": numEc.text,
+          "colonia": colonyC.text,
+          "mun_alc": townC.text,
+          "estado": stateC.text,
+          "codigo_postal": codeC.text,
+          "lat": lat.toString(),
+          "lon": lng.toString(),
+          "id_empleado": employeeS.id,
+          "tipo_venta": typeSaleCs.id,
+          "entre_calle_1": streetR1.text,
+          "entre_calle_2": streetR2.text,
+          "id_horario_1": schedule["id"],
+          "hora_inicio_1": schedule["set"] != "MANUAL" 
+            ? getScheduleFromCreate(schedule["descripcion"],true) 
+            : scheduleOther["1"],
+          "hora_fin_1": schedule["set"] != "MANUAL" 
+            ? getScheduleFromCreate(schedule["descripcion"],false) 
+            : scheduleOther["2"],
+          "no_adultos": int.tryParse(numberAdults.text) ?? 0,
+        }
     };
+    if(numIc.text.isNotEmpty){
+      data["data"]["no_int"] = numIc.text;
+    }
+    if(referenceC.text.isNotEmpty){
+      data["data"]["referencia_domicilio"] = referenceC.text;
+    }
+    if(observacion.text.isNotEmpty){
+      data["data"]["observaciones"] = observacion.text;
+    }
+    if(fraccionamiento.text.isNotEmpty){
+      data["data"]["fraccionamiento"] = fraccionamiento.text;
+    }
     if(scheduleOther["3"] != "Inicio"){
-      data["hora_inicio_2"] = scheduleOther["3"];
+      data["data"]["hora_inicio_2"] = scheduleOther["3"];
     }
     if(scheduleOther["4"] != "Fin"){
-      data["hora_fin_2"] = scheduleOther["4"];
+      data["data"]["hora_fin_2"] = scheduleOther["4"];
     }
     switch (typeLeed){
       case NewTypeUser.colaborador:
@@ -569,6 +575,19 @@ class _NewCustomerState extends State<NewCustomer> {
         data["data"]["contacto"] = contactC.text;
         break;
     }
+    log('{');
+    data.forEach((key, value) {
+      if(key == "data"){
+        log('    data: {');
+        data[key].forEach((key, value) {
+          log('     "$key": "${value.toString()}",');
+        });
+        log('     }');
+      }else{
+      log('  "$key": "${value.toString()}",');
+      }
+    });
+    log('}');
     log("INFO NEW CUSTOMER: $data");
     await postNewCustomer(data).then((answer) {
       if (answer.error) {
@@ -1379,11 +1398,11 @@ class _NewCustomerState extends State<NewCustomer> {
               borderSide: errT != ""
                 ? const BorderSide(width: 1, color: Colors.red)
                 : const BorderSide(width: 1, color: ColorsJunghanns.lighGrey),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(8),
             ),
             focusedBorder: OutlineInputBorder(
               borderSide: const BorderSide(width: 1, color: ColorsJunghanns.blueJ),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(8),
             ),
           )
         ),
@@ -1633,9 +1652,9 @@ class _NewCustomerState extends State<NewCustomer> {
 
   Widget otpField() {
     return Container(
-        color: Colors.black.withOpacity(0.3),
-        child: Center(
-            child: Container(
+      color: Colors.black.withOpacity(0.3),
+      child: Center(
+        child: Container(
           padding: const EdgeInsets.all(12),
           width: size.width * .8,
           //height: size.height * .36,
@@ -1648,18 +1667,19 @@ class _NewCustomerState extends State<NewCustomer> {
               Column(
                 children: [
                   Container(
-                      padding: const EdgeInsets.only(bottom: 5),
-                      child: Text(
-                        "Ingresa el código de verificación enviado a",
-                        style: TextStyles.blueJ215R,
-                        textAlign: TextAlign.center,
-                      )),
+                    padding: const EdgeInsets.only(bottom: 5),
+                    child: Text(
+                      "Ingresa el código de verificación enviado a",
+                      style: TextStyles.blueJ215R,
+                      textAlign: TextAlign.center,
+                    )
+                  ),
                   Text(
                     nameCustomerAPI == ""
-                        ? typeLeed==NewTypeUser.particular
-                            ? "${nameC.text} ${lastNameC.text}"
-                            : companyC.text
-                        : nameCustomerAPI,
+                      ? typeLeed == NewTypeUser.particular
+                        ? "${nameC.text} ${lastNameC.text}"
+                        : companyC.text
+                      : nameCustomerAPI,
                     style: TextStyles.greenJ20Bold,
                     textAlign: TextAlign.center,
                   ),
@@ -1687,92 +1707,106 @@ class _NewCustomerState extends State<NewCustomer> {
               ),
               //Buttons Resend and Cancel
               Container(
-                  padding: const EdgeInsets.only(top: 15),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Visibility(
-                          visible: prefs.channelValidation != "llamada" &&
-                              prefs.channelValidation != "email",
-                          child: Container(
-                            padding: const EdgeInsets.only(
-                                top: 15, left: 10, bottom: 10),
-                            child: Text(
-                              "Selecciona el canal de reenvío",
-                              style: TextStyles.blue15SemiBold,
-                            ),
-                          )),
-                      prefs.channelValidation == "llamada" ||
-                              prefs.channelValidation == "email"
-                          ? SizedBox(
-                              height: 35,
-                              child: prefs.channelValidation == "email"
-                                  ? ButtonJunghanns(
-                                      fun: () {
-                                        showYesNot(
-                                            context,
-                                            () => funResendCode(false),
-                                            "¿Estas seguro de volver a enviar y generar un código de validación? Esto invalidará el código enviado anteriormente",
-                                            true);
-                                      },
-                                      decoration: Decorations.blueJ2Card,
-                                      style: TextStyles.white15R,
-                                      label: "Reenviar email")
-                                  : null)
-                          : chanels.isNotEmpty
-                              ? selectMap(context, (value) {
-                                  showYesNot(context, () {
-                                    setState(() {
-                                      prefs.channelValidation =
-                                        value["descripcion"];
-                                    });
-                                    funResendCode(false);
-                                  }, "¿Estas seguro de volver a enviar y generar un código de validación? Esto invalidará el código enviado anteriormente",
-                                      true);
+                padding: const EdgeInsets.only(top: 15),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Visibility(
+                      visible: prefs.channelValidation != "llamada" 
+                        && prefs.channelValidation != "email",
+                      child: Container(
+                        padding: const EdgeInsets.only(
+                          top: 15, left: 10, bottom: 10),
+                        child: Text(
+                          "Selecciona el canal de reenvío",
+                          style: TextStyles.blue15SemiBold,
+                        ),
+                      )
+                    ),
+                    prefs.channelValidation == "llamada" 
+                    || prefs.channelValidation == "email"
+                      ? SizedBox(
+                          height: 35,
+                          child: prefs.channelValidation == "email"
+                            ? ButtonJunghanns(
+                                fun: () {
+                                  showYesNot(
+                                    context,
+                                    () => funResendCode(false),
+                                    "¿Estás seguro?",
+                                    true,
+                                    subLabel: "Se enviará un nuevo código al email: ${
+                                    emailC.text}"
+                                  );
                                 },
-                                  !prefs.customerP
-                                      ? chanels
-                                          .where(
-                                              (element) => element["id"] != 4)
-                                          .toList()
-                                      : prefs.channelValidation == "whastapp" ||
-                                              prefs.channelValidation == "sms"
-                                          ? chanels
-                                              .where((element) =>
-                                                  element["id"] != 3 &&
-                                                  element["id"] != 4)
-                                              .toList()
-                                          : chanels,
-                                  chanelValidation,
-                                  decoration: Decorations.whiteSblackCard,
-                                  style: TextStyles.blueJ15SemiBold)
-                              : Container(
-                                  color: ColorsJunghanns.blue,
-                                  width: 10,
-                                  height: 10,
-                                ),
-                      const SizedBox(
-                        height: 15,
+                                decoration: Decorations.blueJ2Card,
+                                style: TextStyles.white15R,
+                                label: "Reenviar email"
+                              )
+                              : null
+                        )
+                      : chanels.isNotEmpty
+                          ? selectMap(
+                              context, 
+                              (value) {
+                                showYesNot(
+                                  context, 
+                                  () {
+                                    setState(()=>
+                                      prefs.channelValidation = value["descripcion"]
+                                    );
+                                    funResendCode(false);
+                                  }, 
+                                  "¿Estás seguro?",
+                                  true,
+                                  subLabel: "Se enviará un nuevo código al número celular con terminación: ${
+                                    phoneC.text.substring(phoneC.text.length-4,phoneC.text.length)
+                                    }"
+                                );
+                              },
+                              !prefs.customerP
+                                ? chanels.where((element) => 
+                                    element["id"] != 4).toList()
+                                : prefs.channelValidation == "whastapp" 
+                                || prefs.channelValidation == "sms"
+                                  ? chanels.where((element) =>
+                                      element["id"] != 3 
+                                      && element["id"] != 4).toList()
+                                  : chanels,
+                              chanelValidation,
+                              decoration: Decorations.whiteSblackCard,
+                              style: TextStyles.blueJ15SemiBold
+                            )
+                          : Container(
+                              color: ColorsJunghanns.blue,
+                              width: 10,
+                              height: 10,
+                            ),
+                    const SizedBox(height: 15),
+                    SizedBox(
+                      height: 35,
+                      child: ButtonJunghanns(
+                        fun: () {
+                          showYesNot(
+                            context,
+                            () => funCancelCode(),
+                            "¿Estas seguro de cancelar la validación?",
+                            true
+                          );
+                        },
+                        decoration: Decorations.redCard,
+                        style: TextStyles.white15R,
+                        label: "Rechazar"
                       ),
-                      SizedBox(
-                        height: 35,
-                        child: ButtonJunghanns(
-                            fun: () {
-                              showYesNot(
-                                  context,
-                                  () => funCancelCode(),
-                                  "¿Estas seguro de cancelar la validación?",
-                                  true);
-                            },
-                            decoration: Decorations.redCard,
-                            style: TextStyles.white15R,
-                            label: "Rechazar"),
-                      ),
-                    ],
-                  ))
+                    ),
+                  ],
+                )
+              )
             ],
           ),
-        )));
+        )
+      )
+    );
   }
  
 }

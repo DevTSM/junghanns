@@ -6,11 +6,11 @@ import 'package:junghanns/styles/text.dart';
 Widget itemBalance(String image, String label, double count,double width) {
   NumberFormat formatMoney = NumberFormat("\$#,##0.00");
     return Card(
-      elevation: 1,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.0)),
+      elevation: 2.5,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       child: SizedBox(
         width: width/3,
-        height: width/3,
+        height: width * .35,
         child:Column(
         crossAxisAlignment: CrossAxisAlignment.center, 
       children: [

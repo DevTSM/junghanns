@@ -82,8 +82,9 @@ class Answer {
         return Answer(
                 body: response.body,
                 message: response.statusCode == 422
-                  ? (body.map((e)=>e["message"]).toString()).toString()
-                  : body["message"] ?? "Código de error ${response.statusCode}",
+                  ? (body.map((e)=> e["message"]).toString()).toString()
+                  : (body["message"] 
+                      ?? "Código de error ${response.statusCode}").toString(),
                 status: response.statusCode,
                 error: true);
       }

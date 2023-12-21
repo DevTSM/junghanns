@@ -22,7 +22,7 @@ import 'package:workmanager/workmanager.dart';
 @pragma('vm:entry-point')
 Future<void> messageHandler(RemoteMessage message) async {
   print ("Notification was received on background");
-  NotificationModel notification=NotificationModel.fromEvent(message);
+  NotificationModel notification = NotificationModel.fromEvent(message);
   handler.insertNotification(notification.getMap);
 }
 @pragma('vm:entry-point') // Mandatory if the App is obfuscated or using Flutter 3.1+
@@ -36,7 +36,7 @@ void callbackDispatcher() {
 
 
 void initWebSocket() {
-  var socket = IO.io('https://pue-sur.junghanns.app:3000', 
+  var socket = IO.io('https://sandbox.junghanns.app:3002', 
     <String, dynamic>{
       'transports': ['websocket'],
       'autoConnect': true,
@@ -48,10 +48,8 @@ void initWebSocket() {
     socket.on('junny_notify', (data) 
       async {
         log('Mensaje desde el servidor: $data');
-        prefs.urlBase=urlBaseManuality;
-        prefs.labelCedis=data.toString();
         NotificationService _notificationService = NotificationService();
-      _notificationService.showNotifications(
+        _notificationService.showNotifications(
           "Notify", data.toString());
       }
     );
@@ -71,11 +69,12 @@ Future<void> main() async {
   await prefs.initPrefs();
   HttpOverrides.global = new MyHttpOverrides();
   await handler.initializeDB();
-  Workmanager().initialize(
-    callbackDispatcher,
-    isInDebugMode: true 
-  );
-  Workmanager().registerOneOffTask("task-identifier", "notification");
+  // Workmanager().initialize(
+  //   callbackDispatcher,
+  //   isInDebugMode: false 
+  // );
+  // Workmanager().registerOneOffTask("task-identifier", "notification");
+  initWebSocket();
   runApp(const JunnyApp());
 }
 class MyHttpOverrides extends HttpOverrides {

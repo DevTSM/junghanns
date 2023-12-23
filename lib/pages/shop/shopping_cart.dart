@@ -1290,7 +1290,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
                         margin: const EdgeInsets.only(
                             left: 15, right: 15, bottom: 10, top: 10),
                         width: double.infinity,
-                        height: 40,
+                        height: 45,
                         alignment: Alignment.center,
                         child: ButtonJunghanns(
                           decoration: Decorations.blueBorder12,

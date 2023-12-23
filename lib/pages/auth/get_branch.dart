@@ -39,9 +39,9 @@ class _GetBranchState extends State<GetBranch> {
     super.initState();
     pinC = TextEditingController();
     token = TextEditingController();
-    currentLocation=LocationData.fromMap({});
-    isLoading=false;
-    isValitedOtp=false;
+    currentLocation = LocationData.fromMap({});
+    isLoading = false;
+    isValitedOtp = false;
   }
   
   setCurrentLocation() async {
@@ -101,7 +101,7 @@ class _GetBranchState extends State<GetBranch> {
         );
           }else{
             setState(() {
-              isValitedOtp=true;
+              isValitedOtp = true;
             });
           }
         });
@@ -267,7 +267,7 @@ class _GetBranchState extends State<GetBranch> {
             children: [
               Container(
                 alignment: Alignment.centerLeft,
-                child:IconButton(onPressed: ()=>setState((){isValitedOtp=false;
+                child:IconButton(onPressed: ()=> setState((){ isValitedOtp=false;
                 pinC.clear();}), icon: Icon(Icons.arrow_back_ios,color: ColorsJunghanns.green,))),
               //Info Phone
               Container(
@@ -297,7 +297,7 @@ class _GetBranchState extends State<GetBranch> {
               Container(
                         margin: const EdgeInsets.only(left: 15,right: 15),
                         width: size.width,
-                        height: 35,
+                        height: 45,
                         child: ButtonJunghanns(
                             fun: () {
                               log("RESEND CODE");

@@ -1326,7 +1326,7 @@ class _NewCustomerState extends State<NewCustomer> {
           children: [
             Container(
               margin: const EdgeInsets.only(top: 15),
-              height: 35,
+              height: 45,
               child: ButtonJunghanns(
                 fun: () =>funButtonLocation(),
                 decoration: Decorations.blueBorder12,
@@ -1726,7 +1726,7 @@ class _NewCustomerState extends State<NewCustomer> {
                     prefs.channelValidation == "llamada" 
                     || prefs.channelValidation == "email"
                       ? SizedBox(
-                          height: 35,
+                          height: 45,
                           child: prefs.channelValidation == "email"
                             ? ButtonJunghanns(
                                 fun: () {
@@ -1784,7 +1784,7 @@ class _NewCustomerState extends State<NewCustomer> {
                             ),
                     const SizedBox(height: 15),
                     SizedBox(
-                      height: 35,
+                      height: 45,
                       child: ButtonJunghanns(
                         fun: () {
                           showYesNot(

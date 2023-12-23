@@ -58,7 +58,7 @@ android {
         applicationId "com.devts.junghanns"
         minSdkVersion 26
         targetSdkVersion 33
-        versionCode 97
+        versionCode 98
         versionName "23.9.4"
     }
 

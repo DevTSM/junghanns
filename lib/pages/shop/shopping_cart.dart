@@ -118,12 +118,13 @@ class _ShoppingCartState extends State<ShoppingCart> {
             });
           }
         } else {
-          
-          if (e.idProduct ==
-             provider.basketCurrent.authCurrent.product.idProduct) {
+          log("La autorizacion tiene el producto ${
+            provider.basketCurrent.authCurrent.product.idProduct
+          }");
+          if (e.idProduct == provider.basketCurrent.authCurrent.product.idProduct) {
             setState(() {
               ProductModel product =
-                  ProductModel.fromProduct(provider.basketCurrent.authCurrent.product);
+                ProductModel.fromProduct(provider.basketCurrent.authCurrent.product);
               product.setStock(
                   product.stock <= e.stock
                       ? product.stock
@@ -195,7 +196,6 @@ class _ShoppingCartState extends State<ShoppingCart> {
     }
     //respladamos la lista de formas de pago
     paymentsRecovery = widget.customerCurrent.payment;
-    log("=====> ${paymentsRecovery.length}");
 
     if (provider.basketCurrent.authCurrent.idAuth != 0) {
       //Aqui se valida si existe la autorizacion para filtrar los metodos de pago
@@ -207,9 +207,18 @@ class _ShoppingCartState extends State<ShoppingCart> {
     }
     if (paymentsList.isEmpty) {
       //Se agregan todos lo metodos de pago si no hay autorizacion
+      if(provider.basketCurrent.authCurrent.idAuth != 0){
+        log("=====> Hay una autorización");
+         widget.customerCurrent.payment
+          .map((e) => e.wayToPay != "Monedero" && e.idAuth == -1 
+            ? paymentsList.add(e)
+            : null 
+          ).toList();
+      }else{
       widget.customerCurrent.payment
           .map((e) => e.wayToPay != "Monedero" ? paymentsList.add(e) : null)
           .toList();
+      }
       //Se agrega metodo de pago "Monedero"
       if (widget.customerCurrent.purse > 0 &&
           widget.customerCurrent.payment

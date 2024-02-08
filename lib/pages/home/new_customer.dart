@@ -674,11 +674,11 @@ class _NewCustomerState extends State<NewCustomer> {
   }
   
   void selectHour(String id) async {
-    List<String> items=["07:00","07:30","08:00","08:30","09:00","09:30","10:00","10:30",
+    List<String> items = ["07:00","07:30","08:00","08:30","09:00","09:30","10:00","10:30",
       "11:00","11:30","12:00","12:30","13:00","13:30","14:00","14:30","15:00",
       "15:30","16:00","16:30","17:00","17:30","18:00","18:30","19:00","19:30",
       "20:00","20:30","21:00"];
-    id=="3"||id=="4"?items.insert(0,id=="3"?"Inicio":"Fin"):null;
+    id == "3" || id == "4" ? items.insert(0,id == "3"?"Inicio":"Fin") :null;
     await showCupertinoModalPopup<int>(
       context: context,
       builder: (context) {
@@ -1182,6 +1182,7 @@ class _NewCustomerState extends State<NewCustomer> {
                       : TextStyles.blueJ15SemiBold,
                     () => selectHour("3"),
                     "",
+                    disabled: scheduleOther["2"] == "Fin"
                   )
                 ),
                 const SizedBox(
@@ -1199,6 +1200,7 @@ class _NewCustomerState extends State<NewCustomer> {
                       : TextStyles.blueJ15SemiBold,
                     () => selectHour("4"),
                     "",
+                    disabled: scheduleOther["2"] == "Fin"
                   )
                 ),
               ],
@@ -1253,30 +1255,40 @@ class _NewCustomerState extends State<NewCustomer> {
       ),
       onTap: () {
         bool condition = false;
-        if(id=="1"||id=="2"){
-          condition = int.parse(id=="1"
+        String message = "La hora de inicio debe ser menor a la hora fin";
+        if(id == "1" || id == "2"){
+          condition = int.parse(id == "1"
             ? item.toString().replaceAll(":", "")
             : (scheduleOther["1"]!="Inicio"
               ? scheduleOther["1"].toString().replaceAll(":", "")
               : "0"))
-            < int.parse(id=="2"
+            < int.parse(id == "2"
             ? item.toString().replaceAll(":", "")
-            : (scheduleOther["2"]!="Fin"
+            : (scheduleOther["2"] != "Fin"
               ? scheduleOther["2"].toString().replaceAll(":", "")
               : "2200"));
-        }else if(item!="Inicio" && item!="Fin"){
-          condition=int.parse(id=="3"
+        }else if(item != "Inicio" && item != "Fin"){
+          int valueS2 = int.parse(scheduleOther["2"].toString().replaceAll(":", ""));
+          int valueS3 = int.parse(id == "3"
             ? item.toString().replaceAll(":", "")
-            : (scheduleOther["3"]!="Inicio"
-              ? scheduleOther["3"].toString().replaceAll(":", "")
-              : "0"))
-            < int.parse(id=="4"
+            : (scheduleOther["3"] != "Inicio"
+                ? scheduleOther["3"].toString().replaceAll(":", "")
+                : valueS2.toString()
+              )
+          );
+          int valueS4 = int.parse(id == "4"
             ? item.toString().replaceAll(":", "")
-            : (scheduleOther["4"]!="Fin"
-              ? scheduleOther["4"].toString().replaceAll(":", "")
-              : "2200"));
+            : (scheduleOther["4"] != "Fin"
+                ? scheduleOther["4"].toString().replaceAll(":", "")
+                : "2200"
+              )
+          );
+          condition = valueS3 < valueS4 && valueS3 >= valueS2;
+          message = valueS3 < valueS2 
+            ? "La hora de inicio debe ser mayor a la hora fin del 1er Horario"
+            : message;
         }else{
-          condition=true;
+          condition = true;
         }
         if(condition){
         setState(() {
@@ -1285,10 +1297,11 @@ class _NewCustomerState extends State<NewCustomer> {
         Navigator.pop(context);
         }else{
           Fluttertoast.showToast(
-          msg: "La hora de inicio debe ser menor a la hora fin",
+          msg: message,
           timeInSecForIosWeb: 2,
           toastLength: Toast.LENGTH_LONG,
           gravity: ToastGravity.TOP,
+          backgroundColor: JunnyColor.red5c,
           webShowClose: true,
         );
         }
@@ -1460,7 +1473,7 @@ class _NewCustomerState extends State<NewCustomer> {
   }
 
   Widget _select(String titleB, String textB, BoxDecoration decoB,
-      TextStyle textSB, Function funB, String errB,{bool isRequired=false}) {
+      TextStyle textSB, Function funB, String errB,{bool isRequired = false, bool disabled = false}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1477,24 +1490,25 @@ class _NewCustomerState extends State<NewCustomer> {
             )
             : Text(
             titleB,
-            style: JunnyText.semiBoldBlueA1(15),
+            style: JunnyText.semiBoldBlueA1(15)
+              .copyWith(color: disabled ? JunnyColor.grey_255 : null),
           ),
         ),
         GestureDetector(
+          onTap: disabled ? null : ()=> funB(),
           child: Container(
             padding: const EdgeInsets.fromLTRB(12, 8, 10, 8),
             decoration: decoB,
             child: Row(
               children: [
                 Expanded(child: Text(textB, style: textSB)),
-                const Icon(
+                Icon(
                   FontAwesomeIcons.caretDown,
-                  color: ColorsJunghanns.blue,
+                  color: disabled ? JunnyColor.grey_255 : ColorsJunghanns.blue,
                 )
               ],
             ),
           ),
-          onTap: ()=>funB(),
         ),
         errB.isNotEmpty
           ? Container(
@@ -1808,5 +1822,4 @@ class _NewCustomerState extends State<NewCustomer> {
       )
     );
   }
- 
 }

@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:developer';
 
 import 'package:junghanns/preferences/global_variables.dart';
 
@@ -21,8 +20,7 @@ class DashboardModel {
     );
   }
   factory DashboardModel.fromPrefs() {
-    Map<String,dynamic> data=jsonDecode(prefs.dashboard);
-    log(data.toString());
+    Map<String,dynamic> data = jsonDecode(prefs.dashboard);
     return DashboardModel(
       stock: List.from(data["stock"]??[])
     );

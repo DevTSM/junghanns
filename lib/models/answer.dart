@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:http/http.dart';
 import 'package:junghanns/preferences/global_variables.dart';
@@ -68,7 +69,7 @@ class Answer {
                 error: true);
       }
       if(response.statusCode >= 400 && response.statusCode <= 499){
-        
+        log("Respuesta en cash ${jsonDecode(response.body)}");
         if (response.statusCode == 403 || response.statusCode == 401) {
           String urlBaseSafe = prefs.urlBase;
           String nameCEDIS = prefs.labelCedis;

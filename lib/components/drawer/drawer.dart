@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:junghanns/components/modal/logout.dart';
 import 'package:junghanns/components/modal/yes_not.dart';
 import 'package:junghanns/models/stop_ruta.dart';
 import 'package:junghanns/pages/debug/debug.dart';
@@ -247,10 +248,21 @@ drawer(ProviderJunghanns provider, BuildContext context,
                         color: ColorsJunghanns.blue,
                       ),
                     ),
+                    item(
+                      () => showLogOut(context),
+                      "assets/icons/workRoute.png",
+                      "Cerrar sesión",
+                      image: Image.asset(
+                        "assets/icons/workRoute.png",
+                        width: 28,
+                        height: 28,
+                      ),
+                    ),
                   ],
                 ),
               )
             ),
+            
             Visibility(
               visible: prefs.statusRoute != "FNRT",
               child: Row(

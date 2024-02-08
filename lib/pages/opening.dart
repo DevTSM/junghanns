@@ -43,8 +43,8 @@ class _OpeningState extends State<Opening> {
     log("Version: ${prefs.version}");
     //handler.checkValidate();
     // //TODO: URL
-    // prefs.urlBase=urlBaseManuality;
-    // prefs.labelCedis="BETA W";
+    // prefs.urlBase = urlBaseManuality;
+    // prefs.labelCedis = "BETA W";
     //prefs.qr="";
     //prefs.version="8.11";
     //getAndroidID();

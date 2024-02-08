@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/models/folio.dart';
+import 'package:junghanns/models/message.dart';
 import 'package:junghanns/models/notification.dart';
 import 'package:junghanns/models/product.dart';
 import 'package:junghanns/models/refill.dart';
@@ -79,6 +80,10 @@ class DataBase {
         // prefs
         await database.execute(
           "CREATE TABLE preferencias(id INTEGER PRIMARY KEY AUTOINCREMENT,url TEXT,clientSecret TEXT)",
+        );
+        // chat
+        await database.execute(
+          "CREATE TABLE mensaje(id INTEGER PRIMARY KEY AUTOINCREMENT,mensaje TEXT, emisor TEXT, date TEXT, estatus TEXT)",
         );
       },
       version: 1,
@@ -183,6 +188,11 @@ class DataBase {
       return 0;
     }
   }
+  Future<int> insertMessage(MessageChat current) async {
+    final Database db = await initializeDB();
+     return  await db.insert('mensaje', current.map);
+
+  }
   deleteTable({bool isInit=true}) async {
     try{
     final db = await initializeDB();
@@ -194,6 +204,7 @@ class DataBase {
       db.delete('notification');
       db.delete('bitacora');
       db.delete('devolucion');
+      db.delete('mensaje');
     }else{
       List<CustomerModel> dataAtendidos=await retrieveUsersType(7);
       db.delete('customer');
@@ -295,6 +306,10 @@ class DataBase {
   Future<List<Map<String, dynamic>>> retrieveDevolucion() async {
     final Database db = await initializeDB();
     return await db.query('devolucion');
+  }
+  Future<List<Map<String, dynamic>>> retrieveMessages() async {
+    final Database db = await initializeDB();
+    return await db.query('mensaje');
   }
   Future<List<Map<String, dynamic>>> retrieveDevolucionAsync() async {
     final Database db = await initializeDB();

@@ -86,6 +86,7 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
     setCurrentLocation();
     getHistory();
     getDataP();
+    log("======= Venta permitida > ${widget.customerCurrent.ventaPermitida}");
   }
 
   

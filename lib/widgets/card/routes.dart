@@ -27,7 +27,7 @@ class RoutesCard extends StatelessWidget {
           margin:
               const EdgeInsets.only(left: 5, right: 5, top: 7, bottom: 7),
           padding: const EdgeInsets.only(left: 10, right: 10, top: 5, bottom: 5),
-          decoration: customerCurrent.idClient==414?
+          decoration: customerCurrent.ventaPermitida == 0 ?
             JunnyDecoration.orange255(13).copyWith(
               color: JunnyColor.red5c.withOpacity(.1),
               border: Border.all(color: JunnyColor.red5c)

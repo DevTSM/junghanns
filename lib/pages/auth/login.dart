@@ -74,16 +74,16 @@ class _LoginState extends State<Login> {
     String modelo=await DeviceInformation.deviceModel;
     String marca=await DeviceInformation.deviceManufacturer;
     if(_currentLocation.latitude!=0&&_currentLocation.longitude!=0){
-      log("esto enviamos ${{
-          "user": userC.text,
-          "pass": passC.text,
-          "marca":marca,
-          "modelo":modelo,
-          "version_so":versionSo,
-          "serial":serial.replaceAll(":", ""),
-          "lat":_currentLocation.latitude,
-          "lon":_currentLocation.longitude
-        }}");
+      log('''esto enviamos 
+          user ${userC.text},
+          pass: ${passC.text},
+          marca:${marca},
+          modelo:${modelo},
+          version_so:${versionSo},
+          serial:${serial.replaceAll(":", "")},
+          lat:${_currentLocation.latitude},
+          lon:${_currentLocation.longitude}
+        ''');
     return {
           "user": userC.text,
           "pass": passC.text,
@@ -122,8 +122,7 @@ class _LoginState extends State<Login> {
         isLoading = true;
       });
       if (userC.text.isNotEmpty && passC.text.isNotEmpty) {
-        Map<String, dynamic> data =
-        (await getDataLogin())??{};
+        
         // {
         //   "user": userC.text,
         //   "pass": passC.text,
@@ -142,6 +141,7 @@ class _LoginState extends State<Login> {
               webShowClose: true,
             );
           } else {
+            log("Respuesta 123456787899");
             prefs.clientSecret = answer.body["client_secret"];
             await getToken(userC.text).then((answer1) async {
               if (answer1.error) {
@@ -158,6 +158,7 @@ class _LoginState extends State<Login> {
                 );
               } else {
                 prefs.token = answer1.body["token"];
+                Map<String, dynamic> data = (await getDataLogin()) ?? {};
                 await login(data).then((answer2) {
                   log(answer2.body.toString());
                   if (answer2.error) {

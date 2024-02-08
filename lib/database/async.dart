@@ -237,11 +237,11 @@ class Async {
         return false;
       } else {
         prefs.lastBitacoraUpdate = DateTime.now().toString();
-        List<CustomerModel> dataAtendidos=await handler.retrieveUsersType(7);
+        List<CustomerModel> dataAtendidos = await handler.retrieveUsersType(7);
         await handler.deleteCustomers();
         await handler.insertUser(dataAtendidos);
         for (var item in answer.body) {
-          CustomerModel current=CustomerModel.fromPayload(item);
+          CustomerModel current = CustomerModel.fromPayload(item);
           var exit=dataAtendidos.where((element) => element.idClient==current.idClient);
           if(exit.isNotEmpty){
             current.setType(current.type);
@@ -312,9 +312,10 @@ class Async {
       List<FolioModel> folioList = [];
       if (!answer.error) {
         await handler.deleteFolios();
+        log("=============> Respuesta:::::   ${answer.body}");
         for (var item in answer.body) {
-          if(item["folios"]!=null){
-            if(item["folios"]["remision"]!=null){
+          if(item["folios"] != null){
+            if(item["folios"]["remision"] != null){
               for(var item3 in item["folios"]["remision"]){
               folioList.add(FolioModel.fromService(item3,item["serie"],"remision"));
             }

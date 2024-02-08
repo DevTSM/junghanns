@@ -109,6 +109,7 @@ class _HomeState extends State<Home> {
             } else {
               setState(() {
                 dashboardR = DashboardModel.fromService(answer.body);
+                log(" Get ${answer.body}");
                 prefs.statusRoute = answer.body["paro_de_ruta"] ?? "";
               });
             }

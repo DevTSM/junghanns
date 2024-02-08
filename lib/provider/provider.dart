@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:junghanns/models/authorization.dart';
 import 'package:junghanns/models/customer.dart';
+import 'package:junghanns/models/message.dart';
 import 'package:junghanns/models/notification.dart';
 import 'package:junghanns/models/product.dart';
 import 'package:junghanns/models/shopping_basket.dart';
@@ -23,12 +24,16 @@ class ProviderJunghanns extends ChangeNotifier {
     notificationService.init();
     listen();
     getPendingNotification();
+    getMessages();
   }
   //VARIABLES
+  List<MessageChat> _messagesChat = [];
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin= FlutterLocalNotificationsPlugin();
   NotificationService notificationService=NotificationService();
   FirebaseMessaging messaging = FirebaseMessaging.instance;
-  Function _updateComodato=(){};
+  ScrollController _scrollController = ScrollController();
+  TextEditingController _messageChat = TextEditingController();
+  Function _updateComodato = (){};
   BasketModel basketCurrent = BasketModel.fromState();
   String _path = "";
   String _labelAsync = "Sincronizando datos, no cierres la app";
@@ -59,7 +64,10 @@ class ProviderJunghanns extends ChangeNotifier {
   String get labelAsync => _labelAsync;
   String get path => _path;
   Map<String,dynamic> get brand=> basketCurrent.brandJug;
+  TextEditingController get messageChat => _messageChat;
   Function get updateComodato =>_updateComodato;
+  ScrollController get scrollController => _scrollController;
+  List<MessageChat> get messagesChat => _messagesChat;
   //SETS
   set isNotificationPending(bool current){
     _isNotificationPending=current;
@@ -193,6 +201,15 @@ class ProviderJunghanns extends ChangeNotifier {
     basketCurrent = BasketModel.fromInit(customerCurrent,auth);
     notifyListeners();
   }
+  getMessages() async {
+    _messagesChat = List.from((await handler.retrieveMessages()).map((e) => 
+      MessageChat.fromDB(data: e)).toList());
+    _messagesChat = [
+      MessageChat.fromState(),
+      MessageChat.fromState(emisor: 'operaciones')
+    ];
+    notifyListeners();
+  }
   updateProductShopping(ProductModel productCurrent, int isAdd) {
     //TODO: verificacion de Autorizacion
     var exits = basketCurrent.sales
@@ -250,4 +267,12 @@ class ProviderJunghanns extends ChangeNotifier {
     _isNeedAsync=salesPen.isNotEmpty||stopPen.isNotEmpty;
     notifyListeners();
   }  
+  addMessage() async {
+    MessageChat current = MessageChat.fromMessage(message: _messageChat.text);
+    _messageChat.clear();
+    _messagesChat.add(current);
+    await handler.insertMessage(current);
+    _scrollController.jumpTo(1);
+    notifyListeners();
+  }
 }

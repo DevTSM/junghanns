@@ -215,10 +215,10 @@ class ProviderJunghanns extends ChangeNotifier {
     var exits = basketCurrent.sales
         .where((element) => element.idProduct == productCurrent.idProduct);
     if (exits.isNotEmpty) {
-      if (isAdd==1) {
+      if (isAdd == 1) {
         exits.first.number += 1;
       } else {
-        if(isAdd==0){
+        if(isAdd == 0){
         if (exits.first.number == 1) {
           exits.first.number = 0;
           basketCurrent.sales.removeWhere(
@@ -229,11 +229,11 @@ class ProviderJunghanns extends ChangeNotifier {
         }//aqui no importa ya que se le asigno el numero
       }
     } else {
-      if (isAdd==1) {
+      if (isAdd == 1) {
         productCurrent.number = 1;
         basketCurrent.sales.add(productCurrent);
       }else{
-        if(isAdd==2){
+        if(isAdd == 2){
           basketCurrent.sales.add(productCurrent);
         }
       }

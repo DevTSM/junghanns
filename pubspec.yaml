@@ -95,6 +95,7 @@ flutter:
     - assets/
     - assets/images/
     - assets/icons/
+    - assets/images/bancos/
   fonts:
     - family: MyriadPro-Bold
       fonts:

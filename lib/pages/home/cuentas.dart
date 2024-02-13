@@ -31,7 +31,7 @@ class _Cuentas extends State<Cuentas> {
   void initState() {
     super.initState();
     cuentas = [];
-    isLoading = false;
+    isLoading = true;
     getData();
   }
 
@@ -67,30 +67,27 @@ class _Cuentas extends State<Cuentas> {
           } else {
             cuentas.clear();
             log(answer.body.toString());
-            cuentas.add({
+            cuentas.add(
+              {
           "clave": answer.body["cta_cable"]??"",
           "banco": answer.body["banco"]??"",
-          "image": (answer.body["banco"]??"")=="Citibanamex"?
-              "https://upload.wikimedia.org/wikipedia/commons/thumb/9/92/Citibanamex_logo.svg/2560px-Citibanamex_logo.svg.png":"https://thecorner.eu/wp-content/uploads/2020/06/bank-generico-777x400.jpg"
+          "image": getImage(answer.body["banco"] ?? "")
         });}
         }
       });
-      setState(() {
-        // cuentas.clear();
-        // cuentas.add({
-        //   "clave": "0123456789012345",
-        //   "banco": "Citibanamex",
-        //   "image":
-        //       "https://upload.wikimedia.org/wikipedia/commons/thumb/9/92/Citibanamex_logo.svg/2560px-Citibanamex_logo.svg.png"
-        // });
-        // cuentas.add({
-        //   "clave": "0123456789012345",
-        //   "banco": "BBVA",
-        //   "image":
-        //       "https://www.nicepng.com/png/detail/321-3214672_bbva-bancomer-logo-vector-bbva-bancomer-png-logo.png"
-        // });
-      });
     });
+  }
+  String getImage(String banco){
+    if(banco.toLowerCase().replaceAll(' ', '').contains("banamex")){
+      return 'assets/images/bancos/Banamex-logo.png';
+    }
+    if(banco.toLowerCase().replaceAll(' ', '').contains('santander')){
+      return 'assets/images/bancos/Santander-logo.png';
+    }
+    if(banco.toLowerCase().replaceAll(' ', '').contains('bbva')){
+      return 'assets/images/bancos/BBVA-logo.png';
+    }
+    return 'assets/images/bancos/default.jpeg';
   }
 
   @override
@@ -131,7 +128,7 @@ class _Cuentas extends State<Cuentas> {
                     decoration: JunnyDecoration.whiteBox(5),
                     child: Column(
                       children: [
-                        Image.network(
+                        Image.asset(
                           e["image"],
                           height: 35,
                           width: size.width * .6,

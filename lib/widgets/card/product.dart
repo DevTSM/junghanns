@@ -1,6 +1,4 @@
 // ignore_for_file: must_be_immutable
-import 'dart:developer';
-
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -59,7 +57,7 @@ class ProductSaleCardPriorityState extends State<ProductSaleCardPriority> {
                 alignment: Alignment.center,
                 decoration: Decorations.greenJCardB30,
                 child: AutoSizeText(
-                  "Stock: ${widget.productCurrent.stock - widget.productCurrent.number}",
+                  "Stock: ${widget.productCurrent.stock}",
                   style: TextStyles.white15Itw,
                 )),
                     ])),

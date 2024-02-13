@@ -44,7 +44,7 @@ class _OpeningState extends State<Opening> {
     //handler.checkValidate();
     // //TODO: URL
     // prefs.urlBase = urlBaseManuality;
-    // prefs.labelCedis = "BETA W";
+    // prefs.labelCedis = "BETA S";
     //prefs.qr="";
     //prefs.version="8.11";
     //getAndroidID();

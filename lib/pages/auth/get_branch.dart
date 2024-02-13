@@ -93,7 +93,10 @@ class _GetBranchState extends State<GetBranch> {
           });
           if(answer.error){
             Fluttertoast.showToast(
-          msg: "Acceso denegado. El token ingresado es incorrecto.",
+          msg: answer.message 
+          == "No es posible realizar una activación fuera del CEDIS."
+            ? "Solo se pueden realizar activaciones dentro del CEDIS" 
+            : "Acceso denegado. El token ingresado es incorrecto.",
           timeInSecForIosWeb: 2,
           toastLength: Toast.LENGTH_LONG,
           gravity: ToastGravity.TOP,

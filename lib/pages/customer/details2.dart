@@ -214,7 +214,7 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
   }
   
   getDataP() async {
-    if(itemBar==1){
+    if(itemBar == 1){
       setState(() {
         isLoading=true;
         operations.clear();
@@ -228,14 +228,15 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
         isLoading=false;
       });
       if (!answer.error) {
+        operations.clear();
         for(var e in answer.body){
           OperationCustomerModel currentOperation = 
             OperationCustomerModel.fromServices(e);
             //validamos que tenga algo que devolver 
-            if(currentOperation.amount>0){
-            //validamos que no exista en un registro local
+            if(currentOperation.amount > 0){
+            //validamos que no exista en un registro local que haya sido devuelto
             if(listOperationHandler.where((element) => 
-              (element["idDocumento"]??"")==currentOperation.folio).isEmpty){
+              (element["idDocumento"]??"") == currentOperation.folio).isEmpty){
               setState((){
                 operations.add(OperationCustomerModel.fromServices(e));
               });
@@ -243,16 +244,17 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
           }
         }
         //si no hay operaciones y el itembar este en "por cobrar" se regresa al dashboard
-        if(itemBar==1 && operations.isEmpty){
+        if(itemBar == 1 && operations.isEmpty){
           setState(()=> itemBar = 0);
         }
+        //actualizamos las listas locales "por cobrar"
         widget.customerCurrent.setCreditos(operations);
       } else {
         setState((){
-          operations=widget.customerCurrent.operation;
+          operations = widget.customerCurrent.operation;
           //si no hay operaciones y el itembar este en "por cobrar" se regresa al dashboard
-          if(itemBar==1&&operations.isEmpty){
-            itemBar=0;
+          if(itemBar == 1 && operations.isEmpty){
+            itemBar = 0;
           }
         });
         Fluttertoast.showToast(
@@ -264,33 +266,34 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
         );
       }
       List<Map<String,dynamic>> currentList = await handler.retrieveDevolucion();
+      //buscamos los registros locales de devoluciones de ese cliente
       currentList = currentList.where((element) => element["idCliente"] 
         == widget.customerCurrent.idClient).toList();
       currentList.map((e){
         var exits = operations.where((element) => 
-          element.idDocument==e["idDocumento"]);
+          element.idDocument == e["idDocumento"]);
         if(exits.isNotEmpty){
           exits.first.returnedAmount = 
             exits.first.amountReturned + int.parse(e["cantidad"].toString());
         }else{
           OperationCustomerModel tem = OperationCustomerModel.fromDataBase(e);
           tem.returnedAmount = tem.amount;
-          tem.updateCount=0;
+          tem.updateCount = 0;
           setState(()=> operations.add(tem));
         }
       }).toList();
       items.clear(); 
-      if(operations.where((element) => element.typeInt==1).isNotEmpty){
+      if(operations.where((element) => element.typeInt == 1).isNotEmpty){
           items.add({"id":1,"descripcion":"Comodato"});
         }
-      if(operations.where((element) => element.typeInt==2).isNotEmpty){
+      if(operations.where((element) => element.typeInt == 2).isNotEmpty){
         items.add({"id":2,"descripcion":"Prestamo"});
       }
-      if(operations.where((element) => element.typeInt==3).isNotEmpty){
+      if(operations.where((element) => element.typeInt == 3).isNotEmpty){
         items.add({"id":3,"descripcion":"Credito"});
       }
       if(items.isNotEmpty){
-        currentItem=items.first;
+        currentItem = items.first;
       }
     });
   }
@@ -635,7 +638,7 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
                           onTap: ()=>setState( ()=> itemBar = 1),
                           child:Container(
                             alignment: Alignment.center,
-                            decoration: itemBar==1
+                            decoration: itemBar == 1
                               ? Decorations.blue16Bottom
                               : const BoxDecoration(color: Colors.transparent),
                             padding: const EdgeInsets.all(5),

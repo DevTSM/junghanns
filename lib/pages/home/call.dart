@@ -1,16 +1,17 @@
 import 'dart:async';
 import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:junghanns/components/empty/empty.dart';
 import 'package:junghanns/components/loading.dart';
 import 'package:junghanns/components/need_async.dart';
 import 'package:junghanns/components/without_internet.dart';
 import 'package:junghanns/components/without_location.dart';
 import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/provider/provider.dart';
-import 'package:junghanns/services/customer.dart';
 import 'package:junghanns/services/store.dart';
 import 'package:junghanns/styles/color.dart';
 import 'package:junghanns/styles/decoration.dart';
@@ -152,10 +153,8 @@ getCustomerListDB() async {
                 const SizedBox(
                   height: 15,
                 ),
-                Visibility(
-                    visible: provider.connectionStatus < 4 &&
-                        customerList.isNotEmpty,
-                    child: buscador()),customerList.isNotEmpty
+                buscador(),
+                customerList.isNotEmpty
                         ? Expanded(
                             child: SingleChildScrollView(
                                 child: Column(
@@ -195,11 +194,7 @@ getCustomerListDB() async {
                             }).toList(),
                           )))
                         : Expanded(
-                            child: Center(
-                                child: Text(
-                            "Sin clientes",
-                            style: TextStyles.blue18SemiBoldIt,
-                          )))
+                            child: empty(context))
               ],
             ),
           )),
@@ -213,9 +208,9 @@ getCustomerListDB() async {
           color: ColorsJunghanns.lightBlue,
           padding: EdgeInsets.only(
               right: 15, left: 10, top: 10, bottom: size.height * .06),
-          child: Column(
+          child: const Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
+            children: [
               Text(
                 "Ruta de trabajo",
                 style: TextStyles.blue27_7,
@@ -274,8 +269,7 @@ getCustomerListDB() async {
         margin: const EdgeInsets.only(left: 15, right: 15, top: 5, bottom: 5),
         child: TextFormField(
             controller: buscadorC,
-            onEditingComplete: funSearch,
-            onChanged: (value) => funEmpty(value),
+            onChanged: (value) => funSearch(),
             textAlignVertical: TextAlignVertical.center,
             style: TextStyles.blueJ15SemiBold,
             decoration: InputDecoration(
@@ -287,10 +281,10 @@ getCustomerListDB() async {
               enabledBorder: OutlineInputBorder(
                 borderSide:
                     const BorderSide(width: 1, color: ColorsJunghanns.blue),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(8),
               ),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10.0),
+                borderRadius: BorderRadius.circular(8),
               ),
               suffixIcon: const Padding(
                   padding: EdgeInsets.only(top: 10, bottom: 10, right: 10),
@@ -318,18 +312,18 @@ getCustomerListDB() async {
         for (var element in customerList) {
           if (element.name
               .toLowerCase()
-              .startsWith(buscadorC.text.toLowerCase())) {
+              .contains(buscadorC.text.toLowerCase())) {
             searchList.add(element);
           } else {
             if (element.address
                 .toLowerCase()
-                .startsWith(buscadorC.text.toLowerCase())) {
+                .contains(buscadorC.text.toLowerCase())) {
               searchList.add(element);
             } else {
               if (element.idClient
                   .toString()
                   .toLowerCase()
-                  .startsWith(buscadorC.text.toLowerCase())) {
+                  .contains(buscadorC.text.toLowerCase())) {
                 searchList.add(element);
               }
             }

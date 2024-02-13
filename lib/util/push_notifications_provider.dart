@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:developer';
+
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
-////////////
 class NotificationService {
   //NotificationService a singleton object
   static final NotificationService _notificationService =
@@ -22,18 +22,18 @@ class NotificationService {
       FlutterLocalNotificationsPlugin();
 
   Future<void> init() async {
-    print("------------------ NotificationService ---------------------");
-    final AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+    log("------------------ NotificationService ---------------------");
+    const AndroidInitializationSettings initializationSettingsAndroid =
+        AndroidInitializationSettings('@mipmap/launcher_icon');
 
-    final IOSInitializationSettings initializationSettingsIOS =
+    const IOSInitializationSettings initializationSettingsIOS =
         IOSInitializationSettings(
       requestSoundPermission: false,
       requestBadgePermission: false,
       requestAlertPermission: false,
     );
 
-    final InitializationSettings initializationSettings =
+    const InitializationSettings initializationSettings =
         InitializationSettings(
             android: initializationSettingsAndroid,
             iOS: initializationSettingsIOS,
@@ -45,19 +45,18 @@ class NotificationService {
         onSelectNotification: selectNotification);
   }
 
-  AndroidNotificationDetails _androidNotificationDetails =
-      AndroidNotificationDetails(
+  final AndroidNotificationDetails _androidNotificationDetails =
+      const AndroidNotificationDetails(
     'channel ID',
     'channel name',
     playSound: true,
     priority: Priority.high,
     importance: Importance.high,
   );
-  IOSNotificationDetails _iosNotificationDetails =
-      IOSNotificationDetails(sound: 'slow_spring_board.aiff');
+  final IOSNotificationDetails _iosNotificationDetails =
+      const IOSNotificationDetails(sound: 'slow_spring_board.aiff');
 
   Future<void> showNotifications(String title, String body) async {
-    log("aqui tambien llega");
     try{
     await flutterLocalNotificationsPlugin.show(
       0,

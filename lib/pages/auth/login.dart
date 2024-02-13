@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:developer';
+
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:device_information/device_information.dart';
@@ -8,7 +9,6 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:junghanns/components/without_internet.dart';
-import 'package:junghanns/pages/home/home_principal.dart';
 import 'package:junghanns/pages/opening.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/provider/provider.dart';
@@ -17,6 +17,7 @@ import 'package:junghanns/util/location.dart';
 import 'package:mac_address/mac_address.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
+
 import '../../components/loading.dart';
 import '../../styles/color.dart';
 import '../../styles/decoration.dart';
@@ -41,7 +42,18 @@ class _LoginState extends State<Login> {
   @override
   void initState() {
     super.initState();
-    _currentLocation=Position(altitude: 1,longitude: 0, accuracy: 1, heading: 1, latitude: 0, speed: 1, speedAccuracy: 1, timestamp: DateTime.now(),);
+    _currentLocation = Position(
+      altitudeAccuracy: 1,
+      headingAccuracy: 1,
+      altitude: 1,
+      longitude: 0, 
+      accuracy: 1, 
+      heading: 1, 
+      latitude: 0, 
+      speed: 1, 
+      speedAccuracy: 1, 
+      timestamp: DateTime.now()
+    );
     userC = TextEditingController();
     passC = TextEditingController();
   }
@@ -62,16 +74,16 @@ class _LoginState extends State<Login> {
     String modelo=await DeviceInformation.deviceModel;
     String marca=await DeviceInformation.deviceManufacturer;
     if(_currentLocation.latitude!=0&&_currentLocation.longitude!=0){
-      log("esto enviamos ${{
-          "user": userC.text,
-          "pass": passC.text,
-          "marca":marca,
-          "modelo":modelo,
-          "version_so":versionSo,
-          "serial":serial.replaceAll(":", ""),
-          "lat":_currentLocation.latitude,
-          "lon":_currentLocation.longitude
-        }}");
+      log('''esto enviamos 
+          user ${userC.text},
+          pass: ${passC.text},
+          marca:${marca},
+          modelo:${modelo},
+          version_so:${versionSo},
+          serial:${serial.replaceAll(":", "")},
+          lat:${_currentLocation.latitude},
+          lon:${_currentLocation.longitude}
+        ''');
     return {
           "user": userC.text,
           "pass": passC.text,
@@ -110,8 +122,7 @@ class _LoginState extends State<Login> {
         isLoading = true;
       });
       if (userC.text.isNotEmpty && passC.text.isNotEmpty) {
-        Map<String, dynamic> data =
-        (await getDataLogin())??{};
+        
         // {
         //   "user": userC.text,
         //   "pass": passC.text,
@@ -130,6 +141,7 @@ class _LoginState extends State<Login> {
               webShowClose: true,
             );
           } else {
+            log("Respuesta 123456787899");
             prefs.clientSecret = answer.body["client_secret"];
             await getToken(userC.text).then((answer1) async {
               if (answer1.error) {
@@ -146,6 +158,7 @@ class _LoginState extends State<Login> {
                 );
               } else {
                 prefs.token = answer1.body["token"];
+                Map<String, dynamic> data = (await getDataLogin()) ?? {};
                 await login(data).then((answer2) {
                   log(answer2.body.toString());
                   if (answer2.error) {
@@ -200,7 +213,7 @@ class _LoginState extends State<Login> {
                     });
                     FirebaseMessaging messaging = FirebaseMessaging.instance;
                     messaging.getToken().then((value) async {
-                      log("Token Messaging =======> ${value.toString()}");
+                      print("Token Messaging =======> ${value.toString()}");
                       await updateToken(value.toString()).then((answer) {
                         if (answer.error) {
                           Fluttertoast.showToast(

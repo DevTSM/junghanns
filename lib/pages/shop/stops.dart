@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:developer';
 
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geolocator/geolocator.dart';
@@ -55,29 +55,29 @@ class _StopsState extends State<Stops> {
   getDataStops() async {
     Timer(const Duration(milliseconds: 1000), () async {
       if (provider.connectionStatus < 4) {
-    await getStopsList().then((answer) {
-      setState(() {
-        isLoading = false;
-      });
-      if (answer.error) {
-        Fluttertoast.showToast(
-          msg: "Sin paradas",
-          timeInSecForIosWeb: 2,
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.TOP,
-          webShowClose: true,
-        );
+        await getStopsList().then((answer) {
+          setState(() {
+            isLoading = false;
+          });
+          if (answer.error) {
+            Fluttertoast.showToast(
+              msg: "Sin paradas",
+              timeInSecForIosWeb: 2,
+              toastLength: Toast.LENGTH_LONG,
+              gravity: ToastGravity.TOP,
+              webShowClose: true,
+            );
+          } else {
+            stopList.clear();
+            answer.body.map((e) {
+              stopList.add(StopModel.fromService(e));
+            }).toList();
+          }
+        });
       } else {
-        stopList.clear();
-        answer.body.map((e) {
-          stopList.add(StopModel.fromService(e));
-        }).toList();
-      }
-    });
-      }else{
         setState(() {
-        isLoading = false;
-      });
+          isLoading = false;
+        });
       }
     });
   }
@@ -115,64 +115,75 @@ class _StopsState extends State<Stops> {
       Position _currentLocation = await Geolocator.getCurrentPosition();
       latStop = _currentLocation.latitude;
       lngStop = _currentLocation.longitude;
-      log("Coordenadas : $latStop, $lngStop  ${widget.customerCurrent.lat} ${widget.customerCurrent.lng} ===> ${Geolocator.distanceBetween(
-                  _currentLocation.latitude,
-                  _currentLocation.longitude,
-                  widget.customerCurrent.lat,
-                  widget.customerCurrent.lng)} <====> ${widget.distance}" );
+      log("Coordenadas : $latStop, $lngStop  ${widget.customerCurrent.lat} ${widget.customerCurrent.lng} ===> ${Geolocator.distanceBetween(_currentLocation.latitude, _currentLocation.longitude, widget.customerCurrent.lat, widget.customerCurrent.lng)} <====> ${widget.distance}");
       if (Geolocator.distanceBetween(
-                  _currentLocation.latitude,
-                  _currentLocation.longitude,
-                  widget.customerCurrent.lat,
-                  widget.customerCurrent.lng) <
-              widget.distance) {
-          Map<String, dynamic> data = {
-            "id_cliente": widget.customerCurrent.idClient.toString(),
-            "id_parada": stopCurrent.id,
-            "lat": "$latStop",
-            "lon": "$lngStop",
-            "id_data_origen": widget.customerCurrent.id,
-            "tipo": widget.customerCurrent.typeVisit.characters.first
-          };
-          Map<String, dynamic> dataOff = {
-            "idCustomer": widget.customerCurrent.idClient,
-            "idStop": stopCurrent.id,
-            "lat": "${widget.customerCurrent.lat}",
-            "lng": "${widget.customerCurrent.lng}",
-            "idOrigin": widget.customerCurrent.id,
-            "fecha":DateTime.now().toString(),
-            "type": widget.customerCurrent.typeVisit.characters.first,
-            "isUpdate":0
-          };
-           int id=await handler.insertStopOff(dataOff);
-            data["id_local"]=id;
-          await postStop(data).then((answer) {
-            setState(() {
-              isLoading = false;
-            });
-            if (!answer.error){
-              handler.updateStopOff(1,id );
-            }else{
-              provider.isNeedAsync=true;
-            }
+              _currentLocation.latitude,
+              _currentLocation.longitude,
+              widget.customerCurrent.lat,
+              widget.customerCurrent.lng) <
+          widget.distance) {
+        Map<String, dynamic> data = {
+          "id_cliente": widget.customerCurrent.idClient.toString(),
+          "id_parada": stopCurrent.id,
+          "lat": "$latStop",
+          "lon": "$lngStop",
+          "id_data_origen": widget.customerCurrent.id,
+          "tipo": widget.customerCurrent.typeVisit.characters.first
+        };
+        Map<String, dynamic> dataOff = {
+          "idCustomer": widget.customerCurrent.idClient,
+          "idStop": stopCurrent.id,
+          "lat": "${widget.customerCurrent.lat}",
+          "lng": "${widget.customerCurrent.lng}",
+          "idOrigin": widget.customerCurrent.id,
+          "fecha": DateTime.now().toString(),
+          "type": widget.customerCurrent.typeVisit.characters.first,
+          "isUpdate": 0
+        };
+        int id = await handler.insertStopOff(dataOff);
+        data["id_local"] = id;
+        await postStop(data).then((answer) {
+          setState(() {
+            isLoading = false;
           });
-          log("aqui ................");
-          widget.customerCurrent.addHistory({
-    'fecha':DateTime.now().toString(),
-    'tipo':"PARADA",
-    'descripcion':"${stopCurrent.id} - ${stopCurrent.description}",
-    'importe':0,
-    'cantidad':1
-  });
-          widget.customerCurrent.setType(7);
+          if (prefs.token == "") {
           Fluttertoast.showToast(
-                msg: "Parada asignada con exito",
-                timeInSecForIosWeb: 2,
-                toastLength: Toast.LENGTH_LONG,
-                gravity: ToastGravity.TOP,
-                webShowClose: true,
-              );
-              Navigator.pop(context);
+            msg: "Las credenciales caducaron.",
+            timeInSecForIosWeb: 2,
+            toastLength: Toast.LENGTH_LONG,
+            gravity: ToastGravity.TOP,
+            webShowClose: true,
+          );
+          Timer(const Duration(milliseconds: 2000), () async {
+              Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+            });
+        }else{
+          if (!answer.error) {
+            handler.updateStopOff(1, id);
+          } else {
+            provider.isNeedAsync = true;
+          }
+          widget.customerCurrent.addHistory({
+          'fecha': DateTime.now().toString(),
+          'tipo': "PARADA",
+          'descripcion': "${stopCurrent.id} - ${stopCurrent.description}",
+          'importe': 0,
+          'cantidad': 1
+        });
+        widget.customerCurrent.setType(7);
+        return AwesomeDialog(
+          context: context,
+          dialogType:
+             !answer.error?DialogType.success:answer.status == 1002?DialogType.warning:DialogType.error,
+          animType: AnimType.rightSlide,
+          title:answer.status == 1002 ||!answer.error? 'Parada registrada con exito' : '¡Upss!',
+          desc: answer.error?answer.status == 1002 ? messajeConnection : answer.message:null,
+          dismissOnTouchOutside: false,
+          btnOkText: "Aceptar",
+          btnOkOnPress: () => Navigator.pop(context, true),
+        ).show();
+        }
+        }); 
       } else {
         Navigator.pop(context);
         Fluttertoast.showToast(
@@ -195,33 +206,26 @@ class _StopsState extends State<Stops> {
     provider = Provider.of<ProviderJunghanns>(context);
     return Scaffold(
       backgroundColor: ColorsJunghanns.white,
-      appBar: AppBar(
-        backgroundColor: ColorsJunghanns.whiteJ,
-        systemOverlayStyle: const SystemUiOverlayStyle(
-            statusBarColor: ColorsJunghanns.whiteJ,
-            statusBarIconBrightness: Brightness.dark,
-            statusBarBrightness: Brightness.dark),
-        leading: GestureDetector(
-          child: Container(
-              padding: const EdgeInsets.only(left: 24),
-              child: Image.asset("assets/icons/menu.png")),
-          onTap: () {},
-        ),
-        elevation: 0,
-      ),
+      appBar:  PreferredSize(
+                preferredSize: const Size.fromHeight(0),
+                child: Container(),),
       body: Container(
           color: ColorsJunghanns.whiteJ,
           child: Stack(children: [
             Column(
               children: [
-                provider.connectionStatus == 4? const WithoutInternet():provider.isNeedAsync?const NeedAsync():Container(),
+                provider.connectionStatus == 4
+                    ? const WithoutInternet()
+                    : provider.isNeedAsync
+                        ? const NeedAsync()
+                        : Container(),
                 fakeStop(),
                 typesOfStops(),
               ],
             ),
             Visibility(visible: isLoading, child: const LoadingJunghanns())
           ])),
-      bottomNavigationBar: bottomBar(() {}, 2, isHome: false, context: context),
+      bottomNavigationBar: bottomBar(() {}, 2,context, isHome: false),
     );
   }
 
@@ -251,7 +255,7 @@ class _StopsState extends State<Stops> {
               "Si",
               () => () {
                     Navigator.pop(context);
-                      funSelectStop();
+                    funSelectStop();
                   },
               Decorations.blueBorder12),
           buttomSale(
@@ -349,33 +353,33 @@ class _StopsState extends State<Stops> {
 
   Widget typesOfStops() {
     return Expanded(
-            child: Container(
-                padding: const EdgeInsets.only(left: 20, right: 20),
-                margin: const EdgeInsets.only(top: 20),
-                child: FutureBuilder(
-                    future: handler.retrieveStop(),
-                    builder: (BuildContext context,
-                        AsyncSnapshot<List<StopModel>> snapshot) {
-                      if (snapshot.hasData) {
-                        return GridView.custom(
-                          gridDelegate: SliverWovenGridDelegate.count(
-                            crossAxisCount: 3,
-                            mainAxisSpacing: 8,
-                            crossAxisSpacing: 10,
-                            pattern: const [
-                              WovenGridTile(.8),
-                            ],
-                          ),
-                          childrenDelegate: SliverChildBuilderDelegate(
-                            (context, index) => index != snapshot.data?.length
-                                ? stop(snapshot.data![index])
-                                : Container(),
-                            childCount: snapshot.data?.length,
-                          ),
-                        );
-                      } else {
-                        return Container();
-                      }
-                    })));
+        child: Container(
+            padding: const EdgeInsets.only(left: 20, right: 20),
+            margin: const EdgeInsets.only(top: 20),
+            child: FutureBuilder(
+                future: handler.retrieveStop(),
+                builder: (BuildContext context,
+                    AsyncSnapshot<List<StopModel>> snapshot) {
+                  if (snapshot.hasData) {
+                    return GridView.custom(
+                      gridDelegate: SliverWovenGridDelegate.count(
+                        crossAxisCount: 3,
+                        mainAxisSpacing: 8,
+                        crossAxisSpacing: 10,
+                        pattern: const [
+                          WovenGridTile(.8),
+                        ],
+                      ),
+                      childrenDelegate: SliverChildBuilderDelegate(
+                        (context, index) => index != snapshot.data?.length
+                            ? stop(snapshot.data![index])
+                            : Container(),
+                        childCount: snapshot.data?.length,
+                      ),
+                    );
+                  } else {
+                    return Container();
+                  }
+                })));
   }
 }

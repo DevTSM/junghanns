@@ -111,6 +111,7 @@ class ProductModel {
     this.stock=stock;
     this.stockLocal=stockLocal;
   }
+  set setPrice(double price)=>this.price=price;
   factory ProductModel.fromServiceRefill(Map<String, dynamic> data) {
     return ProductModel(
         idProduct: data["idProductoServicio"] ?? 0,

@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:developer';
 
 import 'package:auto_size_text/auto_size_text.dart';
@@ -14,6 +13,7 @@ import 'package:junghanns/services/auth.dart';
 import 'package:location/location.dart';
 import 'package:pin_code_text_field/pin_code_text_field.dart';
 import 'package:provider/provider.dart';
+
 import '../../components/loading.dart';
 import '../../styles/color.dart';
 import '../../styles/decoration.dart';
@@ -39,9 +39,9 @@ class _GetBranchState extends State<GetBranch> {
     super.initState();
     pinC = TextEditingController();
     token = TextEditingController();
-    currentLocation=LocationData.fromMap({});
-    isLoading=false;
-    isValitedOtp=false;
+    currentLocation = LocationData.fromMap({});
+    isLoading = false;
+    isValitedOtp = false;
   }
   
   setCurrentLocation() async {
@@ -93,7 +93,10 @@ class _GetBranchState extends State<GetBranch> {
           });
           if(answer.error){
             Fluttertoast.showToast(
-          msg: answer.message,
+          msg: answer.message 
+          == "No es posible realizar una activación fuera del CEDIS."
+            ? "Solo se pueden realizar activaciones dentro del CEDIS" 
+            : "Acceso denegado. El token ingresado es incorrecto.",
           timeInSecForIosWeb: 2,
           toastLength: Toast.LENGTH_LONG,
           gravity: ToastGravity.TOP,
@@ -101,7 +104,7 @@ class _GetBranchState extends State<GetBranch> {
         );
           }else{
             setState(() {
-              isValitedOtp=true;
+              isValitedOtp = true;
             });
           }
         });
@@ -119,7 +122,7 @@ class _GetBranchState extends State<GetBranch> {
     });
       if(answer.error){
         Fluttertoast.showToast(
-          msg: answer.message,
+          msg: "Acceso denegado. El token ingresado es incorrecto.",
           timeInSecForIosWeb: 2,
           toastLength: Toast.LENGTH_LONG,
           gravity: ToastGravity.TOP,
@@ -204,7 +207,7 @@ class _GetBranchState extends State<GetBranch> {
           alignment: Alignment.center,
           color: ColorsJunghanns.greenJ,
           child: Text(
-            "Iniciar sesión",
+            "Activar",
             style: TextStyles.white16SemiBoldIt,
           ),
         ),
@@ -267,7 +270,8 @@ class _GetBranchState extends State<GetBranch> {
             children: [
               Container(
                 alignment: Alignment.centerLeft,
-                child:IconButton(onPressed: ()=>setState((){isValitedOtp=false;}), icon: Icon(Icons.arrow_back_ios,color: ColorsJunghanns.green,))),
+                child:IconButton(onPressed: ()=> setState((){ isValitedOtp=false;
+                pinC.clear();}), icon: Icon(Icons.arrow_back_ios,color: ColorsJunghanns.green,))),
               //Info Phone
               Container(
                       padding: const EdgeInsets.only(bottom: 5),
@@ -296,7 +300,7 @@ class _GetBranchState extends State<GetBranch> {
               Container(
                         margin: const EdgeInsets.only(left: 15,right: 15),
                         width: size.width,
-                        height: 35,
+                        height: 45,
                         child: ButtonJunghanns(
                             fun: () {
                               log("RESEND CODE");

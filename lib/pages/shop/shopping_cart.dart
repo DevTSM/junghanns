@@ -1,43 +1,41 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
+
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:device_info_plus/device_info_plus.dart';
-import 'package:flutter/gestures.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:junghanns/components/modal/show_brand.dart';
-import 'package:junghanns/components/need_async.dart';
-import 'package:junghanns/database/async.dart';
-import 'package:junghanns/models/folio.dart';
-import 'package:junghanns/services/customer.dart';
-import 'package:junghanns/widgets/card/product.dart';
-import 'package:location/location.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:junghanns/components/bottom_bar.dart';
 import 'package:junghanns/components/button.dart';
 import 'package:junghanns/components/loading.dart';
+import 'package:junghanns/components/modal/show_brand.dart';
+import 'package:junghanns/components/need_async.dart';
 import 'package:junghanns/components/without_internet.dart';
 import 'package:junghanns/models/authorization.dart';
 import 'package:junghanns/models/config.dart';
 import 'package:junghanns/models/customer.dart';
+import 'package:junghanns/models/folio.dart';
 import 'package:junghanns/models/product.dart';
 import 'package:junghanns/models/shopping_basket.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/provider/provider.dart';
 import 'package:junghanns/services/auth.dart';
+import 'package:junghanns/services/customer.dart';
 import 'package:junghanns/services/store.dart';
 import 'package:junghanns/styles/color.dart';
 import 'package:junghanns/styles/decoration.dart';
 import 'package:junghanns/styles/text.dart';
-import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:junghanns/widgets/card/product.dart';
+import 'package:location/location.dart';
 import 'package:provider/provider.dart';
-import 'package:speed_test_dart/speed_test_dart.dart';
 
 import '../../models/method_payment.dart';
 
@@ -87,7 +85,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
     super.initState();
     productsList = [];
     productListOther = [];
-    paymentsRecovery=[];
+    paymentsRecovery = [];
     folios = [];
     secWayToPay = SecondWayToPay(wayToPay: "", typeWayToPay: "", cost: 0);
     distance = 0;
@@ -102,44 +100,60 @@ class _ShoppingCartState extends State<ShoppingCart> {
   @override
   void dispose() {
     super.dispose();
-    provider.initShopping(CustomerModel.fromState());
   }
 
   getProductLocal() async {
     Timer(const Duration(milliseconds: 1000), () async {
       provider.initShopping(widget.customerCurrent,
-          auth: widget.authList.isNotEmpty ? widget.authList.first : null);
+          auth: widget.authList.isNotEmpty
+              ? widget.authList.first
+              : null);
       List<ProductModel> dataList = await handler.retrieveProducts();
       dataList.map((e) {
         if (provider.basketCurrent.authCurrent.idAuth == 0) {
+          
           if (e.stock > 0) {
             setState(() {
               productsList.add(e);
             });
           }
         } else {
-          if (e.idProduct ==
-              provider.basketCurrent.authCurrent.product.idProduct) {
+          log("La autorizacion tiene el producto ${
+            provider.basketCurrent.authCurrent.product.idProduct
+          }");
+          if (e.idProduct == provider.basketCurrent.authCurrent.product.idProduct) {
             setState(() {
               ProductModel product =
-                  ProductModel.fromProduct(widget.authList.first.product);
+                ProductModel.fromProduct(provider.basketCurrent.authCurrent.product);
               product.setStock(
-                  provider.basketCurrent.authCurrent.product.stock <= e.stock
-                      ? provider.basketCurrent.authCurrent.product.stock
+                  product.stock <= e.stock
+                      ? product.stock
                       : e.stock,
                   e.stock);
-              productsList.add(product);
+                  log("========> Producto ${product.getMap()}");
+              //validamos que la autorización sea de precio especial para asignar el precio correspondiente
+              //TODO: quitar esta validacion
+              // if (provider.basketCurrent.authCurrent.authText == "PRECIO ESPECIAL") {
+              //     product.setPrice = widget.customerCurrent.priceLiquid;
+              // }
+                productsList.add(product);
             });
           }
         }
       }).toList();
+      var priceEspecialList=productsList.where((e)=>e.idProduct==22);
+      if(priceEspecialList.isNotEmpty&& widget.customerCurrent.isAuthPrice==0&&provider.basketCurrent.authCurrent.idAuth == 0){
+        log("========> Producto ${widget.customerCurrent.isAuthPrice}");
+        setState(() {
+          priceEspecialList.first.setPrice=widget.customerCurrent.priceLiquid;
+        });
+      }
       setState(() {
         var exits = productsList.where((element) => element.rank == "");
         productListOther = exits.toList();
         isOtherProduct =
             (productsList.where((element) => element.rank != "").isEmpty);
       });
-      checkPriceCvsPriceS();
       getDataPayment();
       folios = await handler.retrieveFolios();
     });
@@ -163,7 +177,6 @@ class _ShoppingCartState extends State<ShoppingCart> {
     List<MethodPayment> paymentsListT = [];
     await getPaymentMethods(widget.customerCurrent.idClient, prefs.idRouteD)
         .then((answer) {
-          log("metodos de pago=====> ${answer.body}"); 
       if (!answer.error) {
         answer.body.map((e) {
           paymentsListT.add(MethodPayment.fromService(e));
@@ -182,8 +195,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
       widget.customerCurrent.setPayment(paymentsListT);
     }
     //respladamos la lista de formas de pago
-      paymentsRecovery=widget.customerCurrent.payment;
-    log("metodos de pago=====> ${widget.customerCurrent.payment.length}"); 
+    paymentsRecovery = widget.customerCurrent.payment;
 
     if (provider.basketCurrent.authCurrent.idAuth != 0) {
       //Aqui se valida si existe la autorizacion para filtrar los metodos de pago
@@ -195,9 +207,18 @@ class _ShoppingCartState extends State<ShoppingCart> {
     }
     if (paymentsList.isEmpty) {
       //Se agregan todos lo metodos de pago si no hay autorizacion
+      if(provider.basketCurrent.authCurrent.idAuth != 0){
+        log("=====> Hay una autorización");
+         widget.customerCurrent.payment
+          .map((e) => e.wayToPay != "Monedero" && e.idAuth == -1 
+            ? paymentsList.add(e)
+            : null 
+          ).toList();
+      }else{
       widget.customerCurrent.payment
           .map((e) => e.wayToPay != "Monedero" ? paymentsList.add(e) : null)
           .toList();
+      }
       //Se agrega metodo de pago "Monedero"
       if (widget.customerCurrent.purse > 0 &&
           widget.customerCurrent.payment
@@ -291,15 +312,16 @@ class _ShoppingCartState extends State<ShoppingCart> {
                       : textTwoWayToPay(
                           methodCurrent.wayToPay, widget.customerCurrent.purse),
                   Visibility(
-                      visible:
-                          provider.basketCurrent.authCurrent.authText.toUpperCase() == "GARRAFON A LA PAR",
+                      visible: provider.basketCurrent.authCurrent.authText
+                              .toUpperCase() ==
+                          "GARRAFON A LA PAR",
                       child: DefaultTextStyle(
                           style: TextStyles.blueJ215R,
                           child: RichText(
                               text: TextSpan(children: [
                             TextSpan(
                                 text:
-                                    "Marca de garrafon: ${provider.basketCurrent.brandJug["descripcion"]??"No se proporciono"} ",
+                                    "Marca de garrafon: ${provider.basketCurrent.brandJug["descripcion"] ?? "No se proporciono"} ",
                                 style: TextStyles.blueJ215R),
                             // TextSpan(
                             //   text: "Editar",
@@ -358,21 +380,21 @@ class _ShoppingCartState extends State<ShoppingCart> {
                                   if (latSale != 0 && lngSale != 0) {
                                     //se valida si es comodato
                                     if (methodCurrent.wayToPay == "Comodato") {
-                                      getPhonesCustomer(
+                                      await getPhonesCustomer(
                                               widget.customerCurrent.idClient)
-                                          .then((answer) {
+                                          .then((answer) async {
                                         setState(() {
                                           isLoading = false;
                                         });
                                         if (answer.error) {
                                           Fluttertoast.showToast(
-                                            msg:
-                                                "Ocurrio un error al obtener lo numeros de telefono",
-                                            timeInSecForIosWeb: 4,
-                                            toastLength: Toast.LENGTH_LONG,
-                                            gravity: ToastGravity.TOP,
-                                            webShowClose: true,
-                                          );
+                                              msg: answer.status == 1002
+                                                  ? 'No es posible la autorización de comodatos sin red, revisa tu conexión de internet'
+                                                  : 'Ocurrio un error al obtener lo numeros de telefono',
+                                              timeInSecForIosWeb: 2,
+                                              toastLength: Toast.LENGTH_LONG,
+                                              gravity: ToastGravity.TOP,
+                                              webShowClose: true);
                                         } else {
                                           List<String> phones = [];
                                           (answer.body["telefonos"] ?? [])
@@ -472,51 +494,63 @@ class _ShoppingCartState extends State<ShoppingCart> {
                     children: [
                       Expanded(
                           child: ButtonJunghanns(
-                              fun: () async {
-                                Fluttertoast.showToast(
-                                  msg: "Verificando autorización ......",
-                                  timeInSecForIosWeb: 2,
-                                  toastLength: Toast.LENGTH_LONG,
-                                  gravity: ToastGravity.TOP,
-                                  webShowClose: true,
-                                );
-                                await getStatusComodato(id).then((answer) {
-                                  if (answer.error) {
-                                    Fluttertoast.showToast(
-                                      msg: "No se pudo verificar",
-                                      timeInSecForIosWeb: 2,
-                                      toastLength: Toast.LENGTH_LONG,
-                                      gravity: ToastGravity.TOP,
-                                      webShowClose: true,
-                                    );
-                                  } else {
-                                    if (answer.body["estatus"] == "A") {
+                              fun: provider.isProcessValidate
+                                  ? () {}
+                                  : () async {
                                       Fluttertoast.showToast(
-                                        msg: "Autorización verificada",
+                                        msg: "Verificando autorización ......",
                                         timeInSecForIosWeb: 2,
                                         toastLength: Toast.LENGTH_LONG,
                                         gravity: ToastGravity.TOP,
                                         webShowClose: true,
                                       );
-                                      Navigator.pop(context);
-                                      provider.basketCurrent.folio = int.parse(
-                                          answer.body["folio"] ?? "-1");
-                                      funSale(methodCurrent);
-                                    } else {
-                                      Fluttertoast.showToast(
-                                        msg: "Aun no se ha verificado.",
-                                        timeInSecForIosWeb: 2,
-                                        toastLength: Toast.LENGTH_LONG,
-                                        gravity: ToastGravity.TOP,
-                                        webShowClose: true,
-                                      );
-                                    }
-                                  }
-                                });
-                              },
-                              decoration: Decorations.blueBorder12,
+                                      await getStatusComodato(id)
+                                          .then((answer) {
+                                        if (answer.error) {
+                                          Fluttertoast.showToast(
+                                            msg: "No se pudo verificar",
+                                            timeInSecForIosWeb: 2,
+                                            toastLength: Toast.LENGTH_LONG,
+                                            gravity: ToastGravity.TOP,
+                                            webShowClose: true,
+                                          );
+                                        } else {
+                                          //preguntar por el provider
+                                          if (!provider.isProcessValidate) {
+                                            if (answer.body["estatus"] == "A") {
+                                              Fluttertoast.showToast(
+                                                msg: "Autorización verificada",
+                                                timeInSecForIosWeb: 2,
+                                                toastLength: Toast.LENGTH_LONG,
+                                                gravity: ToastGravity.TOP,
+                                                webShowClose: true,
+                                              );
+                                              Navigator.pop(context);
+                                              provider.basketCurrent.folio =
+                                                  int.parse(
+                                                      answer.body["folio"] ??
+                                                          "-1");
+                                              funSale(methodCurrent);
+                                            } else {
+                                              Fluttertoast.showToast(
+                                                msg: "Aun no se ha verificado.",
+                                                timeInSecForIosWeb: 2,
+                                                toastLength: Toast.LENGTH_LONG,
+                                                gravity: ToastGravity.TOP,
+                                                webShowClose: true,
+                                              );
+                                            }
+                                          }
+                                        }
+                                      });
+                                    },
+                              decoration: provider.isProcessValidate
+                                  ? Decorations.blueOpacity(.6, 12)
+                                  : Decorations.blueBorder12,
                               style: TextStyles.white18SemiBoldIt,
-                              label: "Verificar")),
+                              label: provider.isProcessValidate
+                                  ? "Validando..."
+                                  : "Verificar")),
                       // const SizedBox(
                       //   width: 25,
                       // ),
@@ -623,7 +657,8 @@ class _ShoppingCartState extends State<ShoppingCart> {
                                             .idProduct,
                                         provider
                                             .basketCurrent.sales.first.number,
-                                        widget.authList.first.idAuth)
+                                        widget.authList.first.idAuth,
+                                        phoneCurrent)
                                     .then((answer) {
                                   if (answer.error) {
                                     Fluttertoast.showToast(
@@ -641,6 +676,29 @@ class _ShoppingCartState extends State<ShoppingCart> {
                                       gravity: ToastGravity.TOP,
                                       webShowClose: true,
                                     );
+                                    provider.isProcessValidate = false;
+                                    provider.updateComodato =
+                                        (Map<String, dynamic> data) {
+                                      if ((data["validado"] ?? false) == true) {
+                                        Fluttertoast.showToast(
+                                          msg: "Autorización verificada",
+                                          timeInSecForIosWeb: 2,
+                                          toastLength: Toast.LENGTH_LONG,
+                                          gravity: ToastGravity.TOP,
+                                          webShowClose: true,
+                                        );
+                                        Navigator.pop(context);
+                                        funSale(methodCurrent);
+                                      } else {
+                                        Fluttertoast.showToast(
+                                          msg: "Aun no se ha verificado.",
+                                          timeInSecForIosWeb: 2,
+                                          toastLength: Toast.LENGTH_LONG,
+                                          gravity: ToastGravity.TOP,
+                                          webShowClose: true,
+                                        );
+                                      }
+                                    };
                                     showComodatoVerifi(
                                         answer.body["id_solicitud"] ?? 0,
                                         methodCurrent);
@@ -798,22 +856,29 @@ class _ShoppingCartState extends State<ShoppingCart> {
           } else {
             if (provider.basketCurrent.authCurrent.authText.toUpperCase() ==
                 "GARRAFON A LA PAR") {
-              List<Map<String,dynamic>> list=List.from(jsonDecode(prefs.brands!=""?prefs.brands:"[]"));
+              List<Map<String, dynamic>> list = List.from(
+                  jsonDecode(prefs.brands != "" ? prefs.brands : "[]"));
               if (list.isNotEmpty) {
-                    provider.basketCurrent.brandJug = list.first;
-                    showBrand(context,()=>showConfirmSale(widget.customerCurrent.payment.first),provider, list);
-                  }else{
-                    Fluttertoast.showToast(
-          msg:
-              "No se encontraron marcas de garrafon",
-          timeInSecForIosWeb: 2,
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.TOP,
-          webShowClose: true,
-        );
-        provider.basketCurrent.brandJug={"id":0,"descripcion":"Sin marca"};
-        showConfirmSale(widget.customerCurrent.payment.first);
-                  }
+                provider.basketCurrent.brandJug = list.first;
+                showBrand(
+                    context,
+                    () => showConfirmSale(widget.customerCurrent.payment.first),
+                    provider,
+                    list);
+              } else {
+                Fluttertoast.showToast(
+                  msg: "No se encontraron marcas de garrafon",
+                  timeInSecForIosWeb: 2,
+                  toastLength: Toast.LENGTH_LONG,
+                  gravity: ToastGravity.TOP,
+                  webShowClose: true,
+                );
+                provider.basketCurrent.brandJug = {
+                  "id": 0,
+                  "descripcion": "Sin marca"
+                };
+                showConfirmSale(widget.customerCurrent.payment.first);
+              }
             } else {
               showConfirmSale(widget.customerCurrent.payment.first);
             }
@@ -833,15 +898,21 @@ class _ShoppingCartState extends State<ShoppingCart> {
   }
 
   funSale(MethodPayment methodPayment) async {
+    setState(() {
+      isLoading = true;
+    });
+    //validacion de segundo metodo de pago
     if (secWayToPay.wayToPay.isEmpty) {
       provider.basketCurrent.waysToPay.add(WayToPay(
-          type: methodPayment.wayToPay, cost: provider.basketCurrent.totalPrice));
+          type: methodPayment.wayToPay,
+          cost: provider.basketCurrent.totalPrice));
     } else {
       provider.basketCurrent.waysToPay.add(WayToPay(
           type: methodPayment.type, cost: widget.customerCurrent.purse));
       provider.basketCurrent.waysToPay.add(
           WayToPay(type: secWayToPay.typeWayToPay, cost: secWayToPay.cost));
     }
+    //agregamos los productos
     List<Map> listSales = [];
     for (var element in provider.basketCurrent.sales) {
       listSales.add({
@@ -857,40 +928,44 @@ class _ShoppingCartState extends State<ShoppingCart> {
         "precio_unitario": widget.customerCurrent.priceS
       });
     }
-    List<Map<String,dynamic>> listWaysToPay = [];
+    List<Map<String, dynamic>> listWaysToPay = [];
     for (var ele in provider.basketCurrent.waysToPay) {
       listWaysToPay.add({
         "tipo": ele.type,
         "importe": ele.cost,
       });
     }
+    //se validan las autorizaciones
     if (widget.authList.isNotEmpty) {
       provider.basketCurrent.idAuth = widget.authList.first.idAuth;
       widget.authList.removeWhere(
           (element) => element.idAuth == provider.basketCurrent.idAuth);
     }
-
+    //se crea la data default
     Map<String, dynamic> data = {};
-      data["id_cliente"]= provider.basketCurrent.idCustomer;
-      data["id_ruta"]= provider.basketCurrent.idRoute;
-      data["latitud"]= "$latSale";
-      data["longitud"]= "$lngSale";
-      data["venta"]= List.from(listSales.toList());
-      data["formas_de_pago"]=listWaysToPay;
-      data["id_data_origen"]=provider.basketCurrent.idDataOrigin;
-      data["tipo_operacion"]= provider.basketCurrent.typeOperation;
-      
-      if(provider.basketCurrent.brandJug["id"]!=null){
-        data["id_marca_garrafon"]=provider.basketCurrent.brandJug["id"];
-      }
-      if(provider.basketCurrent.idAuth != -1){
-      data["id_autorizacion"]=provider.basketCurrent.idAuth;
-      }
-      if(provider.basketCurrent.folio != -1){
-         data["folio"]= provider.basketCurrent.folio;
-      }
-        data["fecha_entrega"]=DateFormat('yyyy/MM/dd').format(provider.basketCurrent.datePrestamo);
-        
+    data["id_cliente"] = provider.basketCurrent.idCustomer;
+    data["id_ruta"] = provider.basketCurrent.idRoute;
+    data["latitud"] = "$latSale";
+    data["longitud"] = "$lngSale";
+    data["venta"] = List.from(listSales.toList());
+    data["formas_de_pago"] = listWaysToPay;
+    data["id_data_origen"] = provider.basketCurrent.idDataOrigin;
+    data["tipo_operacion"] = provider.basketCurrent.typeOperation;
+    //se valida si se agrega el campo id marca de garrafon (prestamo)
+    if (provider.basketCurrent.brandJug["id"] != null) {
+      data["id_marca_garrafon"] = provider.basketCurrent.brandJug["id"];
+    }
+    //se valida si se agrega el campo autorizacion
+    if (provider.basketCurrent.idAuth != -1) {
+      data["id_autorizacion"] = provider.basketCurrent.idAuth;
+    }
+    //se valida si se agrega el campo folio
+    if (provider.basketCurrent.folio != -1) {
+      data["folio"] = provider.basketCurrent.folio;
+    }
+    data["fecha_entrega"] =
+        DateFormat('yyyy/MM/dd').format(provider.basketCurrent.datePrestamo);
+    //se crea la data local
     Map<String, dynamic> dataLocal = {
       "idCustomer": provider.basketCurrent.idCustomer,
       "idRoute": provider.basketCurrent.idRoute,
@@ -907,94 +982,204 @@ class _ShoppingCartState extends State<ShoppingCart> {
           : null,
       "type": provider.basketCurrent.typeOperation,
       "isUpdate": 0,
-      "fecha":DateTime.now().toString(),
-      "fecha_entrega": provider.basketCurrent.idAuth != -1?DateFormat('yyyy/MM/dd').format(provider.basketCurrent.datePrestamo):null,
-      "id_marca_garrafon":provider.basketCurrent.brandJug["id"]
+      "fecha": DateTime.now().toString(),
+      "fecha_entrega": provider.basketCurrent.idAuth != -1
+          ? DateFormat('yyyy/MM/dd').format(provider.basketCurrent.datePrestamo)
+          : null,
+      "id_marca_garrafon": provider.basketCurrent.brandJug["id"]
     };
+    //se inserta la venta
     int id = await handler.insertSale(dataLocal);
-    data["id_local"]=id;
-    log("Request  post Venta =====> $data");
-    for (var e in provider.basketCurrent.sales) {
-      await handler.updateProductStock((e.stockLocal - e.number), e.idProduct);
-    }
-    if (provider.basketCurrent.idAuth != -1) {
-      widget.customerCurrent.delete(provider.basketCurrent.idAuth);
-    }
-    if (provider.basketCurrent.waysToPay
-        .where((element) => element.type == "Monedero")
-        .isNotEmpty) {
-      log("metodo de pago Monedero ");
-      widget.customerCurrent.setMoney(
-          (widget.customerCurrent.purse -
-                      ((provider.basketCurrent.sales
-                              .map((element) => element.price * element.number)
-                              .toList())
-                          .reduce((value, element) => value + element))) >=
-                  0
-              ? (widget.customerCurrent.purse -
-                  ((provider.basketCurrent.sales
-                          .map((element) => element.price * element.number)
-                          .toList())
-                      .reduce((value, element) => value + element)))
-              : 0,
-          isOffline: true,
-          type: 0);
-    }
-    widget.customerCurrent.addHistory({
-      'fecha': DateTime.now().toString(),
-      'tipo': "VENTA",
-      'descripcion':
-          "${provider.basketCurrent.sales.first.idProduct} - ${provider.basketCurrent.sales.first.description}",
-      'importe': provider.basketCurrent.sales
-          .map((e) => e.number * e.price)
-          .toList()
-          .reduce((value, element) => value + element),
-      'cantidad': provider.basketCurrent.sales
-          .map((e) => e.number)
-          .toList()
-          .reduce((value, element) => value + element)
-    });
-    //validamos la restauracion de los metodos de pago
-    if(provider.basketCurrent.idAuth!=0){
-      listWaysToPay.map((e) =>paymentsRecovery.removeWhere((element) => element.wayToPay.toUpperCase()==e["tipo"].toString().toUpperCase())).toList();
-      widget.customerCurrent.setPayment(paymentsRecovery);
-    }
-    widget.customerCurrent.setType(7);
-    log("se actualizo =====> ${widget.customerCurrent.type}  ${widget.customerCurrent.id}");
-    setState(() {
-      isLoading = true;
-    });
+    // se asigna el id de operacion local para evitar duplicidad
+    data["id_local"] = id;
+    log("venta enviada con :::::::: $data");
+    //se intenta enviar la venta
     await postSale(data).then((answer) async {
       setState(() {
         isLoading = false;
       });
-      log("Respuest de post venta =======> ${answer.body}");
+      //en caso de que la venta se registre con exito
       if (!answer.error) {
-        await handler.updateSale({'isUpdate': 1,
-      'fecha_update':DateTime.now().toString(),
-      'isError':0}, id);
-        Navigator.pop(context,true);
+        //se deshabilita el folio
+        if (provider.basketCurrent.folio != -1) {
+          log("desabilitando folio ${provider.basketCurrent.folio}");
+          var exits = folios.where(
+              (element) => element.number == provider.basketCurrent.folio);
+          if (exits.isNotEmpty) {
+            log("desabilitando folio ${exits.first.status}");
+            exits.first.setStatus = 0;
+            await handler.updateFolio(exits.first);
+          }
+        }
+        //se actualuza el stock
+        for (var e in provider.basketCurrent.sales) {
+          await handler.updateProductStock(
+              (e.stockLocal - e.number), e.idProduct);
+        }
+        //se elimina la autorizacion del cliente en caso de existir
+        if (provider.basketCurrent.idAuth != -1) {
+          widget.customerCurrent.delete(provider.basketCurrent.idAuth);
+        }
+        //se descuenta de monedero en caso de ser usado
+        if (provider.basketCurrent.waysToPay
+            .where((element) => element.type == "Monedero")
+            .isNotEmpty) {
+          widget.customerCurrent.setMoney(
+              (widget.customerCurrent.purse -
+                          ((provider.basketCurrent.sales
+                                  .map((element) =>
+                                      element.price * element.number)
+                                  .toList())
+                              .reduce((value, element) => value + element))) >=
+                      0
+                  ? (widget.customerCurrent.purse -
+                      ((provider.basketCurrent.sales
+                              .map((element) => element.price * element.number)
+                              .toList())
+                          .reduce((value, element) => value + element)))
+                  : 0,
+              isOffline: true,
+              type: 0);
+        }
+        //se agrega al historial
+        widget.customerCurrent.addHistory({
+          'fecha': DateTime.now().toString(),
+          'tipo': "VENTA",
+          'descripcion':
+              "${provider.basketCurrent.sales.first.idProduct} - ${provider.basketCurrent.sales.first.description}",
+          'importe': provider.basketCurrent.sales
+              .map((e) => e.number * e.price)
+              .toList()
+              .reduce((value, element) => value + element),
+          'cantidad': provider.basketCurrent.sales
+              .map((e) => e.number)
+              .toList()
+              .reduce((value, element) => value + element)
+        });
+        //validamos la restauracion de los metodos de pago
+        if (provider.basketCurrent.idAuth != 0) {
+          listWaysToPay
+              .map((e) => paymentsRecovery.removeWhere((element) =>
+                  element.wayToPay.toUpperCase() ==
+                      e["tipo"].toString().toUpperCase() &&
+                  e["tipo"].toString().toUpperCase() != "EFECTIVO"))
+              .toList();
+          log("=====> ${paymentsRecovery.length}");
+          widget.customerCurrent.setPayment(paymentsRecovery);
+        }
+        //se actualiza el cliente a atendidos
+        widget.customerCurrent.setType(7);
+        //se actualiza la venta
+        await handler.updateSale(
+            {'isUpdate': 1, 'fecha': DateTime.now().toString()}, id);
+        //se regresa al dashboard
+        //Navigator.pop(context, true);
+
+        AwesomeDialog(
+          context: context,
+          dialogType: DialogType.success,
+          animType: AnimType.rightSlide,
+          title: 'Venta registrada con exito',
+          dismissOnTouchOutside: false,
+          btnOkText: "Aceptar",
+          btnOkOnPress: () => Navigator.pop(context),
+        ).show();
       } else {
-        if(answer.status==1002){
-        provider.isNeedAsync=true;
-        }else{
-          await handler.updateSale({'isUpdate': 1,
-      'fecha_update':DateTime.now().toString(),
-      'isError':1}, id);
+        //se valida si el error es por falta de red
+        if (answer.status == 1002) {
+          //se habilita el label de sincronizacion necesaria
+          provider.isNeedAsync = true;
+          //se actualuza el stock
+          for (var e in provider.basketCurrent.sales) {
+            await handler.updateProductStock(
+                (e.stockLocal - e.number), e.idProduct);
+          }
+          //se elimina la autorizacion del cliente en caso de existir
+          if (provider.basketCurrent.idAuth != -1) {
+            widget.customerCurrent.delete(provider.basketCurrent.idAuth);
+          }
+          //se descuenta de monedero en caso de ser usado
+          if (provider.basketCurrent.waysToPay
+              .where((element) => element.type == "Monedero")
+              .isNotEmpty) {
+            widget.customerCurrent.setMoney(
+                (widget.customerCurrent.purse -
+                            ((provider.basketCurrent.sales
+                                    .map((element) =>
+                                        element.price * element.number)
+                                    .toList())
+                                .reduce(
+                                    (value, element) => value + element))) >=
+                        0
+                    ? (widget.customerCurrent.purse -
+                        ((provider.basketCurrent.sales
+                                .map(
+                                    (element) => element.price * element.number)
+                                .toList())
+                            .reduce((value, element) => value + element)))
+                    : 0,
+                isOffline: true,
+                type: 0);
+          }
+          //se agrega al historial
+          widget.customerCurrent.addHistory({
+            'fecha': DateTime.now().toString(),
+            'tipo': "VENTA",
+            'descripcion':
+                "${provider.basketCurrent.sales.first.idProduct} - ${provider.basketCurrent.sales.first.description}",
+            'importe': provider.basketCurrent.sales
+                .map((e) => e.number * e.price)
+                .toList()
+                .reduce((value, element) => value + element),
+            'cantidad': provider.basketCurrent.sales
+                .map((e) => e.number)
+                .toList()
+                .reduce((value, element) => value + element)
+          });
+          //validamos la restauracion de los metodos de pago
+          if (provider.basketCurrent.idAuth != 0) {
+            listWaysToPay
+                .map((e) => paymentsRecovery.removeWhere((element) =>
+                    element.wayToPay.toUpperCase() ==
+                        e["tipo"].toString().toUpperCase() &&
+                    e["tipo"].toString().toUpperCase() != "EFECTIVO"))
+                .toList();
+            widget.customerCurrent.setPayment(paymentsRecovery);
+          }
+          //se deshabilita el folio
+          if (provider.basketCurrent.folio != -1) {
+            var exits = folios.where(
+                (element) => element.number == provider.basketCurrent.folio);
+            if (exits.isNotEmpty) {
+              exits.first.setStatus = 0;
+              await handler.updateFolio(exits.first);
+            }
+          }
+          //se actualiza el cliente a atendidos
+          widget.customerCurrent.setType(7);
+        }
+        if (answer.status != 1002) {
+          await handler.updateSale(
+              {'isUpdate': 0, 'fecha': DateTime.now().toString(), 'isError': 1},
+              id);
         }
         return AwesomeDialog(
-            context: context,
-            dialogType: answer.status==1002?DialogType.warning:DialogType.error,
-            animType: AnimType.rightSlide,
-            title: answer.status==1002?'Venta registrada con exito':'¡Upss!',
-            dismissOnTouchOutside: false,
-            desc: answer.status==1002?messajeConnection:answer.message,
-            btnOkText: "Aceptar",
-            btnOkOnPress: ()=>Navigator.pop(context,true),
-            ).show();
+          context: context,
+          dialogType:
+              answer.status == 1002 ? DialogType.warning : DialogType.error,
+          animType: AnimType.rightSlide,
+          title:
+              answer.status == 1002 ? 'Venta registrada con exito' : '¡Upss!',
+          dismissOnTouchOutside: false,
+          desc: answer.status == 1002 ? messajeConnection : answer.message,
+          btnOkText: "Aceptar",
+          btnOkOnPress: () => Navigator.pop(context, true),
+        ).show();
       }
     });
   }
+
+  setDataSuccess() {}
 
   @override
   Widget build(BuildContext context) {
@@ -1002,25 +1187,9 @@ class _ShoppingCartState extends State<ShoppingCart> {
     provider = Provider.of<ProviderJunghanns>(context);
     return Scaffold(
       backgroundColor: ColorsJunghanns.white,
-      appBar: AppBar(
-        backgroundColor: ColorsJunghanns.greenJ,
-        systemOverlayStyle: const SystemUiOverlayStyle(
-            statusBarColor: ColorsJunghanns.greenJ,
-            statusBarIconBrightness: Brightness.light,
-            statusBarBrightness: Brightness.light),
-        leading: Container(),
-        elevation: 0,
-        actions: [
-          Container(
-            alignment: Alignment.center,
-            padding: const EdgeInsets.only(right: 15),
-            child: Text(
-              "${prefs.labelCedis} V$version",
-              style: TextStyles.blue18SemiBoldIt,
-            ),
-          ),
-        ],
-      ),
+      appBar: PreferredSize(
+                preferredSize: const Size.fromHeight(0),
+                child: Container(),),
       body: Stack(
         children: [
           header(),
@@ -1029,7 +1198,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
         ],
       ),
       bottomNavigationBar:
-          bottomBar(() {}, widget.index, isHome: false, context: context),
+          bottomBar(() {}, widget.index,context, isHome: false),
     );
   }
 
@@ -1046,9 +1215,10 @@ class _ShoppingCartState extends State<ShoppingCart> {
           ? Center(
               child: Text(
               widget.authList.isNotEmpty
-                  ? "No hay stock para la autorizacion ${widget.authList.first.product.idProduct}"
+                  ? "No hay suficiente stock de ${widget.authList.first.product.description} para la autorizacion"
                   : "Sin productos",
               style: TextStyles.blue18SemiBoldIt,
+              textAlign: TextAlign.center,
             ))
           : Column(
               children: [
@@ -1129,7 +1299,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
                         margin: const EdgeInsets.only(
                             left: 15, right: 15, bottom: 10, top: 10),
                         width: double.infinity,
-                        height: 40,
+                        height: 45,
                         alignment: Alignment.center,
                         child: ButtonJunghanns(
                           decoration: Decorations.blueBorder12,
@@ -1153,7 +1323,11 @@ class _ShoppingCartState extends State<ShoppingCart> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              provider.connectionStatus == 4? const WithoutInternet():provider.isNeedAsync?const NeedAsync():Container(),
+              provider.connectionStatus == 4
+                  ? const WithoutInternet()
+                  : provider.isNeedAsync
+                      ? const NeedAsync()
+                      : Container(),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -1341,12 +1515,12 @@ class _ShoppingCartState extends State<ShoppingCart> {
               borderSide: errFolio == ""
                   ? const BorderSide(width: 1, color: ColorsJunghanns.blueJ3)
                   : const BorderSide(width: 1, color: Colors.red),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(8),
             ),
             focusedBorder: OutlineInputBorder(
               borderSide:
                   const BorderSide(width: 2, color: ColorsJunghanns.blueJ),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(8),
             ),
           )),
     );
@@ -1371,6 +1545,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
             });
           } else {
             if (exits.first.status == 1) {
+              log("se encontro exitosamente el folio");
               provider.basketCurrent.folio = int.parse(folioC.text);
               setState(() {
                 isLoading = false;
@@ -1379,10 +1554,30 @@ class _ShoppingCartState extends State<ShoppingCart> {
                 if (widget.authList.first.authText == "PRESTAMO") {
                   //validamos que sea un prestamo para desplegar el picker de fecha
                   _selectDate(context);
+                } else {
+                  //validamos que sea credito ocasional para terminar la venta
+                  if (widget.authList.first.authText == "CREDITO OCASIONAL") {
+                    showConfirmSale(widget.customerCurrent.payment.first);
+                  }else{
+                  // validamos que sea precio especial
+                  if (widget.authList.first.authText == "PRECIO ESPECIAL") {
+                    showConfirmSale(widget.customerCurrent.payment.first);
+                  }else{
+                    Fluttertoast.showToast(
+          msg: "No se ha encontrado un procedimiento para esta venta",
+          timeInSecForIosWeb: 2,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+        );
+                  }
+                  }
                 }
               } else {
                 showConfirmSale(widget.customerCurrent.payment.first);
               }
+            } else {
+              log("evento de boton validar");
             }
           }
         } else {
@@ -1435,7 +1630,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
       onTap: () {
         Navigator.pop(context);
 
-         if (funCheckMethodPayment(methodCurrent)) {
+        if (funCheckMethodPayment(methodCurrent)) {
           if (methodCurrent.getIsFolio()) {
             //habilitamos el modal para folio
             setState(() {
@@ -1444,22 +1639,26 @@ class _ShoppingCartState extends State<ShoppingCart> {
           } else {
             if (provider.basketCurrent.authCurrent.authText.toUpperCase() ==
                 "GARRAFON A LA PAR") {
-              List<Map<String,dynamic>> list=List.from(jsonDecode(prefs.brands!=""?prefs.brands:"[]"));
+              List<Map<String, dynamic>> list = List.from(
+                  jsonDecode(prefs.brands != "" ? prefs.brands : "[]"));
               if (list.isNotEmpty) {
-                    provider.basketCurrent.brandJug = list.first;
-                    showBrand(context,()=>showConfirmSale(methodCurrent),provider, list);
-                  }else{
-                    Fluttertoast.showToast(
-          msg:
-              "No se encontraron marcas de garrafon",
-          timeInSecForIosWeb: 2,
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.TOP,
-          webShowClose: true,
-        );
-        provider.basketCurrent.brandJug={"id":0,"descripcion":"Sin marca"};
-        showConfirmSale(methodCurrent);
-                  }
+                provider.basketCurrent.brandJug = list.first;
+                showBrand(context, () => showConfirmSale(methodCurrent),
+                    provider, list);
+              } else {
+                Fluttertoast.showToast(
+                  msg: "No se encontraron marcas de garrafon",
+                  timeInSecForIosWeb: 2,
+                  toastLength: Toast.LENGTH_LONG,
+                  gravity: ToastGravity.TOP,
+                  webShowClose: true,
+                );
+                provider.basketCurrent.brandJug = {
+                  "id": 0,
+                  "descripcion": "Sin marca"
+                };
+                showConfirmSale(methodCurrent);
+              }
             } else {
               showConfirmSale(methodCurrent);
             }

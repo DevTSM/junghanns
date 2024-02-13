@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:junghanns/components/button.dart';
+import 'package:junghanns/components/empty/empty.dart';
 import 'package:junghanns/components/loading.dart';
 import 'package:junghanns/components/need_async.dart';
 import 'package:junghanns/components/without_internet.dart';
@@ -285,9 +286,9 @@ class _TransferState extends State<Transfer> {
                           decoration: Decorations.blueBorder30,
                           style: TextStyles.white16SemiBoldIt,
                           label: "Nueva solicitud")),
-                  SizedBox(
+                   SizedBox(
                     height: size.height * .9,
-                    child: Column(
+                    child: transfers.isEmpty?empty(context):Column(
                       children: transfers
                           .map((e) => transferItem(context, setStatus, e))
                           .toList(),

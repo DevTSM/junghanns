@@ -1,9 +1,10 @@
 import 'dart:convert';
 import 'dart:developer';
-import 'package:flutter/material.dart';
+import 'dart:io';
+
+import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:junghanns/models/answer.dart';
-import 'package:http/http.dart' as http;
 import 'package:junghanns/preferences/global_variables.dart';
 
 Future<Answer> getListCustomer(int idR, DateTime date, String type) async {
@@ -73,6 +74,48 @@ Future<Answer> getPhonesCustomer(int id) async {
         error: true);
   }
 }
+Future<Answer> getCreditos(int id) async {
+  log("/CustomerServices <getCreditos>");
+  try {
+    var response = await http
+        .get(Uri.parse("${prefs.urlBase}credit?idCliente=$id"), headers: {
+      "Content-Type": "aplication/json",
+      "x-api-key": apiKey,
+      "client_secret": prefs.clientSecret,
+      "Authorization": "Bearer ${prefs.token}",
+    });
+    return Answer.fromService(response,200);
+  } catch (e) {
+    log("/CustomerServices <getCreditos> Catch");
+    return Answer(
+        body: e,
+        message: "Algo salio mal, revisa tu conexion a internet.",
+        status: 1002,
+        error: true);
+  }
+}
+Future<Answer> setPrestamoOrComodato(Map<String,dynamic> data) async {
+  log("/CustomerServices <setPrestamoOrComodato> ${data.toString()}");
+  try {
+    var response = await http
+        .put(Uri.parse("${prefs.urlBase}devolucion"), headers: {
+          HttpHeaders.contentTypeHeader: 'application/json; charset=UTF-8',
+      "x-api-key": apiKey,
+      "client_secret": prefs.clientSecret,
+      "Authorization": "Bearer ${prefs.token}",
+    },
+    body: jsonEncode(data)
+    ).timeout(Duration(seconds: timerDuration));
+    return Answer.fromService(response,202);
+  } catch (e) {
+    log("/CustomerServices <setPrestamoOrComodato> Catch");
+    return Answer(
+        body: e,
+        message: messajeConnection,
+        status: 1002,
+        error: true);
+  }
+}
 
 ////////////////////
 Future<Answer> getHistoryCustomer(int id) async {
@@ -86,7 +129,7 @@ Future<Answer> getHistoryCustomer(int id) async {
       "Authorization": "Bearer ${prefs.token}",
     });
     if (response.statusCode == 200) {
-      log("/CustomerServices <getHistoryCustomer> Successfull ${jsonDecode(response.body)}");
+      log("/CustomerServices <getHistoryCustomer> Successfull");
       return Answer(
           body: jsonDecode(response.body),
           message: "",

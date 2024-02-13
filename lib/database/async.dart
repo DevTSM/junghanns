@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:developer';
 
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:junghanns/models/answer.dart';
 import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/models/folio.dart';
 import 'package:junghanns/models/product.dart';
@@ -11,6 +10,7 @@ import 'package:junghanns/models/stop.dart';
 import 'package:junghanns/models/stop_ruta.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/provider/provider.dart';
+import 'package:junghanns/services/customer.dart';
 import 'package:junghanns/services/store.dart';
 
 class Async {
@@ -52,28 +52,43 @@ class Async {
   }
   
   Future<bool> initAsync() async {
+     bool isNotSuccess=false;
     provider.asyncProcess=true;
     provider.labelAsync = "Sincronizando datos, no cierres la app.";
     prefs.isAsyncCurrent = true;
      provider.labelAsync = "Obteniendo datos guardados";
      return getAsyncData().then((value) async {
+      isNotSuccess=value;
+      log("======> $isNotSuccess");
       provider.labelAsync = "Sincronizando clientes";
       return getDataCustomers().then((value4) {
+        isNotSuccess?null:isNotSuccess=value4;
+        log("======> $isNotSuccess");
         provider.labelAsync = "Sincronizando stock";
       return getStock().then((value){
+        isNotSuccess?null:isNotSuccess=value;
+        log("======> $isNotSuccess");
         provider.labelAsync = "Sincronizando paradas";
         return getDataStops().then((value5) {
+          isNotSuccess?null:isNotSuccess=value5;
+          log("======> $isNotSuccess");
           provider.labelAsync = "Sincronizando recargas";
           return getDataRefill().then((value6) {
+            isNotSuccess?null:isNotSuccess=value5;
+            log("======> $isNotSuccess");
             provider.labelAsync = "Sincronizando folios";
             return getDataFolios().then((value6) {
+              isNotSuccess?null:isNotSuccess=value6;
+              log("======> $isNotSuccess");
               provider.labelAsync = "Sincronizando QR";
               return getQR().then((value7){
+                isNotSuccess?null:isNotSuccess=value7;
+                log("======> $isNotSuccess");
                 provider.labelAsync = "Sincronizando marcas de garrafón";
                 return getDataBrand().then((value8){
                   prefs.isAsyncCurrent = false;
               provider.asyncProcess=false;
-              return true;
+              return isNotSuccess;
                 });
                 
               });
@@ -86,12 +101,15 @@ class Async {
   }
   
   Future <bool> getAsyncData() async {
+    bool isNotSuccess=false;
     List<Map<String,dynamic>> salesPen= await handler.retrieveSales();
+    List<Map<String,dynamic>> devolucionesPen= await handler.retrieveDevolucionAsync();
     List<Map<String,dynamic>> stopPen=await handler.retrieveStopOffUpdate();
     List<StopRuta> stopRuta=await handler.retrieveStopRuta();
     if(salesPen.isNotEmpty){
       log("ventas pendientes ---------> ${salesPen.length}");
        provider.labelAsync = "Sincronizando ventas locales";
+       //recorremos la ventas
       for(var e in salesPen){
           Map<String, dynamic> data = {};
       data["id_local"]=e["id"];
@@ -116,19 +134,21 @@ class Async {
       }
         await postSale(data).then((value) async {
           if(!value.error){
+            //se actualiza como exitoso
             await handler.updateSale({'isUpdate': 1,
+            'isError':0,
       'fecha_update':DateTime.now().toString()}, e["id"]);
        provider.isNeedAsync=false;
           }else{
+            isNotSuccess=true;
             if(value.status!=1002){
                await handler.updateSale({'isUpdate': 1,
+               'isError':1,
       'fecha_update':DateTime.now().toString(),
-      'isError':1
       }, e["id"]);
             }
           }
-        });
-        
+        });        
       }
     }
     if(stopPen.isNotEmpty){
@@ -146,9 +166,30 @@ class Async {
         await postStop(data).then((value) async {
           if(!value.error){
             await handler.updateStopOff(1, e["id"]);
+          }else{
+            isNotSuccess=true;
           }
         });
         
+      }
+    }
+    if(devolucionesPen.isNotEmpty){
+      provider.labelAsync = "Sincronizando devoluciones";
+      for(var e in devolucionesPen){
+        Map<String, dynamic> data = {
+          "id_documento":e["idDocumento"],
+            "cantidad": e["cantidad"],
+            "lat": e["lat"].toString(),
+            "lon": e["lng"].toString(),
+            "id_ruta": prefs.idRouteD,
+          };
+        await setPrestamoOrComodato(data).then((value) async {
+          if(!value.error){
+            await handler.updateDevolucion({"id":e["id"],"isUpdate":1});
+          }else{
+            isNotSuccess=true;
+          }
+        });
       }
     }
     if(stopRuta.isNotEmpty){
@@ -158,10 +199,9 @@ class Async {
         await handler.updateStopRuta(1, e.id);
       }
     }
-    return true;
+    return !isNotSuccess;
   }
   
-
   Future <bool> getStock()async{
     return await getStockList(prefs.idRouteD).then((answer) async {
       if(answer.error){
@@ -171,7 +211,7 @@ class Async {
               toastLength: Toast.LENGTH_LONG,
               gravity: ToastGravity.TOP,
               webShowClose: true);
-        return true;
+        return false;
       }else{
         await handler.deleteStock();
         for (var item in answer.body) {
@@ -196,11 +236,24 @@ class Async {
               webShowClose: true);
         return false;
       } else {
-        List<CustomerModel> dataAtendidos=await handler.retrieveUsersType(7);
+        prefs.lastBitacoraUpdate = DateTime.now().toString();
+        List<CustomerModel> dataAtendidos = await handler.retrieveUsersType(7);
         await handler.deleteCustomers();
         await handler.insertUser(dataAtendidos);
         for (var item in answer.body) {
-          list.add(CustomerModel.fromPayload(item));
+          CustomerModel current = CustomerModel.fromPayload(item);
+          var exit=dataAtendidos.where((element) => element.idClient==current.idClient);
+          if(exit.isNotEmpty){
+            current.setType(current.type);
+            await handler.updateUser(current);
+            List<Map<String, dynamic>> sales =await handler.retrieveSalesAll();
+            List<Map<String, dynamic>> salesDelet=sales.where((element) => element["idCustomer"]==current.idClient).toList();
+            for(var e in salesDelet){
+              await handler.deleteTemporalySale(e["id"]);
+            }
+          }else{
+            list.add(current);
+          }
         }
         provider.currentAsync = 2;
         return await handler.insertUser(list).then((value) {
@@ -259,9 +312,10 @@ class Async {
       List<FolioModel> folioList = [];
       if (!answer.error) {
         await handler.deleteFolios();
+        log("=============> Respuesta:::::   ${answer.body}");
         for (var item in answer.body) {
-          if(item["folios"]!=null){
-            if(item["folios"]["remision"]!=null){
+          if(item["folios"] != null){
+            if(item["folios"]["remision"] != null){
               for(var item3 in item["folios"]["remision"]){
               folioList.add(FolioModel.fromService(item3,item["serie"],"remision"));
             }

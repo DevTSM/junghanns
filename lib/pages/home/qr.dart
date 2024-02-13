@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:junghanns/components/loading.dart';
@@ -44,7 +46,19 @@ class _QRSellerState extends State<QRSeller> {
 
   @override
   Widget build(BuildContext context) {
-    return RefreshIndicator(
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: ColorsJunghanns.whiteJ,
+    systemOverlayStyle: const SystemUiOverlayStyle(
+        statusBarColor: ColorsJunghanns.whiteJ,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.dark),
+        elevation: 0,
+    leading:IconButton(
+      onPressed: () => Navigator.pop(context),
+      icon: Icon(Icons.arrow_back_ios,color: ColorsJunghanns.blue,))
+      ),
+    body:RefreshIndicator(
         onRefresh: () async {
           setState(() {
             isLoading = true;
@@ -74,7 +88,7 @@ class _QRSellerState extends State<QRSeller> {
             visible: isLoading,
             child: const LoadingJunghanns(),
           )
-        ]));
+        ])));
   }
 
   Widget body({bool isShared = false}) {
@@ -136,7 +150,7 @@ class _QRSellerState extends State<QRSeller> {
                             isExpanded: true,
                             dropdownColor: ColorsJunghanns.lighGrey,
                             borderRadius:
-                                const BorderRadius.all(Radius.circular(12)),
+                                const BorderRadius.all(Radius.circular(8)),
                             underline: Container(),
                             value: nameCurrent,
                             icon: const Icon(Icons.arrow_drop_down_sharp),

@@ -1,16 +1,14 @@
 // ignore_for_file: depend_on_referenced_packages
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
-import 'dart:async';
+
 import 'package:device_info_plus/device_info_plus.dart';
-import 'package:image_cropper/image_cropper.dart';
-import 'package:intl/intl.dart';
-import 'package:path/path.dart';
-import 'package:async/async.dart';
-import 'package:junghanns/models/answer.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
+import 'package:junghanns/models/answer.dart';
 
 import '../preferences/global_variables.dart';
 Future<Answer> getDataQr() async {
@@ -48,7 +46,7 @@ Future<Answer> postSale(Map<String, dynamic> data) async {
         body: jsonEncode(data)).timeout(Duration(seconds: timerDuration));
         return Answer.fromService(response,201);
   } catch (e) {
-    log("/StoreServices <setSale> Catch ${e.toString()}");
+    print("/StoreServices <setSale> Catch ${e.toString()}");
     return Answer(
         body: e,
         message: "Conexion inestable con el back",
@@ -140,7 +138,7 @@ Future<Answer> postResendCode(Map<String, dynamic> data) async {
   }
 }
 Future<Answer> setComodato(AndroidDeviceInfo build, int id, double lat,
-    double lng, int idProduct,int cantidad,int idAuth) async {
+    double lng, int idProduct,int cantidad,int idAuth,String phone) async {
   log("/StoreServices <setComodato> $cantidad");
   try {
     var response = await http.post(Uri.parse("${prefs.urlBase}rutasolicitud"),
@@ -152,7 +150,7 @@ Future<Answer> setComodato(AndroidDeviceInfo build, int id, double lat,
         },
         body: jsonEncode({
           "tipo": "FC",
-          //"telefono": phone.toString(),
+          "phone": phone,
           "lat": lat.toString(),
           "lon": lng.toString(),
           "id_cliente": id,
@@ -532,7 +530,7 @@ Future<Answer> getPaymentMethods(int idClient, int idR) async {
           "Authorization": "Bearer ${prefs.token}",
         });
     if (response.statusCode == 200) {
-      log("/StoreServices <getPaymentMethods> Successfull");
+      log("/StoreServices <getPaymentMethods> Successfull ${response.body} ");
       return Answer(body: jsonDecode(response.body), message: "",status: response.statusCode, error: false);
     } else {
       log("/StoreServices <getPaymentMethods> Fail");
@@ -773,6 +771,26 @@ Future<Answer> putCancelOTP(Map<String, dynamic> data) async {
       log("/StoreServices <PutCancelOTP> 2-Fail");
       return Answer(body: dataOTP, message: dataOTP["message"]??"Error inesperado",status: response.statusCode, error: true);
     }
+  } catch (e) {
+    return Answer(
+        body: {"error": e},
+        message: "Conexion inestable con el back",
+        status: 1002,
+        error: true);
+  }
+}
+Future<Answer> getCancelAuth(Map<String, dynamic> data) async {
+  log("/StoreServices <getCancelAuth> $data");
+  try {
+    var response = await http.delete(Uri.parse("${prefs.urlBase}clienteautorizacion"),
+        headers: {
+          HttpHeaders.contentTypeHeader: 'application/json; charset=UTF-8',
+          "x-api-key": apiKey,
+          "client_secret": prefs.clientSecret,
+          "Authorization": "Bearer ${prefs.token}"
+        },
+        body: jsonEncode(data)).timeout(Duration(seconds: timerDuration+5));
+        return Answer.fromService(response, 202);
   } catch (e) {
     return Answer(
         body: {"error": e},

@@ -20,11 +20,12 @@ class FolioModel{
       "tipo":type
     };
   }
+  set setStatus(int status)=>this.status=status;
  bool getValid(String value){
-    if(type.toUpperCase()=="REMISION"&&value.toUpperCase()=="CREDITO"){
+    if(type.toUpperCase()=="REMISION"&&value.toUpperCase()=="CREDITO"&&status==1){
       return true;
     }else{
-      if(type.toUpperCase()==value.toUpperCase()){
+      if(type.toUpperCase()==value.toUpperCase()&&status==1){
         return true;
       }else{
         return false;

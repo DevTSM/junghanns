@@ -33,6 +33,18 @@ class PreferenciasUsuario {
   set qr(String qr) {
     prefs!.setString("qr", qr);
   }
+   String get lastBitacoraUpdate {
+    return prefs!.getString("lastBitacoraUpdate") ?? "";
+  }
+  set lastBitacoraUpdate(String lastBitacoraUpdate) {
+    prefs!.setString("lastBitacoraUpdate", lastBitacoraUpdate);
+  }
+   String get lastRouteUpdate {
+    return prefs!.getString("lastRouteUpdate") ?? "";
+  }
+  set lastRouteUpdate(String lastRouteUpdate) {
+    prefs!.setString("lastRouteUpdate", lastRouteUpdate);
+  }
   String get statusRoute {
     return prefs!.getString("statusRoute") ?? "";
   }

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:junghanns/components/modal/logout.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/provider/provider.dart';
 import 'package:junghanns/styles/color.dart';
@@ -43,18 +42,17 @@ PreferredSizeWidget appBarJunghanns(BuildContext context, Size size,ProviderJung
           style: TextStyles.blue18SemiBoldIt,
         ),
       ),
-      GestureDetector(
-        child: Container(
-            padding: const EdgeInsets.only(right: 10),
-            child: Image.asset(
-              "assets/icons/workRoute.png",
-              width: size.width * .10,
-            )),
-        onTap: () {
-          //showConfirmLogOut(context, size);
-          showLogOut(context);
-        },
-      ),
+      // GestureDetector(
+      //   child: const Padding(
+      //     padding: EdgeInsets.only(right: 10),
+      //     child: Icon(
+      //       Icons.message,
+      //       color: JunnyColor.green24,
+      //       size: 30,
+      //     )
+      //   ),
+      //   onTap: ()=> showChat(context)
+      // ),
     ],
     elevation: 0,
   );

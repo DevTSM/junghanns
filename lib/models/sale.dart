@@ -42,7 +42,7 @@ class SaleModel {
 String checkDouble(String evalue) {
   switch (evalue[evalue.length - 2]) {
     case '.':
-      return "\$ $evalue 0";
+      return "\$ ${evalue}0";
     default:
       return "\$ $evalue";
   }

@@ -1,4 +1,3 @@
-import 'package:junghanns/models/delivery_man.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PreferenciasUsuario {
@@ -165,6 +164,13 @@ class PreferenciasUsuario {
   set dataStop(bool dataStop) {
     prefs!.setBool("dataStop", dataStop);
   }
+  String get branchOTP {
+    return prefs!.getString("branchOTP") ?? "";
+  }
+
+  set branchOTP(String branchOTP) {
+    prefs!.setString("branchOTP", branchOTP);
+  }
 
   bool get dataSale {
     return prefs!.getBool("dataSale") ?? false;
@@ -180,6 +186,13 @@ class PreferenciasUsuario {
 
   set isUpdateDB(bool isUpdateDB) {
     prefs!.setBool("isUpdateDB", isUpdateDB);
+  }
+  bool get isRequest {
+    return prefs!.getBool("isRequest") ?? false;
+  }
+
+  set isRequest(bool isRequest) {
+    prefs!.setBool("isRequest", isRequest);
   }
   //Info DeliveryMan
   //---------------------------------------------------------

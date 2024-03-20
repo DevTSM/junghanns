@@ -1047,20 +1047,17 @@ class _NewCustomerState extends State<NewCustomer> {
           Padding(
             padding: const EdgeInsets.only(top: 15, left: 10),
             child: Text(
-              "Entre calles",
+              "Referencias del domicilio",
               style: JunnyText.semiBoldBlueA1(15),
             ),
           ),
-          textFieldLabel(streetR1, "Calle ", "calle 1", "",numLines: 2,
+          const Divider(
+              thickness: 1,
+              color: JunnyColor.blueCE
+            ),
+          textFieldLabel(streetR1, "Entre calle 1 ", "Entre calle 1", "",numLines: 1,
             isRequired: true),
-          Padding(
-            padding: const EdgeInsets.only(top: 15, left: 10),
-            child: Text(
-              "Y",
-              style: JunnyText.semiBoldBlueA1(15),
-            ),
-          ),
-          textFieldLabel(streetR2, "Calle ", "calle 2", "",numLines: 2,
+          textFieldLabel(streetR2, "Entre calle 2 ", "Entre calle 2", "",numLines: 1,
           isRequired: true),
           textFieldLabel(referenceC, "Referencias adicionales del domicilio",
             "Referencias adicionales del domicilio", "",numLines: 5),
@@ -1576,7 +1573,7 @@ class _NewCustomerState extends State<NewCustomer> {
         },
         decoration: Decorations.greenJCardB30,
         style: TextStyles.white17_5,
-        label: "REGISTRAR"
+        label: "SIGUIENTE"
       ),
     );
   }

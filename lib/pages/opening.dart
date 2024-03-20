@@ -42,9 +42,9 @@ class _OpeningState extends State<Opening> {
     print("token de acceso =====> ${prefs.token}");
     log("Version: ${prefs.version}");
     //handler.checkValidate();
-    // //TODO: URL
+    //TODO: URL
     // prefs.urlBase = urlBaseManuality;
-    // prefs.labelCedis = "BETA S";
+    //prefs.labelCedis = "BETA Q";
     //prefs.qr="";
     //prefs.version="8.11";
     //getAndroidID();

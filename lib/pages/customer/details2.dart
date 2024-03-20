@@ -520,11 +520,9 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
     return !provider.asyncProcess
         ? Stack(children: [
             Scaffold(
-              appBar: PreferredSize(
-                preferredSize: const Size.fromHeight(10),
-                child: Container(
-                  color: JunnyColor.bluea4,
-                ),),
+              appBar: const PreferredSize(
+                preferredSize: Size.fromHeight(10),
+                child: SizedBox(height: kBottomNavigationBarHeight,)),
               backgroundColor: ColorsJunghanns.lightBlue,
               body: refreshScroll(),
               bottomNavigationBar: bottomBar(() {}, widget.indexHome,context,

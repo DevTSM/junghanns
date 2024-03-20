@@ -126,19 +126,22 @@ class _HomePrincipalState extends State<HomePrincipal> {
       size = MediaQuery.of(context).size;
       provider = Provider.of<ProviderJunghanns>(context);
     });
+    return _body();
+  }
+  Widget _body(){
     return prefs.statusRoute == "INCM"
-        ? comidaWidget()
-        : Scaffold(
-            //key: GlobalKey<ScaffoldState>(),
-            appBar: appBarJunghanns(context, size, provider),
-            drawer: drawer(provider, context,setIndexCurrent,/*isFinRuta*/true),//se comenta el valor de confirmacion de ruta debido a una adecuacion pendiente
-            body: !provider.asyncProcess
-                ? provider.isStatusloading
-                    ? const Center(child: LoadingJunghanns())
-                    : pages[indexCurrent]
-                : asyncProcess(),
-            bottomNavigationBar: bottomBar(setIndexCurrent, indexCurrent,context),
-          );
+      ? comidaWidget()
+      : Scaffold(
+          //key: GlobalKey<ScaffoldState>(),
+          appBar: appBarJunghanns(context, size, provider),
+          drawer: drawer(provider, context,setIndexCurrent,/*isFinRuta*/true),//se comenta el valor de confirmacion de ruta debido a una adecuacion pendiente
+          body: !provider.asyncProcess
+            ? provider.isStatusloading
+              ? const Center(child: LoadingJunghanns())
+              : pages[indexCurrent]
+            : asyncProcess(),
+          bottomNavigationBar: bottomBar(setIndexCurrent, indexCurrent,context),
+        );
   }
 
   Widget asyncProcess() {

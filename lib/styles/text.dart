@@ -349,7 +349,7 @@ class JunnyText {
     fontSize: size,
     fontWeight: weight,
     color: JunnyColor.bluea4,
-    fontFamily: 'Roboto',
+    fontFamily: 'MyriadPro-Bold',
   );
   static TextStyle green24(FontWeight weight,double size) => TextStyle(
     fontSize: size,

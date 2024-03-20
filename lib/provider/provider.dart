@@ -6,6 +6,7 @@ import 'dart:developer';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:junghanns/components/modal/activate_permission.dart';
 import 'package:junghanns/models/authorization.dart';
 import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/models/message.dart';
@@ -13,6 +14,7 @@ import 'package:junghanns/models/notification.dart';
 import 'package:junghanns/models/product.dart';
 import 'package:junghanns/models/shopping_basket.dart';
 import 'package:junghanns/preferences/global_variables.dart';
+import 'package:junghanns/util/navigator.dart';
 import 'package:junghanns/util/push_notifications_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -37,12 +39,13 @@ class ProviderJunghanns extends ChangeNotifier {
   BasketModel basketCurrent = BasketModel.fromState();
   String _path = "";
   String _labelAsync = "Sincronizando datos, no cierres la app";
+  String _labelPermission = "Se han denegado los permisos de ubicación para esta aplicación. Es necesario que los actives para poder realizar el registro de tu actividad de forma correcta";
   double _downloadRate = 0;
   int _connectionStatus = 100;
   int _totalAsync = 1;
   int _currentAsync = 0;
   int _totalNotificationPending=0;
-  bool _permission = true;
+  bool _permission = false;
   bool _asyncProcess = false;
   bool _isStatusloading = false;
   bool _isNeedAsync=false;
@@ -62,6 +65,7 @@ class ProviderJunghanns extends ChangeNotifier {
   int get connectionStatus => _connectionStatus;
   double get downloadRate => _downloadRate;
   String get labelAsync => _labelAsync;
+  String get labelPermission => _labelPermission;
   String get path => _path;
   Map<String,dynamic> get brand=> basketCurrent.brandJug;
   TextEditingController get messageChat => _messageChat;
@@ -131,6 +135,10 @@ class ProviderJunghanns extends ChangeNotifier {
     _labelAsync = labelAsync;
     notifyListeners();
   }
+  set labelPermission(String labelPermission) {
+    _labelPermission = labelPermission;
+    notifyListeners();
+  }
   set brand(Map<String,dynamic> data){
     basketCurrent.brandJug=data;
     notifyListeners();
@@ -142,27 +150,81 @@ class ProviderJunghanns extends ChangeNotifier {
 
   //FUNCTIONS
   Future<void> requestAllPermissions() async {
-    Timer(const Duration(seconds: 6), () async { 
+    log("Solicitando permisos");
+      prefs.isRequest = true;
+    // Timer(const Duration(seconds: 6), () async { 
       Map<Permission, PermissionStatus> status = await [
-        Permission.locationWhenInUse,
         Permission.location,
         Permission.notification
       ].request();
-
-        // Verifica el estado de los permisos
-      if (status[Permission.locationWhenInUse] == PermissionStatus.denied){
-        log("Solicitando 1 ====================>");
-        await Permission.locationWhenInUse.request();
+      if (status.values.where((permission) => 
+          permission != PermissionStatus.granted).isNotEmpty
+      ){
+        getLabelPermission(
+          permission: status.keys.where((permission) => 
+            status[permission] != PermissionStatus.granted).toList()
+        );
+        Timer(const Duration(seconds: 1), () async{ 
+          await showActivatePermission(
+            context: navigatorKey.currentContext!,
+            permission: status.keys.where((permission) => 
+              status[permission] != PermissionStatus.granted).toList()
+          ).then((value){
+            prefs.isRequest = false;
+          });
+        });
+      }else{
+        log("con permiso");
+        permission = true;
       }
-      if (status[Permission.location] == PermissionStatus.denied){
-        log("Solicitando 2 ====================>");
-        await Permission.location.request();
+  }
+  Future<void> requestAllPermissionsResumed() async {
+    log("Solicitando permisos");
+    if(!prefs.isRequest){
+      prefs.isRequest = true;
+    // Timer(const Duration(seconds: 6), () async { 
+      Map<Permission, PermissionStatus> status = await [
+        Permission.location,
+        Permission.notification
+      ].request();
+      if (status.values.where((permission) => 
+          permission != PermissionStatus.granted).isNotEmpty
+      ){
+        getLabelPermission(
+          permission: status.keys.where((permission) => 
+            status[permission] != PermissionStatus.granted).toList()
+        );
+        Timer(const Duration(seconds: 1), () async{ 
+          await showActivatePermission(
+            context: navigatorKey.currentContext!,
+            permission: status.keys.where((permission) => 
+              status[permission] != PermissionStatus.granted).toList()
+          ).then((value){
+            prefs.isRequest = false;
+          });
+        });
+      }else{
+        log("con permiso");
+        permission = true;
       }
-      if (status[Permission.notification] == PermissionStatus.denied){
-        log("Solicitando 3 ====================>");
-        await Permission.notification.request();
+    }
+  }
+  getLabelPermission({required List<Permission> permission}){
+    if(permission.length == 1 ){
+      switch (permission.first.toString()){
+        case 'Permission.location': 
+          labelPermission = "Se han denegado los permisos de ubicación para esta aplicación. Es necesario que los actives para poder realizar el registro de tu actividad de forma correcta";
+          break;
+        case 'Permission.notification':
+          labelPermission = "Se han denegado los permisos de notificación para esta aplicación. Es necesario que estés comunicado en todo momento.";
+          break;
+        default:
+          labelPermission = "Se han denegado los permisos  para esta aplicación. Es necesario que los actives para poder realizar el registro de tu actividad de forma correcta";
+          break;
       }
-    });
+    }else{
+      labelPermission = "Se han denegado los permisos de ubicación y notificaciones para esta aplicación. Es necesario que los actives para poder realizar el registro de tu actividad de forma correcta";
+    }
   }
   void requestPermissions() {
     flutterLocalNotificationsPlugin

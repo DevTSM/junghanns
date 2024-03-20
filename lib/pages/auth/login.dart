@@ -56,6 +56,7 @@ class _LoginState extends State<Login> {
     );
     userC = TextEditingController();
     passC = TextEditingController();
+    Provider.of<ProviderJunghanns>(context,listen:false).requestAllPermissions();
   }
   Future<Map<String,dynamic>?> getDataLogin() async {
     try{
@@ -328,7 +329,14 @@ class _LoginState extends State<Login> {
         ),
       ),
       textVersion(),
-      Visibility(visible: isLoading, child: const LoadingJunghanns())
+      Visibility(visible: isLoading, child: const LoadingJunghanns()),
+      Visibility(
+        visible: !provider.permission,
+        child: Align(
+          alignment: Alignment.bottomCenter,
+          child: _notPermission(msj: provider.labelPermission)
+        )
+      ),
     ]));
   }
 
@@ -451,6 +459,20 @@ class _LoginState extends State<Login> {
       child: Text(
         "${prefs.labelCedis} V$version",
         style: TextStyles.blue18SemiBoldIt,
+      ),
+    );
+  }
+  Widget _notPermission({required String msj}){
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10,vertical: 5),
+      width: double.infinity,
+      height: 120,
+      alignment: Alignment.center,
+      color: JunnyColor.red5c,
+      child: AutoSizeText(
+        msj,
+        style: JunnyText.semiBoldBlueA1(18).copyWith(color: JunnyColor.white),
+        textAlign: TextAlign.center,
       ),
     );
   }

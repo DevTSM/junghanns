@@ -25,7 +25,7 @@ Future<Answer> getDataQr() async {
     log("${response.statusCode}");
     return Answer.fromService(response,200);
   } catch (e) {
-    log("/StoreServices <getStockList> Catch ${e.toString()}");
+    log("/StoreServices <getDataQr> Catch ${e.toString()}");
     return Answer(
         body: e,
         message: "Conexion inestable con el back",

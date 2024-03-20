@@ -17,11 +17,12 @@ String apiKeyStage = "76b2f0a4784e47d5d3ff89b1fd110984ea9f02bf";
 String clientSecretStage = "baea25384fe9c8e5140aa49e72a6a841";
 String messajeConnection = "Error de comunicación con la Planta. La atención se completó correctamente de manera local. Por favor, sincronice.";
 String nameDB = "junny8.db";
-String version = "24.9.7";
+String version = "B 24.8.40";
 String validVersion = "9.04";
 int timerDuration = 28;
+bool testing = true;
 
-String urlBaseManuality = ipStage2;
+String urlBaseManuality = ipProd;
 //String urlBase = ipCDMX;
 //String urlBase=prefs.urlBase;
 String apiKey = apiKeyStage;

@@ -14,6 +14,7 @@ import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/provider/provider.dart';
 import 'package:junghanns/routes/routes.dart';
 import 'package:junghanns/styles/color.dart';
+import 'package:junghanns/util/navigator.dart';
 import 'package:junghanns/util/push_notifications_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
@@ -110,6 +111,14 @@ class _JunnyAppState extends State<JunnyApp> with WidgetsBindingObserver{
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
+      Timer(const Duration(seconds: 2), () async { 
+        log("####################");
+        Provider.of<ProviderJunghanns>(navigatorKey.currentContext!,listen:false)
+          .requestAllPermissionsResumed();
+      });
+    }
+    if(state == AppLifecycleState.hidden){
+      prefs.isRequest = false;
     }
   }
 
@@ -118,8 +127,7 @@ class _JunnyAppState extends State<JunnyApp> with WidgetsBindingObserver{
     return ChangeNotifierProvider(
       create: (BuildContext context) => ProviderJunghanns(),
       child: MaterialApp(
-        scaffoldMessengerKey: _scaffoldKey,
-        navigatorKey: _navKey,
+        navigatorKey: navigatorKey,
         localizationsDelegates: const [
           GlobalMaterialLocalizations.delegate,
           GlobalWidgetsLocalizations.delegate,

@@ -22,7 +22,7 @@ String validVersion = "9.04";
 int timerDuration = 28;
 bool testing = true;
 
-String urlBaseManuality = ipProd;
+String urlBaseManuality = ipStage;
 //String urlBase = ipCDMX;
 //String urlBase=prefs.urlBase;
 String apiKey = apiKeyStage;

@@ -15,6 +15,8 @@ class AuthorizationModel {
   ProductModel product;
   CustomerModel client;
   DateTime date;
+  dynamic evidence;
+  //String comment;
 
   AuthorizationModel(
       {required this.idAuth,
@@ -54,7 +56,7 @@ class AuthorizationModel {
         authText: data["autorizacion"] ?? "",
         observation: data["observacion"] ?? "",
         idReasonAuth: data["idMotivoAutorizacion"] ?? 0,
-        reason: data["motivo"] ?? "",
+        reason: data["Motivo"] ?? "",
         client: CustomerModel.fromState(),
         date: DateTime.parse(data["fecha_creado"]!=null&&data["hora_creado"]!=null?"${data["fecha_creado"]} ${data["hora_creado"]}":DateTime.now().toString()));
   }
@@ -68,7 +70,7 @@ class AuthorizationModel {
         authText: data["autorizacion"] ?? "",
         observation: data["observacion"] ?? "",
         idReasonAuth: data["idMotivoAutorizacion"] ?? 0,
-        reason: data["motivo"] ?? "",
+        reason: data["Motivo"] ?? "",
         client: CustomerModel.fromState(),
         date: DateTime.parse(data["date"]!=null?"${data["date"]}":DateTime.now().toString()));
   }

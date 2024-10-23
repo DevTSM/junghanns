@@ -7,7 +7,10 @@ import 'package:junghanns/components/modal/logout.dart';
 import 'package:junghanns/components/modal/yes_not.dart';
 import 'package:junghanns/models/stop_ruta.dart';
 import 'package:junghanns/pages/debug/debug.dart';
+import 'package:junghanns/pages/drawer/delivery_of_products.dart';
 import 'package:junghanns/pages/drawer/devoluciones.dart';
+import 'package:junghanns/pages/drawer/inventory.dart';
+import 'package:junghanns/pages/drawer/reception_of_products.dart';
 import 'package:junghanns/pages/home/atendidos.dart';
 import 'package:junghanns/pages/home/autorizaciones.dart';
 import 'package:junghanns/pages/home/call.dart';
@@ -244,6 +247,47 @@ drawer(ProviderJunghanns provider, BuildContext context,
                       "Verificar BD",
                       image: const Icon(
                         Icons.data_object,
+                        size: 24,
+                        color: ColorsJunghanns.blue,
+                      ),
+                    ),
+                    item(
+                          () => Navigator.push(context,
+                          MaterialPageRoute<void>(builder: (BuildContext context) =>
+                          const Inventory()
+                          )
+                      ),
+                      "assets/icons/observationIcon.png",
+                      "Inventario",
+                      image: const Icon(
+                        Icons.inventory_2_outlined,
+                        size: 24,
+                        color: ColorsJunghanns.blue,
+                      ),
+                    ),
+                    item(
+                          () => Navigator.push(context,
+                          MaterialPageRoute<void>(builder: (BuildContext context) =>
+                          const ReceptionOfProducts()
+                          )
+                      ),
+                      "assets/icons/observationIcon.png",
+                      "Recepción de productos",
+                      image: const Icon(
+                        Icons.receipt_long,
+                        size: 24,
+                        color: ColorsJunghanns.blue,
+                      ),
+                    ),item(
+                          () => Navigator.push(context,
+                          MaterialPageRoute<void>(builder: (BuildContext context) =>
+                          const DeliveryOfProducts()
+                          )
+                      ),
+                      "assets/icons/observationIcon.png",
+                      "Entrega de productos",
+                      image: const Icon(
+                        Icons.delivery_dining,
                         size: 24,
                         color: ColorsJunghanns.blue,
                       ),

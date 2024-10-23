@@ -164,6 +164,10 @@ class _OpeningState extends State<Opening> {
     provider.path=await getDatabasesPath();
     log("url base: ${prefs.urlBase}");
     log("id Route: ${prefs.idRouteD}");
+    provider.fetchStockValidation();
+    /*provider.fetchProductsStock();*/
+    provider.fetchStockDelivery();
+    provider.updateStock();
     List<Map<String,dynamic>> list=[];
       list= await handler.retrievePrefs();
       //validamos que haya una url en prefs

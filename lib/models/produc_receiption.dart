@@ -21,7 +21,7 @@ class ProductReceiptionModel {
       /*id: int.parse((data["id"] ?? 0).toString()),*/
       product: data["producto"] ?? "",
       count: double.parse((data["cantidad"] ?? data["stock"] ?? "0").toString()),
-      img: data["url"] ?? "https://cdn-icons-png.flaticon.com/512/1257/1257114.png",
+      img: data["url"] ?? "",
       folio: int.parse((data["folio"] ?? 0).toString()),
     );
   }
@@ -58,7 +58,7 @@ class ProductReceiptionModel {
 
   @override
   String toString() {
-    return 'ProductModel(id: $id, producto: $product,cantidad: $count)';
+    return 'ProductModel(id: $id, producto: $product,cantidad: $count, img: $img)';
   }
 
   factory ProductReceiptionModel.empty(){

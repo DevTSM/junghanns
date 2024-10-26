@@ -31,7 +31,6 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
   late Size size;
   late bool isLoading;
   late bool isLoadingOne;
-  late List<Map<String, dynamic>> inventoryList = [];
   late Position _currentLocation;
   Timer? _timer;
 
@@ -56,20 +55,10 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<ProviderJunghanns>(context, listen: false).fetchStockValidation();
     });
-
-    print(inventoryList);
   }
 
   Future<void> _refreshInventory() async {
-    setState(() {
-      isLoadingOne = true;
-    });
-
     Provider.of<ProviderJunghanns>(context, listen: false).fetchStockValidation();
-
-    setState(() {
-      isLoadingOne = false;
-    });
   }
 
   void _handleAction(String status, {required String comment}) async {
@@ -89,11 +78,13 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
       status: status,
       comment: status == 'R' ? comment : null,
     );
+
+    provider.fetchStockValidation();
     await _refreshInventory();
+
     setState(() {
       isLoadingOne = false; // Muestra el indicador de carga
     });
-    _refreshInventory();
   }
 
 
@@ -102,7 +93,7 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
     size = MediaQuery.of(context).size;
     final provider = Provider.of<ProviderJunghanns>(context, listen: false);
     final validationList = provider.validationList;
-    final hasData = validationList.isNotEmpty && (validationList.first.status == 'P');
+    final hasData = validationList.isNotEmpty && (validationList.first.status == 'P' && validationList.first.valid != 'Planta');
 
     return RefreshIndicator(
       onRefresh: _refreshInventory,
@@ -131,7 +122,7 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
                 children: [
                   header(),
                   const SizedBox(height: 20),
-                  provider.validationList.isEmpty || (provider.validationList.first.status != 'P')
+                  provider.validationList.isEmpty || provider.validationList.first.valid == 'Planta'
                       ? empty(context)
                       : GridView.builder(
                     shrinkWrap: true,  // Importante para que funcione dentro de SingleChildScrollView

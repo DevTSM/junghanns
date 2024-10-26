@@ -25,6 +25,9 @@ import 'package:linear_progress_bar/linear_progress_bar.dart';
 import 'package:location/location.dart';
 import 'package:provider/provider.dart';
 
+import '../../widgets/modal/receipt_modal.dart';
+import '../../widgets/modal/validation_modal.dart';
+
 const List<Widget> pages = [
   Home(),
   Specials(),
@@ -48,6 +51,7 @@ class _HomePrincipalState extends State<HomePrincipal> {
   late LocationData currentLocation;
   late int indexCurrent;
   late bool isloading,isFinRuta;
+  List specialData = [];
   @override
   void initState() {
     super.initState();
@@ -56,11 +60,42 @@ class _HomePrincipalState extends State<HomePrincipal> {
     currentLocation = LocationData.fromMap({});
     isloading=false;
     getFinRuta();
+    _refreshTimer();
   }
 
   @override
   void dispose() {
     super.dispose();
+  }
+  Future<void> _refreshTimer() async {
+    final provider = Provider.of<ProviderJunghanns>(context, listen: false);
+
+    // Ahora fetchStockValidation devuelve un objeto ValidationModel
+    provider.fetchStockValidation();
+
+// Filtrar los datos según las condiciones especificadas
+    final filteredData = provider.validationList.where((validation) {
+      return validation.status == "P" && validation.valid == "Planta";
+    }).toList();
+
+
+// Verificar si hay datos filtrados
+    setState(() {
+      if (filteredData.isNotEmpty) {
+        specialData = filteredData;  // Asigna los datos filtrados a specialData
+        // Imprimir el contenido de specialData para confirmarlo
+        print('Contenido de specialData (filtrado): $specialData');
+        print('Llama al modal');
+        showValidationModal(context);
+      } else {
+        specialData = [];  // Si no hay datos que cumplan las condiciones, asignar un arreglo vacío
+        print('No se encontraron datos que cumplan las condiciones');
+      }
+    });
+
+    if (provider.validationList.first.status =='P' && provider.validationList.first.valid == 'Ruta'){
+      showReceiptModal(context);
+    }
   }
 
   void setIndexCurrent(int current) {

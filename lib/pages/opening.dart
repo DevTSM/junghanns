@@ -15,6 +15,7 @@ import 'package:linear_progress_bar/linear_progress_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:sqflite/sqflite.dart';
 
+import '../widgets/modal/validation_modal.dart';
 import 'auth/login.dart';
 
 class Opening extends StatefulWidget {
@@ -32,6 +33,7 @@ class _OpeningState extends State<Opening> {
   late Connectivity _connectivity;
   late StreamSubscription<ConnectivityResult> _connectivitySubscription;
   late bool isAsync;
+  List specialData = [];
 
   @override
   void initState() {
@@ -149,6 +151,32 @@ class _OpeningState extends State<Opening> {
     _connectivitySubscription.cancel();
   }
 
+  Future<void> _refreshTimer() async {
+    final provider = Provider.of<ProviderJunghanns>(context, listen: false);
+
+    // Ahora fetchStockValidation devuelve un objeto ValidationModel
+    provider.fetchStockValidation();
+
+// Filtrar los datos según las condiciones especificadas
+    final filteredData = provider.validationList.where((validation) {
+      return validation.status == "P" && validation.valid == "Planta";
+    }).toList();
+
+// Verificar si hay datos filtrados
+    setState(() {
+      if (filteredData.isNotEmpty) {
+        specialData = filteredData;  // Asigna los datos filtrados a specialData
+        // Imprimir el contenido de specialData para confirmarlo
+        print('Contenido de specialData (filtrado): $specialData');
+        print('Llama al modal');
+        showValidationModal(context);
+      } else {
+        specialData = [];  // Si no hay datos que cumplan las condiciones, asignar un arreglo vacío
+        print('No se encontraron datos que cumplan las condiciones');
+      }
+    });
+  }
+
   Future<void> initConnectivity() async {
     late ConnectivityResult result;
     try {
@@ -194,7 +222,6 @@ class _OpeningState extends State<Opening> {
     }else{
       if(mounted){
       if(prefs.isLogged){
-        
         Navigator.pushReplacement<void, void>(
                 context,
                 MaterialPageRoute<void>(

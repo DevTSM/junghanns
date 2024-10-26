@@ -36,6 +36,10 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
   late bool isLoadingOne;
   late Position _currentLocation;
   Timer? _timer;
+  bool isDeliverySuccessful = false;
+  bool isValidating = false;
+  bool isButtonDisabled = false;
+  List specialData = [];
 
   final TextEditingController _vaciosController = TextEditingController();
   final TextEditingController _llenosController = TextEditingController();
@@ -64,39 +68,72 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
     isLoading = false;
     isLoadingOne = false;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final provider = Provider.of<ProviderJunghanns>(context, listen: false);
-      provider.fetchStockDelivery();
-      provider.updateStock();
-      provider.fetchProducts();
-      provider.fetchProductsStock();
+      _refreshTimer();
+      _refreshData();
 
     });
-
     _suciosRutaController.addListener(_updateLlenos);
     _rotosRutaController.addListener(_updateLlenos);
-    // _updateControllersWithCurrentStock();
-    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
-      print('Aqui');
+  }
+  Future<void> _refreshTimer() async {
+    final provider = Provider.of<ProviderJunghanns>(context, listen: false);
 
-      _updateControllersWithCurrentStock();
+    // Ahora fetchStockValidation devuelve un objeto ValidationModel
+    provider.fetchStockValidation();
+
+// Filtrar los datos según las condiciones especificadas
+    final filteredData = provider.validationList.where((validation) {
+      return validation.status == "P" && validation.valid == "Planta";
+    }).toList();
+
+// Verificar si hay datos filtrados
+    setState(() {
+      if (filteredData.isNotEmpty) {
+        specialData = filteredData;  // Asigna los datos filtrados a specialData
+        // Imprimir el contenido de specialData para confirmarlo
+        print('Contenido de specialData (filtrado): $specialData');
+      } else {
+        specialData = [];  // Si no hay datos que cumplan las condiciones, asignar un arreglo vacío
+        print('No se encontraron datos que cumplan las condiciones');
+      }
     });
   }
   Future<void> _refreshData() async {
     final provider = Provider.of<ProviderJunghanns>(context, listen: false);
-    await provider.fetchStockDelivery();
+
+    // Ahora fetchStockValidation devuelve un objeto ValidationModel
+    provider.fetchStockValidation();
+
+// Filtrar los datos según las condiciones especificadas
+    final filteredData = provider.validationList.where((validation) {
+      return validation.status == "P" && validation.valid == "Planta";
+    }).toList();
+
+// Verificar si hay datos filtrados
+    setState(() {
+      if (filteredData.isNotEmpty) {
+        specialData = filteredData;  // Asigna los datos filtrados a specialData
+        // Imprimir el contenido de specialData para confirmarlo
+        print('Contenido de specialData (filtrado): $specialData');
+      } else {
+        specialData = [];  // Si no hay datos que cumplan las condiciones, asignar un arreglo vacío
+        print('No se encontraron datos que cumplan las condiciones');
+      }
+    });
+
     await provider.updateStock();
     await provider.fetchProducts();
     await provider.fetchProductsStock();
 
-
-    _updateControllersWithCurrentStock();
+      _updateControllersWithCurrentStock();
   }
 
   void _updateControllersWithCurrentStock() {
     final providerJunghanns = Provider.of<ProviderJunghanns>(context, listen: false);
+
     final currentStock = providerJunghanns.carboyAccesories;
-    providerJunghanns.fetchStockDelivery();
-    providerJunghanns.updateStock();
+    // providerJunghanns.fetchStockDelivery();
+
     if (currentStock.isNotEmpty) {
       // Asigna los valores actualizados a los controladores
       _vaciosController.text = currentStock.first.carboys.empty.toString();
@@ -142,8 +179,11 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
       _llenosController.text = llenosRestantes.toString();
     }
   }
-
   Future<void> _deliverProduct(ProviderJunghanns providerJunghanns) async {
+    setState(() {
+      isButtonDisabled = true;
+    });
+    //Loading
     final uiProvider = Provider.of<ProviderJunghanns>(context, listen: false);
     setState(() {
       isLoadingOne = true;
@@ -214,14 +254,61 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
       delivery: deliveryData,
     );
 
+    await _refreshData();
+    providerJunghanns.fetchStockValidation();
+
+    // Filtrar los datos según las condiciones especificadas
+    final filteredData = providerJunghanns.validationList.where((validation) {
+      return validation.status == "P" && validation.valid == "Planta";
+    }).toList();
+
+    // Verificar si hay datos filtrados
+    setState(() {
+      if (filteredData.isNotEmpty) {
+        specialData = filteredData;// Asigna los datos filtrados a specialData
+        isDeliverySuccessful = true;
+        // Imprimir el contenido de specialData para confirmarlo
+        print('Contenido de specialData (filtrado): $specialData');
+      } else {
+        specialData = [];  // Si no hay datos que cumplan las condiciones, asignar un arreglo vacío
+        print('No se encontraron datos que cumplan las condiciones');
+      }
+    });
+    await _refreshTimer();
     setState(() {
       isLoadingOne = false;
+    });
+
+    setState(() {
+      isButtonDisabled = false;
+    });
+  }
+  void _validateAccessories(ProviderJunghanns providerJunghanns) async {
+    setState(() {
+      isButtonDisabled = true;
+    });
+    if (mounted) {
+      setState(() {
+        isLoadingOne = true;
+      });
+    }
+    await providerJunghanns.fetchStockValidation();
+    await providerJunghanns.validationDelivery();
+    if (mounted) {
+      setState(() {
+        specialData == null;
+
+      });
+      await _refreshData();
+      isLoadingOne = false;
+    }
+    setState(() {
+      isButtonDisabled = false; // Habilitar el botón al finalizar el proceso
     });
   }
 
   @override
   void dispose() {
-    _timer?.cancel();
     _suciosRutaController.removeListener(_updateLlenos);
     _rotosRutaController.removeListener(_updateLlenos);
     _suciosRutaController.dispose();
@@ -238,12 +325,10 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
   Widget build(BuildContext context) {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
     final providerJunghanns = Provider.of<ProviderJunghanns>(context);
-    final currentStock = providerJunghanns.carboyAccesories;
     size = MediaQuery.of(context).size;
+    //Realizando test de esta function
+    _updateControllersWithCurrentStock();
 
-    if (currentStock.isNotEmpty && _llenosController.text.isEmpty) {
-      _updateControllersWithCurrentStock();
-    }
 
     return Stack(
       children: [
@@ -258,13 +343,16 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
             elevation: 0,
             leading: isLoading
                 ? null
-                : IconButton(
-              onPressed: () => Navigator.pop(context),
-              icon: const Icon(
-                Icons.arrow_back_ios,
-                color: ColorsJunghanns.blue,
-              ),
-            ),
+                : Visibility(
+              visible: specialData == null || specialData.isEmpty,
+                  child: IconButton(
+                                onPressed: () => Navigator.pop(context),
+                                icon: const Icon(
+                  Icons.arrow_back_ios,
+                  color: ColorsJunghanns.blue,
+                                ),
+                              ),
+                ),
           ),
           body: isLoading
               ? const Center(
@@ -339,6 +427,12 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
     final provider = Provider.of<ProviderJunghanns>(context, listen: false);
     final hasData = provider.carboyAccesories.isNotEmpty;
 
+    final icon = specialData != null && specialData!.isNotEmpty
+        ? Icons.check_circle
+        : hasData
+        ? Icons.send
+        : Icons.send;
+
     return Positioned(
       bottom: bottomPadding + 35,
       left: 20,
@@ -346,13 +440,26 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
       child: Visibility(
         visible: hasData,
         child: CustomButtonDelivery(
+          onValidate: isButtonDisabled ? null : (specialData != null && specialData!.isNotEmpty
+              ? () {
+            _validateAccessories(provider);
+          }
+              : hasData
+              ? () {
+            _deliverProduct(provider);
+          }
+              : null),
+          validateText: specialData != null && specialData!.isNotEmpty ? 'VERIFICAR' : 'ENVIAR',
+          validateColor: specialData != null && specialData!.isNotEmpty ? ColorsJunghanns.blueJ : (hasData ? ColorsJunghanns.blueJ : ColorsJunghanns.grey),
+          icon: icon,
+        ), /*CustomButtonDelivery(
           onValidate: () {
             _deliverProduct(provider);
             // Implementar lógica de validación si es necesario
           },
           validateText: 'ENVIAR',
           icon: Icons.send,
-        ),
+        ),*/
       ),
     );
   }

@@ -18,7 +18,7 @@ class ProductCatalogModel {
       products: List<int>.from(json['productos']['id']),
       count: int.parse(json['cantidad'] ?? '1'),
       label: '',
-      img: json["url"] ?? "https://thumbs.dreamstime.com/b/botellas-de-agua-12522340.jpg",
+      img: json['productos']['url'] ?? "",
     );
   }
 
@@ -51,6 +51,6 @@ class ProductCatalogModel {
 
   @override
   String toString() {
-    return 'Producto(descripcion: $description, productos: $products)';
+    return 'Producto(descripcion: $description, productos: $products, url: $img)';
   }
 }

@@ -9,6 +9,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:junghanns/components/modal/activate_permission.dart';
 import 'package:junghanns/models/authorization.dart';
 import 'package:junghanns/models/customer.dart';
@@ -82,6 +83,9 @@ class ProviderJunghanns extends ChangeNotifier {
   List<DeliverProductsModel> accessoriesWithStock = [];
   List<DeliverProductsModel> returnsWithStock = [];
   List<DeliverProductsModel> carboyAccesories = [];
+  List<DeliverProductsModel> carboyAccesoriosOrigin = [];
+  List<DeliverProductsModel> carboyAccesoriosOriginSecun = [];
+  List<ValidationProductModel> _validationDeliveryList = [];
 
 
   //GETS
@@ -109,6 +113,8 @@ class ProviderJunghanns extends ChangeNotifier {
   List<ProductCatalogModel> get productsCatalog => _productsCatalog;
   List<ProductCatalogModel> get accesories => _accesories;
   List<ProductModel> get stockProducts => _stockProducts;
+  List<ValidationProductModel> get validationDeliveryList => _validationDeliveryList;
+
 
 
 
@@ -191,7 +197,10 @@ class ProviderJunghanns extends ChangeNotifier {
     _validationList = current;
     notifyListeners();
   }
-
+  set validationDeliveryList(List<ValidationProductModel> current) {
+    _validationDeliveryList = current;
+    notifyListeners();
+  }
   set stockAccesories(List<DeliverProductsModel> current){
     _stockAccesories = current;
     notifyListeners();
@@ -411,7 +420,7 @@ class ProviderJunghanns extends ChangeNotifier {
   }
 
   fetchStockValidation() async {
-    bool hasData = false;
+
     await getValidationList(idR: prefs.idRouteD).then((answer) {
 
       if (answer.error) {
@@ -426,7 +435,7 @@ class ProviderJunghanns extends ChangeNotifier {
           validationList = [validation];
         }
 
-        hasData = validationList.isNotEmpty;
+
         print("Lista de validaciones obtenida: ${validationList.length} items.");
         // Imprimir cada validación para depuración
         for (var validation in validationList) {
@@ -436,7 +445,6 @@ class ProviderJunghanns extends ChangeNotifier {
       }
     });
     notifyListeners();
-    return hasData;
   }
   //Funcionalidad de la recepción
   receiptionProducts({required int idValidacion, required double lat, required double lng, required String status, String? comment,}) async {
@@ -509,7 +517,7 @@ class ProviderJunghanns extends ChangeNotifier {
     notifyListeners();
   }
   // Funcionalidad de lista de productos faltantes
-  void addMissingProduct(ProductModel product, int count) {
+  /*void addMissingProduct(ProductModel product, int count) {
     final existingProduct = missingProducts.firstWhere(
           (p) => p.idProduct == product.idProduct,
       orElse: () => ProductModel.empty(),
@@ -542,7 +550,7 @@ class ProviderJunghanns extends ChangeNotifier {
 
           // Imprimir para depuración
           print('Carboys full: ${carboys.full}, Carboys empty: ${carboys.empty}');
-          updateStock();
+
         } else {
           print('No hay suficientes carboys llenos disponibles para descontar. Disponibles: ${carboys.full}');
         }
@@ -573,9 +581,9 @@ class ProviderJunghanns extends ChangeNotifier {
 
     notifyListeners();
     _updateStock(product.idProduct, -count);
-  }
+  }*/
 
-  void removeMissingProduct(ProductModel product, int count) {
+  /*void removeMissingProduct(ProductModel product, int count) {
     final existingProduct = missingProducts.firstWhere(
           (p) => p.idProduct == product.idProduct,
       orElse: () => ProductModel.empty(),
@@ -628,9 +636,138 @@ class ProviderJunghanns extends ChangeNotifier {
       }
     }
     _updateStock(product.idProduct, count);
+  }*/
+
+  void removeMissingProduct(ProductModel product, int count) {
+    final existingProduct = missingProducts.firstWhere(
+          (p) => p.idProduct == product.idProduct,
+      orElse: () => ProductModel.empty(),
+    );
+
+    if (existingProduct.idProduct != 0) {
+      int currentCount = int.tryParse(existingProduct.count) ?? 0;
+      currentCount -= count;
+
+      // Actualiza los carboys directamente según el id del producto
+      if (product.idProduct == 22) {
+        // Lógica para carboys llenos
+        _updateStock(product.idProduct, -count); // Aquí se aumenta el stock de carboys llenos
+      } else if (product.idProduct == 21) {
+        // Lógica para carboys vacíos
+        _updateStock(product.idProduct, -count); // Aquí se aumenta el stock de carboys vacíos
+      } else {
+        // Para otros productos, se elimina directamente el stock
+        _updateStock(product.idProduct, count); // Restamos el stock normal
+      }
+
+      // Eliminar el producto si su cuenta es menor o igual a cero
+      if (currentCount <= 0) {
+        missingProducts.removeWhere((p) => p.idProduct == product.idProduct);
+      } else {
+        existingProduct.count = currentCount.toString();
+      }
+    }
   }
 
+
   updateStock() async {
+    final uiProvider = Provider.of<ProviderJunghanns>(navigatorKey.currentContext!, listen: false);
+
+    final productWithStockWithoutSerial = uiProvider.stockAccesories;
+    print('Imprimiendo stockAccesories ^${stockAccesories}');
+
+    carboyAccesoriosOrigin = productWithStockWithoutSerial
+        .where((a) => a.carboys != null)
+        .toList();
+
+    if (carboyAccesories.isEmpty) {
+      carboyAccesories = productWithStockWithoutSerial
+          .where((a) => a.carboys != null)
+          .toList();
+      print('Segundo  ${carboyAccesories}');
+    }
+
+    // Actualizar accesorios con stock
+    if (accessoriesWithStock.isEmpty) {
+      accessoriesWithStock = productWithStockWithoutSerial
+          .where((accessory) => accessory.others.isNotEmpty)
+          .toList();
+
+      // Actualizar devoluciones con stock
+      returnsWithStock = productWithStockWithoutSerial
+          .where((accessory) => accessory.returns.isNotEmpty)
+          .toList();
+
+      // Guardar copia de accesorios originales
+      originalAccessoriesWithStock = List.from(accessoriesWithStock);
+      // Imprimir información para verificar
+      print('Accesorios con stock cargados: ${accessoriesWithStock}');
+    }
+    notifyListeners();
+  }
+
+  /*updateStock() async {
+    final uiProvider = Provider.of<ProviderJunghanns>(navigatorKey.currentContext!, listen: false);
+    // uiProvider.fetchStockDelivery();
+    carboyAccesories.clear();
+    print('Primer cargado ${carboyAccesories}');
+    final productWithStockWithoutSerial = uiProvider.stockAccesories;
+
+    // Verificar si ya se cargaron los carboys inicialmente
+    if (carboyAccesories.isEmpty) {
+      // Cargar los datos iniciales de carboys
+      carboyAccesories = productWithStockWithoutSerial
+          .where((a) => a.carboys != null) // Filtrar productos que tienen carboys no nulos
+          .toList();
+      print('Segundo cargado ${carboyAccesories}');
+    } else {
+      // Verificar si hay carboyAccesories previos y conservar los cambios
+      for (var newProduct in productWithStockWithoutSerial) {
+        if (newProduct.carboys != null) {
+          // Buscar si el carboy ya existe en la lista
+          final existingCarboy = carboyAccesories.firstWhere(
+                (carboy) => carboy.carboys == newProduct.carboys,
+            orElse: () => DeliverProductsModel.empty(),
+          );
+
+          if (existingCarboy.carboys != null) {
+            // Si ya existe, no sobrescribir los cambios previos, continuar
+            continue;
+          } else {
+            // Agregar nuevos carboys si no están en la lista
+            carboyAccesories.add(newProduct);
+          }
+        }
+      }
+    }
+    // Imprimir el estado final de carboyAccesories después de la actualización
+    print('=== Estado final de carboyAccesories ===');
+    for (var carboy in carboyAccesories) {
+      print('Carboy: ${carboy.carboys}, Detalles: $carboy');
+    }
+    // Imprimir el estado final de carboyAccesories después de la actualización
+    print('Estado final de carboyAccesories: $carboyAccesories');
+
+    // Actualizar accesorios con stock
+    if (accessoriesWithStock.isEmpty) {
+      accessoriesWithStock = productWithStockWithoutSerial
+          .where((accessory) => accessory.others.isNotEmpty)
+          .toList();
+
+      // Actualizar devoluciones con stock
+      returnsWithStock = productWithStockWithoutSerial
+          .where((accessory) => accessory.returns.isNotEmpty)
+          .toList();
+
+      // Guardar copia de accesorios originales
+      originalAccessoriesWithStock = List.from(accessoriesWithStock);
+      // Imprimir información para verificar
+      print('Accesorios con stock cargados: ${accessoriesWithStock}');
+    }
+    notifyListeners();
+  }*/
+
+  /*updateStock() async {
     final uiProvider = Provider.of<ProviderJunghanns>(navigatorKey.currentContext!, listen: false);
     final productWithStockWithoutSerial = uiProvider.stockAccesories;
 
@@ -694,7 +831,7 @@ class ProviderJunghanns extends ChangeNotifier {
       print('Accesorios con stock cargados: $accessoriesWithStock');
     }
     notifyListeners();
-  }
+  }*/
 
   void updateMissingProduct(ProductModel product, int change) {
     final accessoryWithStock = accessoriesWithStock.firstWhere(
@@ -724,6 +861,105 @@ class ProviderJunghanns extends ChangeNotifier {
   }
 
   void _updateStock(int productId, int countChange) {
+    // Primero, actualizamos la lista de accesorios con stock
+    final product = accessoriesWithStock.firstWhere(
+          (p) => p.others.isNotEmpty && p.others.first.id == productId,
+      orElse: () => DeliverProductsModel.empty(),
+    );
+    print('CountChange: $countChange');
+
+    if (product.others.isNotEmpty && product.others.first.id != 0) {
+      product.others.first.count += countChange;
+
+      if (product.others.first.count < 0) {
+        product.others.first.count = 0;
+      }
+
+      int index = accessoriesWithStock.indexWhere((p) => p.others.isNotEmpty && p.others.first.id == productId);
+      if (index != -1) {
+        accessoriesWithStock[index] = product;
+      }
+    } else {
+      print('Producto no encontrado en accessoriesWithStock: ID ${productId}');
+    }
+
+    // Manejo específico para carboys (id == 22)
+    if (productId == 22) {
+      // Aquí puedes agregar la lógica adicional si es necesario para carboys
+      _updateCarboyAccesories(countChange, true);
+    }
+
+    // Manejo específico para carboys vacíos (id == 21)
+    if (productId == 21) {
+      // Aquí puedes agregar la lógica adicional si es necesario para carboys vacíos
+      _updateCarboyAccesories(countChange, false);
+    }
+
+    notifyListeners();
+  }
+
+  void _updateCarboyAccesories(int countChange, bool isFull) {
+    if (carboyAccesories.isNotEmpty) {
+      final carboys = carboyAccesories.first.carboys;
+      print('CountChange: $countChange');
+      if (isFull == true) {
+        if (carboys.full >= countChange) {
+          carboys.full -= countChange;  // Descontar de carboys llenos
+          carboys.empty += countChange;  // Aumentar en carboys vacíos
+          print('Carboys llenos disminuidos: ${carboys.full}, Carboys vacíos aumentados: ${carboys.empty}');
+
+        } else {
+          print('No hay suficientes carboys llenos disponibles para descontar. Disponibles: ${carboys.full}');
+        }
+      } else {
+        if (carboys.empty >= countChange) {
+          carboys.empty -= countChange; // Descontar de carboys vacíos
+        } else {
+          print('No hay suficientes carboys vacíos disponibles para descontar. Disponibles: ${carboys.empty}');
+        }
+      }
+
+      // Asegurar que el cambio persista en la lista
+      int carboyIndex = carboyAccesories.indexWhere((a) => a.carboys == carboys);
+      if (carboyIndex != -1) {
+        carboyAccesories[carboyIndex].carboys = carboys;
+      }
+
+      print('Actualización de carboys: Full: ${carboys.full}, Empty: ${carboys.empty}');
+      notifyListeners();
+    }
+  }
+
+  void addMissingProduct(ProductModel product, int count) {
+    final existingProduct = missingProducts.firstWhere(
+          (p) => p.idProduct == product.idProduct,
+      orElse: () => ProductModel.empty(),
+    );
+
+    // Manejo del producto faltante
+    if (existingProduct.idProduct != 0) {
+      // Si ya existe, se actualiza la cantidad
+      existingProduct.count = (int.parse(existingProduct.count) + count).toString();
+    } else {
+      // Si no existe, se agrega a la lista
+      missingProducts.add(product.copyWith(count: count.toString(), label: "Faltante"));
+    }
+
+    // Determina si se debe pasar count o -count
+    int countChange;
+    if (product.idProduct == 22 || product.idProduct == 21) {
+      countChange = count; // Para id 22 o 21, usar count positivo
+    } else {
+      countChange = -count; // Para otros productos, usar -count
+    }
+
+    // Actualiza el stock basado en el id del producto
+    notifyListeners();
+    _updateStock(product.idProduct, countChange);
+  }
+
+
+  /*void _updateStock(int productId, int countChange) {
     final product = accessoriesWithStock.firstWhere(
           (p) => p.others.isNotEmpty && p.others.first.id == productId,
       orElse: () => DeliverProductsModel.empty(),
@@ -745,7 +981,7 @@ class ProviderJunghanns extends ChangeNotifier {
     }
 
     notifyListeners();
-  }
+  }*/
   // Funcionalidad de lista de productos adicionales
   addAdditionalProduct(ProductCatalogModel accesory) {
     accesory.label = "Adicional";
@@ -787,15 +1023,14 @@ class ProviderJunghanns extends ChangeNotifier {
             answer.body.map((item) => ProductCatalogModel.fromJson(item)));
         // Agregar los productos del catálogo a accesories
         accesories.addAll(productsCatalog);
-        /*print('Productos en catálago: $productsCatalog');
+        print('Productos en catálago: $productsCatalog');
         print('Accesorios después de agregar: $accesories');
-        print("---Llamando--Productos--");*/
+        print("---Llamando--Productos--");
       }
       hasStock = stockAccesories.isNotEmpty;
     });
     notifyListeners();
   }
-
   // Post de entrega
   Future<void> deliverProducts({
     required int idRuta,
@@ -864,8 +1099,8 @@ class ProviderJunghanns extends ChangeNotifier {
         );
       } else {
         // Limpiar las listas de faltantes y adicionales
-        missingProducts.clear();
-        additionalProducts.clear();
+        /*missingProducts.clear();
+        additionalProducts.clear();*/
         // Mostrar mensaje de éxito
         CustomModal.show(
           context: navigatorKey.currentContext!,
@@ -874,10 +1109,10 @@ class ProviderJunghanns extends ChangeNotifier {
           message: "El registro de entrega fue exitoso.",
           iconColor: ColorsJunghanns.greenJ,
         );
+        fetchStockValidation();
       }
       notifyListeners();
     });
-
   }
   //Funcion para el enviar la evidencia
   Future<void> submitDirtyBroken({
@@ -936,6 +1171,105 @@ class ProviderJunghanns extends ChangeNotifier {
           );
         }
       });
-
   }
+
+  validationDelivery() async {
+    bool hasData = false;
+
+    await getValidationList(idR: prefs.idRouteD).then((answer) {
+      if (answer.error) {
+        print('Error al obtener la lista: ${answer.message}');
+      } else {
+        if (answer.body is List) {
+          validationDeliveryList = (answer.body as List)
+              .map((item) => ValidationProductModel.fromJson(item))
+              .toList();
+        } else if (answer.body is Map) {
+          final validation = ValidationProductModel.fromJson(answer.body);
+          validationDeliveryList = [validation];
+        }
+
+        hasData = validationDeliveryList.isNotEmpty;
+        print("Lista de validaciones obtenida: ${validationDeliveryList.length} items.");
+
+        // Recorre cada validación y verifica el estatus
+        for (var validation in validationDeliveryList) {
+          if (validation.status == "P" && validation.valid == 'Planta') {
+            CustomModal.show(
+                context: navigatorKey.currentContext!,
+                icon: FontAwesomeIcons.clock,
+                title: "VALIDACIÓN PENDIENTE",
+                message: "Validación pendiente, esperando....",
+                iconColor: ColorsJunghanns.blueJ
+            );
+          } else if (validation.status == "A" && validation.valid == 'Planta') {
+            //Pendiente por revisar si carboy la limpeamos
+            carboyAccesories.clear();
+            missingProducts.clear();
+            additionalProducts.clear();
+            // Mostrar mensaje de éxito
+            CustomModal.show(
+              context: navigatorKey.currentContext!,
+              icon: Icons.check_circle,
+              title: "VALIDACIÓN CORERCTA",
+              message: "El registro de la validación fue exitoso.",
+              iconColor: ColorsJunghanns.greenJ,
+            );
+            print("Validación aceptada.");
+            // Aquí puedes llamar a tu función para redirigir al home
+           /* home();*/
+          } else if (validation.status == "R" && validation.valid == 'Planta') {
+            CustomModal.show(
+                context: navigatorKey.currentContext!,
+                icon: Icons.cancel,
+                title: "VALIDACIÓN RECHAZADA",
+                message: "La validación fue rechazada por el almacén, verifiqué sus datos enviados.",
+                iconColor: ColorsJunghanns.red
+            );
+          }
+        }
+      }
+    });
+
+    notifyListeners();
+    return hasData;
+  }
+  // Ver el estatus de la lista
+  /*fetchValidation() async {
+    bool hasData = false;
+    await getValidationList(idR: prefs.idRouteD).then((answer) {
+
+      if (answer.error) {
+        print('Error al obtener la lista: ${answer.message}');
+      } else {
+        if (answer.body is List) {
+          // Mapear la lista obtenida a objetos ValidationProductModel
+          validationList = (answer.body as List)
+              .map((item) => ValidationProductModel.fromJson(item))
+              .toList();
+        } else if (answer.body is Map) {
+          // Si es un solo elemento, convertirlo en una lista
+          final validation = ValidationProductModel.fromJson(answer.body);
+          validationList = [validation];
+        }
+
+        // Filtrar la lista por estatus 'P' y valid 'Planta'
+        validationList = validationList
+            .where((validation) => validation.status == 'P' && validation.valid == 'Planta')
+            .toList();
+
+        hasData = validationList.isNotEmpty;
+        print("Lista de validaciones filtrada: ${validationList.length} items.");
+        // Imprimir cada validación para depuración
+        for (var validation in validationList) {
+          print(validation);
+        }
+        print("---Llamando------------------Validacion--");
+      }
+    });
+    notifyListeners();
+    return hasData;
+  }*/
+
+
 }

@@ -862,7 +862,7 @@ Future<Answer> getValidationList({required int idR}) async {
     if (response.statusCode == 200) {
       var decodedBody = jsonDecode(response.body);
       log("/StoreServices <getValidationList> Successfull");
-      // log("Response Body: $decodedBody");
+      log("Response Body: $decodedBody");
       return Answer(body: jsonDecode(response.body), message: "",status:response.statusCode, error: false);
     } else {
       var decodedBody = jsonDecode(response.body);

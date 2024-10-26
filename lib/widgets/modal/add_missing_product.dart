@@ -152,7 +152,6 @@ class _AddMissingProductModalState extends State<AddMissingProductModal> {
                         final product = widget.controller.productCurrent!;
                         widget.controller.addMissingProduct(product, int.parse(product.count));
                         widget.controller.productCurrent = null;
-                        widget.controller.updateStock();
                         Navigator.pop(context);
                       }
                           : () {},

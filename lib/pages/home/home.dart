@@ -26,6 +26,7 @@ import 'package:junghanns/util/location.dart';
 import 'package:provider/provider.dart';
 
 import '../../services/store.dart';
+import '../../widgets/modal/validation_modal.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -53,6 +54,7 @@ class _HomeState extends State<Home> {
       llamaCA,
       llamaC,
       secon;
+  List specialData = [];
 
   @override
   void initState() {
@@ -76,6 +78,7 @@ class _HomeState extends State<Home> {
     secon = 0;
     getDashboarR();
     getAsync();
+    _refreshTimer();
   }
   @override
   void dispose(){
@@ -84,6 +87,33 @@ class _HomeState extends State<Home> {
 
   getPermission() async {
     await Geolocator.requestPermission();
+  }
+
+  Future<void> _refreshTimer() async {
+    final provider = Provider.of<ProviderJunghanns>(context, listen: false);
+
+    // Ahora fetchStockValidation devuelve un objeto ValidationModel
+    provider.fetchStockValidation();
+    provider.fetchStockDelivery();
+
+// Filtrar los datos según las condiciones especificadas
+    final filteredData = provider.validationList.where((validation) {
+      return validation.status == "P" && validation.valid == "Planta";
+    }).toList();
+
+// Verificar si hay datos filtrados
+    setState(() {
+      if (filteredData.isNotEmpty) {
+        specialData = filteredData;  // Asigna los datos filtrados a specialData
+        // Imprimir el contenido de specialData para confirmarlo
+        print('Contenido de specialData (filtrado): $specialData');
+        print('Llama al modal');
+        showValidationModal(context);
+      } else {
+        specialData = [];  // Si no hay datos que cumplan las condiciones, asignar un arreglo vacío
+        print('No se encontraron datos que cumplan las condiciones');
+      }
+    });
   }
 
   getDashboarR() async {
@@ -224,6 +254,7 @@ class _HomeState extends State<Home> {
                   secon = 0;
                   getDashboarR();
                   getAsync();
+                  _refreshTimer();
                 },child:SingleChildScrollView(
         child:
                 Container(

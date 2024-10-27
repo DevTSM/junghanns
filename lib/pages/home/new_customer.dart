@@ -31,6 +31,9 @@ import 'package:junghanns/styles/text.dart';
 import 'package:pin_code_text_field/pin_code_text_field.dart';
 import 'package:provider/provider.dart';
 
+import '../../widgets/modal/receipt_modal.dart';
+import '../../widgets/modal/validation_modal.dart';
+
 class NewCustomer extends StatefulWidget {
   const NewCustomer({Key? key}) : super(key: key);
 
@@ -62,6 +65,7 @@ class _NewCustomerState extends State<NewCustomer> {
     fraccionamiento, nameComercial;
   late ProviderJunghanns provider;
   late Size size;
+  List specialData = [];
   @override
   void initState() {
     super.initState();
@@ -160,6 +164,37 @@ class _NewCustomerState extends State<NewCustomer> {
     getPermission();
     getListTypesOfStreets();
     funButtonLocation();
+    _refreshTimer();
+  }
+  Future<void> _refreshTimer() async {
+    final provider = Provider.of<ProviderJunghanns>(context, listen: false);
+
+    // Ahora fetchStockValidation devuelve un objeto ValidationModel
+    provider.fetchStockValidation();
+
+// Filtrar los datos según las condiciones especificadas
+    final filteredData = provider.validationList.where((validation) {
+      return validation.status == "P" && validation.valid == "Planta";
+    }).toList();
+
+
+// Verificar si hay datos filtrados
+    setState(() {
+      if (filteredData.isNotEmpty) {
+        specialData = filteredData;  // Asigna los datos filtrados a specialData
+        // Imprimir el contenido de specialData para confirmarlo
+        print('Contenido de specialData (filtrado): $specialData');
+        print('Llama al modal');
+        showValidationModal(context);
+      } else {
+        specialData = [];  // Si no hay datos que cumplan las condiciones, asignar un arreglo vacío
+        print('No se encontraron datos que cumplan las condiciones');
+      }
+    });
+
+    if (provider.validationList.first.status =='P' && provider.validationList.first.valid == 'Ruta'){
+      showReceiptModal(context);
+    }
   }
   getPermission() async {
     LocationPermission permission = await Geolocator.checkPermission();

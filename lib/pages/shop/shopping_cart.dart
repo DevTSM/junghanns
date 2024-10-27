@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:io';
 
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
@@ -38,6 +39,9 @@ import 'package:location/location.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/method_payment.dart';
+import '../../util/location.dart';
+import '../../widgets/modal/evidence.dart';
+
 
 class SecondWayToPay {
   String wayToPay;
@@ -839,8 +843,151 @@ class _ShoppingCartState extends State<ShoppingCart> {
       return false;
     }
   }
+  void confirmarSaleYes(MethodPayment methodCurrent) async {
+    setState(() {
+      isLoading = true;
+    });
+    await setCurrentLocation();
+    if (isRange) {
+      if (latSale != 0 && lngSale != 0) {
+        //se valida si es comodato
+        if (methodCurrent.wayToPay == "Comodato") {
+          await getPhonesCustomer(widget.customerCurrent.idClient).then((answer) async {
+            setState(() {
+              isLoading = false;
+            });
+            if (answer.error) {
+              Fluttertoast.showToast(
+                msg: answer.status == 1002
+                    ? 'No es posible la autorización de comodatos sin red, revisa tu conexión de internet'
+                    : 'Ocurrio un error al obtener lo numeros de telefono',
+                timeInSecForIosWeb: 2,
+                toastLength: Toast.LENGTH_LONG,
+                gravity: ToastGravity.TOP,
+                webShowClose: true,
+              );
+            } else {
+              List<String> phones = [];
+              (answer.body["telefonos"] ?? []).map((e) {
+                if ((e["tipo"] ?? "") == "MOVIL") {
+                  phones.add(e["telefono"].toString());
+                }
+              }).toList();
+              widget.customerCurrent.setPhones(phones);
+              showComodato(methodCurrent);
+            }
+          });
+        } else {
+          funSale(methodCurrent);
+        }
+      } else {
+        setState(() {
+          isLoading = false;
+        });
+        Fluttertoast.showToast(
+          msg: "Sin coordenadas",
+          timeInSecForIosWeb: 16,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+        );
+      }
+    } else {
+      setState(() {
+        isLoading = false;
+      });
+      Fluttertoast.showToast(
+        msg: "Fuera de rango",
+        timeInSecForIosWeb: 16,
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.TOP,
+        webShowClose: true,
+      );
+    }
+  }
 
-  caseSale() async {
+// Lógica para verificar la autorización y luego mostrar el modal de venta o de comentario
+  Future<void> caseSale() async {
+    // Verificar si el cliente tiene más de un método de pago
+    if (widget.customerCurrent.payment.length > 1) {
+      selectPayment();
+    } else {
+      // Si existe al menos un método de pago
+      if (widget.customerCurrent.payment.isNotEmpty) {
+        // Validar que el primer método de pago sea válido
+        if (funCheckMethodPayment(widget.customerCurrent.payment.first)) {
+          // Si el método requiere folio
+          if (widget.customerCurrent.payment.first.getIsFolio()) {
+            setState(() {
+              isRequestFolio = true;
+            });
+          } else {
+            // Verificar la autorización
+            int idReasonAuth = widget.authList.isNotEmpty ? widget.authList[0].idReasonAuth : 0;
+            String? motivoGa = widget.authList.isNotEmpty ? widget.authList[0].reason : "";
+
+            // Si el idReasonAuth es 2 o 3, mostrar el modal de comentario
+            if (idReasonAuth == 2 || idReasonAuth == 3) {
+              String tipo = idReasonAuth == 2 ? 'S' : 'R';
+
+              showComment(
+                context: context,
+                yesFunction: (File? image) {
+                  confirmarSaleYes(widget.customerCurrent.payment.first);
+                },
+                current: motivoGa ?? "",
+                idRuta: prefs.idRouteD.toString(),
+                idCliente: widget.authList[0].idClient.toString(),
+                tipo: tipo,
+                cantidad: productsList.first.number.toString(),
+                lat: latSale,
+                lon: lngSale,
+                idAutorization: widget.authList[0].idAuth,
+              );
+            } else {
+              // Si la autorización es "Garrafón a la par"
+              if (provider.basketCurrent.authCurrent.authText.toUpperCase() == "GARRAFON A LA PAR") {
+                List<Map<String, dynamic>> list = List.from(jsonDecode(prefs.brands != "" ? prefs.brands : "[]"));
+
+                if (list.isNotEmpty) {
+                  provider.basketCurrent.brandJug = list.first;
+                  showBrand(
+                    context,
+                        () => showConfirmSale(widget.customerCurrent.payment.first),
+                    provider,
+                    list,
+                  );
+                } else {
+                  Fluttertoast.showToast(
+                    msg: "No se encontraron marcas de garrafon",
+                    timeInSecForIosWeb: 2,
+                    toastLength: Toast.LENGTH_LONG,
+                    gravity: ToastGravity.TOP,
+                    webShowClose: true,
+                  );
+                  provider.basketCurrent.brandJug = {"id": 0, "descripcion": "Sin marca"};
+                  showConfirmSale(widget.customerCurrent.payment.first);
+                }
+              } else {
+                // Si no hay autorización especial, mostrar confirmación de venta normal
+                showConfirmSale(widget.customerCurrent.payment.first);
+              }
+            }
+          }
+        }
+      } else {
+        Fluttertoast.showToast(
+          msg: "No se encontraron métodos de pago ${widget.authList.isNotEmpty ? "para la autorización ${widget.authList.first.idAuth}" : ""}",
+          timeInSecForIosWeb: 2,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+        );
+      }
+    }
+  }
+
+  /*caseSale() async {
     if (widget.customerCurrent.payment.length > 1) {
       //si hay mas de un metodo agregamos select
       selectPayment();
@@ -862,7 +1009,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
                 provider.basketCurrent.brandJug = list.first;
                 showBrand(
                     context,
-                    () => showConfirmSale(widget.customerCurrent.payment.first),
+                        () => showConfirmSale(widget.customerCurrent.payment.first),
                     provider,
                     list);
               } else {
@@ -887,7 +1034,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
       } else {
         Fluttertoast.showToast(
           msg:
-              "No se encontraron metodos de pago ${widget.authList.isNotEmpty ? "para la autorización ${widget.authList.first.idAuth}" : ""}",
+          "No se encontraron metodos de pago ${widget.authList.isNotEmpty ? "para la autorización ${widget.authList.first.idAuth}" : ""}",
           timeInSecForIosWeb: 2,
           toastLength: Toast.LENGTH_LONG,
           gravity: ToastGravity.TOP,
@@ -895,7 +1042,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
         );
       }
     }
-  }
+  }*/
 
   funSale(MethodPayment methodPayment) async {
     setState(() {
@@ -1084,6 +1231,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
           btnOkText: "Aceptar",
           btnOkOnPress: () => Navigator.pop(context),
         ).show();
+        provider.fetchStockDelivery();
       } else {
         //se valida si el error es por falta de red
         if (answer.status == 1002) {
@@ -1241,11 +1389,17 @@ class _ShoppingCartState extends State<ShoppingCart> {
                               (context, index) => ProductSaleCard(
                                     update: (ProductModel productCurrent,
                                         int isAdd) {
+                                      // Extrae el AuthorizationModel de la lista
+                                      AuthorizationModel? authData = widget.authList.isNotEmpty
+                                          ? widget.authList.first
+                                          : null;
                                       provider.updateProductShopping(
-                                          productCurrent, isAdd);
+                                          context,
+                                          productCurrent, isAdd, authData: authData);
                                       setState(() {});
                                     },
-                                    productCurrent: productListOther[index],
+                                //Se agrego customerCurrent
+                                    productCurrent: productListOther[index], customerCurrent: widget.customerCurrent,
                                   ),
                               childCount: productListOther.length),
                         ),
@@ -1260,7 +1414,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
                                   update:
                                       (ProductModel productCurrent, int isAdd) {
                                     setState(() {
-                                      provider.updateProductShopping(
+                                      provider.updateProductShopping(context,
                                           productCurrent, isAdd);
                                     });
                                   }))

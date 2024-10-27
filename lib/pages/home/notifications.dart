@@ -14,6 +14,8 @@ import 'package:junghanns/widgets/card/notifications.dart';
 import 'package:provider/provider.dart';
 
 import '../../preferences/global_variables.dart';
+import '../../widgets/modal/receipt_modal.dart';
+import '../../widgets/modal/validation_modal.dart';
 
 class Notificactions extends StatefulWidget {
   const Notificactions({Key? key}) : super(key: key);
@@ -27,6 +29,7 @@ class _NotificactionsState extends State<Notificactions> {
   late List<NotificationModel> notifications;
   late Size size;
   late bool isLoading;
+  List specialData = [];
 
   @override
   void initState() {
@@ -34,6 +37,37 @@ class _NotificactionsState extends State<Notificactions> {
     notifications=[];
     isLoading = false;
     getData();
+    _refreshTimer();
+  }
+  Future<void> _refreshTimer() async {
+    final provider = Provider.of<ProviderJunghanns>(context, listen: false);
+
+    // Ahora fetchStockValidation devuelve un objeto ValidationModel
+    provider.fetchStockValidation();
+
+// Filtrar los datos según las condiciones especificadas
+    final filteredData = provider.validationList.where((validation) {
+      return validation.status == "P" && validation.valid == "Planta";
+    }).toList();
+
+
+// Verificar si hay datos filtrados
+    setState(() {
+      if (filteredData.isNotEmpty) {
+        specialData = filteredData;  // Asigna los datos filtrados a specialData
+        // Imprimir el contenido de specialData para confirmarlo
+        print('Contenido de specialData (filtrado): $specialData');
+        print('Llama al modal');
+        showValidationModal(context);
+      } else {
+        specialData = [];  // Si no hay datos que cumplan las condiciones, asignar un arreglo vacío
+        print('No se encontraron datos que cumplan las condiciones');
+      }
+    });
+
+    if (provider.validationList.first.status =='P' && provider.validationList.first.valid == 'Ruta'){
+      showReceiptModal(context);
+    }
   }
 
   getData() async {

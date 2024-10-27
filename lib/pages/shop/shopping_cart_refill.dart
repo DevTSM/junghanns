@@ -28,6 +28,8 @@ import 'package:junghanns/widgets/card/product.dart';
 import 'package:location/location.dart';
 import 'package:provider/provider.dart';
 
+import '../../models/authorization.dart';
+
 class ShoppingCartRefill extends StatefulWidget {
   CustomerModel customerCurrent;
   ShoppingCartRefill({
@@ -47,12 +49,14 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
   late List<ConfigModel> configList;
   late bool isLoading, isRange;
   late double latSale, lngSale,distance;
+  late List<AuthorizationModel> authList;
 
   @override
   void initState() {
     super.initState();
     configList=[];
     refillList=[];
+    authList = [];
     isLoading = false;
     isRange = false;
     distance = 0;
@@ -64,6 +68,23 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
   void dispose(){
     super.dispose();
     //provider.initShopping(CustomerModel.fromState());
+  }
+
+  getAuth() async {
+    authList.clear();
+    await getAuthorization(widget.customerCurrent.idClient, prefs.idRouteD)
+        .then((answer) {
+      log(answer.body.toString());
+      if (!answer.error) {
+        answer.body
+            .map((e) => authList.add(AuthorizationModel.fromService(e)))
+            .toList();
+        widget.customerCurrent.setAuth(authList);
+      } else {
+        authList.addAll(widget.customerCurrent.auth);
+      }
+    });
+
   }
 
   getDataRefill() async {
@@ -435,10 +456,10 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
                                     update: (ProductModel productCurrent,
                                         int isAdd) {
                                       provider.updateProductShopping(
-                                          productCurrent, isAdd);
+                                          context, productCurrent, isAdd);
                                       setState(() {});
                                     },
-                                    productCurrent: refillList[index],
+                                    productCurrent: refillList[index],  customerCurrent: widget.customerCurrent,
                                   ),
                         childCount: refillList.length),
                   ),

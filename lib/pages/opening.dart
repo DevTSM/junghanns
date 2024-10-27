@@ -43,7 +43,7 @@ class _OpeningState extends State<Opening> {
     log("Version: ${prefs.version}");
     //handler.checkValidate();
     //TODO: URL
-    prefs.urlBase = urlBaseManuality;
+    //prefs.urlBase = urlBaseManuality;
     //prefs.labelCedis = "BETA Q";
     //prefs.qr="";
     //prefs.version="8.11";

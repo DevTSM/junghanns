@@ -194,6 +194,14 @@ class PreferenciasUsuario {
   set isRequest(bool isRequest) {
     prefs!.setBool("isRequest", isRequest);
   }
+
+  bool get conectado {
+    return prefs!.getBool("conectado") ?? false;
+  }
+
+  set conectado(bool conectado) {
+    prefs!.setBool("conectado", conectado);
+  }
   //Info DeliveryMan
   //---------------------------------------------------------
 

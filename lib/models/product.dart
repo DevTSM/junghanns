@@ -85,17 +85,34 @@ class ProductModel {
         stock: int.parse((data["stock"] ?? (data["cantidad"] ?? 0)).toString()),
         stockLocal: int.parse((data["stock"] ?? (data["cantidad"] ?? 0)).toString()),
         number: 0,
-        img: data["url"] ?? "https://cdn-icons-png.flaticon.com/512/1257/1257114.png",
+        img: data["url"] ?? "",
         type: 1,
-        count: ((data["data"] ?? 0).toString()),
+        count: data["cantidad"]?.toString() ?? "0",
         isSelect: false,
         rank: data["rank"] ?? "", label: '');
   }
+  // Método para establecer count asegurando que sea un valor válido
+  setCountString(String newCount) {
+    // Asegúrate de que el nuevo valor sea un número o "0" como valor predeterminado
+    if (int.tryParse(newCount) != null) {
+      this.count = newCount;
+    } else {
+      this.count = '0'; // Asignar un valor predeterminado
+    }
+  }
+
   Map<String, dynamic> toJson() {
     return {
       'id': idProduct,
       'articulo': description,
       'cantidad': stock,
+    };
+  }
+  Map<String, dynamic> toJsonMissing() {
+    return {
+      'id': idProduct,
+      'articulo': description,
+      'cantidad': count,
     };
   }
 
@@ -196,7 +213,7 @@ class ProductModel {
   }
   @override
   String toString() {
-    return 'ProductModel(id: $idProduct, articulo: $description,stock: $stock, url: $img)';
+    return 'ProductModel(id: $idProduct, articulo: $description,stock: $stock, url: $img, count: ${count})';
   }
 
   ProductModel copyWith({

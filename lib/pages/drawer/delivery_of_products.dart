@@ -73,12 +73,18 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
     isLoadingOne = false;
     Future.microtask(() {
       print('En la vista');
+      final provider = Provider.of<ProviderJunghanns>(context, listen: false);
       Provider.of<ProviderJunghanns>(context, listen: false).fetchStockDelivery();
-      Provider.of<ProviderJunghanns>(context, listen: false).updateStock();
-      /*print('Llamando loadList de l guardado de las listas');
       Provider.of<ProviderJunghanns>(context, listen: false).loadLists();
+      Provider.of<ProviderJunghanns>(context, listen: false).updateStock();
+      /*print('Llamando loadList de l guardado de las listas');*//*
+      Provider.of<ProviderJunghanns>(context, listen: false).loadLists();*/
+      Provider.of<ProviderJunghanns>(context, listen: false).loadMissingProducts();
+      // Imprimir los productos que se han cargado
+      print('Productos faltantes cargados: ${provider.missingProducts.length}');
       print('Llamando loadListAdicional de la guardado de las listas');
-      Provider.of<ProviderJunghanns>(context, listen: false).loadAdditionalProducts();*/
+      Provider.of<ProviderJunghanns>(context, listen: false).loadAdditionalProducts();
+
     });
     _refreshTimer();
     _refreshData();

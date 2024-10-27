@@ -195,13 +195,12 @@ class _OpeningState extends State<Opening> {
     provider.fetchStockValidation();
     /*provider.fetchProductsStock();*/
     provider.fetchStockDelivery();
-    provider.updateStock();
-    print('Llamando loadList de l guardado de las listas');
+   /* print('Llamando loadList de l guardado de las listas');
     await provider.loadLists();
     print('Llamando loadListAdicional de la guardado de las listas');
     await provider.loadAdditionalProducts();
     print('Llamando loadListFaltantes de la guardado de las listas');
-    await provider.loadMissingProducts();
+    await provider.loadMissingProducts();*/
     List<Map<String,dynamic>> list=[];
       list= await handler.retrievePrefs();
       //validamos que haya una url en prefs

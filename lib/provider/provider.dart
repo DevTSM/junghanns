@@ -676,6 +676,7 @@ class ProviderJunghanns extends ChangeNotifier {
         existingProduct.count = currentCount.toString();
       }
     }
+    await saveLists();
     await saveMissingProducts(); // Guardar la lista actualizada
     notifyListeners();
   }
@@ -685,6 +686,10 @@ class ProviderJunghanns extends ChangeNotifier {
 
     fetchStockDelivery();
     final productWithStockWithoutSerial = uiProvider.stockAccesories;
+    saveLists();
+    print('Cargado de la lista despues de saveLists: $carboyAccesories');
+    // Limpia la lista de productos faltantes si es necesario
+
 
     carboyAccesoriosOrigin = productWithStockWithoutSerial
         .where((a) => a.carboys != null)
@@ -698,7 +703,7 @@ class ProviderJunghanns extends ChangeNotifier {
         .map((a) => a.copy()) // Crear copias de cada elemento
         .toList();
 
-    if (carboyAccesories.isEmpty) {
+    if (carboyAccesories.isEmpty || carboyAccesoriosOriginSecun.isEmpty) {
 
       carboyAccesoriosOriginSecun = productWithStockWithoutSerial
           .where((a) => a.carboys != null)
@@ -730,7 +735,7 @@ class ProviderJunghanns extends ChangeNotifier {
         .toList();
 
     // Actualizar accesorios con stock
-    if (accessoriesWithStock.isEmpty) {
+    if (accessoriesWithStock.isEmpty || othersAccesoriosOriginSecun.isEmpty) {
       othersAccesoriosOriginSecun = productWithStockWithoutSerial
           .where((a) => a.others.isNotEmpty)
           .map((a) => a.copyOthers())
@@ -771,7 +776,7 @@ class ProviderJunghanns extends ChangeNotifier {
         .map((a) => a.copyOthers())
         .toList();
 
-    if(returnsWithStock.isEmpty){
+    if(returnsWithStock.isEmpty || returnsAccesoriosOriginSecun.isEmpty){
       returnsAccesoriosOriginSecun = productWithStockWithoutSerial
           .where((a) => a.returns.isNotEmpty)
           .map((a) => a.copyOthers())
@@ -790,6 +795,7 @@ class ProviderJunghanns extends ChangeNotifier {
       returnsAccesoriosOriginSecun.clear();
       returnsWithStock.clear();
     }
+
     notifyListeners();
     await saveLists();
   }
@@ -798,10 +804,21 @@ class ProviderJunghanns extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
 
     // Convierte tus listas a JSON
-    prefs.setString('carboyAccesories', jsonEncode(carboyAccesories.map((a) => a.toJson()).toList()));
-    prefs.setString('othersAccesories', jsonEncode(accessoriesWithStock.map((a) => a.toJson()).toList()));
-    prefs.setString('returnsAccesories', jsonEncode(returnsWithStock.map((a) => a.toJson()).toList()));
+    String carboyJson = jsonEncode(carboyAccesories.map((a) => a.toJson()).toList());
+    String othersJson = jsonEncode(accessoriesWithStock.map((a) => a.toJson()).toList());
+    String returnsJson = jsonEncode(returnsWithStock.map((a) => a.toJson()).toList());
+
+    // Guarda las listas en SharedPreferences
+    await prefs.setString('carboyAccesories', carboyJson);
+    await prefs.setString('othersAccesories', othersJson);
+    await prefs.setString('returnsAccesories', returnsJson);
+
+    // Imprimir las listas guardadas para depuración
+    print('Guardado Carboy Accessories: $carboyJson');
+    print('Guardado Accessories with Stock: $othersJson');
+    print('Guardado Returns with Stock: $returnsJson');
   }
+
 
   Future<void> loadLists() async {
     final prefs = await SharedPreferences.getInstance();
@@ -811,14 +828,24 @@ class ProviderJunghanns extends ChangeNotifier {
         .map((e) => DeliverProductsModel.fromJson(e))
         .toList();
 
+    // Imprimir la lista de accesorios carboy
+    print('Carboy Accessories: $carboyAccesories');
+
     accessoriesWithStock = (jsonDecode(prefs.getString('othersAccesories') ?? '[]') as List)
         .map((e) => DeliverProductsModel.fromJson(e))
         .toList();
 
+    // Imprimir la lista de accesorios con stock
+    print('Accessories with Stock: $accessoriesWithStock');
+
     returnsWithStock = (jsonDecode(prefs.getString('returnsAccesories') ?? '[]') as List)
         .map((e) => DeliverProductsModel.fromJson(e))
         .toList();
+
+    // Imprimir la lista de devoluciones con stock
+    print('Returns with Stock: $returnsWithStock');
   }
+
 
   void updateMissingProduct(ProductModel product, int change) {
     final accessoryWithStock = accessoriesWithStock.firstWhere(
@@ -881,7 +908,7 @@ class ProviderJunghanns extends ChangeNotifier {
       // Aquí puedes agregar la lógica adicional si es necesario para carboys vacíos
       _updateCarboyAccesories(countChange, false);
     }
-
+    saveLists();
     notifyListeners();
   }
 
@@ -941,6 +968,7 @@ class ProviderJunghanns extends ChangeNotifier {
     }
 
     // Actualiza el stock basado en el id del producto
+    await saveLists();
     await saveMissingProducts(); // Guardar la lista actualizada
     notifyListeners();
     _updateStock(product.idProduct, countChange);
@@ -948,20 +976,40 @@ class ProviderJunghanns extends ChangeNotifier {
 
   Future<void> saveMissingProducts() async {
     final prefs = await SharedPreferences.getInstance();
-    final missingProductsJson = missingProducts.map((p) => p.toJson()).toList();
-    prefs.setString('missingProducts', jsonEncode(missingProductsJson));
+
+    // Convierte los productos faltantes a JSON
+    String jsonString = jsonEncode(missingProducts.map((p) => p.toJsonMissing()).toList());
+
+    print('Guardando productos faltantes: $jsonString');
+
+    // Guarda la cadena JSON en SharedPreferences
+    await prefs.setString('missingProducts', jsonString);
   }
 
   Future<void> loadMissingProducts() async {
     final prefs = await SharedPreferences.getInstance();
     final missingProductsString = prefs.getString('missingProducts');
 
-    if (missingProductsString != null) {
+    print('Contenido de SharedPreferences: $missingProductsString');
+
+    if (missingProductsString != null && missingProductsString.isNotEmpty) {
+      // Decodifica la cadena JSON y convierte a la lista de ProductModel
       missingProducts = (jsonDecode(missingProductsString) as List)
           .map((json) => ProductModel.fromProductInventary(json))
           .toList();
+
+      // Imprimir productos cargados
+      for (var product in missingProducts) {
+        print('Producto cargado: ${product.description}, count: ${product.count}');
+      }
+    } else {
+      print('No se encontraron productos faltantes.');
     }
   }
+
+
+
+
 
 
 
@@ -1237,7 +1285,9 @@ class ProviderJunghanns extends ChangeNotifier {
             );
           } else if (validation.status == "A" && validation.valid == 'Planta') {
             //Pendiente por revisar si carboy la limpeamos
-            /*carboyAccesories.clear();*/
+            carboyAccesories.clear();
+            accessoriesWithStock.clear();
+            returnsWithStock.clear();
             missingProducts.clear();
             additionalProducts.clear();
 

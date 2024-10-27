@@ -1,6 +1,7 @@
 // ignore_for_file: unnecessary_getters_setters
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
@@ -28,7 +29,9 @@ import 'package:junghanns/util/navigator.dart';
 import 'package:junghanns/util/push_notifications_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import '../database/async.dart';
 import '../models/produc_receiption.dart';
 import '../pages/home/home_principal.dart';
 import '../services/store.dart';
@@ -81,7 +84,11 @@ class ProviderJunghanns extends ChangeNotifier {
   List<ProductModel> _stockProducts = [];
   List<DeliverProductsModel> originalAccessoriesWithStock = [];
   List<DeliverProductsModel> accessoriesWithStock = [];
+  List<DeliverProductsModel> othersAccesoriosOrigin = [];
+  List<DeliverProductsModel> othersAccesoriosOriginSecun = [];
   List<DeliverProductsModel> returnsWithStock = [];
+  List<DeliverProductsModel> returnsAccesoriosOrigin = [];
+  List<DeliverProductsModel> returnsAccesoriosOriginSecun = [];
   List<DeliverProductsModel> carboyAccesories = [];
   List<DeliverProductsModel> carboyAccesoriosOrigin = [];
   List<DeliverProductsModel> carboyAccesoriosOriginSecun = [];
@@ -484,6 +491,7 @@ class ProviderJunghanns extends ChangeNotifier {
               message: "Se aceptaron correctamente los productos enviados por el almacén.",
               iconColor: ColorsJunghanns.greenJ,
           );
+          fetchStockValidation();
         } else {
           CustomModal.show(
             context: navigatorKey.currentContext!,
@@ -492,6 +500,7 @@ class ProviderJunghanns extends ChangeNotifier {
             message: "Proceso realizado correctamente, la solicitud fue rechazada.",
             iconColor: ColorsJunghanns.red,
           );
+          fetchStockValidation();
         }
         notifyListeners();
       }
@@ -669,42 +678,147 @@ class ProviderJunghanns extends ChangeNotifier {
     }
   }
 
-
   updateStock() async {
     final uiProvider = Provider.of<ProviderJunghanns>(navigatorKey.currentContext!, listen: false);
 
+    fetchStockDelivery();
     final productWithStockWithoutSerial = uiProvider.stockAccesories;
-    print('Imprimiendo stockAccesories ^${stockAccesories}');
 
     carboyAccesoriosOrigin = productWithStockWithoutSerial
         .where((a) => a.carboys != null)
+        .map((a) => a.copy()) // Crear copias de cada elemento
+        .toList();
+
+    carboyAccesoriosOrigin.clear();
+
+    carboyAccesoriosOrigin = productWithStockWithoutSerial
+        .where((a) => a.carboys != null)
+        .map((a) => a.copy()) // Crear copias de cada elemento
         .toList();
 
     if (carboyAccesories.isEmpty) {
+
+      carboyAccesoriosOriginSecun = productWithStockWithoutSerial
+          .where((a) => a.carboys != null)
+          .map((a) => a.copy())
+          .toList();
+
       carboyAccesories = productWithStockWithoutSerial
           .where((a) => a.carboys != null)
+          .map((a) => a.copy())
           .toList();
-      print('Segundo  ${carboyAccesories}');
     }
+    // Comparación de las listas para carboys
+    // Solo comparamos el contenido de carboys de cada lista
+    final carboyAccesoriesCarboys = carboyAccesories.map((a) => a.carboys).toList();
+    final carboyAccesoriosOriginCarboys = carboyAccesoriosOrigin.map((a) => a.carboys).toList();
+    final carboyAccesoriesSecunCarboys = carboyAccesoriosOriginSecun.map((a) => a.carboys).toList();
+
+    if (carboyAccesoriosOriginCarboys.toString() != carboyAccesoriesSecunCarboys.toString()) {
+      //Verificar esto antes de todo
+      missingProducts.removeWhere((product) => product.idProduct == 22 || product.idProduct == 21);
+      carboyAccesoriosOriginSecun.clear();
+      carboyAccesories.clear();
+    }
+
+    // Otros productos
+    othersAccesoriosOrigin = productWithStockWithoutSerial
+        .where((a) => a.others.isNotEmpty)
+        .map((a) => a.copyOthers())
+        .toList();
 
     // Actualizar accesorios con stock
     if (accessoriesWithStock.isEmpty) {
-      accessoriesWithStock = productWithStockWithoutSerial
-          .where((accessory) => accessory.others.isNotEmpty)
+      othersAccesoriosOriginSecun = productWithStockWithoutSerial
+          .where((a) => a.others.isNotEmpty)
+          .map((a) => a.copyOthers())
           .toList();
 
+      accessoriesWithStock = productWithStockWithoutSerial
+          .where((accessory) => accessory.others.isNotEmpty)
+          .map((a) => a.copyOthers())
+          .toList();
+
+      originalAccessoriesWithStock = List.from(accessoriesWithStock);
+    }
+
+    List<Map<String, dynamic>> simplifyProducts(List<ProductReceiptionModel> products) {
+      return products.map((product) {
+        return {
+          'id': product.id,
+          'producto': product.product,
+          'cantidad': product.count,
+        };
+      }).toList();
+    }
+    // Comparación de las listas para carboys
+    // Solo comparamos el contenido de others de cada lista
+    final othersAccesoriesOthers = accessoriesWithStock.map((a) => simplifyProducts(a.others)).toList();
+    final othersAccesoriosOriginOthers = othersAccesoriosOrigin.map((a) => simplifyProducts(a.others)).toList();
+    final othersAccesoriesSecunOthers = othersAccesoriosOriginSecun.map((a) => simplifyProducts(a.others)).toList();
+
+
+    if (othersAccesoriosOriginOthers.toString() != othersAccesoriesSecunOthers.toString()) {
+      missingProducts.removeWhere((product) => product.idProduct != 22 && product.idProduct != 21);
+      othersAccesoriosOriginSecun.clear();
+      accessoriesWithStock.clear();
+    }
+   // Devoluciones
+    returnsAccesoriosOrigin = productWithStockWithoutSerial
+        .where((a) => a.returns.isNotEmpty)
+        .map((a) => a.copyOthers())
+        .toList();
+
+    if(returnsWithStock.isEmpty){
+      returnsAccesoriosOriginSecun = productWithStockWithoutSerial
+          .where((a) => a.returns.isNotEmpty)
+          .map((a) => a.copyOthers())
+          .toList();
       // Actualizar devoluciones con stock
       returnsWithStock = productWithStockWithoutSerial
           .where((accessory) => accessory.returns.isNotEmpty)
           .toList();
+    }
+    // Solo comparamos el contenido de carboys de cada lista
+    final returnsAccesoriesReturns = returnsWithStock.map((a) => simplifyProducts(a.returns)).toList();
+    final returnsAccesoriosOriginReturns = returnsAccesoriosOrigin.map((a) => simplifyProducts(a.returns)).toList();
+    final returnsAccesoriesSecunReturns = returnsAccesoriosOriginSecun.map((a) => simplifyProducts(a.returns)).toList();
 
-      // Guardar copia de accesorios originales
-      originalAccessoriesWithStock = List.from(accessoriesWithStock);
-      // Imprimir información para verificar
-      print('Accesorios con stock cargados: ${accessoriesWithStock}');
+    if (returnsAccesoriosOriginReturns.toString() != returnsAccesoriesSecunReturns.toString()) {
+      returnsAccesoriosOriginSecun.clear();
+      returnsWithStock.clear();
     }
     notifyListeners();
+    await saveLists();
   }
+
+  Future<void> saveLists() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    // Convierte tus listas a JSON
+    prefs.setString('carboyAccesories', jsonEncode(carboyAccesories.map((a) => a.toJson()).toList()));
+    prefs.setString('othersAccesories', jsonEncode(accessoriesWithStock.map((a) => a.toJson()).toList()));
+    prefs.setString('returnsAccesories', jsonEncode(returnsWithStock.map((a) => a.toJson()).toList()));
+  }
+
+  Future<void> loadLists() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    // Recupera y asigna las listas desde el almacenamiento local
+    carboyAccesories = (jsonDecode(prefs.getString('carboyAccesories') ?? '[]') as List)
+        .map((e) => DeliverProductsModel.fromJson(e))
+        .toList();
+
+    accessoriesWithStock = (jsonDecode(prefs.getString('othersAccesories') ?? '[]') as List)
+        .map((e) => DeliverProductsModel.fromJson(e))
+        .toList();
+
+    returnsWithStock = (jsonDecode(prefs.getString('returnsAccesories') ?? '[]') as List)
+        .map((e) => DeliverProductsModel.fromJson(e))
+        .toList();
+  }
+
+
 
   /*updateStock() async {
     final uiProvider = Provider.of<ProviderJunghanns>(navigatorKey.currentContext!, listen: false);
@@ -983,15 +1097,38 @@ class ProviderJunghanns extends ChangeNotifier {
     notifyListeners();
   }*/
   // Funcionalidad de lista de productos adicionales
-  addAdditionalProduct(ProductCatalogModel accesory) {
+  addAdditionalProduct(ProductCatalogModel accesory) async {
     accesory.label = "Adicional";
     additionalProducts.add(accesory);
+    await saveAdditionalProducts();
     notifyListeners();
   }
-  removeAdditionalProduct(ProductCatalogModel accessory) {
+  removeAdditionalProduct(ProductCatalogModel accessory) async {
     additionalProducts.removeWhere((item) => item.products == accessory.products);
+    await saveAdditionalProducts();
     notifyListeners();
   }
+
+  Future<void> saveAdditionalProducts() async {
+    final prefs = await SharedPreferences.getInstance();
+    // Convierte la lista a JSON y guárdala
+    final additionalProductsJson = additionalProducts.map((a) => a.toJson()).toList();
+    prefs.setString('additionalProducts', jsonEncode(additionalProductsJson));
+  }
+
+  Future<void> loadAdditionalProducts() async {
+    final prefs = await SharedPreferences.getInstance();
+    final additionalProductsString = prefs.getString('additionalProducts');
+
+    if (additionalProductsString != null) {
+      // Decodifica la lista JSON y asigna los objetos deserializados a la lista
+      additionalProducts = (jsonDecode(additionalProductsString) as List)
+          .map((json) => ProductCatalogModel.fromJson(json))
+          .toList();
+    }
+  }
+
+
   //Obtener lista de productos con stock
   fetchProductsStock() async {
     await getStockList(prefs.idRouteD).then((
@@ -1038,6 +1175,7 @@ class ProviderJunghanns extends ChangeNotifier {
     required double lng,
     required String team,
     required Map<String, dynamic> delivery,
+    required ProviderJunghanns provider,
   }) async {
 
     // Preparar las listas de productos
@@ -1087,7 +1225,7 @@ class ProviderJunghanns extends ChangeNotifier {
       lon: lng,
       equipo: team,
       entrega: deliveryData,
-    ).then((answer){
+    ).then((answer) async {
       if (answer.error) {
         // Mostrar mensaje de error
         CustomModal.show(
@@ -1102,10 +1240,13 @@ class ProviderJunghanns extends ChangeNotifier {
         /*missingProducts.clear();
         additionalProducts.clear();*/
         // Mostrar mensaje de éxito
+        print('Iniciando getStock');
+        await Async(provider: provider).getStock();
+        print('Iniciando terminando');
         CustomModal.show(
           context: navigatorKey.currentContext!,
           icon: Icons.check_circle,
-          title: "ENTREGA CORERCTA",
+          title: "ENTREGA CORRECTA",
           message: "El registro de entrega fue exitoso.",
           iconColor: ColorsJunghanns.greenJ,
         );
@@ -1204,9 +1345,14 @@ class ProviderJunghanns extends ChangeNotifier {
             );
           } else if (validation.status == "A" && validation.valid == 'Planta') {
             //Pendiente por revisar si carboy la limpeamos
-            carboyAccesories.clear();
+            /*carboyAccesories.clear();*/
             missingProducts.clear();
             additionalProducts.clear();
+
+            Navigator.pushReplacement(
+              navigatorKey.currentContext!,
+              MaterialPageRoute(builder: (context) => HomePrincipal()),
+            );
             // Mostrar mensaje de éxito
             CustomModal.show(
               context: navigatorKey.currentContext!,

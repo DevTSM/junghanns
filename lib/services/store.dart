@@ -847,9 +847,9 @@ Future<Answer> getStockDeliveryList({required int idR}) async {
 }
 Future<Answer> getValidationList({required int idR}) async {
   log("/StoreServices <getValidationList>");
-  // Imprimir el request
+  /*// Imprimir el request
   log("Request URL: ${prefs.urlBase}almacenmovil?q=EstatusValidacion&id_ruta=$idR");
-
+*/
   try {
     var response = await http.get(
         Uri.parse("${prefs.urlBase}almacenmovil?q=EstatusValidacion&id_ruta=$idR"),

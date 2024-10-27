@@ -13,6 +13,24 @@ class DeliverProductsModel {
     required this.others,
     required this.returns,
   });
+
+  DeliverProductsModel copy() {
+    return DeliverProductsModel(
+      idRoute: this.idRoute,
+      carboys: this.carboys.copy(),
+      others: this.others,
+      returns: this.returns,
+    );
+  }
+  DeliverProductsModel copyOthers() {
+    return DeliverProductsModel(
+      idRoute: this.idRoute,
+      carboys: this.carboys.copy(), // Copia de carboys
+      others: this.others.map((e) => e.copy()).toList(), // Copia profunda de others
+      returns: this.returns.map((e) => e.copy()).toList(), // Copia profunda de returns si es necesario
+    );
+  }
+
   factory DeliverProductsModel.empty(){
     return DeliverProductsModel(idRoute: 0, carboys: CarboyModel.empty(), others: [], returns: []);
   }

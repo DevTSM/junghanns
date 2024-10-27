@@ -1231,6 +1231,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
           btnOkText: "Aceptar",
           btnOkOnPress: () => Navigator.pop(context),
         ).show();
+        provider.fetchStockDelivery();
       } else {
         //se valida si el error es por falta de red
         if (answer.status == 1002) {

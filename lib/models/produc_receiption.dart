@@ -38,6 +38,22 @@ class ProductReceiptionModel {
       'cantidad': count,
     };
   }
+  ProductReceiptionModel copy() {
+    return ProductReceiptionModel(
+      id: id,
+      product: product,
+      count: count,
+      folio: folio,
+      img: img,
+    );
+  }
+
+  bool isEqualWithoutImage(ProductReceiptionModel other) {
+    return this.id == other.id &&
+        this.product == other.product &&
+        this.count == other.count;
+  }
+
   // Método para convertir ProductReceiptionModel a ProductModel
   ProductModel toProductModel() {
     return ProductModel(

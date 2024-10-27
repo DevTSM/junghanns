@@ -18,6 +18,9 @@ import '../../provider/provider.dart';
 import '../../util/location.dart';
 import '../../widgets/button/button_reception.dart';
 import '../../widgets/modal/decline.dart';
+import '../../widgets/modal/receipt_modal.dart';
+import '../../widgets/modal/validation_modal.dart';
+import '../home/home_principal.dart';
 
 class ReceptionOfProducts extends StatefulWidget {
   const ReceptionOfProducts({Key? key}) : super(key: key);
@@ -32,6 +35,7 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
   late bool isLoading;
   late bool isLoadingOne;
   late Position _currentLocation;
+  List specialData = [];
   Timer? _timer;
 
   @override
@@ -55,20 +59,52 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<ProviderJunghanns>(context, listen: false).fetchStockValidation();
     });
+    _refreshTimer();
   }
 
   Future<void> _refreshInventory() async {
     Provider.of<ProviderJunghanns>(context, listen: false).fetchStockValidation();
   }
+  Future<void> _refreshTimer() async {
+    final provider = Provider.of<ProviderJunghanns>(context, listen: false);
+
+    // Ahora fetchStockValidation devuelve un objeto ValidationModel
+    provider.fetchStockValidation();
+
+// Filtrar los datos según las condiciones especificadas
+    final filteredData = provider.validationList.where((validation) {
+      return validation.status == "P" && validation.valid == "Planta";
+    }).toList();
+
+
+// Verificar si hay datos filtrados
+    setState(() {
+      if (filteredData.isNotEmpty) {
+        specialData = filteredData;  // Asigna los datos filtrados a specialData
+        // Imprimir el contenido de specialData para confirmarlo
+        print('Contenido de specialData (filtrado): $specialData');
+        print('Llama al modal');
+        showValidationModal(context);
+      } else {
+        specialData = [];  // Si no hay datos que cumplan las condiciones, asignar un arreglo vacío
+        print('No se encontraron datos que cumplan las condiciones');
+      }
+    });
+
+    if (provider.validationList.first.status =='P' && provider.validationList.first.valid == 'Ruta'){
+      showReceiptModal(context);
+    }
+  }
 
   void _handleAction(String status, {required String comment}) async {
     final provider = Provider.of<ProviderJunghanns>(context, listen: false);
-    final validation = provider.validationList.first;
-    final products = validation.idValidation;
 
     setState(() {
       isLoadingOne = true; // Muestra el indicador de carga
     });
+
+    final validation = provider.validationList.first;
+    final products = validation.idValidation;
 
     _currentLocation = (await LocationJunny().getCurrentLocation())!;
     provider.receiptionProducts(
@@ -109,7 +145,18 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
               ),
               elevation: 0,
               leading: IconButton(
-                onPressed: () => Navigator.pop(context),
+                /*onPressed: () => Navigator.pushReplacementNamed(context, '/HomePrincipal')*//*Navigator.pop(context)*//*,*/
+                onPressed: () {
+                  if (Navigator.canPop(context)) {
+                    Navigator.pop(context); // Solo hacer pop si hay algo que cerrar
+                  } else {
+                    // Opcional: puedes navegar a HomePrincipal si no hay más pantallas
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => HomePrincipal()),
+                    );
+                  }
+                },
                 icon: const Icon(
                   Icons.arrow_back_ios,
                   color: ColorsJunghanns.blue,

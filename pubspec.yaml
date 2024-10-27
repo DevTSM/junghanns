@@ -63,6 +63,7 @@ dependencies:
   animated_icon: ^0.0.5
   workmanager: ^0.5.2
   http_parser: ^4.0.2
+  collection: ^1.18.0
 
   
 dependency_overrides:

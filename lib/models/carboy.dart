@@ -52,6 +52,17 @@ class CarboyModel {
       'a_la_par': aLongWay,
     };
   }
+  CarboyModel copy() {
+    return CarboyModel(
+      empty: this.empty,
+      full: this.full,
+      brokenCte: this.brokenCte,
+      dirtyCte: this.dirtyCte,
+      brokenRoute: this.brokenRoute,
+      dirtyRoute: this.dirtyRoute,
+      aLongWay: this.aLongWay,
+    );
+  }
 
   void incrementEmpty(int count) {
     empty += count;

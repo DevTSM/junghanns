@@ -15,14 +15,17 @@ import 'package:junghanns/widgets/card/product_missing_card.dart';
 import 'package:junghanns/widgets/card/product_others_card.dart';
 import 'package:junghanns/widgets/card/product_returns_card.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../components/button_delivery.dart';
 import '../../models/customer.dart';
 import '../../provider/provider.dart';
 import '../../util/location.dart';
+import '../../util/navigator.dart';
 import '../../widgets/card/product_addditional_card.dart';
 import '../../widgets/modal/add_additional_product.dart';
 import '../../widgets/modal/add_missing_product.dart';
+import '../home/home_principal.dart';
 
 class DeliveryOfProducts extends StatefulWidget {
   const DeliveryOfProducts({Key? key}) : super(key: key);
@@ -39,6 +42,7 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
   bool isDeliverySuccessful = false;
   bool isValidating = false;
   bool isButtonDisabled = false;
+  bool areFieldsEditable = true; // Nuevo estado para editar los campos
   List specialData = [];
 
   final TextEditingController _vaciosController = TextEditingController();
@@ -67,11 +71,18 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
     );
     isLoading = false;
     isLoadingOne = false;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _refreshTimer();
-      _refreshData();
-
+    Future.microtask(() {
+      print('En la vista');
+      Provider.of<ProviderJunghanns>(context, listen: false).fetchStockDelivery();
+      Provider.of<ProviderJunghanns>(context, listen: false).updateStock();
+      /*print('Llamando loadList de l guardado de las listas');
+      Provider.of<ProviderJunghanns>(context, listen: false).loadLists();
+      print('Llamando loadListAdicional de la guardado de las listas');
+      Provider.of<ProviderJunghanns>(context, listen: false).loadAdditionalProducts();*/
     });
+    _refreshTimer();
+    _refreshData();
+    _loadSavedValues();
     _suciosRutaController.addListener(_updateLlenos);
     _rotosRutaController.addListener(_updateLlenos);
   }
@@ -94,7 +105,6 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
         print('Contenido de specialData (filtrado): $specialData');
       } else {
         specialData = [];  // Si no hay datos que cumplan las condiciones, asignar un arreglo vacío
-        print('No se encontraron datos que cumplan las condiciones');
       }
     });
   }
@@ -117,10 +127,11 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
         print('Contenido de specialData (filtrado): $specialData');
       } else {
         specialData = [];  // Si no hay datos que cumplan las condiciones, asignar un arreglo vacío
-        print('No se encontraron datos que cumplan las condiciones');
       }
     });
+    print('refresh');
 
+    await provider.fetchStockDelivery();
     await provider.updateStock();
     await provider.fetchProducts();
     await provider.fetchProductsStock();
@@ -128,9 +139,22 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
       _updateControllersWithCurrentStock();
   }
 
-  void _updateControllersWithCurrentStock() {
+  Future<void> _loadSavedValues() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _rotosRutaController.text = prefs.getString('rotosRuta') ?? '';  // Cargar valor
+      _suciosRutaController.text = prefs.getString('suciosRuta') ?? ''; // Cargar valor
+    });
+  }
+  void _saveValues() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('rotosRuta', _rotosRutaController.text);  // Guardar valor
+    await prefs.setString('suciosRuta', _suciosRutaController.text); // Guardar valor
+  }
+  Future<void> _updateControllersWithCurrentStock() async {
     final providerJunghanns = Provider.of<ProviderJunghanns>(context, listen: false);
-
+    /*await providerJunghanns.fetchStockDelivery();*/
+    //await providerJunghanns.updateStock();
     final currentStock = providerJunghanns.carboyAccesories;
     // providerJunghanns.fetchStockDelivery();
 
@@ -251,7 +275,7 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
       lat: _currentLocation.latitude,
       lng: _currentLocation.longitude,
       team: marca,
-      delivery: deliveryData,
+      delivery: deliveryData, provider: providerJunghanns,
     );
 
     await _refreshData();
@@ -299,6 +323,16 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
         specialData == null;
 
       });
+      final filteredData = providerJunghanns.validationList.where((validation) {
+        return validation.status != "P" && validation.valid == "Planta";
+      }).toList();
+
+      // Limpiar los inputs si filteredData tiene elementos
+      if (filteredData.isNotEmpty) {
+        _rotosRutaController.clear();
+        _suciosRutaController.clear();
+      }
+
       await _refreshData();
       isLoadingOne = false;
     }
@@ -309,6 +343,7 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
 
   @override
   void dispose() {
+    _saveValues();
     _suciosRutaController.removeListener(_updateLlenos);
     _rotosRutaController.removeListener(_updateLlenos);
     _suciosRutaController.dispose();
@@ -327,104 +362,127 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
     final providerJunghanns = Provider.of<ProviderJunghanns>(context);
     size = MediaQuery.of(context).size;
     //Realizando test de esta function
+    //providerJunghanns.updateStock();
     _updateControllersWithCurrentStock();
 
 
-    return Stack(
-      children: [
-        Scaffold(
-          appBar: AppBar(
-            backgroundColor: ColorsJunghanns.whiteJ,
-            systemOverlayStyle: const SystemUiOverlayStyle(
-              statusBarColor: ColorsJunghanns.whiteJ,
-              statusBarIconBrightness: Brightness.dark,
-              statusBarBrightness: Brightness.dark,
-            ),
-            elevation: 0,
-            leading: isLoading
-                ? null
-                : Visibility(
-              visible: specialData == null || specialData.isEmpty,
-                  child: IconButton(
-                                onPressed: () => Navigator.pop(context),
-                                icon: const Icon(
-                  Icons.arrow_back_ios,
-                  color: ColorsJunghanns.blue,
+    return GestureDetector(
+      onTap: () {
+        // Desenfocar el campo de texto al tocar fuera de él
+        FocusScope.of(context).unfocus();
+      },
+      child: Stack(
+        children: [
+          Scaffold(
+            appBar: AppBar(
+              backgroundColor: ColorsJunghanns.whiteJ,
+              systemOverlayStyle: const SystemUiOverlayStyle(
+                statusBarColor: ColorsJunghanns.whiteJ,
+                statusBarIconBrightness: Brightness.dark,
+                statusBarBrightness: Brightness.dark,
+              ),
+              elevation: 0,
+              leading: isLoading
+                  ? null
+                  : Visibility(
+                visible: specialData == null || specialData.isEmpty,
+                    child: IconButton(
+                      onPressed: () {
+                        if (Navigator.canPop(context)) {
+                          Navigator.pop(context); // Solo hacer pop si hay algo que cerrar
+                        } else {
+                          // Opcional: puedes navegar a HomePrincipal si no hay más pantallas
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(builder: (context) => HomePrincipal()),
+                          );
+                        }
+                      },
+
+                      /*onPressed: () {
+                        Navigator.pop(context);
+                      },*/
+/*Navigator.pop(context)*/
+                                  icon: const Icon(
+                    Icons.arrow_back_ios,
+                    color: ColorsJunghanns.blue,
+                                  ),
                                 ),
-                              ),
-                ),
-          ),
-          body: isLoading
-              ? const Center(
-            child: LoadingJunghanns(),
-          )
-              : RefreshIndicator(
-            onRefresh: _refreshData,
-                child: Column(
-                            children: [
-                header(),
-                const SizedBox(height: 5),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 85),
-                    child: providerJunghanns.stockAccesories.isEmpty
-                    ? empty(context)
-                    :ListView(
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      children: [
-                        _sectionWithPlus(
-                          "PRODUCTOS EN CAMIONETA",
-                          Icons.add,
-                          _inputFieldsForStock(),
-                              () {
-                            print("Añadir producto con stock");
-                          },
-                          showPlus: false,
-                        ),
-                        /*_sectionWithPlus(
-                          "OTROS PRODUCTOS",
-                          Icons.add,
-                          _othersStock(),
-                              () {
-                            print("Añadir producto otros");
-                          }, showPlus: false,
-                        ),*/
-                        _sectionWithPlus(
-                          "PRODUCTOS FALTANTES",
-                          Icons.add,
-                          _missingProducts(),
-                              () {
-                            _showAddMissingProductModal(context: context, controller: providerJunghanns);
-                              }, showPlus: true,
-                        ),
-                        _sectionWithPlus(
-                          "PRODUCTOS ADICIONALES",
-                          Icons.add,
-                          _additionalProducts(),
-                              () {
-                            _showAddAdditionalProductModal(context: context, controller: providerJunghanns);
-                          }, showPlus: true,
-                        ),
-                      ],
+                  ),
+            ),
+            body: isLoading
+                ? const Center(
+              child: LoadingJunghanns(),
+            )
+                : RefreshIndicator(
+              onRefresh: _refreshData,
+                  child: Column(
+                              children: [
+                  header(),
+                  const SizedBox(height: 5),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 85),
+                      child: providerJunghanns.stockAccesories.isEmpty
+                      ? empty(context)
+                      :ListView(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        children: [
+                          _sectionWithPlus(
+                            "PRODUCTOS EN CAMIONETA",
+                            Icons.add,
+                            _inputFieldsForStock(),
+                                () {
+                              print("Añadir producto con stock");
+                            },
+                            showPlus: false,
+                          ),
+                          /*_sectionWithPlus(
+                            "OTROS PRODUCTOS",
+                            Icons.add,
+                            _othersStock(),
+                                () {
+                              print("Añadir producto otros");
+                            }, showPlus: false,
+                          ),*/
+                          _sectionWithPlus(
+                            "PRODUCTOS FALTANTES",
+                            Icons.add,
+                            _missingProducts(),
+                                () {
+                              _showAddMissingProductModal(context: context, controller: providerJunghanns);
+                                }, showPlus: true,
+                          ),
+                          _sectionWithPlus(
+                            "PRODUCTOS ADICIONALES",
+                            Icons.add,
+                            _additionalProducts(),
+                                () {
+                              _showAddAdditionalProductModal(context: context, controller: providerJunghanns);
+                            }, showPlus: true,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
+                              ],
+                            ),
                 ),
-                            ],
-                          ),
-              ),
-        ),
-        _buildActionButton(-15),
-        Visibility(
-          visible: isLoadingOne,
-          child: const Center(
-            child: LoadingJunghanns(),
           ),
-        ),
-      ],
+          _buildActionButton(-15),
+          Visibility(
+            visible: isLoadingOne,
+            child: const Center(
+              child: LoadingJunghanns(),
+            ),
+          ),
+        ],
+      ),
     );
   }
   Widget _buildActionButton(double bottomPadding) {
     final provider = Provider.of<ProviderJunghanns>(context, listen: false);
+/*provider.updateStock();*/
     final hasData = provider.carboyAccesories.isNotEmpty;
 
     final icon = specialData != null && specialData!.isNotEmpty
@@ -437,15 +495,20 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
       bottom: bottomPadding + 35,
       left: 20,
       right: 20,
-      child: Visibility(
-        visible: hasData,
+
         child: CustomButtonDelivery(
           onValidate: isButtonDisabled ? null : (specialData != null && specialData!.isNotEmpty
               ? () {
+            setState(() {
+              areFieldsEditable = false; // Deshabilitar los campos al validar
+            });
             _validateAccessories(provider);
           }
               : hasData
               ? () {
+            setState(() {
+              areFieldsEditable = false; // Deshabilitar los campos al entregar
+            });
             _deliverProduct(provider);
           }
               : null),
@@ -460,7 +523,6 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
           validateText: 'ENVIAR',
           icon: Icons.send,
         ),*/
-      ),
     );
   }
   Widget textField(
@@ -487,14 +549,15 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
         child: TextFormField(
           controller: controller,
           textAlignVertical: TextAlignVertical.center,
-          enabled: enabled,
+          /*enabled: enabled,*/
+          enabled: enabled && areFieldsEditable,
           style: TextStyles.blue18SemiBoldIt.copyWith(
             color: enabled ? ColorsJunghanns.blueJ : Colors.grey[400],
           ),
           decoration: InputDecoration(
             labelText: hintText,
             labelStyle: TextStyles.blue18SemiBoldIt.copyWith(
-              color: enabled ? Colors.grey[800] : Colors.grey[600],
+              color: /*enabled*/ (enabled && areFieldsEditable) ? Colors.grey[800] : Colors.grey[600],
             ),
             filled: true,
             fillColor: Colors.transparent,
@@ -502,14 +565,14 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
-                color: enabled ? ColorsJunghanns.blueJ : ColorsJunghanns.grey,
+                color: /*enabled*/(enabled && areFieldsEditable) ? ColorsJunghanns.blueJ : ColorsJunghanns.grey,
                 width: 1.5,
               ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
-                color: enabled ? ColorsJunghanns.blueJ : ColorsJunghanns.grey,
+                color:/* enabled */(enabled && areFieldsEditable)? ColorsJunghanns.blueJ : ColorsJunghanns.grey,
                 width: 1.5,
               ),
             ),

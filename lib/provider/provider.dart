@@ -647,7 +647,7 @@ class ProviderJunghanns extends ChangeNotifier {
     _updateStock(product.idProduct, count);
   }*/
 
-  void removeMissingProduct(ProductModel product, int count) {
+  Future<void> removeMissingProduct(ProductModel product, int count) async {
     final existingProduct = missingProducts.firstWhere(
           (p) => p.idProduct == product.idProduct,
       orElse: () => ProductModel.empty(),
@@ -676,6 +676,8 @@ class ProviderJunghanns extends ChangeNotifier {
         existingProduct.count = currentCount.toString();
       }
     }
+    await saveMissingProducts(); // Guardar la lista actualizada
+    notifyListeners();
   }
 
   updateStock() async {
@@ -818,135 +820,6 @@ class ProviderJunghanns extends ChangeNotifier {
         .toList();
   }
 
-
-
-  /*updateStock() async {
-    final uiProvider = Provider.of<ProviderJunghanns>(navigatorKey.currentContext!, listen: false);
-    // uiProvider.fetchStockDelivery();
-    carboyAccesories.clear();
-    print('Primer cargado ${carboyAccesories}');
-    final productWithStockWithoutSerial = uiProvider.stockAccesories;
-
-    // Verificar si ya se cargaron los carboys inicialmente
-    if (carboyAccesories.isEmpty) {
-      // Cargar los datos iniciales de carboys
-      carboyAccesories = productWithStockWithoutSerial
-          .where((a) => a.carboys != null) // Filtrar productos que tienen carboys no nulos
-          .toList();
-      print('Segundo cargado ${carboyAccesories}');
-    } else {
-      // Verificar si hay carboyAccesories previos y conservar los cambios
-      for (var newProduct in productWithStockWithoutSerial) {
-        if (newProduct.carboys != null) {
-          // Buscar si el carboy ya existe en la lista
-          final existingCarboy = carboyAccesories.firstWhere(
-                (carboy) => carboy.carboys == newProduct.carboys,
-            orElse: () => DeliverProductsModel.empty(),
-          );
-
-          if (existingCarboy.carboys != null) {
-            // Si ya existe, no sobrescribir los cambios previos, continuar
-            continue;
-          } else {
-            // Agregar nuevos carboys si no están en la lista
-            carboyAccesories.add(newProduct);
-          }
-        }
-      }
-    }
-    // Imprimir el estado final de carboyAccesories después de la actualización
-    print('=== Estado final de carboyAccesories ===');
-    for (var carboy in carboyAccesories) {
-      print('Carboy: ${carboy.carboys}, Detalles: $carboy');
-    }
-    // Imprimir el estado final de carboyAccesories después de la actualización
-    print('Estado final de carboyAccesories: $carboyAccesories');
-
-    // Actualizar accesorios con stock
-    if (accessoriesWithStock.isEmpty) {
-      accessoriesWithStock = productWithStockWithoutSerial
-          .where((accessory) => accessory.others.isNotEmpty)
-          .toList();
-
-      // Actualizar devoluciones con stock
-      returnsWithStock = productWithStockWithoutSerial
-          .where((accessory) => accessory.returns.isNotEmpty)
-          .toList();
-
-      // Guardar copia de accesorios originales
-      originalAccessoriesWithStock = List.from(accessoriesWithStock);
-      // Imprimir información para verificar
-      print('Accesorios con stock cargados: ${accessoriesWithStock}');
-    }
-    notifyListeners();
-  }*/
-
-  /*updateStock() async {
-    final uiProvider = Provider.of<ProviderJunghanns>(navigatorKey.currentContext!, listen: false);
-    final productWithStockWithoutSerial = uiProvider.stockAccesories;
-
-    // Cargar los datos de productWithStockWithoutSerial en carboyAccesories si no se ha hecho aún
-    if (carboyAccesories.isEmpty) {
-      print('Cargando carboyAccesories desde productWithStockWithoutSerial...');
-      carboyAccesories.addAll(productWithStockWithoutSerial);
-    }
-    // Filtrar productos que tienen carboys no nulos
-    final newCarboys = productWithStockWithoutSerial
-        .where((a) => a.carboys != null)
-        .toList();
-
-    // Crear un conjunto de IDs de los carboys actuales para evitar duplicados
-    final currentCarboyIds = carboyAccesories.map((carboy) => carboy.carboys).toSet();
-
-    // Imprimir la lista actual y la nueva lista
-    print('Lista actual de carboyAccesories: $carboyAccesories');
-    print('Nueva lista de carboys: $newCarboys');
-
-    // Actualizar la lista de carboys si hay cambios
-    bool hasChanges = false;
-
-    for (var newProduct in newCarboys) {
-      // Buscar si el carboy ya existe en la lista
-      final existingCarboyIndex = carboyAccesories.indexWhere(
-              (carboy) => carboy.idRoute == newProduct.idRoute);
-
-      if (existingCarboyIndex != -1) {
-        // Si existe, comparar sus valores
-        final existingCarboy = carboyAccesories[existingCarboyIndex];
-
-        if (existingCarboy.carboys != newProduct.carboys) {
-          // Si los carboys son diferentes, actualizar el carboy existente
-          print('Actualizando carboy en id_ruta: ${newProduct.idRoute}');
-          carboyAccesories[existingCarboyIndex] = newProduct;
-          hasChanges = true;
-        }
-      } else {
-        // Si no existe en la lista, agregar como nuevo
-        print('Agregando nuevo carboy: ${newProduct.carboys}');
-        carboyAccesories.add(newProduct);
-        hasChanges = true;
-      }
-    }
-    // Si hubo cambios, imprimir el nuevo estado de carboyAccesories y notificar
-    if (hasChanges) {
-      print('Lista actualizada de carboyAccesories: $carboyAccesories');
-      notifyListeners();
-    }
-
-    if (accessoriesWithStock.isEmpty) {
-      accessoriesWithStock = productWithStockWithoutSerial
-          .where((accessory) => accessory.others.isNotEmpty)
-          .toList();
-
-      returnsWithStock = productWithStockWithoutSerial
-          .where((accessory) => accessory.returns.isNotEmpty)
-          .toList();
-      originalAccessoriesWithStock = List.from(accessoriesWithStock);
-      print('Accesorios con stock cargados: $accessoriesWithStock');
-    }
-    notifyListeners();
-  }*/
-
   void updateMissingProduct(ProductModel product, int change) {
     final accessoryWithStock = accessoriesWithStock.firstWhere(
           (p) => p.others.first.id == product.idProduct,
@@ -1044,7 +917,7 @@ class ProviderJunghanns extends ChangeNotifier {
     }
   }
 
-  void addMissingProduct(ProductModel product, int count) {
+  Future<void> addMissingProduct(ProductModel product, int count) async {
     final existingProduct = missingProducts.firstWhere(
           (p) => p.idProduct == product.idProduct,
       orElse: () => ProductModel.empty(),
@@ -1068,9 +941,28 @@ class ProviderJunghanns extends ChangeNotifier {
     }
 
     // Actualiza el stock basado en el id del producto
+    await saveMissingProducts(); // Guardar la lista actualizada
     notifyListeners();
     _updateStock(product.idProduct, countChange);
   }
+
+  Future<void> saveMissingProducts() async {
+    final prefs = await SharedPreferences.getInstance();
+    final missingProductsJson = missingProducts.map((p) => p.toJson()).toList();
+    prefs.setString('missingProducts', jsonEncode(missingProductsJson));
+  }
+
+  Future<void> loadMissingProducts() async {
+    final prefs = await SharedPreferences.getInstance();
+    final missingProductsString = prefs.getString('missingProducts');
+
+    if (missingProductsString != null) {
+      missingProducts = (jsonDecode(missingProductsString) as List)
+          .map((json) => ProductModel.fromProductInventary(json))
+          .toList();
+    }
+  }
+
 
 
   /*void _updateStock(int productId, int countChange) {

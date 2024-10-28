@@ -496,7 +496,7 @@ Future<Answer> getRefillList(int idR) async {
   log("/StoreServices <getRefillList>");
   try {
     var response = await http.get(
-        Uri.parse("${prefs.urlBase}almacenmovil?q=recarga&idRuta=$idR"),
+        Uri.parse("${prefs.urlBase}almacenmovil?q=recarga&id_ruta=$idR"),
         headers: {
           "Content-Type": "aplication/json",
           "x-api-key": apiKey,
@@ -507,6 +507,9 @@ Future<Answer> getRefillList(int idR) async {
       log("/StoreServices <getRefillList> Successfull");
       return Answer(body: jsonDecode(response.body), message: "",status: response.statusCode, error: false);
     } else {
+      log("/StoreServices <getRefillList> Failed with status: ${response.statusCode}, body: ${response.body}");
+      log("/StoreServices <getRefillList> Failed with status: ${response.statusCode}, body: ${response.body}");
+
       log("/StoreServices <getRefillList> Fail");
       return Answer(
           body: response,

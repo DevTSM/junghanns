@@ -800,8 +800,15 @@ class ProviderJunghanns extends ChangeNotifier {
     await saveLists();
   }
 
+
   Future<void> saveLists() async {
     final prefs = await SharedPreferences.getInstance();
+
+    // Obtén el token de sesión actual al momento de guardar las listas
+    String sessionToken = await prefs.getString('token') ?? '';
+
+    // Guarda el token de sesión actual para referencia futura
+    await prefs.setString('savedSessionToken', sessionToken);
 
     // Convierte tus listas a JSON
     String carboyJson = jsonEncode(carboyAccesories.map((a) => a.toJson()).toList());
@@ -818,32 +825,62 @@ class ProviderJunghanns extends ChangeNotifier {
     print('Guardado Accessories with Stock: $othersJson');
     print('Guardado Returns with Stock: $returnsJson');
   }
-
-
-  Future<void> loadLists() async {
+  Future<void> refreshList(String currentSessionToken) async {
     final prefs = await SharedPreferences.getInstance();
 
-    // Recupera y asigna las listas desde el almacenamiento local
-    carboyAccesories = (jsonDecode(prefs.getString('carboyAccesories') ?? '[]') as List)
-        .map((e) => DeliverProductsModel.fromJson(e))
-        .toList();
+    String? savedSessionToken = prefs.getString('savedSessionToken');
+    String? currentSessionToken = prefs.getString('token');
 
-    // Imprimir la lista de accesorios carboy
-    print('Carboy Accessories: $carboyAccesories');
+    // Imprimir el token guardado y el token actual para comparar
+    print("Token de sesión guardado: $savedSessionToken");
+    print("Token de sesión actual: $currentSessionToken");
+    // Verifica si el token actual de la sesión es diferente al guardado
+    if (currentSessionToken != savedSessionToken) {
+      // Si los tokens no coinciden, limpia las listas y elimina los datos guardados
+      carboyAccesories.clear();
+      accessoriesWithStock.clear();
+      returnsWithStock.clear();
+      missingProducts.clear();
+      additionalProducts.clear();
 
-    accessoriesWithStock = (jsonDecode(prefs.getString('othersAccesories') ?? '[]') as List)
-        .map((e) => DeliverProductsModel.fromJson(e))
-        .toList();
+      await prefs.remove('carboyAccesories');
+      await prefs.remove('othersAccesories');
+      await prefs.remove('returnsAccesories');
+      await prefs.remove('missingProducts');
+      await prefs.remove('additionalProducts');
+      await prefs.remove('savedSessionToken');
+     // Actualiza el token guardado para la siguiente comparación
+      await prefs.setString('savedSessionToken', currentSessionToken!);
+      print("Token de sesión cambiado, listas no cargadas y datos eliminados.");
+      return;
+    }
+  }
 
-    // Imprimir la lista de accesorios con stock
-    print('Accessories with Stock: $accessoriesWithStock');
+  Future<void> loadLists(String currentSessionToken) async {
+    final prefs = await SharedPreferences.getInstance();
 
-    returnsWithStock = (jsonDecode(prefs.getString('returnsAccesories') ?? '[]') as List)
-        .map((e) => DeliverProductsModel.fromJson(e))
-        .toList();
+      // Recupera y asigna las listas desde el almacenamiento local
+      carboyAccesories = (jsonDecode(prefs.getString('carboyAccesories') ?? '[]') as List)
+          .map((e) => DeliverProductsModel.fromJson(e))
+          .toList();
 
-    // Imprimir la lista de devoluciones con stock
-    print('Returns with Stock: $returnsWithStock');
+      // Imprimir la lista de accesorios carboy
+      print('Carboy Accessories: $carboyAccesories');
+
+      accessoriesWithStock = (jsonDecode(prefs.getString('othersAccesories') ?? '[]') as List)
+          .map((e) => DeliverProductsModel.fromJson(e))
+          .toList();
+
+      // Imprimir la lista de accesorios con stock
+      print('Accessories with Stock: $accessoriesWithStock');
+
+      returnsWithStock = (jsonDecode(prefs.getString('returnsAccesories') ?? '[]') as List)
+          .map((e) => DeliverProductsModel.fromJson(e))
+          .toList();
+
+      // Imprimir la lista de devoluciones con stock
+      print('Returns with Stock: $returnsWithStock');
+
   }
 
 
@@ -986,25 +1023,25 @@ class ProviderJunghanns extends ChangeNotifier {
     await prefs.setString('missingProducts', jsonString);
   }
 
-  Future<void> loadMissingProducts() async {
+  Future<void> loadMissingProducts(String currentSessionToken) async {
     final prefs = await SharedPreferences.getInstance();
     final missingProductsString = prefs.getString('missingProducts');
 
     print('Contenido de SharedPreferences: $missingProductsString');
 
     if (missingProductsString != null && missingProductsString.isNotEmpty) {
-      // Decodifica la cadena JSON y convierte a la lista de ProductModel
-      missingProducts = (jsonDecode(missingProductsString) as List)
-          .map((json) => ProductModel.fromProductInventary(json))
-          .toList();
+        // Decodifica la cadena JSON y convierte a la lista de ProductModel
+        missingProducts = (jsonDecode(missingProductsString) as List)
+            .map((json) => ProductModel.fromProductInventary(json))
+            .toList();
 
-      // Imprimir productos cargados
-      for (var product in missingProducts) {
-        print('Producto cargado: ${product.description}, count: ${product.count}');
+        // Imprimir productos cargados
+        for (var product in missingProducts) {
+          print('Producto cargado: ${product.description}, count: ${product.count}');
+        }
+      } else {
+        print('No se encontraron productos faltantes.');
       }
-    } else {
-      print('No se encontraron productos faltantes.');
-    }
   }
 
 

@@ -75,11 +75,12 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
       print('En la vista');
       final provider = Provider.of<ProviderJunghanns>(context, listen: false);
       Provider.of<ProviderJunghanns>(context, listen: false).fetchStockDelivery();
-      Provider.of<ProviderJunghanns>(context, listen: false).loadLists();
+      Provider.of<ProviderJunghanns>(context, listen: false).refreshList(prefs.token);
+      Provider.of<ProviderJunghanns>(context, listen: false).loadLists(prefs.token);
       Provider.of<ProviderJunghanns>(context, listen: false).updateStock();
       /*print('Llamando loadList de l guardado de las listas');*//*
       Provider.of<ProviderJunghanns>(context, listen: false).loadLists();*/
-      Provider.of<ProviderJunghanns>(context, listen: false).loadMissingProducts();
+      Provider.of<ProviderJunghanns>(context, listen: false).loadMissingProducts(prefs.token);
       // Imprimir los productos que se han cargado
       print('Productos faltantes cargados: ${provider.missingProducts.length}');
       print('Llamando loadListAdicional de la guardado de las listas');

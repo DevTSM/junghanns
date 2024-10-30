@@ -91,9 +91,9 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
       }
     });
 
-    if (provider.validationList.first.status =='P' && provider.validationList.first.valid == 'Ruta'){
+    /*if (provider.validationList.first.status =='P' && provider.validationList.first.valid == 'Ruta'){
       showReceiptModal(context);
-    }
+    }*/
   }
 
   void _handleAction(String status, {required String comment}) async {

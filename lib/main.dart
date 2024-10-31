@@ -29,7 +29,7 @@ Future<void> messageHandler(RemoteMessage message) async {
 @pragma('vm:entry-point') // Mandatory if the App is obfuscated or using Flutter 3.1+
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) {
-    initWebSocket();
+    //initWebSocket();
     print("Native called background task: $task"); //simpleTask will be emitted here.
     return Future.value(true);
   });
@@ -96,7 +96,7 @@ Future<void> main() async {
   //   isInDebugMode: false 
   // );
   // Workmanager().registerOneOffTask("task-identifier", "notification");
-  initWebSocket();
+  //initWebSocket();
   runApp(const JunnyApp());
 }
 class MyHttpOverrides extends HttpOverrides {

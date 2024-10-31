@@ -37,10 +37,17 @@ class Async {
               provider.labelAsync = "Sincronizando QR";
               return getQR().then((value7){
                 provider.labelAsync = "Sincronizando marcas de garrafón";
-                return getDataBrand().then((value8){
+                return provider.synchronizeListDelivery().then((value8){
+                  provider.labelAsync = "Sincronizando stock de entrega";
+                  return getDataBrand().then((value9){
+                    prefs.isAsyncCurrent = false;
+                    provider.asyncProcess=false;
+                    return true;
+                });
+                /*return getDataBrand().then((value8){
                   prefs.isAsyncCurrent = false;
               provider.asyncProcess=false;
-              return true;
+              return true;*/
                 });
               });
             });
@@ -85,11 +92,19 @@ class Async {
                 isNotSuccess?null:isNotSuccess=value7;
                 log("======> $isNotSuccess");
                 provider.labelAsync = "Sincronizando marcas de garrafón";
-                return getDataBrand().then((value8){
+                return provider.synchronizeListDelivery().then((value8){
+                  provider.labelAsync = "Sincronizando stock de entrega";
+                  return getDataBrand().then((value9){
+                    prefs.isAsyncCurrent = false;
+                    provider.asyncProcess=false;
+                    return isNotSuccess;
+                  });
+                });
+                /*return getDataBrand().then((value9){
                   prefs.isAsyncCurrent = false;
               provider.asyncProcess=false;
               return isNotSuccess;
-                });
+                });*/
                 
               });
             });

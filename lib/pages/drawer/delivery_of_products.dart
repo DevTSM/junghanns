@@ -44,6 +44,9 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
   bool isButtonDisabled = false;
   bool areFieldsEditable = true; // Nuevo estado para editar los campos
   List specialData = [];
+  String? errorMessage;
+  // Estado para mostrar el banner
+  bool showErrorBanner = false;
 
   final TextEditingController _vaciosController = TextEditingController();
   final TextEditingController _llenosController = TextEditingController();
@@ -53,6 +56,9 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
   final TextEditingController _rotosRutaController = TextEditingController();
   final TextEditingController _aLaParController = TextEditingController();
   final TextEditingController _otrosController = TextEditingController();
+  final TextEditingController _comodatoController = TextEditingController();
+  final TextEditingController _prestamoController = TextEditingController();
+  final TextEditingController _enCamionetaController = TextEditingController();
 
   @override
   void initState() {
@@ -90,6 +96,7 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
     _refreshTimer();
     _refreshData();
     _loadSavedValues();
+
     _suciosRutaController.addListener(_updateLlenos);
     _rotosRutaController.addListener(_updateLlenos);
   }
@@ -116,6 +123,7 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
     });
   }
   Future<void> _refreshData() async {
+    if (!mounted) return;
     final provider = Provider.of<ProviderJunghanns>(context, listen: false);
 
     // Ahora fetchStockValidation devuelve un objeto ValidationModel
@@ -143,21 +151,40 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
     await provider.fetchProducts();
     await provider.fetchProductsStock();
 
+    if (mounted) {
       _updateControllersWithCurrentStock();
+    }
   }
 
   Future<void> _loadSavedValues() async {
     final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _rotosRutaController.text = prefs.getString('rotosRuta') ?? '';  // Cargar valor
-      _suciosRutaController.text = prefs.getString('suciosRuta') ?? ''; // Cargar valor
-    });
+    // Verifica si el estado de la validación está en "P" (pendiente)
+    final provider = Provider.of<ProviderJunghanns>(context, listen: false);
+    await provider.fetchStockValidation(); // Asegura que se tiene la última lista de validaciones
+    final isPending = provider.validationList.any((validation) => validation.status == "P");
+
+    // Carga los valores solo si la validación está pendiente
+    if (isPending) {
+      setState(() {
+        _rotosRutaController.text = prefs.getString('rotosRuta') ?? '';
+        _suciosRutaController.text = prefs.getString('suciosRuta') ?? '';
+      });
+    }
   }
+
   void _saveValues() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('rotosRuta', _rotosRutaController.text);  // Guardar valor
-    await prefs.setString('suciosRuta', _suciosRutaController.text); // Guardar valor
+    final provider = Provider.of<ProviderJunghanns>(context, listen: false);
+    await provider.fetchStockValidation();
+
+    final isPending = provider.validationList.any((validation) => validation.status == "P");
+
+    if (isPending) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('rotosRuta', _rotosRutaController.text);
+      await prefs.setString('suciosRuta', _suciosRutaController.text);
+    }
   }
+
   Future<void> _updateControllersWithCurrentStock() async {
     final providerJunghanns = Provider.of<ProviderJunghanns>(context, listen: false);
     /*await providerJunghanns.fetchStockDelivery();*/
@@ -172,8 +199,12 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
       _rotosCteController.text = currentStock.first.carboys.brokenCte.toString();
       _suciosCteController.text = currentStock.first.carboys.dirtyCte.toString();
       _aLaParController.text = currentStock.first.carboys.aLongWay.toString();
+      _comodatoController.text = currentStock.first.carboys.loan.toString();
+      _prestamoController.text = currentStock.first.carboys.pLoan.toString();
+      _enCamionetaController.text = currentStock.first.carboys.full.toString();
       _updateLlenos();
     }
+    validateInputs();
   }
   void _updateLlenos() {
     final providerJunghanns = Provider.of<ProviderJunghanns>(context, listen: false);
@@ -210,6 +241,37 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
       _llenosController.text = llenosRestantes.toString();
     }
   }
+  // Valida si hay valores negativos en los controladores
+  // Valida si hay valores negativos en los controladores
+  void validateInputs() {
+    print('Entrnado al banner');
+    setState(() {
+      errorMessage = null;
+      showErrorBanner = false; // Resetea el estado del banner
+
+      List<TextEditingController> controllers = [
+        _vaciosController,
+        _llenosController,
+        _suciosCteController,
+        _rotosCteController,
+        _suciosRutaController,
+        _rotosRutaController,
+        _aLaParController,
+        _otrosController,
+        _comodatoController,
+        _prestamoController,
+      ];
+
+      for (var controller in controllers) {
+        int? value = int.tryParse(controller.text);
+        if (value != null && value < 0) {
+          errorMessage = "Existe un error en la información registrada, no deben existir valores negativos en la entrega. Verifica las ventas capturadas.";
+          showErrorBanner = true;
+          break;
+        }
+      }
+    });
+  }
   Future<void> _deliverProduct(ProviderJunghanns providerJunghanns) async {
     setState(() {
       isButtonDisabled = true;
@@ -230,6 +292,8 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
     int rotosRuta = int.tryParse(_rotosRutaController.text) ?? 0;
     int suciosRuta = int.tryParse(_suciosRutaController.text) ?? 0;
     int aLaPar = int.tryParse(_aLaParController.text) ?? 0;
+    int comodato = int.tryParse(_comodatoController.text) ?? 0;
+    int prestamo = int.tryParse(_prestamoController.text) ?? 0;
 
     // Obtener listas de productos
     List<Map<String, dynamic>> missingProducts = providerJunghanns.missingProducts.map((product) {
@@ -271,6 +335,8 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
         "sucios_ruta": suciosRuta,
         "rotos_ruta": rotosRuta,
         "a_la_par": aLaPar,
+        "comodato": comodato,
+        "prestamo": prestamo,
       },
       "faltantes": missingProducts,
       "otros": otherProducts,
@@ -311,8 +377,13 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
     });
 
     setState(() {
+      areFieldsEditable = !isDeliverySuccessful;
+    });
+
+    setState(() {
       isButtonDisabled = false;
     });
+
   }
   void _validateAccessories(ProviderJunghanns providerJunghanns) async {
     setState(() {
@@ -334,11 +405,33 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
         return validation.status != "P" && validation.valid == "Planta";
       }).toList();
 
+      // Verificar si alguna validación fue rechazada
+      bool isRejected = providerJunghanns.validationList.any((validation) => validation.status == "R");
+      // Verificar si alguna validación esta Pendiente
+      bool isPendiente = providerJunghanns.validationList.any((validation) => validation.status == "P");
+
       // Limpiar los inputs si filteredData tiene elementos
       if (filteredData.isNotEmpty) {
         _rotosRutaController.clear();
         _suciosRutaController.clear();
       }
+
+      // Si hay una validación rechazada, habilitar los campos de entrada
+      if (isRejected) {
+        setState(() {
+          areFieldsEditable = true;// Habilitar el campo nuevamente
+          _rotosRutaController.text = "";
+          _suciosRutaController.text = "";
+        });
+      }
+// Guardar temporalmente los valores en SharedPreferences al verificar
+      // Guardar los valores de rotosRuta y suciosRuta
+      if (isPendiente) {
+        setState(() {
+          _saveValues();
+        });
+      }
+
 
       await _refreshData();
       isLoadingOne = false;
@@ -350,7 +443,7 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
 
   @override
   void dispose() {
-    _saveValues();
+    /*_saveValues();*/
     _suciosRutaController.removeListener(_updateLlenos);
     _rotosRutaController.removeListener(_updateLlenos);
     _suciosRutaController.dispose();
@@ -361,6 +454,9 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
     _suciosCteController.dispose();
     _aLaParController.dispose();
     _otrosController.dispose();
+    _comodatoController.dispose();
+    _prestamoController.dispose();
+    _enCamionetaController.dispose();
     super.dispose();
   }
   @override
@@ -409,7 +505,7 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
                       /*onPressed: () {
                         Navigator.pop(context);
                       },*/
-/*Navigator.pop(context)*/
+                      /*Navigator.pop(context)*/
                                   icon: const Icon(
                     Icons.arrow_back_ios,
                     color: ColorsJunghanns.blue,
@@ -427,6 +523,18 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
                               children: [
                   header(),
                   const SizedBox(height: 5),
+                                if (showErrorBanner)
+                                  Container(
+                                    width: double.infinity,
+                                    color: ColorsJunghanns.red,
+                                    padding: EdgeInsets.all(8),
+                                    child: Center(
+                                      child: Text(
+                                        errorMessage ?? '',
+                                        style: TextStyle(color: Colors.white),
+                                      ),
+                                    ),
+                                  ),
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.only(bottom: 85),
@@ -513,9 +621,6 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
           }
               : hasData
               ? () {
-            setState(() {
-              areFieldsEditable = false; // Deshabilitar los campos al entregar
-            });
             _deliverProduct(provider);
           }
               : null),
@@ -610,13 +715,23 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 5),
           child: Text(
-            'GARRAFÓN',
+            'EN CAMIONETA',
             style: TextStyles.blue18SemiBoldIt,
           ),
         ),
         // Campos de llenos y vacíos deshabilitados
+        // textField(_enCamionetaController, 'En camioneta', FontAwesomeIcons.droplet, enabled: false),
+        // const SizedBox(height: 10),
         textField(_llenosController, 'Llenos', FontAwesomeIcons.droplet, enabled: false),
         const SizedBox(height: 10),
+
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 5),
+          child: Text(
+            'POR ENTREGAR',
+            style: TextStyles.blue18SemiBoldIt,
+          ),
+        ),
         textField(_vaciosController, 'Vacios', FontAwesomeIcons.droplet, enabled: false),
         const SizedBox(height: 10),
         textField(_rotosCteController, 'Rotos de clientes', FontAwesomeIcons.droplet, enabled: false),
@@ -628,6 +743,10 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
         textField(_suciosRutaController, 'Sucios ruta', FontAwesomeIcons.droplet),
         const SizedBox(height: 10),
         textField(_aLaParController, 'A la par', FontAwesomeIcons.droplet, enabled: false),
+        const SizedBox(height: 10),
+        textField(_comodatoController, 'Comodato', FontAwesomeIcons.droplet, enabled: false),
+        const SizedBox(height: 10),
+        textField(_prestamoController, 'Prestamo', FontAwesomeIcons.droplet, enabled: false),
         const SizedBox(height: 10),
 
         // Otros

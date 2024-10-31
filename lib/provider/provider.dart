@@ -124,7 +124,6 @@ class ProviderJunghanns extends ChangeNotifier {
 
 
 
-
   //SETS
   set isNotificationPending(bool current){
     _isNotificationPending=current;
@@ -526,127 +525,6 @@ class ProviderJunghanns extends ChangeNotifier {
     notifyListeners();
   }
   // Funcionalidad de lista de productos faltantes
-  /*void addMissingProduct(ProductModel product, int count) {
-    final existingProduct = missingProducts.firstWhere(
-          (p) => p.idProduct == product.idProduct,
-      orElse: () => ProductModel.empty(),
-    );
-
-    // Manejo del producto faltante
-    if (existingProduct.idProduct != 0) {
-      // Si ya existe, se actualiza la cantidad
-      existingProduct.count = (int.parse(existingProduct.count) + count).toString();
-    } else {
-      // Si no existe, se agrega a la lista
-      missingProducts.add(product.copyWith(count: count.toString(), label: "Faltante"));
-    }
-
-    // Manejo específico para carboys (id == 22)
-    if (product.idProduct == 22) {
-      if (carboyAccesories.isNotEmpty) {
-        final carboys = carboyAccesories.first.carboys;
-
-        // Verifica cuántos carboys se pueden descontar
-        if (carboys.full >= count) {
-          carboys.full -= count;  // Descontar de carboys llenos
-          carboys.empty += count; // Aumentar en carboys vacíos
-
-          // Asegurar que el cambio persista en la lista
-          int carboyIndex = carboyAccesories.indexWhere((a) => a.carboys == carboys);
-          if (carboyIndex != -1) {
-            carboyAccesories[carboyIndex].carboys = carboys;
-          }
-
-          // Imprimir para depuración
-          print('Carboys full: ${carboys.full}, Carboys empty: ${carboys.empty}');
-
-        } else {
-          print('No hay suficientes carboys llenos disponibles para descontar. Disponibles: ${carboys.full}');
-        }
-      }
-    }
-
-    // Manejo específico para carboys vacíos (id == 21)
-    if (product.idProduct == 21) {
-      if (carboyAccesories.isNotEmpty) {
-        final carboys = carboyAccesories.first.carboys;
-
-        // Verifica cuántos carboys vacíos se pueden descontar
-        if (carboys.empty >= count) {
-          carboys.empty -= count; // Descontar de carboys vacíos
-
-          // Asegurar que el cambio persista en la lista
-          int carboyIndex = carboyAccesories.indexWhere((a) => a.carboys == carboys);
-          if (carboyIndex != -1) {
-            carboyAccesories[carboyIndex].carboys = carboys;
-          }
-
-          print('Carboys empty después de descuento: ${carboys.empty}');
-        } else {
-          print('No hay suficientes carboys vacíos disponibles para descontar. Disponibles: ${carboys.empty}');
-        }
-      }
-    }
-
-    notifyListeners();
-    _updateStock(product.idProduct, -count);
-  }*/
-
-  /*void removeMissingProduct(ProductModel product, int count) {
-    final existingProduct = missingProducts.firstWhere(
-          (p) => p.idProduct == product.idProduct,
-      orElse: () => ProductModel.empty(),
-    );
-
-    if (existingProduct.idProduct != 0) {
-      int currentCount = int.tryParse(existingProduct.count) ?? 0;
-      currentCount -= count;
-
-      // Manejo específico para carboys (id == 22)
-      if (product.idProduct == 22) {
-        if (carboyAccesories.isNotEmpty) {
-          final carboys = carboyAccesories.first.carboys;
-
-          // Aumenta los carboys llenos y disminuye los vacíos según la cantidad eliminada
-          carboys.full += count;   // Regresar carboys llenos
-          carboys.empty -= count;  // Disminuir carboys vacíos
-
-          // Asegurar que el cambio persista en la lista
-          int carboyIndex = carboyAccesories.indexWhere((a) => a.carboys == carboys);
-          if (carboyIndex != -1) {
-            carboyAccesories[carboyIndex].carboys = carboys;
-          }
-          print('Carboys actualizados: Full: ${carboys.full}, Empty: ${carboys.empty}');
-        }
-      }
-
-      // Manejo específico para el producto faltante con id == 21
-      if (product.idProduct == 21) {
-        if (carboyAccesories.isNotEmpty) {
-          final carboys = carboyAccesories.first.carboys;
-
-          // Aumentar los carboys vacíos según la cantidad eliminada
-          carboys.empty += count;  // Regresar carboys vacíos
-
-          // Asegurar que el cambio persista en la lista
-          int carboyIndex = carboyAccesories.indexWhere((a) => a.carboys == carboys);
-          if (carboyIndex != -1) {
-            carboyAccesories[carboyIndex].carboys = carboys;
-          }
-          print('Carboys vacíos actualizados: Empty: ${carboys.empty}');
-        }
-      }
-
-      // Eliminar el producto si su cuenta es menor o igual a cero
-      if (currentCount <= 0) {
-        missingProducts.removeWhere((p) => p.idProduct == product.idProduct);
-      } else {
-        existingProduct.count = currentCount.toString();
-      }
-    }
-    _updateStock(product.idProduct, count);
-  }*/
-
   Future<void> removeMissingProduct(ProductModel product, int count) async {
     final existingProduct = missingProducts.firstWhere(
           (p) => p.idProduct == product.idProduct,
@@ -827,33 +705,68 @@ class ProviderJunghanns extends ChangeNotifier {
   }
   Future<void> refreshList(String currentSessionToken) async {
     final prefs = await SharedPreferences.getInstance();
-
     String? savedSessionToken = prefs.getString('savedSessionToken');
-    String? currentSessionToken = prefs.getString('token');
 
-    // Imprimir el token guardado y el token actual para comparar
     print("Token de sesión guardado: $savedSessionToken");
     print("Token de sesión actual: $currentSessionToken");
-    // Verifica si el token actual de la sesión es diferente al guardado
-    if (currentSessionToken != savedSessionToken) {
-      // Si los tokens no coinciden, limpia las listas y elimina los datos guardados
-      carboyAccesories.clear();
-      accessoriesWithStock.clear();
-      returnsWithStock.clear();
-      missingProducts.clear();
-      additionalProducts.clear();
 
-      await prefs.remove('carboyAccesories');
-      await prefs.remove('othersAccesories');
-      await prefs.remove('returnsAccesories');
-      await prefs.remove('missingProducts');
-      await prefs.remove('additionalProducts');
-      await prefs.remove('savedSessionToken');
-     // Actualiza el token guardado para la siguiente comparación
-      await prefs.setString('savedSessionToken', currentSessionToken!);
-      print("Token de sesión cambiado, listas no cargadas y datos eliminados.");
-      return;
+    try {
+      // Verifica si el token actual de la sesión es diferente al guardado
+      if (currentSessionToken != savedSessionToken) {
+        carboyAccesories.clear();
+        print("carboyAccesories después de clear: $carboyAccesories");
+        accessoriesWithStock.clear();
+        print("accessoriesWithStock después de clear: $accessoriesWithStock");
+        returnsWithStock.clear();
+        print("returnsWithStock después de clear: $returnsWithStock");
+        missingProducts.clear();
+        print("missingProducts después de clear: $missingProducts");
+        additionalProducts.clear();
+        print("additionalProducts después de clear: $additionalProducts");
+
+
+        await prefs.remove('carboyAccesories');
+        await prefs.remove('othersAccesories');
+        await prefs.remove('returnsAccesories');
+        await prefs.remove('missingProducts');
+        await prefs.remove('additionalProducts');
+        await prefs.remove('savedSessionToken');
+
+        bool missingProductsExists = prefs.containsKey('missingProducts');
+        print("missingProducts eliminado: ${!missingProductsExists}");
+
+        await prefs.setString('savedSessionToken', currentSessionToken);
+        print("Token de sesión cambiado, listas no cargadas y datos eliminados.");
+      }
+    } catch (e) {
+      print("Error en refreshList: $e");
     }
+    notifyListeners();
+  }
+
+  synchronizeListDelivery() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    print("Entra a la sincronizacion de las listas");
+    carboyAccesories.clear();
+    print("carboyAccesories después de clear: $carboyAccesories");
+    accessoriesWithStock.clear();
+    print("accessoriesWithStock después de clear: $accessoriesWithStock");
+    returnsWithStock.clear();
+    print("returnsWithStock después de clear: $returnsWithStock");
+    missingProducts.clear();
+    print("missingProducts después de clear: $missingProducts");
+    additionalProducts.clear();
+    print("additionalProducts después de clear: $additionalProducts");
+
+    await prefs.remove('carboyAccesories');
+    await prefs.remove('othersAccesories');
+    await prefs.remove('returnsAccesories');
+    await prefs.remove('missingProducts');
+    await prefs.remove('additionalProducts');
+
+    bool missingProductsExists = prefs.containsKey('missingProducts');
+    print("missingProducts eliminado: ${!missingProductsExists}");
   }
 
   Future<void> loadLists(String currentSessionToken) async {
@@ -882,7 +795,6 @@ class ProviderJunghanns extends ChangeNotifier {
       print('Returns with Stock: $returnsWithStock');
 
   }
-
 
   void updateMissingProduct(ProductModel product, int change) {
     final accessoryWithStock = accessoriesWithStock.firstWhere(
@@ -1044,35 +956,6 @@ class ProviderJunghanns extends ChangeNotifier {
       }
   }
 
-
-
-
-
-
-
-  /*void _updateStock(int productId, int countChange) {
-    final product = accessoriesWithStock.firstWhere(
-          (p) => p.others.isNotEmpty && p.others.first.id == productId,
-      orElse: () => DeliverProductsModel.empty(),
-    );
-
-    if (product.others.isNotEmpty && product.others.first.id != 0) {
-      product.others.first.count += countChange;
-
-      if (product.others.first.count < 0) {
-        product.others.first.count = 0;
-      }
-
-      int index = accessoriesWithStock.indexWhere((p) => p.others.isNotEmpty && p.others.first.id == productId);
-      if (index != -1) {
-        accessoriesWithStock[index] = product;
-      }
-    } else {
-      print('Producto no encontrado en accessoriesWithStock: ID ${productId}');
-    }
-
-    notifyListeners();
-  }*/
   // Funcionalidad de lista de productos adicionales
   addAdditionalProduct(ProductCatalogModel accesory) async {
     accesory.label = "Adicional";
@@ -1190,6 +1073,8 @@ class ProviderJunghanns extends ChangeNotifier {
         "sucios_ruta": delivery["garrafon"]["sucios_ruta"],
         "rotos_ruta": delivery["garrafon"]["rotos_ruta"],
         "a_la_par": delivery["garrafon"]["a_la_par"],
+        "comodato": delivery["garrafon"]["comodato"],
+        "prestamo": delivery["garrafon"]["prestamo"]
       },
       "faltantes": missingProductsList,
       "otros": returnedProducts,
@@ -1336,7 +1221,7 @@ class ProviderJunghanns extends ChangeNotifier {
             CustomModal.show(
               context: navigatorKey.currentContext!,
               icon: Icons.check_circle,
-              title: "VALIDACIÓN CORERCTA",
+              title: "VALIDACIÓN CORRECTA",
               message: "El registro de la validación fue exitoso.",
               iconColor: ColorsJunghanns.greenJ,
             );

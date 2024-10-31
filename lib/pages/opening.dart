@@ -195,6 +195,7 @@ class _OpeningState extends State<Opening> {
     provider.fetchStockValidation();
     /*provider.fetchProductsStock();*/
     provider.fetchStockDelivery();
+    provider.refreshList(prefs.token);
    /* print('Llamando loadList de l guardado de las listas');
     await provider.loadLists();
     print('Llamando loadListAdicional de la guardado de las listas');

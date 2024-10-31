@@ -26,6 +26,7 @@ import 'package:junghanns/util/location.dart';
 import 'package:provider/provider.dart';
 
 import '../../services/store.dart';
+import '../../widgets/modal/receipt_modal.dart';
 import '../../widgets/modal/validation_modal.dart';
 
 class Home extends StatefulWidget {
@@ -114,6 +115,10 @@ class _HomeState extends State<Home> {
         print('No se encontraron datos que cumplan las condiciones');
       }
     });
+
+    if (provider.validationList.first.status =='P' && provider.validationList.first.valid == 'Ruta'){
+      showReceiptModal(context);
+    }
   }
 
   getDashboarR() async {
@@ -609,6 +614,7 @@ class _HomeState extends State<Home> {
             });
             provider.asyncProcess = true;
             provider.isNeedAsync = false;
+            /*provider.synchronizeListDelivery();*/
             
             Async async = Async(provider: provider);
             await async.initAsync().then((value) async {

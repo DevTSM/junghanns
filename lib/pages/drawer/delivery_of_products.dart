@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:intl/intl.dart';
 import 'package:junghanns/components/empty/empty.dart';
 import 'package:junghanns/components/loading.dart';
 import 'package:junghanns/preferences/global_variables.dart';
@@ -18,6 +19,8 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../components/button_delivery.dart';
+import '../../components/need_async.dart';
+import '../../components/without_internet.dart';
 import '../../models/customer.dart';
 import '../../provider/provider.dart';
 import '../../util/location.dart';
@@ -521,8 +524,19 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
               onRefresh: _refreshData,
                   child: Column(
                               children: [
-                  header(),
+                                providerJunghanns.connectionStatus == 4? const WithoutInternet():providerJunghanns.isNeedAsync?const NeedAsync():Container(),
+                                header(),
                   const SizedBox(height: 5),
+                                Visibility(
+                                    visible: prefs.lastRouteUpdate != "",
+                                    child: Padding(padding: const EdgeInsets.only(left: 15,top: 5,bottom: 5),
+                                        child:Align(
+                                          alignment: Alignment.centerLeft,
+                                          child: Text(
+                                            "Última actualización: ${DateFormat('hh:mm a').format(prefs.lastBitacoraUpdate != "" ? DateTime.parse(prefs.lastBitacoraUpdate) : DateTime.now())}",
+                                            style: TextStyles.blue13It,
+                                          ),
+                                        ))),
                                 if (showErrorBanner)
                                   Container(
                                     width: double.infinity,

@@ -58,6 +58,7 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
   final TextEditingController _otrosController = TextEditingController();
   final TextEditingController _comodatoController = TextEditingController();
   final TextEditingController _prestamoController = TextEditingController();
+  final TextEditingController _enCamionetaController = TextEditingController();
 
   @override
   void initState() {
@@ -200,6 +201,7 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
       _aLaParController.text = currentStock.first.carboys.aLongWay.toString();
       _comodatoController.text = currentStock.first.carboys.loan.toString();
       _prestamoController.text = currentStock.first.carboys.pLoan.toString();
+      _enCamionetaController.text = currentStock.first.carboys.full.toString();
       _updateLlenos();
     }
     validateInputs();
@@ -454,6 +456,7 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
     _otrosController.dispose();
     _comodatoController.dispose();
     _prestamoController.dispose();
+    _enCamionetaController.dispose();
     super.dispose();
   }
   @override
@@ -712,13 +715,23 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 5),
           child: Text(
-            'GARRAFÓN',
+            'EN CAMIONETA',
             style: TextStyles.blue18SemiBoldIt,
           ),
         ),
         // Campos de llenos y vacíos deshabilitados
-        textField(_llenosController, 'En camioneta', FontAwesomeIcons.droplet, enabled: false),
+        // textField(_enCamionetaController, 'En camioneta', FontAwesomeIcons.droplet, enabled: false),
+        // const SizedBox(height: 10),
+        textField(_llenosController, 'Llenos', FontAwesomeIcons.droplet, enabled: false),
         const SizedBox(height: 10),
+
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 5),
+          child: Text(
+            'POR ENTREGAR',
+            style: TextStyles.blue18SemiBoldIt,
+          ),
+        ),
         textField(_vaciosController, 'Vacios', FontAwesomeIcons.droplet, enabled: false),
         const SizedBox(height: 10),
         textField(_rotosCteController, 'Rotos de clientes', FontAwesomeIcons.droplet, enabled: false),

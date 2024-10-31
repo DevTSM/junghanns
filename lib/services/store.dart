@@ -680,7 +680,7 @@ Future<Answer> getTypesOfSalesC() async {
   } catch (e) {
     return Answer(
         body: {"error": e},
-        message: "Conexion inestable con el back",
+        message: "Conexión inestable con el back",
         status: 1002,
         error: true);
   }
@@ -711,7 +711,7 @@ Future<Answer> getEmployees() async {
   } catch (e) {
     return Answer(
         body: {"error": e},
-        message: "Conexion inestable con el back",
+        message: "Conexión inestable con el back",
         status: 1002,
         error: true);
   }
@@ -748,7 +748,7 @@ Future<Answer> putValidateOTP(Map<String, dynamic> data) async {
   } catch (e) {
     return Answer(
         body: {"error": e},
-        message: "Conexion inestable con el back",
+        message: "Conexión inestable con el back",
         status: 1002,
         error: true);
   }
@@ -783,7 +783,7 @@ Future<Answer> putCancelOTP(Map<String, dynamic> data) async {
   } catch (e) {
     return Answer(
         body: {"error": e},
-        message: "Conexion inestable con el back",
+        message: "Conexión inestable con el back",
         status: 1002,
         error: true);
   }
@@ -803,7 +803,7 @@ Future<Answer> getCancelAuth(Map<String, dynamic> data) async {
   } catch (e) {
     return Answer(
         body: {"error": e},
-        message: "Conexion inestable con el back",
+        message: "Conexión inestable con el back",
         status: 1002,
         error: true);
   }
@@ -843,7 +843,7 @@ Future<Answer> getStockDeliveryList({required int idR}) async {
     log("/StoreServices <getStockList> Catch ${e.toString()}");
     return Answer(
         body: e,
-        message: "Conexion inestable con el back",
+        message: "Conexión inestable con el back",
         status: 1002,
         error: true);
   }
@@ -880,7 +880,7 @@ Future<Answer> getValidationList({required int idR}) async {
     log("/StoreServices <getValidationList> Catch ${e.toString()}");
     return Answer(
         body: e,
-        message: "Conexion inestable con el back",
+        message: "Conexión inestable con el back",
         status: 1002,
         error: true);
   }
@@ -918,7 +918,7 @@ Future<Answer> putValidated({required String action, required int idV, required 
     log("/StoreServices <postValidated> Catch");
     return Answer(
         body: e,
-        message: "Algo salio mal, revisa tu conexion a internet.",
+        message: "Algo salio mal, revisa tu conexión a internet.",
         status: 1002,
         error: true);
   }

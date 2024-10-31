@@ -417,7 +417,7 @@ class _HomeState extends State<Home> {
             Visibility(
                 visible: prefs.lastBitacoraUpdate != "",
                 child: Text(
-                  "Ultima actualización: ${DateFormat('hh:mm a').format(prefs.lastBitacoraUpdate != "" ? DateTime.parse(prefs.lastBitacoraUpdate) : DateTime.now())}",
+                  "Última actualización: ${DateFormat('hh:mm a').format(prefs.lastBitacoraUpdate != "" ? DateTime.parse(prefs.lastBitacoraUpdate) : DateTime.now())}",
                   style: TextStyles.blue13It,
                 )),
             const SizedBox(

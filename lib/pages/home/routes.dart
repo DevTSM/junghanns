@@ -249,7 +249,7 @@ class _RoutesState extends State<Routes> {
                 visible: prefs.lastRouteUpdate != "",
                 child: Padding(padding: const EdgeInsets.only(left: 15,top: 5,bottom: 5),
                 child:Text(
-                  "Ultima actualización: ${DateFormat('hh:mm a').format(prefs.lastBitacoraUpdate != "" ? DateTime.parse(prefs.lastBitacoraUpdate) : DateTime.now())}",
+                  "Última actualización: ${DateFormat('hh:mm a').format(prefs.lastBitacoraUpdate != "" ? DateTime.parse(prefs.lastBitacoraUpdate) : DateTime.now())}",
                   style: TextStyles.blue13It,
                 ))),
                 customerList.isNotEmpty

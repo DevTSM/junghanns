@@ -100,7 +100,7 @@ class _OpeningState extends State<Opening> {
     Timer(const Duration(milliseconds: 2000), () async {
       provider.getIsNeedAsync();
       if (prefs.isLogged) {
-        log(" Ultima Syncronizacion ${prefs.asyncLast}");
+        log(" Última Syncronizacion ${prefs.asyncLast}");
         DateTime dateLast=DateTime.parse(prefs.asyncLast != ""
                     ? prefs.asyncLast
                     : DateTime(2017, 9, 7, 17, 30).toString());

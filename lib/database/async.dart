@@ -136,6 +136,10 @@ class Async {
       if(e["idAuth"]!=null){
       data["id_autorizacion"]= e["idAuth"];
       }
+      if(e["idReasonAuth"]!=null){
+        data["id_autorizacion_motivo"]= e["idReasonAuth"];
+      }
+      data["motivo"]= e["reason"];
       data["formas_de_pago"]= jsonDecode(e["paymentMethod"]);
       data["id_data_origen"]= e["idOrigin"];
       if(e["folio"]!=null){

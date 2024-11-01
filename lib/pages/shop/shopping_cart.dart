@@ -212,7 +212,9 @@ class _ShoppingCartState extends State<ShoppingCart> {
     if (paymentsList.isEmpty) {
       //Se agregan todos lo metodos de pago si no hay autorizacion
       if(provider.basketCurrent.authCurrent.idAuth != 0){
-        log("=====> Hay una autorización");
+        log("=====> Hay una autorización ${provider.basketCurrent.authCurrent.idAuth}");
+        log("=====> Hay una autorización de motivo ${provider.basketCurrent.authCurrent.idReasonAuth}");
+        log("=====> Hay una autorización de motivo ${provider.basketCurrent.authCurrent.reason}");
          widget.customerCurrent.payment
           .map((e) => e.wayToPay != "Monedero" && e.idAuth == -1 
             ? paymentsList.add(e)
@@ -924,11 +926,12 @@ class _ShoppingCartState extends State<ShoppingCart> {
           } else {
             // Verificar la autorización
             int idReasonAuth = widget.authList.isNotEmpty ? widget.authList[0].idReasonAuth : 0;
-            String? motivoGa = widget.authList.isNotEmpty ? widget.authList[0].reason : "";
-
+            String? motivoGa = widget.authList.isNotEmpty && widget.authList[0].reason.isNotEmpty
+                ? widget.authList[0].reason
+                : provider.basketCurrent.authCurrent.reason;
             // Si el idReasonAuth es 2 o 3, mostrar el modal de comentario
-            if (idReasonAuth == 2 || idReasonAuth == 3) {
-              String tipo = idReasonAuth == 2 ? 'S' : 'R';
+            if ((idReasonAuth == 2 || provider.basketCurrent.authCurrent.idReasonAuth == 2) || (idReasonAuth == 3 || provider.basketCurrent.authCurrent.idReasonAuth == 3)) {
+              String tipo = (idReasonAuth == 2 || provider.basketCurrent.authCurrent.idReasonAuth ==2) ? 'S' : 'R';
 
               showComment(
                 context: context,
@@ -937,12 +940,12 @@ class _ShoppingCartState extends State<ShoppingCart> {
                 },
                 current: motivoGa ?? "",
                 idRuta: prefs.idRouteD.toString(),
-                idCliente: widget.authList[0].idClient.toString(),
+                idCliente: (widget.authList.isNotEmpty ? widget.authList[0].idClient.toString() : null) ?? provider.basketCurrent.authCurrent.idClient.toString(),
                 tipo: tipo,
                 cantidad: productsList.first.number.toString(),
                 lat: latSale,
                 lon: lngSale,
-                idAutorization: widget.authList[0].idAuth,
+                idAutorization: (widget.authList.isNotEmpty ? widget.authList[0].idAuth : null) ?? provider.basketCurrent.authCurrent.idAuth,
               );
             } else {
               // Si la autorización es "Garrafón a la par"

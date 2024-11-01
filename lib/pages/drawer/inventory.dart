@@ -36,6 +36,7 @@ class _InventoryState extends State<Inventory> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<ProviderJunghanns>(context, listen: false).fetchProductsStock();
     });
+    _refreshInventory();
   }
 
   Future<void> _refreshInventory() async {
@@ -45,68 +46,70 @@ class _InventoryState extends State<Inventory> {
   @override
   Widget build(BuildContext context) {
     size = MediaQuery.of(context).size;
-    return Stack(
-      children: [
-        Scaffold(
-          appBar: AppBar(
-            backgroundColor: ColorsJunghanns.whiteJ,
-            systemOverlayStyle: const SystemUiOverlayStyle(
-              statusBarColor: ColorsJunghanns.whiteJ,
-              statusBarIconBrightness: Brightness.dark,
-              statusBarBrightness: Brightness.dark,
-            ),
-            elevation: 0,
-            leading: isLoading
-                ? null
-                : IconButton(
-              onPressed: () => Navigator.pop(context),
-              icon: const Icon(
-                Icons.arrow_back_ios,
-                color: ColorsJunghanns.blue,
+    return RefreshIndicator(
+      onRefresh: () async{
+        await _refreshInventory();
+      },
+      child: Stack(
+        children: [
+          Scaffold(
+            appBar: AppBar(
+              backgroundColor: ColorsJunghanns.whiteJ,
+              systemOverlayStyle: const SystemUiOverlayStyle(
+                statusBarColor: ColorsJunghanns.whiteJ,
+                statusBarIconBrightness: Brightness.dark,
+                statusBarBrightness: Brightness.dark,
+              ),
+              elevation: 0,
+              leading: isLoading
+                  ? null
+                  : IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(
+                  Icons.arrow_back_ios,
+                  color: ColorsJunghanns.blue,
+                ),
               ),
             ),
-          ),
-          body: Consumer<ProviderJunghanns>(
-            builder: (context, provider, child) {
-              return RefreshIndicator(
-                onRefresh: _refreshInventory,
-                child: Column(
-                  children: [
-                    header(),
-                    const SizedBox(height: 20),
-                    provider.stockProducts.isEmpty
-                        ? empty(context)
-                        : Expanded(
-                      child: GridView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          childAspectRatio: 0.85,
-                          crossAxisSpacing: 10,
-                          mainAxisSpacing: 10,
+            body: Consumer<ProviderJunghanns>(
+              builder: (context, provider, child) {
+                return Column(
+                    children: [
+                      header(),
+                      const SizedBox(height: 20),
+                      provider.stockProducts.isEmpty
+                          ? empty(context)
+                          : Expanded(
+                        child: GridView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            childAspectRatio: 0.85,
+                            crossAxisSpacing: 10,
+                            mainAxisSpacing: 10,
+                          ),
+                          itemCount: provider.stockProducts.length,
+                          itemBuilder: (context, index) {
+                            final product = provider.stockProducts[index];
+                            return ProductInventaryCard(
+                              productCurrent: product,
+                            );
+                          },
                         ),
-                        itemCount: provider.stockProducts.length,
-                        itemBuilder: (context, index) {
-                          final product = provider.stockProducts[index];
-                          return ProductInventaryCard(
-                            productCurrent: product,
-                          );
-                        },
                       ),
-                    ),
-                  ],
-                ),
-              );
-            },
+                    ],
+                );
+              },
+            ),
           ),
-        ),
-        Visibility(
-          visible: isLoadingOne,
-          child: const Center(
-            child: LoadingJunghanns(),
+          Visibility(
+            visible: isLoadingOne,
+            child: const Center(
+              child: LoadingJunghanns(),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 

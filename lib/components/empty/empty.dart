@@ -19,8 +19,12 @@ Widget empty(BuildContext context) {
               style: JunnyText.grey_255(FontWeight.w500, 22),
             ),
             Text(
-              "lo siento no hay información que mostrar.",
-              style: JunnyText.grey_255(FontWeight.w400, 18),
+              "Lo siento no se encontró ",
+              style: JunnyText.grey_255(FontWeight.w400, 13),
+            ),
+            Text(
+              "ninguna información que mostrar.",
+              style: JunnyText.grey_255(FontWeight.w400, 13),
             ),
 
         /*Text(

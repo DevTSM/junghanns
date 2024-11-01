@@ -50,6 +50,7 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
   String? errorMessage;
   // Estado para mostrar el banner
   bool showErrorBanner = false;
+  bool isExpanded = false;
 
   final TextEditingController _vaciosController = TextEditingController();
   final TextEditingController _llenosController = TextEditingController();
@@ -580,7 +581,8 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
                             _missingProducts(),
                                 () {
                               _showAddMissingProductModal(context: context, controller: providerJunghanns);
-                                }, showPlus: true,
+                                },
+                            showPlus: false,
                           ),
                           _sectionWithPlus(
                             "PRODUCTOS ADICIONALES",
@@ -588,7 +590,7 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
                             _additionalProducts(),
                                 () {
                               _showAddAdditionalProductModal(context: context, controller: providerJunghanns);
-                            }, showPlus: true,
+                            }, showPlus: false,
                           ),
                         ],
                       ),
@@ -846,8 +848,218 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
     }
     return SizedBox.shrink();
   }
+  Widget _sectionWithPlus(
+      String title,
+      IconData icon,
+      Widget content,
+      VoidCallback onPressed, {
+        required bool showPlus,
+      }) {
+    ValueNotifier<bool> isExpanded = ValueNotifier(false);
 
-  Widget _sectionWithPlus(String title, IconData icon,  Widget content,  VoidCallback onPressed, {required bool showPlus} ) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: const BorderRadius.all(Radius.circular(10)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.3),
+            spreadRadius: 2,
+            blurRadius: 5,
+            offset: Offset(0, 3),
+          ),
+        ],
+      ),
+      child: ValueListenableBuilder<bool>(
+        valueListenable: isExpanded,
+        builder: (context, expanded, child) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  color: expanded ? ColorsJunghanns.blueJ3 : Colors.transparent,
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+                ),
+                child: ExpansionTile(
+                  onExpansionChanged: (value) {
+                    isExpanded.value = value;
+                  },
+                  title: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          title,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                            color: expanded ? ColorsJunghanns.blueJ : ColorsJunghanns.blue,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (showPlus)
+                        IconButton(
+                          icon: Icon(icon, color: expanded ? ColorsJunghanns.blue : ColorsJunghanns.blueJ),
+                          onPressed: onPressed,
+                        ),
+                    ],
+                  ),
+                  tilePadding: const EdgeInsets.symmetric(horizontal: 10),
+                  collapsedIconColor: ColorsJunghanns.blueJ,
+                  iconColor: expanded ? ColorsJunghanns.blueJ : ColorsJunghanns.blue,
+                  backgroundColor: Colors.transparent,
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        color: ColorsJunghanns.lightBlue,
+                        borderRadius: const BorderRadius.only(
+                          bottomLeft: Radius.circular(10),
+                          bottomRight: Radius.circular(10),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.blue.withOpacity(0.3), // Color de la sombra azul con opacidad
+                            spreadRadius: 1,
+                            blurRadius: 8,
+                            offset: Offset(0, 4), // Ajuste de la posición de la sombra
+                          ),
+                        ],
+                        border: Border.all(
+                          width: 3,
+                          color: ColorsJunghanns.blueJ3, // Borde azul
+                        ),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
+                      child: content,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  /*Widget _sectionWithPlus(
+      String title,
+      IconData icon,
+      Widget content,
+      VoidCallback onPressed, {
+        required bool showPlus,
+      }) {
+    ValueNotifier<bool> isExpanded = ValueNotifier(false);
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.3),
+            spreadRadius: 2,
+            blurRadius: 5,
+            offset: Offset(0, 3),
+          ),
+        ],
+      ),
+      child: ValueListenableBuilder<bool>(
+        valueListenable: isExpanded,
+        builder: (context, expanded, child) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  color: expanded ? ColorsJunghanns.blueJ.withOpacity(0.1) : Colors.transparent,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
+                ),
+                child: ExpansionTile(
+                  onExpansionChanged: (value) {
+                    isExpanded.value = value;
+                  },
+                  title: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          title,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                            color: expanded ? ColorsJunghanns.blueJ : ColorsJunghanns.blue,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (showPlus)
+                        IconButton(
+                          icon: Icon(icon, color: expanded ? ColorsJunghanns.blue : ColorsJunghanns.blueJ),
+                          onPressed: onPressed,
+                        ),
+                    ],
+                  ),
+                  tilePadding: const EdgeInsets.symmetric(horizontal: 10),
+                  collapsedIconColor: ColorsJunghanns.blueJ,
+                  iconColor: expanded ? ColorsJunghanns.blueJ : ColorsJunghanns.blue,
+                  backgroundColor: Colors.transparent, // Mantener transparente
+                  children: [
+                    // Aquí se asegura que el contenido tenga su propio color
+                    Container(
+                      color: Colors.white, // Fondo blanco o cualquier color distinto
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                      child: content,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }*/
+
+
+  /*Widget _sectionWithPlus(String title, IconData icon, Widget content, VoidCallback onPressed, {required bool showPlus}) {
+    return ExpansionTile(
+      title: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+              color: ColorsJunghanns.blue,
+            ),
+          ),
+          if (showPlus)
+            IconButton(
+              icon: Icon(icon, color: ColorsJunghanns.blueJ),
+              onPressed: onPressed,
+            ),
+        ],
+      ),
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          child: content,
+        ),
+      ],
+      initiallyExpanded: false, // Cambia a `true` si quieres que esté abierto por defecto
+      tilePadding: const EdgeInsets.symmetric(horizontal: 15), // Opcional: Ajustar padding
+      collapsedIconColor: ColorsJunghanns.blueJ, // Color del ícono de expansión colapsado
+      iconColor: ColorsJunghanns.blueJ, // Color del ícono cuando está expandido
+    );
+  }*/
+
+  /*Widget _sectionWithPlus(String title, IconData icon,  Widget content,  VoidCallback onPressed, {required bool showPlus} ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -874,7 +1086,7 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
         content,
       ],
     );
-  }
+  }*/
   void _showAddAdditionalProductModal({required BuildContext context, required ProviderJunghanns controller}) {
     showModalBottomSheet(
       context: context,
@@ -896,6 +1108,48 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
   Widget _missingProducts() {
     final providerJunghanns = Provider.of<ProviderJunghanns>(context);
     final missingProducts = providerJunghanns.missingProducts;
+
+    return Column(
+      children: [
+        Center(
+          child: SizedBox(
+            width: 200,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                _showAddMissingProductModal(context: context, controller: providerJunghanns);
+              },
+              icon: Icon(Icons.add),
+              label: const Text('Agregar', style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: ColorsJunghanns.blue,
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 5),
+        if (missingProducts.isNotEmpty)
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: missingProducts.length,
+            itemBuilder: (context, index) {
+              final product = missingProducts[index];
+              return ProductMissingCard(
+                product: product,
+              );
+            },
+          ),
+      ],
+    );
+  }
+
+  /*Widget _missingProducts() {
+    final providerJunghanns = Provider.of<ProviderJunghanns>(context);
+    final missingProducts = providerJunghanns.missingProducts;
     if (missingProducts.isEmpty) {
     }
     return ListView.builder(
@@ -909,23 +1163,48 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
         );
       },
     );
-  }
+  }*/
   Widget _additionalProducts() {
     final providerJunghanns = Provider.of<ProviderJunghanns>(context);
     final additionalProducts = providerJunghanns.additionalProducts;
 
     if (additionalProducts.isEmpty) {
     }
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: additionalProducts.length,
-      itemBuilder: (context, index) {
-        final product = additionalProducts[index];
-        return AdditionalProductCard(
-            product: product,
-        );
-      },
+    return Column(
+      children:[
+        Center(
+          child: SizedBox(
+            width: 200,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                _showAddAdditionalProductModal(context: context, controller: providerJunghanns);
+              },
+              icon: Icon(Icons.add),
+              label: const Text('Agregar', style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: ColorsJunghanns.blue,
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 5),
+        if (additionalProducts.isNotEmpty)
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: additionalProducts.length,
+            itemBuilder: (context, index) {
+            final product = additionalProducts[index];
+            return AdditionalProductCard(
+                product: product,
+            );
+            },
+          ),
+      ],
     );
   }
   Widget header() {

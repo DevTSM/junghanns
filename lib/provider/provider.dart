@@ -430,7 +430,13 @@ class ProviderJunghanns extends ChangeNotifier {
     await getValidationList(idR: prefs.idRouteD).then((answer) {
 
       if (answer.error) {
-        print('Error al obtener la lista: ${answer.message}');
+        Fluttertoast.showToast(
+          msg: "${answer.message}",
+          timeInSecForIosWeb: 16,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+        );
       } else {
         if (answer.body is List) {
           validationList = (answer.body as List)
@@ -509,14 +515,18 @@ class ProviderJunghanns extends ChangeNotifier {
     bool hasStock = false;
     await getStockDeliveryList(idR: prefs.idRouteD).then((answer) {
       if (answer.error) {
-        print('Error al obtener la lista: ${answer.message}');
+        Fluttertoast.showToast(
+          msg: "${answer.message}",
+          timeInSecForIosWeb: 16,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+        );
       } else {
         if (answer.body is Map) {
           DeliverProductsModel stockModel = DeliverProductsModel.fromJson(answer.body);
           stockAccesories = [stockModel];
           print('Stock Accesorios: $stockAccesories');
-        } else {
-          print('Error: La respuesta no es un mapa válido');
         }
         print("---Llamando--Stock--Entrega--");
       }
@@ -1020,9 +1030,6 @@ class ProviderJunghanns extends ChangeNotifier {
             answer.body.map((item) => ProductCatalogModel.fromJson(item)));
         // Agregar los productos del catálogo a accesories
         accesories.addAll(productsCatalog);
-        print('Productos en catálago: $productsCatalog');
-        print('Accesorios después de agregar: $accesories');
-        print("---Llamando--Productos--");
       }
       hasStock = stockAccesories.isNotEmpty;
     });
@@ -1244,42 +1251,4 @@ class ProviderJunghanns extends ChangeNotifier {
     notifyListeners();
     return hasData;
   }
-  // Ver el estatus de la lista
-  /*fetchValidation() async {
-    bool hasData = false;
-    await getValidationList(idR: prefs.idRouteD).then((answer) {
-
-      if (answer.error) {
-        print('Error al obtener la lista: ${answer.message}');
-      } else {
-        if (answer.body is List) {
-          // Mapear la lista obtenida a objetos ValidationProductModel
-          validationList = (answer.body as List)
-              .map((item) => ValidationProductModel.fromJson(item))
-              .toList();
-        } else if (answer.body is Map) {
-          // Si es un solo elemento, convertirlo en una lista
-          final validation = ValidationProductModel.fromJson(answer.body);
-          validationList = [validation];
-        }
-
-        // Filtrar la lista por estatus 'P' y valid 'Planta'
-        validationList = validationList
-            .where((validation) => validation.status == 'P' && validation.valid == 'Planta')
-            .toList();
-
-        hasData = validationList.isNotEmpty;
-        print("Lista de validaciones filtrada: ${validationList.length} items.");
-        // Imprimir cada validación para depuración
-        for (var validation in validationList) {
-          print(validation);
-        }
-        print("---Llamando------------------Validacion--");
-      }
-    });
-    notifyListeners();
-    return hasData;
-  }*/
-
-
 }

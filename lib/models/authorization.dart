@@ -82,6 +82,8 @@ getMap(){
     "tipo":type,
     "idCatAutorizacion":idCatAuth,
     "autorizacion":authText,
+    "idMotivoAutorizacion":idReasonAuth,
+    "Motivo": reason,
     "observacion":observation,
     "date":date.toString()
   };

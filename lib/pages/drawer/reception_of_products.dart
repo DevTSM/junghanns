@@ -10,7 +10,6 @@ import 'package:junghanns/styles/color.dart';
 import 'package:junghanns/styles/decoration.dart';
 import 'package:junghanns/styles/text.dart';
 import 'package:junghanns/widgets/card/product_inventary.dart';
-import 'package:junghanns/widgets/modal/delete_reception.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/customer.dart';
@@ -18,7 +17,6 @@ import '../../provider/provider.dart';
 import '../../util/location.dart';
 import '../../widgets/button/button_reception.dart';
 import '../../widgets/modal/decline.dart';
-import '../../widgets/modal/receipt_modal.dart';
 import '../../widgets/modal/validation_modal.dart';
 import '../home/home_principal.dart';
 
@@ -37,6 +35,9 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
   late Position _currentLocation;
   List specialData = [];
   Timer? _timer;
+  String? errorMessage;
+  // Estado para mostrar el banner
+  bool showErrorBanner = false;
 
   @override
   void initState() {
@@ -57,13 +58,21 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
     isLoading = false;
     isLoadingOne = false;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<ProviderJunghanns>(context, listen: false).fetchStockValidation();
+      _fetchData();
     });
     _refreshTimer();
+    validateReception();
+  }
+
+  Future<void> _fetchData() async {
+    await Provider.of<ProviderJunghanns>(context, listen: false).fetchStockValidation();
   }
 
   Future<void> _refreshInventory() async {
-    Provider.of<ProviderJunghanns>(context, listen: false).fetchStockValidation();
+    setState(() => isLoadingOne = true);
+    await _fetchData();
+    await validateReception();
+    setState(() => isLoadingOne = false);
   }
   Future<void> _refreshTimer() async {
     final provider = Provider.of<ProviderJunghanns>(context, listen: false);
@@ -117,9 +126,28 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
 
     provider.fetchStockValidation();
     await _refreshInventory();
+    await _fetchData();
+    await validateReception();
 
     setState(() {
       isLoadingOne = false; // Muestra el indicador de carga
+    });
+  }
+
+  validateReception() {
+    print('Entrnado al banner');
+    setState(() {
+      errorMessage = null;
+      showErrorBanner = false; // Resetea el estado del banner
+      final provider = Provider.of<ProviderJunghanns>(context, listen: false);
+      final validationList = provider.validationList;
+
+      final hasData = validationList.isNotEmpty && (validationList.first.status != 'P' && validationList.first.valid != 'Planta');
+
+      if (hasData){
+        errorMessage = "Se completo la última recepción con éxito.";
+        showErrorBanner = true;
+      }
     });
   }
 
@@ -132,7 +160,12 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
     final hasData = validationList.isNotEmpty && (validationList.first.status == 'P' && validationList.first.valid != 'Planta');
 
     return RefreshIndicator(
-      onRefresh: _refreshInventory,
+      onRefresh: () async{
+        await _refreshInventory();
+        await _fetchData();
+        await validateReception();
+
+      },
       child: Stack(
         children: [
           Scaffold(
@@ -169,7 +202,86 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
                 children: [
                   header(),
                   const SizedBox(height: 20),
-                  provider.validationList.isEmpty || provider.validationList.first.valid == 'Planta'
+                  /*if (showErrorBanner) ...[
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                      color: ColorsJunghanns.greenJ.withOpacity(0.9),
+                      child: Center(
+                        child: Wrap(
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.check_circle,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 5),
+                            Text(
+                              errorMessage ?? '',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20), // Se coloca el espacio justo después del contenedor
+                  ],*/
+                  if (showErrorBanner) ...[
+                    Padding(
+                      padding: const EdgeInsets.all(24), // Padding de 10 px alrededor del contenedor
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.white, // Fondo blanco o transparente
+                          border: Border.all(
+                            color: ColorsJunghanns.greenJ, // Color del borde verde
+                            width: 0, // Grosor del borde
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: ColorsJunghanns.greenJ.withOpacity(0.4), // Sombra verde
+                              blurRadius: 8,
+                              offset: const Offset(0, 4), // Posición de la sombra
+                            ),
+                          ],
+                          borderRadius: BorderRadius.circular(8), // Ajusta la redondez del borde
+                        ),
+                        child: Center(
+                          child: Wrap(
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.check_circle,
+                                color: ColorsJunghanns.greenJ,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 5),
+                              Text(
+                                errorMessage ?? '',
+                                style: const TextStyle(
+                                  color: ColorsJunghanns.greenJ,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20), // Espacio después del contenedor
+                  ],
+
+
+                  provider.validationList.isEmpty || provider.validationList.first.valid == 'Planta'|| provider.validationList.first.status == 'A'|| provider.validationList.first.status == 'R'
                       ? empty(context)
                       : GridView.builder(
                     shrinkWrap: true,  // Importante para que funcione dentro de SingleChildScrollView
@@ -194,7 +306,88 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
               ),
             ),
           ),
+
+          /*Stack(
+            children: [
+              if (showErrorBanner)
+                Positioned(
+                  bottom: 25,
+                  left: 20,
+                  right: 20,
+                  child: Container(
+                    width: double.infinity,
+                    height: 50,
+                    color: Colors.transparent,
+                    padding: EdgeInsets.all(8),
+                    child: Center(
+                      child: Text(
+                        errorMessage ?? '',
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            decoration: TextDecoration.none),
+                      ),
+                    ),
+                  ),
+                )
+              else
+                Positioned(
+                  bottom: 25,
+                  left: 20,
+                  right: 20,
+                  child: hasData
+                      ? CustomButtonProduct(
+                    onValidate: () {
+                      _handleAction('A', comment: '');
+                    },
+                    onReject: () {
+                      showDeclineProduct(
+                        context: context,
+                        onReject: (comment) {
+                          _handleAction('R', comment: comment);
+                        },
+                      );
+                    },
+                    validateText: 'ACEPTAR',
+                    rejectText: 'RECHAZAR',
+                    validateColor: ColorsJunghanns.blueJ,
+                    rejectColor: ColorsJunghanns.red,
+                    validateIcon: Icons.check_circle,
+                    rejectIcon: Icons.cancel,
+                  )
+                      : Container(), // Si no se cumple la condición, no se muestra nada
+                ),
+            ],
+          ),*/
+
           Positioned(
+            bottom: 25,
+            left: 20,
+            right: 20,
+            child: hasData
+                ? CustomButtonProduct(
+              onValidate: () {
+                _handleAction('A', comment: '');
+              },
+              onReject: () {
+                showDeclineProduct(
+                  context: context,
+                  onReject: (comment) {
+                    _handleAction('R', comment: comment);
+                  },
+                );
+              },
+              validateText: 'ACEPTAR',
+              rejectText: 'RECHAZAR',
+              validateColor: ColorsJunghanns.blueJ,
+              rejectColor: ColorsJunghanns.red,
+              validateIcon: Icons.check_circle,
+              rejectIcon: Icons.cancel,
+            )
+                : Container(), // Si no se cumple la condición, no se muestra nada
+          ),
+
+          /*Positioned(
             bottom: 25,
             left: 20,
             right: 20,
@@ -221,7 +414,7 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
               validateIcon: Icons.check_circle,
               rejectIcon: Icons.cancel,
             ),
-          ),
+          ),*/
           Visibility(
             visible: isLoadingOne,
             child: const Center(

@@ -136,11 +136,16 @@ class Async {
       if(e["idAuth"]!=null){
       data["id_autorizacion"]= e["idAuth"];
       }
-      if(e["idReasonAuth"]!=null){
-        data["id_autorizacion_motivo"]= e["idReasonAuth"];
+
+      if (e["idReasonAuth"] != null) {
+        data["id_autorizacion_motivo"] = e["idReasonAuth"];
       }
-      data["motivo"]= e["reason"];
-      data["formas_de_pago"]= jsonDecode(e["paymentMethod"]);
+      if (e["reason"] != null) {
+        data["motivo"] = e["reason"];
+      }
+
+
+          data["formas_de_pago"]= jsonDecode(e["paymentMethod"]);
       data["id_data_origen"]= e["idOrigin"];
       if(e["folio"]!=null){
         data["folio"]= e["folio"];
@@ -151,6 +156,8 @@ class Async {
       if(e["id_marca_garrafon"]!=null){
       data["id_marca_garrafon"]=e["id_marca_garrafon"];
       }
+          // Log para verificar los datos antes de enviarlos
+          log("Datos de la venta antes de enviar: ${jsonEncode(data)}");
         await postSale(data).then((value) async {
           if(!value.error){
             //se actualiza como exitoso

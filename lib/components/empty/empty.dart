@@ -7,15 +7,25 @@ Widget empty(BuildContext context) {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
         Image.asset(
-          "assets/no-data.gif",
-          height: MediaQuery.of(context).size.height * .3,
+          "assets/no.png",
+          height: MediaQuery.of(context).size.height * .2,
+
         ),
         const SizedBox(
           width: double.infinity,
         ),
-        Text(
-          "No hay información que mostrar",
+            Text(
+              "¡Upps!",
+              style: JunnyText.grey_255(FontWeight.w500, 22),
+            ),
+            Text(
+              "lo siento no hay información que mostrar.",
+              style: JunnyText.grey_255(FontWeight.w400, 18),
+            ),
+
+        /*Text(
+          "¡Upps! hay información que mostrar",
           style: JunnyText.grey_255(FontWeight.w400, 16),
-        )
+        )*/
       ]);
 }

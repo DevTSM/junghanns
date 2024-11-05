@@ -28,6 +28,7 @@ import '../../util/navigator.dart';
 import '../../widgets/card/product_addditional_card.dart';
 import '../../widgets/modal/add_additional_product.dart';
 import '../../widgets/modal/add_missing_product.dart';
+import '../../widgets/modal/sync_data.dart';
 import '../home/home_principal.dart';
 
 class DeliveryOfProducts extends StatefulWidget {
@@ -83,6 +84,7 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
     isLoadingOne = false;
     Future.microtask(() {
       print('En la vista');
+      validateSyncDta();
       final provider = Provider.of<ProviderJunghanns>(context, listen: false);
       Provider.of<ProviderJunghanns>(context, listen: false).fetchStockDelivery();
       Provider.of<ProviderJunghanns>(context, listen: false).refreshList(prefs.token);
@@ -101,51 +103,39 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
     _refreshData();
     _loadSavedValues();
 
+
     _suciosRutaController.addListener(_updateLlenos);
     _rotosRutaController.addListener(_updateLlenos);
   }
   Future<void> _refreshTimer() async {
     final provider = Provider.of<ProviderJunghanns>(context, listen: false);
-
-    // Ahora fetchStockValidation devuelve un objeto ValidationModel
     provider.fetchStockValidation();
-
-// Filtrar los datos según las condiciones especificadas
     final filteredData = provider.validationList.where((validation) {
       return validation.status == "P" && validation.valid == "Planta";
     }).toList();
-
-// Verificar si hay datos filtrados
     setState(() {
       if (filteredData.isNotEmpty) {
-        specialData = filteredData;  // Asigna los datos filtrados a specialData
-        // Imprimir el contenido de specialData para confirmarlo
+        specialData = filteredData;
         print('Contenido de specialData (filtrado): $specialData');
       } else {
-        specialData = [];  // Si no hay datos que cumplan las condiciones, asignar un arreglo vacío
+        specialData = [];
       }
     });
   }
   Future<void> _refreshData() async {
     if (!mounted) return;
     final provider = Provider.of<ProviderJunghanns>(context, listen: false);
-
-    // Ahora fetchStockValidation devuelve un objeto ValidationModel
     provider.fetchStockValidation();
-
-// Filtrar los datos según las condiciones especificadas
     final filteredData = provider.validationList.where((validation) {
       return validation.status == "P" && validation.valid == "Planta";
     }).toList();
 
-// Verificar si hay datos filtrados
     setState(() {
       if (filteredData.isNotEmpty) {
-        specialData = filteredData;  // Asigna los datos filtrados a specialData
-        // Imprimir el contenido de specialData para confirmarlo
+        specialData = filteredData;
         print('Contenido de specialData (filtrado): $specialData');
       } else {
-        specialData = [];  // Si no hay datos que cumplan las condiciones, asignar un arreglo vacío
+        specialData = [];
       }
     });
     print('refresh');
@@ -158,6 +148,20 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
     if (mounted) {
       _updateControllersWithCurrentStock();
     }
+  }
+
+  validateSyncDta() {
+    setState(() {
+
+      final provider = Provider.of<ProviderJunghanns>(context, listen: false);
+      final validationList = provider.validationList;
+
+      final hasData = validationList.isNotEmpty && (validationList.first.status != 'P' && validationList.first.valid != 'Planta');
+
+      if (hasData){
+        provider.synchronizeListDelivery();
+      }
+    });
   }
 
   Future<void> _loadSavedValues() async {
@@ -246,9 +250,7 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
     }
   }
   // Valida si hay valores negativos en los controladores
-  // Valida si hay valores negativos en los controladores
   void validateInputs() {
-    print('Entrnado al banner');
     setState(() {
       errorMessage = null;
       showErrorBanner = false; // Resetea el estado del banner
@@ -559,7 +561,7 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
                         padding: const EdgeInsets.symmetric(horizontal: 10),
                         children: [
                           _sectionWithPlus(
-                            "PRODUCTOS EN CAMIONETA",
+                            "PRODUCTOS EN STOCK",
                             Icons.add,
                             _inputFieldsForStock(),
                                 () {
@@ -857,207 +859,105 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
       }) {
     ValueNotifier<bool> isExpanded = ValueNotifier(false);
 
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: const BorderRadius.all(Radius.circular(10)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.3),
-            spreadRadius: 2,
-            blurRadius: 5,
-            offset: Offset(0, 3),
-          ),
-        ],
-      ),
-      child: ValueListenableBuilder<bool>(
-        valueListenable: isExpanded,
-        builder: (context, expanded, child) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                  color: expanded ? ColorsJunghanns.blueJ3 : Colors.transparent,
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+    return Stack(
+      children: [
+        GestureDetector(
+          onTap: () {
+            // Si está expandido, no alteres el estado
+            if (isExpanded.value) return;
+          },
+          child: Container(
+            margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: const BorderRadius.all(Radius.circular(10)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.3),
+                  spreadRadius: 2,
+                  blurRadius: 5,
+                  offset: Offset(0, 3),
                 ),
-                child: ExpansionTile(
-                  onExpansionChanged: (value) {
-                    isExpanded.value = value;
-                  },
-                  title: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          title,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                            color: expanded ? ColorsJunghanns.blueJ : ColorsJunghanns.blue,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      if (showPlus)
-                        IconButton(
-                          icon: Icon(icon, color: expanded ? ColorsJunghanns.blue : ColorsJunghanns.blueJ),
-                          onPressed: onPressed,
-                        ),
-                    ],
-                  ),
-                  tilePadding: const EdgeInsets.symmetric(horizontal: 10),
-                  collapsedIconColor: ColorsJunghanns.blueJ,
-                  iconColor: expanded ? ColorsJunghanns.blueJ : ColorsJunghanns.blue,
-                  backgroundColor: Colors.transparent,
+              ],
+            ),
+            child: ValueListenableBuilder<bool>(
+              valueListenable: isExpanded,
+              builder: (context, expanded, child) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Container(
                       decoration: BoxDecoration(
-                        color: ColorsJunghanns.lightBlue,
-                        borderRadius: const BorderRadius.only(
-                          bottomLeft: Radius.circular(10),
-                          bottomRight: Radius.circular(10),
+                        color: expanded ? ColorsJunghanns.blueJ : Colors.transparent,
+                        borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+                      ),
+                      child: ExpansionTile(
+                        onExpansionChanged: (value) {
+                          isExpanded.value = value;
+                        },
+                        title: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            SizedBox(width: 12), // Ajusta el ancho según sea necesario
+                            Expanded(
+                              child: Text(
+                                title,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18,
+                                  color: expanded ? ColorsJunghanns.white : ColorsJunghanns.blue,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            if (showPlus)
+                              IconButton(
+                                icon: Icon(icon, color: expanded ? ColorsJunghanns.blue : ColorsJunghanns.blueJ),
+                                onPressed: onPressed,
+                              ),
+                          ],
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.blue.withOpacity(0.3), // Color de la sombra azul con opacidad
-                            spreadRadius: 1,
-                            blurRadius: 8,
-                            offset: Offset(0, 4), // Ajuste de la posición de la sombra
+
+                        tilePadding: const EdgeInsets.symmetric(horizontal: 10),
+                        collapsedIconColor: ColorsJunghanns.blueJ,
+                        iconColor: expanded ? ColorsJunghanns.white : ColorsJunghanns.blue,
+                        backgroundColor: Colors.transparent,
+                        children: [
+                          Container(
+                            decoration: BoxDecoration(
+                              color: ColorsJunghanns.lightBlue,
+                              borderRadius: const BorderRadius.only(
+                                bottomLeft: Radius.circular(10),
+                                bottomRight: Radius.circular(10),
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: ColorsJunghanns.blueJ.withOpacity(0.3),
+                                  spreadRadius: 1,
+                                  blurRadius: 8,
+                                  offset: Offset(0, 4),
+                                ),
+                              ],
+                              border: Border.all(
+                                width: 3,
+                                color: ColorsJunghanns.blueJ,
+                              ),
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+                            child: content,
                           ),
                         ],
-                        border: Border.all(
-                          width: 3,
-                          color: ColorsJunghanns.blueJ3, // Borde azul
-                        ),
                       ),
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
-                      child: content,
                     ),
                   ],
-                ),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  /*Widget _sectionWithPlus(
-      String title,
-      IconData icon,
-      Widget content,
-      VoidCallback onPressed, {
-        required bool showPlus,
-      }) {
-    ValueNotifier<bool> isExpanded = ValueNotifier(false);
-
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.3),
-            spreadRadius: 2,
-            blurRadius: 5,
-            offset: Offset(0, 3),
-          ),
-        ],
-      ),
-      child: ValueListenableBuilder<bool>(
-        valueListenable: isExpanded,
-        builder: (context, expanded, child) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                  color: expanded ? ColorsJunghanns.blueJ.withOpacity(0.1) : Colors.transparent,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
-                ),
-                child: ExpansionTile(
-                  onExpansionChanged: (value) {
-                    isExpanded.value = value;
-                  },
-                  title: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          title,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                            color: expanded ? ColorsJunghanns.blueJ : ColorsJunghanns.blue,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      if (showPlus)
-                        IconButton(
-                          icon: Icon(icon, color: expanded ? ColorsJunghanns.blue : ColorsJunghanns.blueJ),
-                          onPressed: onPressed,
-                        ),
-                    ],
-                  ),
-                  tilePadding: const EdgeInsets.symmetric(horizontal: 10),
-                  collapsedIconColor: ColorsJunghanns.blueJ,
-                  iconColor: expanded ? ColorsJunghanns.blueJ : ColorsJunghanns.blue,
-                  backgroundColor: Colors.transparent, // Mantener transparente
-                  children: [
-                    // Aquí se asegura que el contenido tenga su propio color
-                    Container(
-                      color: Colors.white, // Fondo blanco o cualquier color distinto
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-                      child: content,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }*/
-
-
-  /*Widget _sectionWithPlus(String title, IconData icon, Widget content, VoidCallback onPressed, {required bool showPlus}) {
-    return ExpansionTile(
-      title: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
-              color: ColorsJunghanns.blue,
+                );
+              },
             ),
           ),
-          if (showPlus)
-            IconButton(
-              icon: Icon(icon, color: ColorsJunghanns.blueJ),
-              onPressed: onPressed,
-            ),
-        ],
-      ),
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-          child: content,
         ),
       ],
-      initiallyExpanded: false, // Cambia a `true` si quieres que esté abierto por defecto
-      tilePadding: const EdgeInsets.symmetric(horizontal: 15), // Opcional: Ajustar padding
-      collapsedIconColor: ColorsJunghanns.blueJ, // Color del ícono de expansión colapsado
-      iconColor: ColorsJunghanns.blueJ, // Color del ícono cuando está expandido
     );
-  }*/
+  }
 
   /*Widget _sectionWithPlus(String title, IconData icon,  Widget content,  VoidCallback onPressed, {required bool showPlus} ) {
     return Column(

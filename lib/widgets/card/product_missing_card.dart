@@ -98,7 +98,7 @@ class ProductMissingCardState extends State<ProductMissingCard> {
                       // Controles de cantidad
                       Row(
                         children: [
-                          const SizedBox(width: 15),
+                          const SizedBox(width: 3),
                           Container(
                             width: size.width * 0.35,
                             height: 40,

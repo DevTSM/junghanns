@@ -125,6 +125,7 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
     );
 
     provider.fetchStockValidation();
+    provider.synchronizeListDelivery();
     await _refreshInventory();
     await _fetchData();
     await validateReception();
@@ -135,7 +136,6 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
   }
 
   validateReception() {
-    print('Entrnado al banner');
     setState(() {
       errorMessage = null;
       showErrorBanner = false; // Resetea el estado del banner

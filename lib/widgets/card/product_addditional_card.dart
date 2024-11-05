@@ -95,7 +95,7 @@ class AdditionalProductCardState extends State<AdditionalProductCard> {
                       // Botones de +, - y delete
                       Row(
                         children: [
-                          const SizedBox(width: 15),
+                          const SizedBox(width: 3),
                           Container(
                             width: size.width * 0.35,
                             height: 40,

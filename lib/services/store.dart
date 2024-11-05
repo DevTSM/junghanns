@@ -836,7 +836,8 @@ Future<Answer> getStockDeliveryList({required int idR}) async {
       log("Response Body: $decodedBody");
       return Answer(
           body: response,
-          message: "Algo salio mal, intentalo mas tarde.",status:response.statusCode,
+          message: "No se pudieron obtener los datos actualizados de la planta. Revisa tu conexión a internet.",
+          status:response.statusCode,
           error: true);
     }
   } catch (e) {

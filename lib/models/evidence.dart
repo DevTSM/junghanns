@@ -8,6 +8,7 @@ class Evidence {
   final int idAutorization;
   final String filePath;
   final bool isUploaded;
+  final bool isError;
 
   Evidence({
     required this.idRuta,
@@ -19,5 +20,6 @@ class Evidence {
     required this.idAutorization,
     required this.filePath,
     required this.isUploaded,
+    required this.isError,
   });
 }

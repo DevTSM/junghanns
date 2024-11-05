@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart'; // Importamos para obtener la ruta del almacenamiento local
@@ -82,25 +83,26 @@ class _CommentState extends State<Comment> {
 
       // Comprobar la conectividad
       var connectivityResult = await (Connectivity().checkConnectivity());
-      if (connectivityResult == ConnectivityResult.none) {
-        // Si no hay internet, guardar en la base de datos con isUploaded = 0
-        await dbHelper.insertEvidence(widget.idRuta, widget.idCliente,widget.tipo, widget.cantidad, widget.lat, widget.lon, widget.idAutorization, filePath, 0);
-        //await printEvidencesFromDB();
-      } else {
-        // Si hay internet, intenta subir y cambia el estado
-        await _uploadAndConfirm(imageFile, filePath);
-      }
+
+      await dbHelper.insertEvidence(widget.idRuta, widget.idCliente,widget.tipo, widget.cantidad, widget.lat, widget.lon, widget.idAutorization, filePath, 0, 0);
+
       // Llamar al método para imprimir los datos guardados en la base de datos
       //await printEvidencesFromDB();
     } catch (e) {
-      print("Error al guardar la imagen: $e");
+      Fluttertoast.showToast(
+        msg: "Error al guardar la imagen localmente",
+        timeInSecForIosWeb: 16,
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.TOP,
+        webShowClose: true,
+      );
     }
   }
 
   Future<void> printEvidences() async {
     try {
       // Obtener todas las evidencias desde la base de datos
-      final evidences = await dbHelper.getEvidences();
+      final evidences = await dbHelper.getAllEvidences();
 
       // Imprimir las evidencias en la consola
       for (var evidence in evidences) {
@@ -137,9 +139,6 @@ class _CommentState extends State<Comment> {
       idAutorization: widget.idAutorization,
       archivo: imageFile,
     );
-
-    // Actualizar en la base de datos como "subida" isUploaded = 1
-    await dbHelper.insertEvidence(widget.idRuta, widget.idCliente,widget.tipo, widget.cantidad, widget.lat, widget.lon, widget.idAutorization, filePath, 1);
   }
 
   Widget _buttons(BuildContext context) {

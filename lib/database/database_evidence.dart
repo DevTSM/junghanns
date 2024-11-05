@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
-
 import '../models/evidence.dart';
 
 class DatabaseHelper {
@@ -21,14 +20,14 @@ class DatabaseHelper {
 
   Future<Database> _initDatabase() async {
     Directory documentsDirectory = await getApplicationDocumentsDirectory();
-    String path = join(documentsDirectory.path, 'evidences.db');
+    String path = join(documentsDirectory.path, 'evidences1.db');
 
     return await openDatabase(
       path,
       version: 1,
       onCreate: (Database db, int version) async {
         await db.execute('''
-          CREATE TABLE evidences (
+          CREATE TABLE evidences1 (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             idRuta TEXT,
             idCliente TEXT,
@@ -38,16 +37,17 @@ class DatabaseHelper {
             lon DOUBLE,
             idAutorization INTEGER,
             archivo TEXT,
-            isUploaded INTEGER
+            isUploaded INTEGER,
+            isError INTEGER DEFAULT 0
           )
         ''');
       },
     );
   }
 
-  Future<int> insertEvidence(String idRuta, String idCliente, String tipo, String cantidad, double lat, double lon, int idAutorization, String archivo, int isUploaded) async {
+  Future<int> insertEvidence(String idRuta, String idCliente, String tipo, String cantidad, double lat, double lon, int idAutorization, String archivo, int isUploaded, int isError) async {
     final db = await database;
-    return await db.insert('evidences', {
+    return await db.insert('evidences1', {
       'idRuta': idRuta,
       'idCliente': idCliente,
       'tipo': tipo,
@@ -57,22 +57,40 @@ class DatabaseHelper {
       'idAutorization': idAutorization,
       'archivo': archivo,
       'isUploaded': isUploaded,
+      'isError': isError,
     });
   }
 
-  Future<int> updateEvidence(int id, int isUploaded) async {
+  Future<int> updateEvidence(int id, int isUploaded, int isError) async {
     final db = await database;
     return await db.update(
-      'evidences',
-      {'isUploaded': isUploaded},
+      'evidences1',
+      {
+        'isUploaded': isUploaded,
+        'isError': isError
+      },
       where: 'id = ?',
       whereArgs: [id],
     );
   }
 
+  Future<int?> getEvidenceIdByAuthorization(int idAutorization) async {
+    final db = await database;
+    List<Map<String, dynamic>> result = await db.query(
+      'evidences1',
+      columns: ['id'],
+      where: 'idAutorization = ?',
+      whereArgs: [idAutorization],
+    );
+    if (result.isNotEmpty) {
+      return result.first['id'] as int;
+    }
+    return null; // Retorna null si no se encuentra ningún registro
+  }
+
   Future<List<Evidence>> getAllEvidences() async {
     final db = await database;
-    final List<Map<String, dynamic>> maps = await db.query('evidences'); // Cambiado de 'evidencias' a 'evidences'
+    final List<Map<String, dynamic>> maps = await db.query('evidences1');
 
     return List.generate(maps.length, (i) {
       return Evidence(
@@ -85,27 +103,8 @@ class DatabaseHelper {
         idAutorization: maps[i]['idAutorization'] ?? 0,
         filePath: maps[i]['archivo'] ?? '',
         isUploaded: (maps[i]['isUploaded'] ?? 0) == 1,
+        isError: maps[i]['isError'] ?? 0,  // Obtener idError
       );
     });
   }
-
-  Future<List<Evidence>> getEvidences() async {
-    final db = await database;
-    final List<Map<String, dynamic>> maps = await db.query('evidences'); // Cambiado de 'evidencias' a 'evidences'
-
-    return List.generate(maps.length, (i) {
-      return Evidence(
-        idRuta: maps[i]['idRuta'] ?? '',
-        idCliente: maps[i]['idCliente'] ?? '',
-        tipo: maps[i]['tipo'] ?? '',
-        cantidad: maps[i]['cantidad'] ?? '',
-        lat: maps[i]['lat'] ?? 0.0,
-        lon: maps[i]['lon'] ?? 0.0,
-        idAutorization: maps[i]['idAutorization'] ?? 0,
-        filePath: maps[i]['archivo'] ?? '',
-        isUploaded: (maps[i]['isUploaded'] ?? 0) == 0,
-      );
-    });
-  }
-
 }

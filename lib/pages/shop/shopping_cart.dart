@@ -38,6 +38,7 @@ import 'package:junghanns/widgets/card/product.dart';
 import 'package:location/location.dart';
 import 'package:provider/provider.dart';
 
+import '../../database/database_evidence.dart';
 import '../../models/method_payment.dart';
 import '../../util/location.dart';
 import '../../widgets/modal/evidence.dart';
@@ -83,6 +84,9 @@ class _ShoppingCartState extends State<ShoppingCart> {
   late bool isLoading, isRange;
   late bool isRequestFolio = false;
   late bool isOtherProduct;
+
+  List<Map<String, dynamic>> commentsData = [];
+
 
   @override
   void initState() {
@@ -924,6 +928,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
               isRequestFolio = true;
             });
           } else {
+            await setCurrentLocation();
             // Verificar la autorización
             int idReasonAuth = widget.authList.isNotEmpty ? widget.authList[0].idReasonAuth : 0;
             String? motivoGa = widget.authList.isNotEmpty && widget.authList[0].reason.isNotEmpty
@@ -936,7 +941,20 @@ class _ShoppingCartState extends State<ShoppingCart> {
               showComment(
                 context: context,
                 yesFunction: (File? image) {
+
+                  commentsData.add({
+                    'image': image,
+                    'idRuta': prefs.idRouteD.toString(),
+                    'idCliente': (widget.authList.isNotEmpty ? widget.authList[0].idClient.toString() : null) ?? provider.basketCurrent.authCurrent.idClient.toString(),
+                    'tipo': tipo,
+                    'cantidad': productsList.first.number.toString(),
+                    'lat': latSale,
+                    'lon': lngSale,
+                    'idAutorization': (widget.authList.isNotEmpty ? widget.authList[0].idAuth : null) ?? provider.basketCurrent.authCurrent.idAuth,
+                  });
                   confirmarSaleYes(widget.customerCurrent.payment.first);
+                  // Llamar a _uploadAndConfirm con los parámetros necesarios
+
                 },
                 current: motivoGa ?? "",
                 idRuta: prefs.idRouteD.toString(),
@@ -990,62 +1008,29 @@ class _ShoppingCartState extends State<ShoppingCart> {
     }
   }
 
-  /*caseSale() async {
-    if (widget.customerCurrent.payment.length > 1) {
-      //si hay mas de un metodo agregamos select
-      selectPayment();
-    } else {
-      if (widget.customerCurrent.payment.isNotEmpty) {
-        //validamos que existan metodos de pago
-        if (funCheckMethodPayment(widget.customerCurrent.payment.first)) {
-          if (widget.customerCurrent.payment.first.getIsFolio()) {
-            //habilitamos el modal para folio
-            setState(() {
-              isRequestFolio = true;
-            });
-          } else {
-            if (provider.basketCurrent.authCurrent.authText.toUpperCase() ==
-                "GARRAFON A LA PAR") {
-              List<Map<String, dynamic>> list = List.from(
-                  jsonDecode(prefs.brands != "" ? prefs.brands : "[]"));
-              if (list.isNotEmpty) {
-                provider.basketCurrent.brandJug = list.first;
-                showBrand(
-                    context,
-                        () => showConfirmSale(widget.customerCurrent.payment.first),
-                    provider,
-                    list);
-              } else {
-                Fluttertoast.showToast(
-                  msg: "No se encontraron marcas de garrafon",
-                  timeInSecForIosWeb: 2,
-                  toastLength: Toast.LENGTH_LONG,
-                  gravity: ToastGravity.TOP,
-                  webShowClose: true,
-                );
-                provider.basketCurrent.brandJug = {
-                  "id": 0,
-                  "descripcion": "Sin marca"
-                };
-                showConfirmSale(widget.customerCurrent.payment.first);
-              }
-            } else {
-              showConfirmSale(widget.customerCurrent.payment.first);
-            }
-          }
-        }
-      } else {
-        Fluttertoast.showToast(
-          msg:
-          "No se encontraron metodos de pago ${widget.authList.isNotEmpty ? "para la autorización ${widget.authList.first.idAuth}" : ""}",
-          timeInSecForIosWeb: 2,
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.TOP,
-          webShowClose: true,
-        );
-      }
-    }
-  }*/
+  Future<void> _uploadAndConfirm({
+    File? imageFile,
+    required String idRuta,
+    required String idCliente,
+    required String tipo,
+    required String cantidad,
+    required double lat,
+    required double lon,
+    required String idAutorization,
+  }) async {
+    // Implementar aquí la lógica de carga y confirmación
+    context.read<ProviderJunghanns>().submitDirtyBroken(
+      idRuta: idRuta,
+      idCliente: idCliente,
+      tipo: tipo,
+      cantidad: cantidad,
+      lat: lat,
+      lon: lon,
+      idAutorization: int.parse(idAutorization),
+      archivo: imageFile!,
+    );
+  }
+
 
   funSale(MethodPayment methodPayment) async {
     setState(() {
@@ -1223,6 +1208,20 @@ class _ShoppingCartState extends State<ShoppingCart> {
         await handler.updateSale(
             {'isUpdate': 1, 'fecha': DateTime.now().toString()}, id);
         //se regresa al dashboard
+        // Subir la imagen y confirmar
+        // Itera sobre los datos recopilados en `commentsData` y llama a `_uploadAndConfirm`
+        for (var data in commentsData) {
+          await _uploadAndConfirm(
+            imageFile: data['image'],
+            idRuta: data['idRuta'],
+            idCliente: data['idCliente'],
+            tipo: data['tipo'],
+            cantidad: data['cantidad'],
+            lat: double.parse(data['lat'].toString()),
+            lon: double.parse(data['lon'].toString()),
+            idAutorization: data['idAutorization'].toString(),
+          );
+        }
         //Navigator.pop(context, true);
 
         AwesomeDialog(
@@ -1313,6 +1312,15 @@ class _ShoppingCartState extends State<ShoppingCart> {
           await handler.updateSale(
               {'isUpdate': 0, 'fecha': DateTime.now().toString(), 'isError': 1},
               id);
+          DatabaseHelper dbHelper = DatabaseHelper();
+          for (var data in commentsData) {
+            // Extraer el idAutorization para cada iteración
+            String? idAutorizationString = data['idAutorization']?.toString();
+            int? idAutorization = int.tryParse(idAutorizationString ?? '');
+
+            int? evidenceId = await dbHelper.getEvidenceIdByAuthorization(idAutorization!);
+            await dbHelper.updateEvidence(evidenceId!, 0, 1);
+          }
         }
         return AwesomeDialog(
           context: context,

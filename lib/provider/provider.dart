@@ -32,6 +32,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../database/async.dart';
+import '../database/database_evidence.dart';
 import '../models/produc_receiption.dart';
 import '../pages/home/home_principal.dart';
 import '../services/store.dart';
@@ -496,6 +497,7 @@ class ProviderJunghanns extends ChangeNotifier {
               message: "Se aceptaron correctamente los productos enviados por el almacén.",
               iconColor: ColorsJunghanns.greenJ,
           );
+          synchronizeListDelivery();
           fetchStockValidation();
         } else {
           CustomModal.show(
@@ -505,6 +507,7 @@ class ProviderJunghanns extends ChangeNotifier {
             message: "Proceso realizado correctamente, la solicitud fue rechazada.",
             iconColor: ColorsJunghanns.red,
           );
+          synchronizeListDelivery();
           fetchStockValidation();
         }
         notifyListeners();
@@ -526,9 +529,8 @@ class ProviderJunghanns extends ChangeNotifier {
         if (answer.body is Map) {
           DeliverProductsModel stockModel = DeliverProductsModel.fromJson(answer.body);
           stockAccesories = [stockModel];
-          print('Stock Accesorios: $stockAccesories');
+          //print('Stock Accesorios: $stockAccesories');
         }
-        print("---Llamando--Stock--Entrega--");
       }
       hasStock = stockAccesories.isNotEmpty;
     });
@@ -571,7 +573,7 @@ class ProviderJunghanns extends ChangeNotifier {
 
   updateStock() async {
     final uiProvider = Provider.of<ProviderJunghanns>(navigatorKey.currentContext!, listen: false);
-
+    print('-------------------ENTRANDO AL UPDATE STOCK----------------------------');
     fetchStockDelivery();
     final productWithStockWithoutSerial = uiProvider.stockAccesories;
     saveLists();
@@ -608,6 +610,9 @@ class ProviderJunghanns extends ChangeNotifier {
     final carboyAccesoriesCarboys = carboyAccesories.map((a) => a.carboys).toList();
     final carboyAccesoriosOriginCarboys = carboyAccesoriosOrigin.map((a) => a.carboys).toList();
     final carboyAccesoriesSecunCarboys = carboyAccesoriosOriginSecun.map((a) => a.carboys).toList();
+
+    print('Imprimento Origin ${carboyAccesoriosOriginCarboys}');
+    print('Imprimento Secun ${carboyAccesoriesSecunCarboys}');
 
     if (carboyAccesoriosOriginCarboys.toString() != carboyAccesoriesSecunCarboys.toString()) {
       //Verificar esto antes de todo
@@ -1136,6 +1141,77 @@ class ProviderJunghanns extends ChangeNotifier {
     required File archivo,
   }) async {
     notifyListeners();
+    DatabaseHelper dbHelper = DatabaseHelper();
+
+    await postDirtyBroken(
+      idRuta: idRuta,
+      idCliente: idCliente,
+      tipo: tipo,
+      cantidad: cantidad,
+      lat: lat,
+      lon: lon,
+      idAutorization: idAutorization,
+      archivo: archivo,
+    ).then((answer) async {
+      // Buscar el ID de la evidencia en la base de datos usando idAutorization
+      int? evidenceId = await dbHelper.getEvidenceIdByAuthorization(idAutorization);
+
+      if (evidenceId != null) {
+        if (answer.error) {
+          // Si hay un error y el código es diferente de 1002, actualizar isError a 1
+          if (answer.status != 1002) {
+            await dbHelper.updateEvidence(evidenceId, 0, 1);
+            Fluttertoast.showToast(
+              msg: "${answer.message}",
+              timeInSecForIosWeb: 16,
+              toastLength: Toast.LENGTH_LONG,
+              gravity: ToastGravity.TOP,
+              webShowClose: true,
+            );
+          } else{
+            Fluttertoast.showToast(
+              msg: "${answer.message}",
+              timeInSecForIosWeb: 16,
+              toastLength: Toast.LENGTH_LONG,
+              gravity: ToastGravity.TOP,
+              webShowClose: true,
+            );
+          }
+        } else {
+          // Si la respuesta es exitosa, actualizar isUploaded a 1 y isError a 0
+          await dbHelper.updateEvidence(evidenceId, 1, 0);
+          Fluttertoast.showToast(
+            msg: "Evidencia enviada",
+            timeInSecForIosWeb: 16,
+            toastLength: Toast.LENGTH_LONG,
+            gravity: ToastGravity.TOP,
+            webShowClose: true,
+          );
+        }
+      } else {
+        // Manejar el caso en que no se encuentra la evidencia
+        Fluttertoast.showToast(
+          msg: "No se encontró la evidencia en la base de datos",
+          timeInSecForIosWeb: 16,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+        );
+      }
+    });
+  }
+
+  /*Future<void> submitDirtyBroken({
+    required String idRuta,
+    required String idCliente,
+    required String tipo,
+    required String cantidad,
+    required double lat,
+    required double lon,
+    required int idAutorization,
+    required File archivo,
+  }) async {
+    notifyListeners();
 
       await postDirtyBroken(
         idRuta: idRuta,
@@ -1149,13 +1225,13 @@ class ProviderJunghanns extends ChangeNotifier {
       ). then((answer){
         if (answer.error) {
           // Mostrar mensaje de error
-          /*CustomModal.show(
+          *//*CustomModal.show(
             context: navigatorKey.currentContext!,
             icon: Icons.cancel_outlined,
             title: "ERROR",
             message: "${answer.message}",
             iconColor: ColorsJunghanns.red,
-          );*/
+          );*//*
           Fluttertoast.showToast(
             msg: "${answer.message}",
             timeInSecForIosWeb: 16,
@@ -1165,13 +1241,13 @@ class ProviderJunghanns extends ChangeNotifier {
           );
         } else {
           // Mostrar mensaje de éxito
-          /*CustomModal.show(
+          *//*CustomModal.show(
             context: navigatorKey.currentContext!,
             icon: Icons.check_circle,
             title: "EVIDENCIA ENVIADA",
             message: "La evidencia fue enviada correctamente.",
             iconColor: ColorsJunghanns.greenJ,
-          );*/
+          );*//*
           Fluttertoast.showToast(
             msg: "Evidencia enviada",
             timeInSecForIosWeb: 16,
@@ -1181,7 +1257,7 @@ class ProviderJunghanns extends ChangeNotifier {
           );
         }
       });
-  }
+  }*/
 
   validationDelivery() async {
     bool hasData = false;

@@ -36,6 +36,7 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
   List specialData = [];
   Timer? _timer;
   String? errorMessage;
+  String? errorMessage1;
   // Estado para mostrar el banner
   bool showErrorBanner = false;
 
@@ -145,7 +146,8 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
       final hasData = validationList.isNotEmpty && (validationList.first.status != 'P' && validationList.first.valid != 'Planta');
 
       if (hasData){
-        errorMessage = "Se completo la última recepción con éxito.";
+        errorMessage = "Se completo la última recepción ";
+        errorMessage1 = "con éxito.";
         showErrorBanner = true;
       }
     });
@@ -196,65 +198,36 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
                 ),
               ),
             ),
-            body: SingleChildScrollView(  // Asegura que el contenido se pueda desplazar
-              physics: const AlwaysScrollableScrollPhysics(),  // Para permitir siempre el scroll
+            body: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
               child: Column(
                 children: [
                   header(),
                   const SizedBox(height: 20),
-                  /*if (showErrorBanner) ...[
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                      color: ColorsJunghanns.greenJ.withOpacity(0.9),
-                      child: Center(
-                        child: Wrap(
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          children: [
-                            const Icon(
-                              Icons.check_circle,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 5),
-                            Text(
-                              errorMessage ?? '',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20), // Se coloca el espacio justo después del contenedor
-                  ],*/
                   if (showErrorBanner) ...[
                     Padding(
-                      padding: const EdgeInsets.all(24), // Padding de 10 px alrededor del contenedor
+                      padding: const EdgeInsets.all(24),
                       child: Container(
                         width: double.infinity,
                         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                         decoration: BoxDecoration(
-                          color: Colors.white, // Fondo blanco o transparente
+                          color: Colors.white,
                           border: Border.all(
-                            color: ColorsJunghanns.greenJ, // Color del borde verde
-                            width: 0, // Grosor del borde
+                            color: ColorsJunghanns.greenJ,
+                            width: 0,
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: ColorsJunghanns.greenJ.withOpacity(0.4), // Sombra verde
+                              color: ColorsJunghanns.greenJ.withOpacity(0.4),
                               blurRadius: 8,
-                              offset: const Offset(0, 4), // Posición de la sombra
+                              offset: const Offset(0, 4),
                             ),
                           ],
-                          borderRadius: BorderRadius.circular(8), // Ajusta la redondez del borde
+                          borderRadius: BorderRadius.circular(8),
                         ),
                         child: Center(
                           child: Wrap(
+                            alignment: WrapAlignment.center,
                             crossAxisAlignment: WrapCrossAlignment.center,
                             children: [
                               const Icon(
@@ -272,12 +245,21 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
                                   letterSpacing: 0.5,
                                 ),
                               ),
+                              Text(
+                                errorMessage1 ?? '',
+                                style: const TextStyle(
+                                  color: ColorsJunghanns.greenJ,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
                             ],
                           ),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 20), // Espacio después del contenedor
+                    const SizedBox(height: 20),
                   ],
 
 
@@ -306,59 +288,6 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
               ),
             ),
           ),
-
-          /*Stack(
-            children: [
-              if (showErrorBanner)
-                Positioned(
-                  bottom: 25,
-                  left: 20,
-                  right: 20,
-                  child: Container(
-                    width: double.infinity,
-                    height: 50,
-                    color: Colors.transparent,
-                    padding: EdgeInsets.all(8),
-                    child: Center(
-                      child: Text(
-                        errorMessage ?? '',
-                        style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            decoration: TextDecoration.none),
-                      ),
-                    ),
-                  ),
-                )
-              else
-                Positioned(
-                  bottom: 25,
-                  left: 20,
-                  right: 20,
-                  child: hasData
-                      ? CustomButtonProduct(
-                    onValidate: () {
-                      _handleAction('A', comment: '');
-                    },
-                    onReject: () {
-                      showDeclineProduct(
-                        context: context,
-                        onReject: (comment) {
-                          _handleAction('R', comment: comment);
-                        },
-                      );
-                    },
-                    validateText: 'ACEPTAR',
-                    rejectText: 'RECHAZAR',
-                    validateColor: ColorsJunghanns.blueJ,
-                    rejectColor: ColorsJunghanns.red,
-                    validateIcon: Icons.check_circle,
-                    rejectIcon: Icons.cancel,
-                  )
-                      : Container(), // Si no se cumple la condición, no se muestra nada
-                ),
-            ],
-          ),*/
 
           Positioned(
             bottom: 25,

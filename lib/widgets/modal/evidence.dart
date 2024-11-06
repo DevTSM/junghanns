@@ -248,7 +248,18 @@ class _CommentState extends State<Comment> {
                 widget.image!,
                 width: MediaQuery.of(context).size.width * .25,
                 height: MediaQuery.of(context).size.width * .3,
+              )
+            else
+            // Mostrar el mensaje de advertencia si no hay imagen
+              const Text(
+                "Agrega la evidencia",
+                style: TextStyle(
+                  color: Colors.red,
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
+
             const SizedBox(height: 10),
             ElevatedButton.icon(
               onPressed: _takePicture,

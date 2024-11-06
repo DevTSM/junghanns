@@ -20,14 +20,14 @@ class DatabaseHelper {
 
   Future<Database> _initDatabase() async {
     Directory documentsDirectory = await getApplicationDocumentsDirectory();
-    String path = join(documentsDirectory.path, 'evidences1.db');
+    String path = join(documentsDirectory.path, 'evidencesCortesia.db');
 
     return await openDatabase(
       path,
       version: 1,
       onCreate: (Database db, int version) async {
         await db.execute('''
-          CREATE TABLE evidences1 (
+          CREATE TABLE evidencesCortesia (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             idRuta TEXT,
             idCliente TEXT,
@@ -47,7 +47,7 @@ class DatabaseHelper {
 
   Future<int> insertEvidence(String idRuta, String idCliente, String tipo, String cantidad, double lat, double lon, int idAutorization, String archivo, int isUploaded, int isError) async {
     final db = await database;
-    return await db.insert('evidences1', {
+    return await db.insert('evidencesCortesia', {
       'idRuta': idRuta,
       'idCliente': idCliente,
       'tipo': tipo,
@@ -64,7 +64,7 @@ class DatabaseHelper {
   Future<int> updateEvidence(int id, int isUploaded, int isError) async {
     final db = await database;
     return await db.update(
-      'evidences1',
+      'evidencesCortesia',
       {
         'isUploaded': isUploaded,
         'isError': isError
@@ -77,7 +77,7 @@ class DatabaseHelper {
   Future<int?> getEvidenceIdByAuthorization(int idAutorization) async {
     final db = await database;
     List<Map<String, dynamic>> result = await db.query(
-      'evidences1',
+      'evidencesCortesia',
       columns: ['id'],
       where: 'idAutorization = ?',
       whereArgs: [idAutorization],
@@ -85,12 +85,22 @@ class DatabaseHelper {
     if (result.isNotEmpty) {
       return result.first['id'] as int;
     }
-    return null; // Retorna null si no se encuentra ningún registro
+    return null;
+  }
+
+  Future<List<Map<String, dynamic>>> retrieveEvdences() async {
+    final db = await database;
+    return await db.query(
+        'evidencesCortesia',
+        where: "isUploaded = ? AND isError = ?",
+        whereArgs: [0, 0],
+        orderBy: 'id DESC'
+    );
   }
 
   Future<List<Evidence>> getAllEvidences() async {
     final db = await database;
-    final List<Map<String, dynamic>> maps = await db.query('evidences1');
+    final List<Map<String, dynamic>> maps = await db.query('evidencesCortesia');
 
     return List.generate(maps.length, (i) {
       return Evidence(
@@ -102,8 +112,8 @@ class DatabaseHelper {
         lon: maps[i]['lon'] ?? 0.0,
         idAutorization: maps[i]['idAutorization'] ?? 0,
         filePath: maps[i]['archivo'] ?? '',
-        isUploaded: (maps[i]['isUploaded'] ?? 0) == 1,
-        isError: maps[i]['isError'] ?? 0,  // Obtener idError
+        isUploaded: (maps[i]['isUploaded'] ?? 0) == 1 ? true : false,
+        isError: (maps[i]['isError'] ?? 0 )== 1 ? true : false,  // Obtener idError
       );
     });
   }

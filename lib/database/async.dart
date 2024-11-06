@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:io';
 
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:junghanns/models/customer.dart';
@@ -12,6 +13,8 @@ import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/provider/provider.dart';
 import 'package:junghanns/services/customer.dart';
 import 'package:junghanns/services/store.dart';
+
+import 'database_evidence.dart';
 
 class Async {
   ProviderJunghanns provider;
@@ -116,10 +119,12 @@ class Async {
   }
   
   Future <bool> getAsyncData() async {
+    DatabaseHelper dbHelper = DatabaseHelper();
     bool isNotSuccess=false;
     List<Map<String,dynamic>> salesPen= await handler.retrieveSales();
     List<Map<String,dynamic>> devolucionesPen= await handler.retrieveDevolucionAsync();
     List<Map<String,dynamic>> stopPen=await handler.retrieveStopOffUpdate();
+    List<Map<String, dynamic>> evidencePen = await dbHelper.retrieveEvdences();
     List<StopRuta> stopRuta=await handler.retrieveStopRuta();
     if(salesPen.isNotEmpty){
       log("ventas pendientes ---------> ${salesPen.length}");
@@ -214,6 +219,49 @@ class Async {
             await handler.updateDevolucion({"id":e["id"],"isUpdate":1});
           }else{
             isNotSuccess=true;
+          }
+        });
+      }
+    }
+    if (evidencePen.isNotEmpty) {
+      provider.labelAsync = "Sincronizando evidencias";
+      for (var e in evidencePen) {
+        double lat = 0.0;
+        double lon = 0.0;
+        if (e["lat"] != null && e["lat"].toString().isNotEmpty) {
+          lat = double.tryParse(e["lat"].toString()) ?? 0.0;
+        }
+        if (e["lon"] != null && e["lon"].toString().isNotEmpty) {
+          lon = double.tryParse(e["lon"].toString()) ?? 0.0;
+        }
+        String archivoFile = e["archivo"];
+        File archivo = File(archivoFile);
+
+        Map<String, dynamic> data = {
+          "id_ruta": e["idRuta"],
+          "id_cliente": e["idCliente"],
+          "tipo": e["tipo"],
+          "cantidad": e["cantidad"],
+          "lat": lat,
+          "lon": lon,
+          "id_autorization": e["idAutorization"],
+          "archivo": archivoFile
+        };
+
+        log("Datos de la evidencia antes de enviar: ${jsonEncode(data)}");
+
+        await postDirtyBroken(idRuta: e["idRuta"], idCliente: e["idCliente"], tipo: e["tipo"], cantidad: e["cantidad"], lat:lat, lon: lon, idAutorization: e["idAutorization"], archivo: archivo).then((value) async {
+          if (!value.error) {
+            int? evidenceId = await dbHelper.getEvidenceIdByAuthorization(e["idAutorization"]);
+            log("Se actualizan los datos");
+            await dbHelper.updateEvidence(evidenceId!, 1, 0);
+            provider.isNeedAsync = false;
+          } else {
+            isNotSuccess = true;
+            if (value.status != 1002) {
+              int? evidenceId = await dbHelper.getEvidenceIdByAuthorization(e["idAutorization"]);
+              await dbHelper.updateEvidence(evidenceId!, 0, 1);
+            }
           }
         });
       }

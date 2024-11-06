@@ -1020,12 +1020,12 @@ Future<Answer> deleteReceiption({required int idV, String? comment, required dou
 Future<Answer> postDirtyBroken({
   required String idRuta,
   required String idCliente,
-  required String tipo, // "S" para sucio, "R" para roto
+  required String tipo,
   required String cantidad,
   required double lat,
   required double lon,
   required File archivo,
-  required int idAutorization,// Archivo a subir
+  required int idAutorization,
 }) async {
   log("/StoreServices <postDirtyBroken> ¡");
 

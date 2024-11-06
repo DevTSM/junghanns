@@ -168,11 +168,20 @@ class _HomeState extends State<Home> {
       }
       await Async(provider: provider).getStock();
       List<ProductModel> dataList = await handler.retrieveProducts();
+      log(''' =======> 
+      ${dataList.toString()}''');
       dataList.map((e) {
         var exits =
             dashboardR.stock.where((element) => element["id"] == e.idProduct);
         if (exits.isNotEmpty) {
           setState(() {
+            print({
+              "nombre": exits.first["desc"],
+              "stock get":exits.first["stock"],
+              "stockLocal":e.stock,
+              "ventaLocal":int.parse((exits.first["stock"] ?? 0).toString()) -
+                int.parse((e.stock).toString())
+            });
             exits.first["venta_local"] =
                 int.parse((exits.first["stock"] ?? 0).toString()) -
                     int.parse((e.stock).toString());
@@ -469,8 +478,8 @@ class _HomeState extends State<Home> {
                 dashboardR.stock
                     .map((e) => {
                           "type": e["desc"] ?? "",
-                          "atendidos": e["venta_local"] ?? 0,
-                          "faltantes": e["stock"] ?? 0
+                          "atendidos": e["venta_local"] ?? 0,//vendidos
+                          "faltantes": e["stock"] ?? 0 //total
                         })
                     .toList(),
                 Container()),

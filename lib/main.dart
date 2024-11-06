@@ -30,7 +30,7 @@ Future<void> messageHandler(RemoteMessage message) async {
 @pragma('vm:entry-point') // Mandatory if the App is obfuscated or using Flutter 3.1+
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) {
-    initWebSocket();
+    //initWebSocket();
     print("Native called background task: $task"); //simpleTask will be emitted here.
     return Future.value(true);
   });
@@ -38,25 +38,46 @@ void callbackDispatcher() {
 
 
 void initWebSocket() {
+  
   var socket = IO.io('https://sandbox.junghanns.app:3002', 
     <String, dynamic>{
+      'auth': {"token":"123456789"},
       'transports': ['websocket'],
       'autoConnect': true,
     }
   );
   try{
+    if(true){
     socket.connect();
+    
+    prefs.conectado = true;
+    }else{
+      log("con proceso =======================>");
+    }
+    socket.onConnect((data){
+      socket.emit('catch_mobile', 'Hola, servidor! Junny');
+      socket.emit('primerDato', 'Hola, servidor! Junny');
+      log("################# Conectado");
+      log("################# Conectado $data");
+    });
     // Escucha eventos del servidor
-    socket.on('junny_notify', (data) 
-      async {
-        log('Mensaje desde el servidor: $data');
-        NotificationService _notificationService = NotificationService();
-        _notificationService.showNotifications(
-          "Notify", data.toString());
+    socket.on('junny_notify', (data)async {
+      log('Mensaje desde el servidor: $data');
+      NotificationService _notificationService = NotificationService();
+      _notificationService.showNotifications("Notify", data.toString());
+    });
+    socket.on('respuesta', (data)async {
+      log('Mensaje desde el servidor: $data');
+      NotificationService _notificationService = NotificationService();
+      _notificationService.showNotifications("Notify", data.toString());
+    });
+    Future.delayed(Duration(seconds: 10),(){
+      if(!socket.connected){
+        print("Terminando socket");
+        socket.close();
       }
-    );
-    log("Conectado ${socket.acks.toString()}");
-    socket.emit('catch_mobile', 'Hola, servidor!');
+    });
+    socket.onConnectError((data)=> log('===> Error de conexion $data'));
   }catch(e){
     log("ERORR: ${e.toString()}");
   }
@@ -80,7 +101,7 @@ Future<void> main() async {
   //   isInDebugMode: false 
   // );
   // Workmanager().registerOneOffTask("task-identifier", "notification");
-  initWebSocket();
+  //initWebSocket();
   runApp(const JunnyApp());
 }
 class MyHttpOverrides extends HttpOverrides {

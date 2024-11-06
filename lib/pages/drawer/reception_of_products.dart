@@ -146,8 +146,8 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
       final hasData = validationList.isNotEmpty && (validationList.first.status != 'P' && validationList.first.valid != 'Planta');
 
       if (hasData){
-        errorMessage = "Se completo la última recepción ";
-        errorMessage1 = "con éxito.";
+        errorMessage = "Se completo la última ";
+        errorMessage1 = "recepción con éxito.";
         showErrorBanner = true;
       }
     });

@@ -784,7 +784,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
       }
     } catch (e) {
       Fluttertoast.showToast(
-          msg: "Dispositivo sin coordenadas",
+          msg: "Dispositivo sin ubicación",
           timeInSecForIosWeb: 2,
           toastLength: Toast.LENGTH_LONG,
           gravity: ToastGravity.TOP,

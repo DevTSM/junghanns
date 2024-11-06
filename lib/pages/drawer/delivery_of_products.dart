@@ -51,7 +51,8 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
   String? errorMessage;
   // Estado para mostrar el banner
   bool showErrorBanner = false;
-  bool isExpanded = false;
+  //bool isExpanded = false;
+  late List<ValueNotifier<bool>> isExpandedList;
 
   final TextEditingController _vaciosController = TextEditingController();
   final TextEditingController _llenosController = TextEditingController();
@@ -68,6 +69,9 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
   @override
   void initState() {
     super.initState();
+    // Inicializa la lista de ValueNotifiers
+    isExpandedList = List.generate(4, (_) => ValueNotifier<bool>(false));
+
     _currentLocation = Position(
       altitudeAccuracy: 1,
       headingAccuracy: 1,
@@ -82,20 +86,17 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
     );
     isLoading = false;
     isLoadingOne = false;
+
     Future.microtask(() {
       print('En la vista');
+
       validateSyncDta();
       final provider = Provider.of<ProviderJunghanns>(context, listen: false);
       Provider.of<ProviderJunghanns>(context, listen: false).fetchStockDelivery();
       Provider.of<ProviderJunghanns>(context, listen: false).refreshList(prefs.token);
       Provider.of<ProviderJunghanns>(context, listen: false).loadLists(prefs.token);
       Provider.of<ProviderJunghanns>(context, listen: false).updateStock();
-      /*print('Llamando loadList de l guardado de las listas');*//*
-      Provider.of<ProviderJunghanns>(context, listen: false).loadLists();*/
       Provider.of<ProviderJunghanns>(context, listen: false).loadMissingProducts(prefs.token);
-      // Imprimir los productos que se han cargado
-      print('Productos faltantes cargados: ${provider.missingProducts.length}');
-      print('Llamando loadListAdicional de la guardado de las listas');
       Provider.of<ProviderJunghanns>(context, listen: false).loadAdditionalProducts();
 
     });
@@ -166,12 +167,10 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
 
   Future<void> _loadSavedValues() async {
     final prefs = await SharedPreferences.getInstance();
-    // Verifica si el estado de la validación está en "P" (pendiente)
     final provider = Provider.of<ProviderJunghanns>(context, listen: false);
-    await provider.fetchStockValidation(); // Asegura que se tiene la última lista de validaciones
+    await provider.fetchStockValidation();
     final isPending = provider.validationList.any((validation) => validation.status == "P");
 
-    // Carga los valores solo si la validación está pendiente
     if (isPending) {
       setState(() {
         _rotosRutaController.text = prefs.getString('rotosRuta') ?? '';
@@ -195,13 +194,9 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
 
   Future<void> _updateControllersWithCurrentStock() async {
     final providerJunghanns = Provider.of<ProviderJunghanns>(context, listen: false);
-    /*await providerJunghanns.fetchStockDelivery();*/
-    //await providerJunghanns.updateStock();
     final currentStock = providerJunghanns.carboyAccesories;
-    // providerJunghanns.fetchStockDelivery();
 
     if (currentStock.isNotEmpty) {
-      // Asigna los valores actualizados a los controladores
       _vaciosController.text = currentStock.first.carboys.empty.toString();
       _llenosController.text = currentStock.first.carboys.full.toString();
       _rotosCteController.text = currentStock.first.carboys.brokenCte.toString();
@@ -221,7 +216,6 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
     if (currentStock.isNotEmpty) {
       int llenos = currentStock.first.carboys.full;
 
-      // Obtener valores de los controladores
       int rotosRuta = int.tryParse(_rotosRutaController.text) ?? 0;
       int suciosRuta = int.tryParse(_suciosRutaController.text) ?? 0;
 
@@ -249,11 +243,10 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
       _llenosController.text = llenosRestantes.toString();
     }
   }
-  // Valida si hay valores negativos en los controladores
   void validateInputs() {
     setState(() {
       errorMessage = null;
-      showErrorBanner = false; // Resetea el estado del banner
+      showErrorBanner = false;
 
       List<TextEditingController> controllers = [
         _vaciosController,
@@ -360,20 +353,17 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
     await _refreshData();
     providerJunghanns.fetchStockValidation();
 
-    // Filtrar los datos según las condiciones especificadas
     final filteredData = providerJunghanns.validationList.where((validation) {
       return validation.status == "P" && validation.valid == "Planta";
     }).toList();
 
-    // Verificar si hay datos filtrados
     setState(() {
       if (filteredData.isNotEmpty) {
-        specialData = filteredData;// Asigna los datos filtrados a specialData
+        specialData = filteredData;
         isDeliverySuccessful = true;
-        // Imprimir el contenido de specialData para confirmarlo
         print('Contenido de specialData (filtrado): $specialData');
       } else {
-        specialData = [];  // Si no hay datos que cumplan las condiciones, asignar un arreglo vacío
+        specialData = [];
         print('No se encontraron datos que cumplan las condiciones');
       }
     });
@@ -411,39 +401,33 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
         return validation.status != "P" && validation.valid == "Planta";
       }).toList();
 
-      // Verificar si alguna validación fue rechazada
       bool isRejected = providerJunghanns.validationList.any((validation) => validation.status == "R");
-      // Verificar si alguna validación esta Pendiente
       bool isPendiente = providerJunghanns.validationList.any((validation) => validation.status == "P");
 
-      // Limpiar los inputs si filteredData tiene elementos
       if (filteredData.isNotEmpty) {
         _rotosRutaController.clear();
         _suciosRutaController.clear();
       }
 
-      // Si hay una validación rechazada, habilitar los campos de entrada
       if (isRejected) {
         setState(() {
-          areFieldsEditable = true;// Habilitar el campo nuevamente
+          areFieldsEditable = true;
           _rotosRutaController.text = "";
           _suciosRutaController.text = "";
         });
       }
-// Guardar temporalmente los valores en SharedPreferences al verificar
-      // Guardar los valores de rotosRuta y suciosRuta
+
       if (isPendiente) {
         setState(() {
           _saveValues();
         });
       }
 
-
       await _refreshData();
       isLoadingOne = false;
     }
     setState(() {
-      isButtonDisabled = false; // Habilitar el botón al finalizar el proceso
+      isButtonDisabled = false;
     });
   }
 
@@ -463,6 +447,9 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
     _comodatoController.dispose();
     _prestamoController.dispose();
     _enCamionetaController.dispose();
+    for (var notifier in isExpandedList) {
+      notifier.dispose();
+    }
     super.dispose();
   }
   @override
@@ -470,14 +457,11 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
     final providerJunghanns = Provider.of<ProviderJunghanns>(context);
     size = MediaQuery.of(context).size;
-    //Realizando test de esta function
-    //providerJunghanns.updateStock();
     _updateControllersWithCurrentStock();
 
 
     return GestureDetector(
       onTap: () {
-        // Desenfocar el campo de texto al tocar fuera de él
         FocusScope.of(context).unfocus();
       },
       child: Stack(
@@ -498,7 +482,7 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
                     child: IconButton(
                       onPressed: () {
                         if (Navigator.canPop(context)) {
-                          Navigator.pop(context); // Solo hacer pop si hay algo que cerrar
+                          Navigator.pop(context);
                         } else {
                           // Opcional: puedes navegar a HomePrincipal si no hay más pantallas
                           Navigator.pushReplacement(
@@ -508,10 +492,6 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
                         }
                       },
 
-                      /*onPressed: () {
-                        Navigator.pop(context);
-                      },*/
-                      /*Navigator.pop(context)*/
                                   icon: const Icon(
                     Icons.arrow_back_ios,
                     color: ColorsJunghanns.blue,
@@ -567,16 +547,8 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
                                 () {
                               print("Añadir producto con stock");
                             },
-                            showPlus: false,
+                            showPlus: false, index: 1,
                           ),
-                          /*_sectionWithPlus(
-                            "OTROS PRODUCTOS",
-                            Icons.add,
-                            _othersStock(),
-                                () {
-                              print("Añadir producto otros");
-                            }, showPlus: false,
-                          ),*/
                           _sectionWithPlus(
                             "PRODUCTOS FALTANTES",
                             Icons.add,
@@ -584,7 +556,7 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
                                 () {
                               _showAddMissingProductModal(context: context, controller: providerJunghanns);
                                 },
-                            showPlus: false,
+                            showPlus: false, index: 2,
                           ),
                           _sectionWithPlus(
                             "PRODUCTOS ADICIONALES",
@@ -592,7 +564,7 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
                             _additionalProducts(),
                                 () {
                               _showAddAdditionalProductModal(context: context, controller: providerJunghanns);
-                            }, showPlus: false,
+                            }, showPlus: false, index: 3,
                           ),
                         ],
                       ),
@@ -645,14 +617,7 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
           validateText: specialData != null && specialData!.isNotEmpty ? 'VERIFICAR' : 'ENVIAR',
           validateColor: specialData != null && specialData!.isNotEmpty ? ColorsJunghanns.blueJ : (hasData ? ColorsJunghanns.blueJ : ColorsJunghanns.grey),
           icon: icon,
-        ), /*CustomButtonDelivery(
-          onValidate: () {
-            _deliverProduct(provider);
-            // Implementar lógica de validación si es necesario
-          },
-          validateText: 'ENVIAR',
-          icon: Icons.send,
-        ),*/
+        ),
     );
   }
   Widget textField(
@@ -737,9 +702,6 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
             style: TextStyles.blue18SemiBoldIt,
           ),
         ),
-        // Campos de llenos y vacíos deshabilitados
-        // textField(_enCamionetaController, 'En camioneta', FontAwesomeIcons.droplet, enabled: false),
-        // const SizedBox(height: 10),
         textField(_llenosController, 'Llenos', FontAwesomeIcons.droplet, enabled: false),
         const SizedBox(height: 10),
 
@@ -856,15 +818,18 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
       Widget content,
       VoidCallback onPressed, {
         required bool showPlus,
+        required int index,
       }) {
-    ValueNotifier<bool> isExpanded = ValueNotifier(false);
+    if (index < 0 || index >= isExpandedList.length) {
+      return Container();
+    }
 
     return Stack(
       children: [
         GestureDetector(
           onTap: () {
             // Si está expandido, no alteres el estado
-            if (isExpanded.value) return;
+            if (isExpandedList[index].value) return;
           },
           child: Container(
             margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
@@ -881,7 +846,7 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
               ],
             ),
             child: ValueListenableBuilder<bool>(
-              valueListenable: isExpanded,
+              valueListenable: isExpandedList[index],
               builder: (context, expanded, child) {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -893,12 +858,12 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
                       ),
                       child: ExpansionTile(
                         onExpansionChanged: (value) {
-                          isExpanded.value = value;
+                          isExpandedList[index].value = value;
                         },
                         title: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            SizedBox(width: 12), // Ajusta el ancho según sea necesario
+                            SizedBox(width: 12),
                             Expanded(
                               child: Text(
                                 title,
@@ -917,7 +882,6 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
                               ),
                           ],
                         ),
-
                         tilePadding: const EdgeInsets.symmetric(horizontal: 10),
                         collapsedIconColor: ColorsJunghanns.blueJ,
                         iconColor: expanded ? ColorsJunghanns.white : ColorsJunghanns.blue,
@@ -1047,23 +1011,6 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
     );
   }
 
-  /*Widget _missingProducts() {
-    final providerJunghanns = Provider.of<ProviderJunghanns>(context);
-    final missingProducts = providerJunghanns.missingProducts;
-    if (missingProducts.isEmpty) {
-    }
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: missingProducts.length,
-      itemBuilder: (context, index) {
-        final product = missingProducts[index];
-        return ProductMissingCard(
-          product: product,
-        );
-      },
-    );
-  }*/
   Widget _additionalProducts() {
     final providerJunghanns = Provider.of<ProviderJunghanns>(context);
     final additionalProducts = providerJunghanns.additionalProducts;

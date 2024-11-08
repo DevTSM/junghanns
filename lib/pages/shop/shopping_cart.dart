@@ -935,9 +935,19 @@ class _ShoppingCartState extends State<ShoppingCart> {
                 ? widget.authList[0].reason
                 : provider.basketCurrent.authCurrent.reason;
             // Si el idReasonAuth es 2 o 3, mostrar el modal de comentario
-            if ((idReasonAuth == 2 || provider.basketCurrent.authCurrent.idReasonAuth == 2) || (idReasonAuth == 3 || provider.basketCurrent.authCurrent.idReasonAuth == 3)) {
-              String tipo = (idReasonAuth == 2 || provider.basketCurrent.authCurrent.idReasonAuth ==2) ? 'S' : 'R';
+            /*if ((idReasonAuth == 2 || provider.basketCurrent.authCurrent.idReasonAuth == 2) || (idReasonAuth == 3 || provider.basketCurrent.authCurrent.idReasonAuth == 3)) {
+              String tipo = (idReasonAuth == 2 || provider.basketCurrent.authCurrent.idReasonAuth ==2) ? 'S' : 'R';*/
+            if ((idReasonAuth == 2 || provider.basketCurrent.authCurrent.idReasonAuth == 2) ||
+                (idReasonAuth == 3 || provider.basketCurrent.authCurrent.idReasonAuth == 3) ||
+                (idReasonAuth == 4 || provider.basketCurrent.authCurrent.idReasonAuth == 4)) {
 
+              String tipo;
+
+              if (idReasonAuth == 4 || provider.basketCurrent.authCurrent.idReasonAuth == 4) {
+                tipo = 'MS';
+              } else {
+                tipo = (idReasonAuth == 2 || provider.basketCurrent.authCurrent.idReasonAuth == 2) ? 'S' : 'R';
+              }
               showComment(
                 context: context,
                 yesFunction: (File? image) {

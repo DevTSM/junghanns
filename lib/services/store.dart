@@ -1031,8 +1031,8 @@ Future<Answer> postDirtyBroken({
 
   try {
     // Validación del tipo
-    if (tipo != "S" && tipo != "R") {
-      throw Exception("Tipo inválido. Solo se acepta 'S' o 'R'.");
+    if (tipo != "S" && tipo != "R" && tipo != "MS") {
+      throw Exception("Tipo inválido. Solo se acepta 'S' o 'R' o 'MS'.");
     }
 
     // Prepara la URI

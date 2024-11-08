@@ -663,6 +663,16 @@ class ProviderJunghanns extends ChangeNotifier {
       othersAccesoriosOriginSecun.clear();
       accessoriesWithStock.clear();
     }
+    List<Map<String, dynamic>> simplifyProductsReturn(List<ProductReceiptionModel> products) {
+      return products.map((product) {
+        return {
+          'id_devolucion': product.id,
+          'cantidad': product.count,
+          'folio': product.folio,
+          'producto': product.product
+        };
+      }).toList();
+    }
    // Devoluciones
     returnsAccesoriosOrigin = productWithStockWithoutSerial
         .where((a) => a.returns.isNotEmpty)
@@ -680,9 +690,9 @@ class ProviderJunghanns extends ChangeNotifier {
           .toList();
     }
     // Solo comparamos el contenido de carboys de cada lista
-    final returnsAccesoriesReturns = returnsWithStock.map((a) => simplifyProducts(a.returns)).toList();
-    final returnsAccesoriosOriginReturns = returnsAccesoriosOrigin.map((a) => simplifyProducts(a.returns)).toList();
-    final returnsAccesoriesSecunReturns = returnsAccesoriosOriginSecun.map((a) => simplifyProducts(a.returns)).toList();
+    final returnsAccesoriesReturns = returnsWithStock.map((a) => simplifyProductsReturn(a.returns)).toList();
+    final returnsAccesoriosOriginReturns = returnsAccesoriosOrigin.map((a) => simplifyProductsReturn(a.returns)).toList();
+    final returnsAccesoriesSecunReturns = returnsAccesoriosOriginSecun.map((a) => simplifyProductsReturn(a.returns)).toList();
 
     if (returnsAccesoriosOriginReturns.toString() != returnsAccesoriesSecunReturns.toString()) {
       returnsAccesoriosOriginSecun.clear();
@@ -1075,6 +1085,15 @@ class ProviderJunghanns extends ChangeNotifier {
       return productMap;
     }).toList();
 
+    List<Map<String, dynamic>> returnsProducts = returnsWithStock.map((product) {
+      return {
+        'id_devolucion': product.returns.first.id,
+        'cantidad': product.returns.first.count,
+        'folio': product.returns.first.folio,
+        'producto': product.returns.first.product,
+      };
+    }).toList();
+
     // Estructura de entrega
     final Map<String, dynamic> deliveryData = {
       "garrafon": {
@@ -1092,6 +1111,7 @@ class ProviderJunghanns extends ChangeNotifier {
       "faltantes": missingProductsList,
       "otros": returnedProducts,
       "adicionales": additionalProductsList,
+      "devoluciones": returnsProducts,
     };
 
     await postDelivery(

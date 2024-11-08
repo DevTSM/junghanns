@@ -17,7 +17,7 @@ class ProductReceiptionModel {
 
   factory ProductReceiptionModel.from(Map<String, dynamic> data) {
     return ProductReceiptionModel(
-      id: int.parse((data["id"] ?? data["id_producto"] ?? 0).toString()),
+      id: int.parse((data["id"] ?? data["id_producto"] ?? data["id_devolucion"] ?? 0).toString()),
       /*id: int.parse((data["id"] ?? 0).toString()),*/
       product: data["producto"] ?? "",
       count: double.parse((data["cantidad"] ?? data["stock"] ?? "0").toString()),
@@ -36,6 +36,14 @@ class ProductReceiptionModel {
     return {
       'id_producto': id,
       'cantidad': count,
+    };
+  }
+  Map<String, dynamic> toProductReturn() {
+    return {
+      'id_devolucion': id,
+      'cantidad': count,
+      'folio': folio,
+      'producto': product
     };
   }
   ProductReceiptionModel copy() {
@@ -74,7 +82,7 @@ class ProductReceiptionModel {
 
   @override
   String toString() {
-    return 'ProductModel(id: $id, producto: $product,cantidad: $count, img: $img)';
+    return 'ProductModell(id: $id, producto: $product, folio: $folio, cantidad: $count, img: $img)';
   }
 
   factory ProductReceiptionModel.empty(){

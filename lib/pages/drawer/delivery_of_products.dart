@@ -312,6 +312,15 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
       };
     }).toList();
 
+    List<Map<String, dynamic>> returnsProducts = providerJunghanns.returnsWithStock.map((product) {
+      return {
+        'id_devolucion': product.returns.first.id,
+        'cantidad': product.returns.first.count,
+        'folio': product.returns.first.folio,
+        'producto': product.returns.first.product,
+      };
+    }).toList();
+
     List<Map<String, dynamic>> otherProducts = providerJunghanns.stockAccesories.map((product) {
       if (product.others.isNotEmpty) {
         return {
@@ -344,6 +353,7 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
       "faltantes": missingProducts,
       "otros": otherProducts,
       "adicionales": additionalProducts,
+      "devoluciones": returnsProducts,
     };
 
     await providerJunghanns.deliverProducts(

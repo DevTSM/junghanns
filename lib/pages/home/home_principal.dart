@@ -71,15 +71,15 @@ class _HomePrincipalState extends State<HomePrincipal> {
     final provider = Provider.of<ProviderJunghanns>(context, listen: false);
 
     // Ahora fetchStockValidation devuelve un objeto ValidationModel
-    provider.fetchStockValidation();
+    await provider.fetchStockValidation();
 
-// Filtrar los datos según las condiciones especificadas
+    // Filtrar los datos según las condiciones especificadas
     final filteredData = provider.validationList.where((validation) {
       return validation.status == "P" && validation.valid == "Planta";
     }).toList();
 
 
-// Verificar si hay datos filtrados
+    // Verificar si hay datos filtrados
     setState(() {
       if (filteredData.isNotEmpty) {
         specialData = filteredData;  // Asigna los datos filtrados a specialData
@@ -89,7 +89,7 @@ class _HomePrincipalState extends State<HomePrincipal> {
         showValidationModal(context);
       } else {
         specialData = [];  // Si no hay datos que cumplan las condiciones, asignar un arreglo vacío
-        print('No se encontraron datos que cumplan las condiciones');
+        print('No se encontraron datos que cumplan las condiciones----Home principal');
       }
     });
 

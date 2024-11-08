@@ -15,6 +15,7 @@ import 'package:linear_progress_bar/linear_progress_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:sqflite/sqflite.dart';
 
+import '../widgets/modal/receipt_modal.dart';
 import '../widgets/modal/validation_modal.dart';
 import 'auth/login.dart';
 
@@ -154,28 +155,39 @@ class _OpeningState extends State<Opening> {
   Future<void> _refreshTimer() async {
     final provider = Provider.of<ProviderJunghanns>(context, listen: false);
 
-    // Ahora fetchStockValidation devuelve un objeto ValidationModel
+    // Llama a fetchStockValidation para actualizar la lista validationList
     provider.fetchStockValidation();
 
-// Filtrar los datos según las condiciones especificadas
+    /*// Filtra los datos según las condiciones especificadas
     final filteredData = provider.validationList.where((validation) {
       return validation.status == "P" && validation.valid == "Planta";
     }).toList();
 
-// Verificar si hay datos filtrados
+    // Verificar si hay datos filtrados y actualizar el estado
     setState(() {
       if (filteredData.isNotEmpty) {
-        specialData = filteredData;  // Asigna los datos filtrados a specialData
-        // Imprimir el contenido de specialData para confirmarlo
+        specialData = filteredData;
         print('Contenido de specialData (filtrado): $specialData');
         print('Llama al modal');
         showValidationModal(context);
       } else {
-        specialData = [];  // Si no hay datos que cumplan las condiciones, asignar un arreglo vacío
-        print('No se encontraron datos que cumplan las condiciones');
+        specialData = [];
+        print('No se encontraron datos que cumplan las condiciones------opening');
       }
-    });
+    });*/
+
+    // Verifica si provider.validationList no está vacío antes de acceder a .first
+    if (provider.validationList.isNotEmpty &&
+        provider.validationList.first.status == 'P' &&
+        provider.validationList.first.valid == 'Ruta') {
+      print('Hay datos en validationList');
+      showReceiptModal(context);
+    } else {
+      // Imprime mensaje si no hay datos en validationList
+      print('No hay datos en validationList');
+    }
   }
+
 
   Future<void> initConnectivity() async {
     late ConnectivityResult result;
@@ -192,10 +204,10 @@ class _OpeningState extends State<Opening> {
     provider.path=await getDatabasesPath();
     log("url base: ${prefs.urlBase}");
     log("id Route: ${prefs.idRouteD}");
-    provider.fetchStockValidation();
+    await provider.refreshList(prefs.token);
+    await provider.fetchStockValidation();
     /*provider.fetchProductsStock();*/
-    provider.fetchStockDelivery();
-    provider.refreshList(prefs.token);
+    await provider.fetchStockDelivery();
    /* print('Llamando loadList de l guardado de las listas');
     await provider.loadLists();
     print('Llamando loadListAdicional de la guardado de las listas');

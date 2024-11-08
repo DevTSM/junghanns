@@ -94,8 +94,8 @@ class _HomeState extends State<Home> {
     final provider = Provider.of<ProviderJunghanns>(context, listen: false);
 
     // Ahora fetchStockValidation devuelve un objeto ValidationModel
-    provider.fetchStockValidation();
-    provider.fetchStockDelivery();
+    await provider.fetchStockValidation();
+    await provider.fetchStockDelivery();
 
 // Filtrar los datos según las condiciones especificadas
     final filteredData = provider.validationList.where((validation) {
@@ -112,7 +112,7 @@ class _HomeState extends State<Home> {
         showValidationModal(context);
       } else {
         specialData = [];  // Si no hay datos que cumplan las condiciones, asignar un arreglo vacío
-        print('No se encontraron datos que cumplan las condiciones');
+        print('No se encontraron datos que cumplan las condiciones----Home');
       }
     });
 

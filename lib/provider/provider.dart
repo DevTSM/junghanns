@@ -1086,7 +1086,8 @@ class ProviderJunghanns extends ChangeNotifier {
         "rotos_ruta": delivery["garrafon"]["rotos_ruta"],
         "a_la_par": delivery["garrafon"]["a_la_par"],
         "comodato": delivery["garrafon"]["comodato"],
-        "prestamo": delivery["garrafon"]["prestamo"]
+        "prestamo": delivery["garrafon"]["prestamo"],
+        "mal_sabor": delivery["garrafon"]["mal_sabor"],
       },
       "faltantes": missingProductsList,
       "otros": returnedProducts,

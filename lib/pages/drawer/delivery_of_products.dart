@@ -58,6 +58,7 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
   final TextEditingController _llenosController = TextEditingController();
   final TextEditingController _suciosCteController = TextEditingController();
   final TextEditingController _rotosCteController = TextEditingController();
+  final TextEditingController _malSaborController = TextEditingController();
   final TextEditingController _suciosRutaController = TextEditingController();
   final TextEditingController _rotosRutaController = TextEditingController();
   final TextEditingController _aLaParController = TextEditingController();
@@ -169,7 +170,7 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
     final prefs = await SharedPreferences.getInstance();
     final provider = Provider.of<ProviderJunghanns>(context, listen: false);
     await provider.fetchStockValidation();
-    final isPending = provider.validationList.any((validation) => validation.status == "P");
+    final isPending = provider.validationList.any((validation) => validation.status == "P" && validation.valid == 'Planta');
 
     if (isPending) {
       setState(() {
@@ -183,7 +184,7 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
     final provider = Provider.of<ProviderJunghanns>(context, listen: false);
     await provider.fetchStockValidation();
 
-    final isPending = provider.validationList.any((validation) => validation.status == "P");
+    final isPending = provider.validationList.any((validation) => validation.status == "P" && validation.valid == 'Planta');
 
     if (isPending) {
       final prefs = await SharedPreferences.getInstance();
@@ -201,6 +202,7 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
       _llenosController.text = currentStock.first.carboys.full.toString();
       _rotosCteController.text = currentStock.first.carboys.brokenCte.toString();
       _suciosCteController.text = currentStock.first.carboys.dirtyCte.toString();
+      _malSaborController.text = currentStock.first.carboys.badTaste.toString();
       _aLaParController.text = currentStock.first.carboys.aLongWay.toString();
       _comodatoController.text = currentStock.first.carboys.loan.toString();
       _prestamoController.text = currentStock.first.carboys.pLoan.toString();
@@ -293,6 +295,7 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
     int aLaPar = int.tryParse(_aLaParController.text) ?? 0;
     int comodato = int.tryParse(_comodatoController.text) ?? 0;
     int prestamo = int.tryParse(_prestamoController.text) ?? 0;
+    int malSabor = int.tryParse(_malSaborController.text) ?? 0;
 
     // Obtener listas de productos
     List<Map<String, dynamic>> missingProducts = providerJunghanns.missingProducts.map((product) {
@@ -336,6 +339,7 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
         "a_la_par": aLaPar,
         "comodato": comodato,
         "prestamo": prestamo,
+        "mal_sabor": malSabor,
       },
       "faltantes": missingProducts,
       "otros": otherProducts,
@@ -356,6 +360,14 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
     final filteredData = providerJunghanns.validationList.where((validation) {
       return validation.status == "P" && validation.valid == "Planta";
     }).toList();
+
+    bool isPendiente = providerJunghanns.validationList.any((validation) => validation.status == "P" && validation.valid == 'Planta');
+
+    if (isPendiente) {
+      setState(() {
+        _saveValues();
+      });
+    }
 
     setState(() {
       if (filteredData.isNotEmpty) {
@@ -402,7 +414,7 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
       }).toList();
 
       bool isRejected = providerJunghanns.validationList.any((validation) => validation.status == "R");
-      bool isPendiente = providerJunghanns.validationList.any((validation) => validation.status == "P");
+      bool isPendiente = providerJunghanns.validationList.any((validation) => validation.status == "P" && validation.valid == 'Planta');
 
       if (filteredData.isNotEmpty) {
         _rotosRutaController.clear();
@@ -447,6 +459,7 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
     _comodatoController.dispose();
     _prestamoController.dispose();
     _enCamionetaController.dispose();
+    _malSaborController.dispose();
     for (var notifier in isExpandedList) {
       notifier.dispose();
     }
@@ -727,6 +740,8 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
         textField(_comodatoController, 'Comodato', FontAwesomeIcons.droplet, enabled: false),
         const SizedBox(height: 10),
         textField(_prestamoController, 'Prestamo', FontAwesomeIcons.droplet, enabled: false),
+        const SizedBox(height: 10),
+        textField(_malSaborController, 'Mal sabor', FontAwesomeIcons.droplet, enabled: false),
         const SizedBox(height: 10),
 
         // Otros

@@ -9,6 +9,7 @@ class CarboyModel {
   int loan;
   int pLoan;
   String test;
+  int badTaste;
 
   CarboyModel({
     required this.empty,
@@ -21,6 +22,7 @@ class CarboyModel {
     required this.loan,
     required this.pLoan,
     required this.test,
+    required this.badTaste,
   });
 
   factory CarboyModel.empty() {
@@ -34,7 +36,8 @@ class CarboyModel {
       aLongWay: 1,
       loan: 1,
       pLoan: 1,
-      test: ''
+      test: '',
+      badTaste: 1,
     );
   }
 
@@ -50,6 +53,7 @@ class CarboyModel {
       loan:  int.parse((data["comodato"] ?? 0).toString()),
       pLoan:  int.parse((data["prestamo"] ?? 0).toString()),
       test: data["test"] ?? "",
+      badTaste: int.parse((data["mal_sabor"] ?? 0).toString()),
     );
   }
 
@@ -65,6 +69,7 @@ class CarboyModel {
       'comodato': loan,
       "prestamo": pLoan,
       "test": test,
+      'mal_sabor': badTaste,
     };
   }
   CarboyModel copy() {
@@ -79,6 +84,7 @@ class CarboyModel {
       loan: this.loan,
       pLoan: this.pLoan,
       test: this.test,
+      badTaste: this.badTaste,
     );
   }
 
@@ -96,7 +102,7 @@ class CarboyModel {
 
   @override
   String toString() {
-    return 'ProductCarboy(vacios: $empty, llenos: $full, rotos_cte: $brokenCte, sucios_cte: $dirtyCte, rotos_ruta: $brokenRoute, sucios_ruta: $dirtyRoute, a_la_par: $aLongWay, comodato: $loan, prestamo: $pLoan, test: $test)';
+    return 'ProductCarboy(vacios: $empty, llenos: $full, rotos_cte: $brokenCte, sucios_cte: $dirtyCte, rotos_ruta: $brokenRoute, sucios_ruta: $dirtyRoute, a_la_par: $aLongWay, comodato: $loan, prestamo: $pLoan, test: $test, mal_sabor: $badTaste)';
   }
 
   @override
@@ -113,7 +119,8 @@ class CarboyModel {
         other.aLongWay == aLongWay &&
         other.loan == loan &&
         other.pLoan == pLoan &&
-        other.test == test;
+        other.test == test &&
+        other.badTaste == badTaste;
   }
 
   @override
@@ -127,6 +134,7 @@ class CarboyModel {
     aLongWay.hashCode ^
     loan.hashCode ^
     pLoan.hashCode ^
-    test.hashCode;
+    test.hashCode ^
+    badTaste.hashCode;
   }
 }

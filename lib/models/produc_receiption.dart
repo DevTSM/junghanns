@@ -32,6 +32,14 @@ class ProductReceiptionModel {
       'cantidad': count,
     };
   }
+  Map<String, dynamic> toJsonOthers() {
+    return {
+      'id': id,
+      'producto': product,
+      'cantidad': count,
+      'url': img,
+    };
+  }
   Map<String, dynamic> toProduct() {
     return {
       'id_producto': id,

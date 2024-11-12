@@ -81,6 +81,7 @@ class _HomeState extends State<Home> {
     getAsync();
     _refreshTimer();
   }
+
   @override
   void dispose(){
     super.dispose();
@@ -112,7 +113,6 @@ class _HomeState extends State<Home> {
         showValidationModal(context);
       } else {
         specialData = [];  // Si no hay datos que cumplan las condiciones, asignar un arreglo vacío
-        print('No se encontraron datos que cumplan las condiciones----Home');
       }
     });
 

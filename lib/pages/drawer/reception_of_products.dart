@@ -61,12 +61,13 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _fetchData();
     });
-    _refreshTimer();
+
     validateReception();
   }
 
   Future<void> _fetchData() async {
     await Provider.of<ProviderJunghanns>(context, listen: false).fetchStockValidation();
+    await _refreshTimer();
   }
 
   Future<void> _refreshInventory() async {

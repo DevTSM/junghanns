@@ -55,13 +55,13 @@ class _RoutesState extends State<Routes> {
     final provider = Provider.of<ProviderJunghanns>(context, listen: false);
 
     // Ahora fetchStockValidation devuelve un objeto ValidationModel
-    provider.fetchStockValidation();
+    await provider.fetchStockValidation();
+    await provider.fetchStockDelivery();
 
 // Filtrar los datos según las condiciones especificadas
     final filteredData = provider.validationList.where((validation) {
       return validation.status == "P" && validation.valid == "Planta";
     }).toList();
-
 
 // Verificar si hay datos filtrados
     setState(() {
@@ -73,7 +73,6 @@ class _RoutesState extends State<Routes> {
         showValidationModal(context);
       } else {
         specialData = [];  // Si no hay datos que cumplan las condiciones, asignar un arreglo vacío
-        print('No se encontraron datos que cumplan las condiciones');
       }
     });
 

@@ -219,6 +219,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
         log("=====> Hay una autorización ${provider.basketCurrent.authCurrent.idAuth}");
         log("=====> Hay una autorización de motivo ${provider.basketCurrent.authCurrent.idReasonAuth}");
         log("=====> Hay una autorización de motivo ${provider.basketCurrent.authCurrent.reason}");
+        log("=====> Hay una autorización de motivo ${provider.basketCurrent.totalPrice}");
          widget.customerCurrent.payment
           .map((e) => e.wayToPay != "Monedero" && e.idAuth == -1 
             ? paymentsList.add(e)
@@ -280,6 +281,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
                   )
                 ],
               ),
+
               actions: widget.customerCurrent.payment.map((item) {
                 return showItem(item, FontAwesomeIcons.coins);
               }).toList());
@@ -916,7 +918,64 @@ class _ShoppingCartState extends State<ShoppingCart> {
   Future<void> caseSale() async {
     // Verificar si el cliente tiene más de un método de pago
     if (widget.customerCurrent.payment.length > 1) {
-      selectPayment();
+      if (provider.basketCurrent.totalPrice == 0.0){
+        print('Entra a mostrar el precio es de 0.0 ');
+        print('Esta solo calidando que tenga mas de un metodo e pago precio${provider.basketCurrent.totalPrice}');
+
+        await setCurrentLocation();
+        // Verificar la autorización
+        int idReasonAuth = widget.authList.isNotEmpty ? widget.authList[0].idReasonAuth : 0;
+        String? motivoGa = widget.authList.isNotEmpty && widget.authList[0].reason.isNotEmpty
+            ? widget.authList[0].reason
+            : provider.basketCurrent.authCurrent.reason;
+        // Si el idReasonAuth es 2 o 3, mostrar el modal de comentario
+
+        if ((idReasonAuth == 2 || provider.basketCurrent.authCurrent.idReasonAuth == 2) ||
+            (idReasonAuth == 3 || provider.basketCurrent.authCurrent.idReasonAuth == 3) ||
+            (idReasonAuth == 4 || provider.basketCurrent.authCurrent.idReasonAuth == 4)) {
+
+          String tipo;
+
+          if (idReasonAuth == 4 || provider.basketCurrent.authCurrent.idReasonAuth == 4) {
+            tipo = 'MS';
+          } else {
+            tipo = (idReasonAuth == 2 || provider.basketCurrent.authCurrent.idReasonAuth == 2) ? 'S' : 'R';
+          }
+          showComment(
+            context: context,
+            yesFunction: (File? image) {
+
+              commentsData.add({
+                'image': image,
+                'idRuta': prefs.idRouteD.toString(),
+                'idCliente': (widget.authList.isNotEmpty ? widget.authList[0].idClient.toString() : null) ?? provider.basketCurrent.authCurrent.idClient.toString(),
+                'tipo': tipo,
+                'cantidad': productsList.first.number.toString(),
+                'lat': latSale,
+                'lon': lngSale,
+                'idAutorization': (widget.authList.isNotEmpty ? widget.authList[0].idAuth : null) ?? provider.basketCurrent.authCurrent.idAuth,
+              });
+
+              confirmarSaleYes(widget.customerCurrent.payment[1]);
+              // Llama a showConfirmSale con el primer método de pago
+
+            },
+            current: motivoGa ?? "",
+            idRuta: prefs.idRouteD.toString(),
+            idCliente: (widget.authList.isNotEmpty ? widget.authList[0].idClient.toString() : null) ?? provider.basketCurrent.authCurrent.idClient.toString(),
+            tipo: tipo,
+            cantidad: productsList.first.number.toString(),
+            lat: latSale,
+            lon: lngSale,
+            idAutorization: (widget.authList.isNotEmpty ? widget.authList[0].idAuth : null) ?? provider.basketCurrent.authCurrent.idAuth,
+          );
+        } else{
+          showConfirmSale(widget.customerCurrent.payment[1]);
+        }
+      } else {
+        selectPayment();
+      }
+
     } else {
       // Si existe al menos un método de pago
       if (widget.customerCurrent.payment.isNotEmpty) {
@@ -981,6 +1040,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
                 List<Map<String, dynamic>> list = List.from(jsonDecode(prefs.brands != "" ? prefs.brands : "[]"));
 
                 if (list.isNotEmpty) {
+                  print('Antepenultimo');
                   provider.basketCurrent.brandJug = list.first;
                   showBrand(
                     context,

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:device_information/device_information.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
@@ -576,7 +577,7 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
                         padding: const EdgeInsets.symmetric(horizontal: 10),
                         children: [
                           _sectionWithPlus(
-                            "PRODUCTOS EN STOCK",
+                            "GARRAFÓN 20 LITROS",
                             Icons.add,
                             _inputFieldsForStock(),
                                 () {
@@ -650,10 +651,17 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
     final hasData = provider.carboyAccesories.isNotEmpty;
 
     final icon = specialData != null && specialData!.isNotEmpty
-        ? Icons.check_circle
+        ? const SpinKitCircle(
+      color: ColorsJunghanns.white, size: 24.0,
+    )
+        : Icon(
+      hasData ? Icons.send : Icons.send,
+      color: ColorsJunghanns.white, size: 18.0,  // Color del icono de envío
+    );
+        /*? Icons.check_circle
         : hasData
         ? Icons.send
-        : Icons.send;
+        : Icons.send;*/
 
     return Positioned(
       bottom: bottomPadding + 35,
@@ -871,7 +879,14 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
         ],
       );
     }
-    return SizedBox.shrink();
+    // Retorna un mensaje si no hay productos disponibles
+    return const Center(
+      child: Text(
+        "No hay nada que mostrar",
+        style: TextStyle(fontSize: 16, color: Colors.grey, fontWeight: FontWeight.w500),
+      ),
+    );
+    //return SizedBox.shrink();
   }
   Widget _sectionWithPlus(
       String title,

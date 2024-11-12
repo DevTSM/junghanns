@@ -60,7 +60,7 @@ android {
         minSdkVersion 26
         targetSdkVersion 33
         versionCode 110
-        versionName "24.9.60"
+        versionName "24.9.70"
     }
 
     signingConfigs {

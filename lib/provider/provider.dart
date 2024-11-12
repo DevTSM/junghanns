@@ -771,6 +771,7 @@ class ProviderJunghanns extends ChangeNotifier {
 
   synchronizeListDelivery() async {
     final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('missingProducts');
 
     print("Entra a la sincronizacion de las listas");
     carboyAccesories.clear();

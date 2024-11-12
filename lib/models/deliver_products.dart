@@ -51,13 +51,13 @@ class DeliverProductsModel {
     return {
       'id_ruta': idRoute,
       'garrafones': carboys,
-      'otros': others,
-      'devoluciones': returns,
+      'otros': others.map((item) => item.toJsonOthers()).toList(),
+      'devoluciones': returns.map((item) => item.toProductReturn()).toList(),
       // 'productos': products.toJson(),
     };
   }
   @override
   String toString() {
-    return 'ValidationModel( id_ruta: $idRoute, garrafones:$carboys, otros: $others, develuciones: $returns)';
+    return 'ValidationModel( id_ruta: $idRoute, garrafones:$carboys, otros: $others, devoluciones: $returns)';
   }
 }

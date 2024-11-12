@@ -38,6 +38,7 @@ class ProductCatalogModel {
       'descripcion': description,
       'productos': {
         'id': products,
+        'url': img,
       },
     };
   }

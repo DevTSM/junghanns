@@ -113,6 +113,7 @@ class ProductModel {
       'id': idProduct,
       'articulo': description,
       'cantidad': count,
+      'url': img,
     };
   }
 

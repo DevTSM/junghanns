@@ -71,7 +71,7 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
   void initState() {
     super.initState();
     // Inicializa la lista de ValueNotifiers
-    isExpandedList = List.generate(4, (_) => ValueNotifier<bool>(false));
+    isExpandedList = List.generate(5, (_) => ValueNotifier<bool>(false));
 
     _currentLocation = Position(
       altitudeAccuracy: 1,
@@ -153,15 +153,14 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
   }
 
   validateSyncDta() {
-    setState(() {
+    setState(()  {
 
       final provider = Provider.of<ProviderJunghanns>(context, listen: false);
       final validationList = provider.validationList;
 
       final hasData = validationList.isNotEmpty && (validationList.first.status != 'P' && validationList.first.valid != 'Planta');
-
       if (hasData){
-        provider.synchronizeListDelivery();
+         provider.synchronizeListDelivery();
       }
     });
   }
@@ -558,7 +557,20 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.only(bottom: 85),
-                      child: providerJunghanns.stockAccesories.isEmpty
+                      /*child: providerJunghanns.carboyAccesories.isEmpty*/
+                      child: providerJunghanns.carboyAccesories.isEmpty ||
+                          providerJunghanns.carboyAccesories.every((carboy) =>
+                          carboy.carboys.empty == 0 &&
+                              carboy.carboys.full == 0 &&
+                              carboy.carboys.brokenCte == 0 &&
+                              carboy.carboys.dirtyCte == 0 &&
+                              carboy.carboys.brokenRoute == 0 &&
+                              carboy.carboys.dirtyRoute == 0 &&
+                              carboy.carboys.aLongWay == 0 &&
+                              carboy.carboys.loan == 0 &&
+                              carboy.carboys.pLoan == 0 &&
+                              carboy.carboys.badTaste == 0
+                          )
                       ? empty(context)
                       :ListView(
                         padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -589,6 +601,15 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
                               _showAddAdditionalProductModal(context: context, controller: providerJunghanns);
                             }, showPlus: false, index: 3,
                           ),
+                          _sectionWithPlus(
+                            "PRESTAMOS Y COMODATOS",
+                            Icons.add,
+                            _returnsStock(),
+                                () {
+                              print("Prestamos");
+                            },
+                            showPlus: false, index: 4,
+                          ),
                         ],
                       ),
                     ),
@@ -597,7 +618,22 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
                             ),
                 ),
           ),
-          _buildActionButton(-15),
+          Visibility(
+            visible: providerJunghanns.carboyAccesories.isNotEmpty &&
+                providerJunghanns.carboyAccesories.any((carboy) =>
+                carboy.carboys.empty != 0 ||
+                    carboy.carboys.full != 0 ||
+                    carboy.carboys.brokenCte != 0 ||
+                    carboy.carboys.dirtyCte != 0 ||
+                    carboy.carboys.brokenRoute != 0 ||
+                    carboy.carboys.dirtyRoute != 0 ||
+                    carboy.carboys.aLongWay != 0 ||
+                    carboy.carboys.loan != 0 ||
+                    carboy.carboys.pLoan != 0 ||
+                    carboy.carboys.badTaste != 0),
+            child: _buildActionButton(-15),
+          ),
+
           Visibility(
             visible: isLoadingOne,
             child: const Center(
@@ -741,6 +777,8 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
         const SizedBox(height: 10),
         textField(_suciosCteController, 'Sucios de clientes', FontAwesomeIcons.droplet, enabled: false),
         const SizedBox(height: 10),
+        textField(_malSaborController, 'Mal sabor', FontAwesomeIcons.droplet, enabled: false),
+        const SizedBox(height: 10),
         textField(_rotosRutaController, 'Rotos ruta', FontAwesomeIcons.droplet),
         const SizedBox(height: 10),
         textField(_suciosRutaController, 'Sucios ruta', FontAwesomeIcons.droplet),
@@ -751,15 +789,13 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
         const SizedBox(height: 10),
         textField(_prestamoController, 'Prestamo', FontAwesomeIcons.droplet, enabled: false),
         const SizedBox(height: 10),
-        textField(_malSaborController, 'Mal sabor', FontAwesomeIcons.droplet, enabled: false),
-        const SizedBox(height: 10),
 
         // Otros
         _othersStock(),
         const SizedBox(height: 10),
 
-        // Devoluciones
-        _returnsStock(),
+        /*// Devoluciones
+        _returnsStock(),*/
       ],
     );
   }
@@ -814,13 +850,13 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Padding(
+          /*Padding(
             padding: const EdgeInsets.symmetric(vertical: 5),
             child: Text(
               'DEVOLUCIONES',
               style: TextStyles.blue18SemiBoldIt,
             ),
-          ),
+          ),*/
           ListView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),

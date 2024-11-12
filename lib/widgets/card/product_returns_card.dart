@@ -94,11 +94,17 @@ class ProductReturnsCardState extends State<ProductReturnsCard> {
                         overflow: TextOverflow.ellipsis,
                         style: TextStyles.blueJ20BoldIt,
                       ),
+                      AutoSizeText(
+                        'Folio: ${widget.product.folio.toString()}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyles.blueJ20BoldIt,
+                      ),
                       const SizedBox(height: 10),
                       // Botones de +, - y delete
                       Row(
                         children: [
-                          const SizedBox(width: 40),
+                          const SizedBox(width: 20),
                           Container(
                             width: size.width * 0.35,
                             height: 40,
@@ -146,7 +152,7 @@ class ProductReturnsCardState extends State<ProductReturnsCard> {
   Widget imageProduct() {
     return Container(
       width: size.width * 0.3, // Ajustar el tamaño de la imagen
-      height: size.height * 0.12,
+      height: size.height * 0.14,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
         color: Colors.white,

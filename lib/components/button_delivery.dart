@@ -6,13 +6,13 @@ class CustomButtonDelivery extends StatelessWidget {
   final Function()? onValidate;
   final String validateText;
   final Color validateColor;
-  final IconData? icon;
+  final Widget icon;
 
   const CustomButtonDelivery({
     required this.onValidate,
     this.validateText = '',
     this.validateColor = ColorsJunghanns.blueJ,
-    this.icon,
+    required this.icon,
     super.key,
   });
 
@@ -61,7 +61,8 @@ class CustomButtonDelivery extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 6),
-                Icon(icon, color: Colors.white, size: 18),
+                icon,
+                //Icon(icon, color: Colors.white, size: 18),
               ],
             ),
             /*child: Text(

@@ -918,10 +918,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
   Future<void> caseSale() async {
     // Verificar si el cliente tiene más de un método de pago
     if (widget.customerCurrent.payment.length > 1) {
-      if (provider.basketCurrent.totalPrice == 0.0){
-        print('Entra a mostrar el precio es de 0.0 ');
-        print('Esta solo calidando que tenga mas de un metodo e pago precio${provider.basketCurrent.totalPrice}');
-
+      /*if (provider.basketCurrent.totalPrice == 0.0){
         await setCurrentLocation();
         // Verificar la autorización
         int idReasonAuth = widget.authList.isNotEmpty ? widget.authList[0].idReasonAuth : 0;
@@ -969,11 +966,185 @@ class _ShoppingCartState extends State<ShoppingCart> {
             lon: lngSale,
             idAutorization: (widget.authList.isNotEmpty ? widget.authList[0].idAuth : null) ?? provider.basketCurrent.authCurrent.idAuth,
           );
-        } else{
-          showConfirmSale(widget.customerCurrent.payment[1]);
+        }
+        else{
+          if (provider.basketCurrent.authCurrent.authText.toUpperCase() ==
+              "GARRAFON A LA PAR") {
+            List<Map<String, dynamic>> list = List.from(
+                jsonDecode(prefs.brands != "" ? prefs.brands : "[]"));
+            if (list.isNotEmpty) {
+              provider.basketCurrent.brandJug = list.first;
+              showBrand(context, () => showConfirmSale(widget.customerCurrent.payment.first),
+                  provider, list);
+            } else {
+              Fluttertoast.showToast(
+                msg: "No se encontraron marcas de garrafon",
+                timeInSecForIosWeb: 2,
+                toastLength: Toast.LENGTH_LONG,
+                gravity: ToastGravity.TOP,
+                webShowClose: true,
+              );
+              provider.basketCurrent.brandJug = {
+                "id": 0,
+                "descripcion": "Sin marca"
+              };
+              showConfirmSale(widget.customerCurrent.payment.first);
+            }
+          }
+          else {
+            showConfirmSale(widget.customerCurrent.payment[1]);
+          }
+        }
+      }
+      //Si tiene precio
+      else {
+        selectPayment();
+      }*/
+      if (provider.basketCurrent.totalPrice == 0.0) {
+        await setCurrentLocation();
+        int idReasonAuth = widget.authList.isNotEmpty ? widget.authList[0].idReasonAuth : 0;
+        String? motivoGa = widget.authList.isNotEmpty && widget.authList[0].reason.isNotEmpty
+            ? widget.authList[0].reason
+            : provider.basketCurrent.authCurrent.reason;
+
+        if ((idReasonAuth == 2 || provider.basketCurrent.authCurrent.idReasonAuth == 2) ||
+            (idReasonAuth == 3 || provider.basketCurrent.authCurrent.idReasonAuth == 3) ||
+            (idReasonAuth == 4 || provider.basketCurrent.authCurrent.idReasonAuth == 4)) {
+
+          String tipo;
+          if (idReasonAuth == 4 || provider.basketCurrent.authCurrent.idReasonAuth == 4) {
+            tipo = 'MS';
+          } else {
+            tipo = (idReasonAuth == 2 || provider.basketCurrent.authCurrent.idReasonAuth == 2) ? 'S' : 'R';
+          }
+
+          showComment(
+            context: context,
+            yesFunction: (File? image) {
+              commentsData.add({
+                'image': image,
+                'idRuta': prefs.idRouteD.toString(),
+                'idCliente': (widget.authList.isNotEmpty ? widget.authList[0].idClient.toString() : null) ?? provider.basketCurrent.authCurrent.idClient.toString(),
+                'tipo': tipo,
+                'cantidad': productsList.first.number.toString(),
+                'lat': latSale,
+                'lon': lngSale,
+                'idAutorization': (widget.authList.isNotEmpty ? widget.authList[0].idAuth : null) ?? provider.basketCurrent.authCurrent.idAuth,
+              });
+              confirmarSaleYes(widget.customerCurrent.payment[1]);
+            },
+            current: motivoGa ?? "",
+            idRuta: prefs.idRouteD.toString(),
+            idCliente: (widget.authList.isNotEmpty ? widget.authList[0].idClient.toString() : null) ?? provider.basketCurrent.authCurrent.idClient.toString(),
+            tipo: tipo,
+            cantidad: productsList.first.number.toString(),
+            lat: latSale,
+            lon: lngSale,
+            idAutorization: (widget.authList.isNotEmpty ? widget.authList[0].idAuth : null) ?? provider.basketCurrent.authCurrent.idAuth,
+          );
+
+        } else {
+          if (provider.basketCurrent.authCurrent.authText.toUpperCase() == "GARRAFON A LA PAR") {
+            List<Map<String, dynamic>> list = List.from(
+                jsonDecode(prefs.brands != "" ? prefs.brands : "[]"));
+            if (list.isNotEmpty) {
+              provider.basketCurrent.brandJug = list.first;
+              showBrand(context, () => showConfirmSale(widget.customerCurrent.payment[1]), provider, list);
+            } else {
+              Fluttertoast.showToast(
+                msg: "No se encontraron marcas de garrafon",
+                timeInSecForIosWeb: 2,
+                toastLength: Toast.LENGTH_LONG,
+                gravity: ToastGravity.TOP,
+                webShowClose: true,
+              );
+              provider.basketCurrent.brandJug = {
+                "id": 0,
+                "descripcion": "Sin marca"
+              };
+              showConfirmSale(widget.customerCurrent.payment[1]);
+            }
+          } else {
+            showConfirmSale(widget.customerCurrent.payment[1]);
+          }
         }
       } else {
-        selectPayment();
+        await setCurrentLocation();
+        int idReasonAuth = widget.authList.isNotEmpty ? widget.authList[0].idReasonAuth : 0;
+        String? motivoGa = widget.authList.isNotEmpty && widget.authList[0].reason.isNotEmpty
+            ? widget.authList[0].reason
+            : provider.basketCurrent.authCurrent.reason;
+
+        bool validacionCumplida = false;
+
+        if ((idReasonAuth == 2 || provider.basketCurrent.authCurrent.idReasonAuth == 2) ||
+            (idReasonAuth == 3 || provider.basketCurrent.authCurrent.idReasonAuth == 3) ||
+            (idReasonAuth == 4 || provider.basketCurrent.authCurrent.idReasonAuth == 4)) {
+
+          validacionCumplida = true;
+
+          String tipo;
+          if (idReasonAuth == 4 || provider.basketCurrent.authCurrent.idReasonAuth == 4) {
+            tipo = 'MS';
+          } else {
+            tipo = (idReasonAuth == 2 || provider.basketCurrent.authCurrent.idReasonAuth == 2) ? 'S' : 'R';
+          }
+
+          showComment(
+            context: context,
+            yesFunction: (File? image) {
+              commentsData.add({
+                'image': image,
+                'idRuta': prefs.idRouteD.toString(),
+                'idCliente': (widget.authList.isNotEmpty ? widget.authList[0].idClient.toString() : null) ?? provider.basketCurrent.authCurrent.idClient.toString(),
+                'tipo': tipo,
+                'cantidad': productsList.first.number.toString(),
+                'lat': latSale,
+                'lon': lngSale,
+                'idAutorization': (widget.authList.isNotEmpty ? widget.authList[0].idAuth : null) ?? provider.basketCurrent.authCurrent.idAuth,
+              });
+              confirmarSaleYes(widget.customerCurrent.payment[1]);
+            },
+            current: motivoGa ?? "",
+            idRuta: prefs.idRouteD.toString(),
+            idCliente: (widget.authList.isNotEmpty ? widget.authList[0].idClient.toString() : null) ?? provider.basketCurrent.authCurrent.idClient.toString(),
+            tipo: tipo,
+            cantidad: productsList.first.number.toString(),
+            lat: latSale,
+            lon: lngSale,
+            idAutorization: (widget.authList.isNotEmpty ? widget.authList[0].idAuth : null) ?? provider.basketCurrent.authCurrent.idAuth,
+          );
+
+        } else {
+          if (provider.basketCurrent.authCurrent.authText.toUpperCase() == "GARRAFON A LA PAR") {
+            validacionCumplida = true;
+
+            List<Map<String, dynamic>> list = List.from(
+                jsonDecode(prefs.brands != "" ? prefs.brands : "[]"));
+            if (list.isNotEmpty) {
+              provider.basketCurrent.brandJug = list.first;
+              showBrand(context, () => showConfirmSale(widget.customerCurrent.payment[1]), provider, list);
+            } else {
+              Fluttertoast.showToast(
+                msg: "No se encontraron marcas de garrafon",
+                timeInSecForIosWeb: 2,
+                toastLength: Toast.LENGTH_LONG,
+                gravity: ToastGravity.TOP,
+                webShowClose: true,
+              );
+              provider.basketCurrent.brandJug = {
+                "id": 0,
+                "descripcion": "Sin marca"
+              };
+              showConfirmSale(widget.customerCurrent.payment[1]);
+            }
+          }
+        }
+
+        // Llamar a selectPayment solo si ninguna validación se cumplió
+        if (!validacionCumplida) {
+          selectPayment();
+        }
       }
 
     } else {
@@ -1040,7 +1211,6 @@ class _ShoppingCartState extends State<ShoppingCart> {
                 List<Map<String, dynamic>> list = List.from(jsonDecode(prefs.brands != "" ? prefs.brands : "[]"));
 
                 if (list.isNotEmpty) {
-                  print('Antepenultimo');
                   provider.basketCurrent.brandJug = list.first;
                   showBrand(
                     context,

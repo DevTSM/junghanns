@@ -1,4 +1,4 @@
-class CarboyModel {
+class CarboyElevenModel {
   int empty;
   int full;
   int brokenCte;
@@ -8,10 +8,9 @@ class CarboyModel {
   int aLongWay;
   int loan;
   int pLoan;
-  String test;
   int badTaste;
 
-  CarboyModel({
+  CarboyElevenModel({
     required this.empty,
     required this.full,
     required this.brokenCte,
@@ -21,14 +20,13 @@ class CarboyModel {
     required this.aLongWay,
     required this.loan,
     required this.pLoan,
-    required this.test,
     required this.badTaste,
   });
 
-  factory CarboyModel.empty() {
-    return CarboyModel(
-      empty: 1,
+  factory CarboyElevenModel.empty() {
+    return CarboyElevenModel(
       full: 1,
+      empty: 1,
       brokenCte: 1,
       dirtyCte: 1,
       brokenRoute: 1,
@@ -36,58 +34,56 @@ class CarboyModel {
       aLongWay: 1,
       loan: 1,
       pLoan: 1,
-      test: '',
       badTaste: 1,
     );
   }
 
-  factory CarboyModel.from(Map<String, dynamic> data) {
-    return CarboyModel(
-      empty: int.parse((data["vacios"] ?? 0).toString()),
-      full: int.parse((data["llenos"] ?? 0).toString()),
-      brokenCte: int.parse((data["rotos_cte"] ?? 0).toString()),
-      dirtyCte: int.parse((data["sucios_cte"] ?? 0).toString()),
-      brokenRoute: int.parse((data["rotos_ruta"] ?? 0).toString()),
-      dirtyRoute: int.parse((data["sucios_ruta"] ?? 0).toString()),
-      aLongWay: int.parse((data["a_la_par"] ?? 0).toString()),
-      loan:  int.parse((data["comodato"] ?? 0).toString()),
-      pLoan:  int.parse((data["prestamo"] ?? 0).toString()),
-      test: data["test"] ?? "",
-      badTaste: int.parse((data["mal_sabor"] ?? 0).toString()),
+  factory CarboyElevenModel.from(Map<String, dynamic> data) {
+    return CarboyElevenModel(
+      full: int.parse((data["llenos_11"] ?? data["llenos"] ?? 0).toString()),
+      empty: int.parse((data["vacios_11"] ?? data["vacios"] ?? 0).toString()),
+      brokenCte: int.parse((data["roto_cte_11"] ?? data["rotos_cte"] ?? 0).toString()),
+      dirtyCte: int.parse((data["sucios_cte_11"] ?? data["sucios_cte"] ?? 0).toString()),
+      brokenRoute: int.parse((data["roto_ruta_11"] ?? data["rotos_ruta"] ?? 0).toString()),
+      dirtyRoute: int.parse((data["sucio_ruta_11"] ?? data["sucios_ruta"] ?? 0).toString()),
+      aLongWay: int.parse((data["a_la_par_11"] ?? data["a_la_par"] ?? 0).toString()),
+      loan: int.parse((data["comodato_11"] ?? data["comodato"] ?? 0).toString()),
+      pLoan: int.parse((data["prestamo_11"] ?? data["prestamo"] ?? 0).toString()),
+      badTaste: int.parse((data["mal_sabor_11"] ?? data["mal_sabor"] ?? 0).toString()),
     );
   }
-  Map<String, dynamic> toPostCarboyJson() {
+
+  Map<String, dynamic> toPostElevenJson() {
     return {
-      'vacios': empty,
-      'llenos': full,
-      'rotos_cte': brokenCte,
-      'sucios_cte': dirtyCte,
-      'rotos_ruta': brokenRoute,
-      'sucios_ruta': dirtyRoute,
-      'a_la_par': aLongWay,
-      'comodato': loan,
-      "prestamo": pLoan,
-      "test": test,
-      'mal_sabor': badTaste,
+      'llenos_11': full,
+      'vacios_11': empty,
+      'roto_cte_11': brokenCte,
+      'sucios_cte_11': dirtyCte,
+      'roto_ruta_11': brokenRoute,
+      'sucio_ruta_11': dirtyRoute,
+      'a_la_par_11': aLongWay,
+      'comodato_11': loan,
+      "prestamo_11": pLoan,
+      'mal_sabor_11': badTaste,
     };
   }
+
   Map<String, dynamic> toJson() {
     return {
-      'vacios': empty,
       'llenos': full,
-      'rotos_cte': brokenCte,
+      'vacios': empty,
+      'roto_cte': brokenCte,
       'sucios_cte': dirtyCte,
-      'rotos_ruta': brokenRoute,
-      'sucios_ruta': dirtyRoute,
+      'roto_ruta': brokenRoute,
+      'sucio_ruta': dirtyRoute,
       'a_la_par': aLongWay,
       'comodato': loan,
       "prestamo": pLoan,
-      "test": test,
       'mal_sabor': badTaste,
     };
   }
-  CarboyModel copy() {
-    return CarboyModel(
+  CarboyElevenModel copy() {
+    return CarboyElevenModel(
       empty: this.empty,
       full: this.full,
       brokenCte: this.brokenCte,
@@ -97,7 +93,6 @@ class CarboyModel {
       aLongWay: this.aLongWay,
       loan: this.loan,
       pLoan: this.pLoan,
-      test: this.test,
       badTaste: this.badTaste,
     );
   }
@@ -116,14 +111,14 @@ class CarboyModel {
 
   @override
   String toString() {
-    return 'ProductCarboy(vacios: $empty, llenos: $full, rotos_cte: $brokenCte, sucios_cte: $dirtyCte, rotos_ruta: $brokenRoute, sucios_ruta: $dirtyRoute, a_la_par: $aLongWay, comodato: $loan, prestamo: $pLoan, test: $test, mal_sabor: $badTaste)';
+    return 'ProductCarboyElevenModel(vacios: $empty, llenos: $full, rotos_cte: $brokenCte, sucios_cte: $dirtyCte, rotos_ruta: $brokenRoute, sucios_ruta: $dirtyRoute, a_la_par: $aLongWay, comodato: $loan, prestamo: $pLoan, mal_sabor: $badTaste)';
   }
 
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
 
-    return other is CarboyModel &&
+    return other is CarboyElevenModel &&
         other.empty == empty &&
         other.full == full &&
         other.brokenCte == brokenCte &&
@@ -133,7 +128,6 @@ class CarboyModel {
         other.aLongWay == aLongWay &&
         other.loan == loan &&
         other.pLoan == pLoan &&
-        other.test == test &&
         other.badTaste == badTaste;
   }
 
@@ -148,7 +142,6 @@ class CarboyModel {
     aLongWay.hashCode ^
     loan.hashCode ^
     pLoan.hashCode ^
-    test.hashCode ^
     badTaste.hashCode;
   }
 }

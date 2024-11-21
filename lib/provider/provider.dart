@@ -13,9 +13,11 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:junghanns/components/modal/activate_permission.dart';
 import 'package:junghanns/models/authorization.dart';
+import 'package:junghanns/models/carboyEleven.dart';
 import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/models/deliver_products.dart';
 import 'package:junghanns/models/delivery.dart';
+import 'package:junghanns/models/distance.dart';
 import 'package:junghanns/models/message.dart';
 import 'package:junghanns/models/notification.dart';
 import 'package:junghanns/models/product.dart';
@@ -33,6 +35,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../database/async.dart';
 import '../database/database_evidence.dart';
+import '../models/demineralized.dart';
 import '../models/produc_receiption.dart';
 import '../pages/home/home_principal.dart';
 import '../services/store.dart';
@@ -94,6 +97,13 @@ class ProviderJunghanns extends ChangeNotifier {
   List<DeliverProductsModel> carboyAccesoriosOrigin = [];
   List<DeliverProductsModel> carboyAccesoriosOriginSecun = [];
   List<ValidationProductModel> _validationDeliveryList = [];
+  List<DeliverProductsModel> demineralizedAccesories = [];
+  List<DeliverProductsModel> demineralizedAccesoriosOrigin = [];
+  List<DeliverProductsModel> demineralizedAccesoriosOriginSecun = [];
+  List<DeliverProductsModel> carboyElevenAccesories = [];
+  List<DeliverProductsModel> carboyElevenAccesoriosOrigin = [];
+  List<DeliverProductsModel> carboyElevenAccesoriosOriginSecun = [];
+  List<DistanceModel> _planteDistance = [];
 
 
   //GETS
@@ -122,6 +132,7 @@ class ProviderJunghanns extends ChangeNotifier {
   List<ProductCatalogModel> get accesories => _accesories;
   List<ProductModel> get stockProducts => _stockProducts;
   List<ValidationProductModel> get validationDeliveryList => _validationDeliveryList;
+  List<DistanceModel> get planteDistance => _planteDistance;
 
 
 
@@ -230,6 +241,10 @@ class ProviderJunghanns extends ChangeNotifier {
   }
   set stockProducts(List<ProductModel> current){
     _stockProducts = current;
+    notifyListeners();
+  }
+  set planteDistance(List<DistanceModel> current){
+    _planteDistance = current;
     notifyListeners();
   }
 
@@ -554,6 +569,12 @@ class ProviderJunghanns extends ChangeNotifier {
       } else if (product.idProduct == 21) {
         // Lógica para carboys vacíos
         _updateStock(product.idProduct, -count); // Aquí se aumenta el stock de carboys vacíos
+      } else if (product.idProduct == 125){
+        _updateStock(product.idProduct, -count);
+      } else if (product.idProduct == 136){
+        _updateStock(product.idProduct, -count);
+      } else if (product.idProduct == 50){
+        _updateStock(product.idProduct, -count);
       } else {
         // Para otros productos, se elimina directamente el stock
         _updateStock(product.idProduct, count); // Restamos el stock normal
@@ -619,6 +640,90 @@ class ProviderJunghanns extends ChangeNotifier {
       missingProducts.removeWhere((product) => product.idProduct == 22 || product.idProduct == 21);
       carboyAccesoriosOriginSecun.clear();
       carboyAccesories.clear();
+    }
+
+    //Desmineralizados
+
+    demineralizedAccesoriosOrigin = productWithStockWithoutSerial
+        .where((a) => a.demineralizeds != null)
+        .map((a) => a.copy()) // Crear copias de cada elemento
+        .toList();
+
+    demineralizedAccesoriosOrigin.clear();
+
+    demineralizedAccesoriosOrigin = productWithStockWithoutSerial
+        .where((a) => a.demineralizeds != null)
+        .map((a) => a.copy()) // Crear copias de cada elemento
+        .toList();
+
+    if (demineralizedAccesories.isEmpty || demineralizedAccesoriosOriginSecun.isEmpty) {
+
+      demineralizedAccesoriosOriginSecun = productWithStockWithoutSerial
+          .where((a) => a.demineralizeds != null)
+          .map((a) => a.copy())
+          .toList();
+
+      demineralizedAccesories = productWithStockWithoutSerial
+          .where((a) => a.demineralizeds != null)
+          .map((a) => a.copy())
+          .toList();
+    }
+    // Comparación de las listas para carboys
+    // Solo comparamos el contenido de desmineralizados de cada lista
+    final demineralizedAccesoriesCarboys = demineralizedAccesories.map((a) => a.demineralizeds).toList();
+    final demineralizedAccesoriosOriginCarboys = demineralizedAccesoriosOrigin.map((a) => a.demineralizeds).toList();
+    final demineralizedAccesoriesSecunCarboys = demineralizedAccesoriosOriginSecun.map((a) => a.demineralizeds).toList();
+
+    print('Imprimento Origin ${demineralizedAccesoriosOriginCarboys}');
+    print('Imprimento Secun ${demineralizedAccesoriesSecunCarboys}');
+
+    if (demineralizedAccesoriosOriginCarboys.toString() != demineralizedAccesoriesSecunCarboys.toString()) {
+      //Verificar esto antes de todo
+      missingProducts.removeWhere((product) => product.idProduct == 50);
+      demineralizedAccesoriosOriginSecun.clear();
+      demineralizedAccesories.clear();
+    }
+
+    //Garrafon de 11 L
+
+    carboyElevenAccesoriosOrigin = productWithStockWithoutSerial
+        .where((a) => a.carboysEleven != null)
+        .map((a) => a.copy()) // Crear copias de cada elemento
+        .toList();
+
+    carboyElevenAccesoriosOrigin.clear();
+
+    carboyElevenAccesoriosOrigin = productWithStockWithoutSerial
+        .where((a) => a.carboysEleven != null)
+        .map((a) => a.copy()) // Crear copias de cada elemento
+        .toList();
+
+    if (carboyElevenAccesories.isEmpty || carboyElevenAccesoriosOriginSecun.isEmpty) {
+
+      carboyElevenAccesoriosOriginSecun = productWithStockWithoutSerial
+          .where((a) => a.carboysEleven != null)
+          .map((a) => a.copy())
+          .toList();
+
+      carboyElevenAccesories = productWithStockWithoutSerial
+          .where((a) => a.carboysEleven != null)
+          .map((a) => a.copy())
+          .toList();
+    }
+    // Comparación de las listas para carboys
+    // Solo comparamos el contenido de desmineralizados de cada lista
+    final carboyElevenAccesoriesCarboys = carboyElevenAccesories.map((a) => a.carboysEleven).toList();
+    final carboyElevenAccesoriosOriginCarboys = carboyElevenAccesoriosOrigin.map((a) => a.carboysEleven).toList();
+    final carboyElevenAccesoriesSecunCarboys = carboyElevenAccesoriosOriginSecun.map((a) => a.carboysEleven).toList();
+
+    print('Imprimento Origin ${carboyElevenAccesoriosOriginCarboys}');
+    print('Imprimento Secun ${carboyElevenAccesoriesSecunCarboys}');
+
+    if (demineralizedAccesoriosOriginCarboys.toString() != demineralizedAccesoriesSecunCarboys.toString()) {
+      //Verificar esto antes de todo
+      missingProducts.removeWhere((product) => product.idProduct == 136 || product.idProduct == 125);
+      carboyElevenAccesoriosOriginSecun.clear();
+      carboyElevenAccesories.clear();
     }
 
     // Otros productos
@@ -703,7 +808,6 @@ class ProviderJunghanns extends ChangeNotifier {
     await saveLists();
   }
 
-
   Future<void> saveLists() async {
     final prefs = await SharedPreferences.getInstance();
 
@@ -715,16 +819,22 @@ class ProviderJunghanns extends ChangeNotifier {
 
     // Convierte tus listas a JSON
     String carboyJson = jsonEncode(carboyAccesories.map((a) => a.toJson()).toList());
+    String demineralizedJson = jsonEncode(demineralizedAccesories.map((a) => a.toJson()).toList());
+    String carboyElevenJson = jsonEncode(carboyElevenAccesories.map((a) => a.toJson()).toList());
     String othersJson = jsonEncode(accessoriesWithStock.map((a) => a.toJson()).toList());
     String returnsJson = jsonEncode(returnsWithStock.map((a) => a.toJson()).toList());
 
     // Guarda las listas en SharedPreferences
     await prefs.setString('carboyAccesories', carboyJson);
+    await prefs.setString('demineralizedAccesories', demineralizedJson);
+    await prefs.setString('carboyElevenAccesories', carboyElevenJson);
     await prefs.setString('othersAccesories', othersJson);
     await prefs.setString('returnsAccesories', returnsJson);
 
     // Imprimir las listas guardadas para depuración
     print('Guardado Carboy Accessories: $carboyJson');
+    print('Guardado Desmineralizado Accessories: $demineralizedJson');
+    print('Guardado Carboy 11L Accessories: $carboyElevenJson');
     print('Guardado Accessories with Stock: $othersJson');
     print('Guardado Returns with Stock: $returnsJson');
   }
@@ -740,6 +850,10 @@ class ProviderJunghanns extends ChangeNotifier {
       if (currentSessionToken != savedSessionToken) {
         carboyAccesories.clear();
         print("carboyAccesories después de clear: $carboyAccesories");
+        demineralizedAccesories.clear();
+        print("demineralizedAccesories después de clear: $demineralizedAccesories");
+        carboyElevenAccesories.clear();
+        print("carboyElevenAccesories después de clear: $carboyElevenAccesories");
         accessoriesWithStock.clear();
         print("accessoriesWithStock después de clear: $accessoriesWithStock");
         returnsWithStock.clear();
@@ -751,6 +865,8 @@ class ProviderJunghanns extends ChangeNotifier {
 
 
         await prefs.remove('carboyAccesories');
+        await prefs.remove('demineralizedAccesories');
+        await prefs.remove('carboyElevenAccesories');
         await prefs.remove('othersAccesories');
         await prefs.remove('returnsAccesories');
         await prefs.remove('missingProducts');
@@ -776,6 +892,10 @@ class ProviderJunghanns extends ChangeNotifier {
     print("Entra a la sincronizacion de las listas");
     carboyAccesories.clear();
     print("carboyAccesories después de clear: $carboyAccesories");
+    demineralizedAccesories.clear();
+    print("demineralizedAccesories después de clear: $demineralizedAccesories");
+    carboyElevenAccesories.clear();
+    print("carboyElevenAccesories después de clear: $carboyElevenAccesories");
     accessoriesWithStock.clear();
     print("accessoriesWithStock después de clear: $accessoriesWithStock");
     returnsWithStock.clear();
@@ -786,6 +906,8 @@ class ProviderJunghanns extends ChangeNotifier {
     print("additionalProducts después de clear: $additionalProducts");
 
     await prefs.remove('carboyAccesories');
+    await prefs.remove('demineralizedAccesories');
+    await prefs.remove('carboyElevenAccesories');
     await prefs.remove('othersAccesories');
     await prefs.remove('returnsAccesories');
     await prefs.remove('missingProducts');
@@ -805,6 +927,20 @@ class ProviderJunghanns extends ChangeNotifier {
 
       // Imprimir la lista de accesorios carboy
       print('Carboy Accessories: $carboyAccesories');
+
+    demineralizedAccesories = (jsonDecode(prefs.getString('demineralizedAccesories') ?? '[]') as List)
+        .map((e) => DeliverProductsModel.fromJson(e))
+        .toList();
+
+    // Imprimir la lista de accesorios demineralized
+    print('demineralized Accessories: $demineralizedAccesories');
+
+    carboyElevenAccesories = (jsonDecode(prefs.getString('carboyElevenAccesories') ?? '[]') as List)
+        .map((e) => DeliverProductsModel.fromJson(e))
+        .toList();
+
+    // Imprimir la lista de accesorios carboy eleven
+    print('carboyEleven Accessories: $carboyElevenAccesories');
 
       accessoriesWithStock = (jsonDecode(prefs.getString('othersAccesories') ?? '[]') as List)
           .map((e) => DeliverProductsModel.fromJson(e))
@@ -883,6 +1019,21 @@ class ProviderJunghanns extends ChangeNotifier {
       // Aquí puedes agregar la lógica adicional si es necesario para carboys vacíos
       _updateCarboyAccesories(countChange, false);
     }
+
+    // Manejo específico para carboys vacíos (id == 136)
+    if (productId == 136) {
+      // Aquí puedes agregar la lógica adicional si es necesario para carboys vacíos
+      _updateCarboyElevenAccesories(countChange, false);
+    }
+    // Manejo específico para carboys vacíos (id == 125)
+    if (productId == 125) {
+      // Aquí puedes agregar la lógica adicional si es necesario para carboys vacíos
+      _updateCarboyElevenAccesories(countChange, true);
+    }
+    if (productId == 50) {
+      // Aquí puedes agregar la lógica adicional si es necesario para carboys vacíos
+      _updateCarboyDemineralizedsAccesories(countChange, true);
+    }
     saveLists();
     notifyListeners();
   }
@@ -918,6 +1069,76 @@ class ProviderJunghanns extends ChangeNotifier {
       notifyListeners();
     }
   }
+  void _updateCarboyElevenAccesories(int countChange, bool isFull) {
+    if (carboyElevenAccesories.isNotEmpty) {
+      final carboys = carboyElevenAccesories.first.carboysEleven;
+      print('CountChange: $countChange');
+      print('--- Actualización de carboys Eleven ---');
+      print('CountChange: $countChange, isFull: $isFull');
+      print('Antes de descontar: Full: ${carboys.full}, Empty: ${carboys.empty}');
+      if (isFull == true) {
+        if (carboys.full >= countChange) {
+          carboys.full -= countChange;  // Descontar de carboys llenos
+          carboys.empty += countChange;  // Aumentar en carboys vacíos
+          print('Carboys llenos disminuidos: ${carboys.full}, Carboys vacíos aumentados: ${carboys.empty}');
+
+        } else {
+          print('No hay suficientes carboys llenos disponibles para descontar. Disponibles: ${carboys.full}');
+        }
+      } else {
+        if (carboys.empty >= countChange) {
+          carboys.empty -= countChange; // Descontar de carboys vacíos
+        } else {
+          print('No hay suficientes carboys vacíos disponibles para descontar. Disponibles: ${carboys.empty}');
+        }
+      }
+
+      // Asegurar que el cambio persista en la lista
+      int carboyIndex = carboyElevenAccesories.indexWhere((a) => a.carboysEleven == carboys);
+      if (carboyIndex != -1) {
+        carboyElevenAccesories[carboyIndex].carboysEleven = carboys;
+      }
+
+      print('Actualización de carboys: Full: ${carboys.full}, Empty: ${carboys.empty}');
+      notifyListeners();
+    }
+  }
+
+  void _updateCarboyDemineralizedsAccesories(int countChange, bool isFull) {
+
+      final carboysDemi = demineralizedAccesories.first.demineralizeds;
+      final carboys =carboyAccesories.first.carboys;
+      print('CountChange: $countChange');
+      print('--- Actualización de carboys DEsmi ---');
+      print('CountChange: $countChange, isFull: $isFull');
+      print('Antes de descontar: Full: ${carboysDemi.full}, Empty: ${carboys.empty}');
+      if (isFull == true) {
+        if (carboysDemi.full >= countChange) {
+          carboysDemi.full -= countChange;  // Descontar de carboys llenos
+          carboys.empty += countChange;  // Aumentar en carboys vacíos
+          print('Carboys llenos disminuidos: ${carboysDemi.full}, Carboys vacíos aumentados: ${carboys.empty}');
+
+        } else {
+          print('No hay suficientes carboys llenos disponibles para descontar. Disponibles: ${carboysDemi.full}');
+        }
+      } else {
+        if (carboys.empty >= countChange) {
+          carboys.empty -= countChange; // Descontar de carboys vacíos
+        } else {
+          print('No hay suficientes carboys vacíos disponibles para descontar. Disponibles: ${carboys.empty}');
+        }
+      }
+
+      // Asegurar que el cambio persista en la lista
+      int carboyIndex = demineralizedAccesories.indexWhere((a) => a.demineralizeds == carboysDemi);
+      if (carboyIndex != -1) {
+        demineralizedAccesories[carboyIndex].demineralizeds = carboysDemi;
+      }
+
+      print('Actualización de carboys: Full: ${carboysDemi.full}, Empty: ${carboys.empty}');
+      notifyListeners();
+
+  }
 
   Future<void> addMissingProduct(ProductModel product, int count) async {
     final existingProduct = missingProducts.firstWhere(
@@ -936,7 +1157,7 @@ class ProviderJunghanns extends ChangeNotifier {
 
     // Determina si se debe pasar count o -count
     int countChange;
-    if (product.idProduct == 22 || product.idProduct == 21) {
+    if (product.idProduct == 22 || product.idProduct == 21 || product.idProduct == 136 || product.idProduct == 125 || product.idProduct == 50) {
       countChange = count; // Para id 22 o 21, usar count positivo
     } else {
       countChange = -count; // Para otros productos, usar -count
@@ -1013,7 +1234,6 @@ class ProviderJunghanns extends ChangeNotifier {
           .toList();
     }
   }
-
 
   //Obtener lista de productos con stock
   fetchProductsStock() async {
@@ -1109,6 +1329,8 @@ class ProviderJunghanns extends ChangeNotifier {
         "prestamo": delivery["garrafon"]["prestamo"],
         "mal_sabor": delivery["garrafon"]["mal_sabor"],
       },
+      "desmineralizados": DemineralizedModel.from(delivery["desmineralizados"]).toPostJson(),
+      "garrafon11l": CarboyElevenModel.from(delivery["garradon11l"]).toPostElevenJson(),
       "faltantes": missingProductsList,
       "otros": returnedProducts,
       "adicionales": additionalProductsList,
@@ -1222,65 +1444,7 @@ class ProviderJunghanns extends ChangeNotifier {
       }
     });
   }
-
-  /*Future<void> submitDirtyBroken({
-    required String idRuta,
-    required String idCliente,
-    required String tipo,
-    required String cantidad,
-    required double lat,
-    required double lon,
-    required int idAutorization,
-    required File archivo,
-  }) async {
-    notifyListeners();
-
-      await postDirtyBroken(
-        idRuta: idRuta,
-        idCliente: idCliente,
-        tipo: tipo,
-        cantidad: cantidad,
-        lat: lat,
-        lon: lon,
-        idAutorization: idAutorization,
-        archivo: archivo,
-      ). then((answer){
-        if (answer.error) {
-          // Mostrar mensaje de error
-          *//*CustomModal.show(
-            context: navigatorKey.currentContext!,
-            icon: Icons.cancel_outlined,
-            title: "ERROR",
-            message: "${answer.message}",
-            iconColor: ColorsJunghanns.red,
-          );*//*
-          Fluttertoast.showToast(
-            msg: "${answer.message}",
-            timeInSecForIosWeb: 16,
-            toastLength: Toast.LENGTH_LONG,
-            gravity: ToastGravity.TOP,
-            webShowClose: true,
-          );
-        } else {
-          // Mostrar mensaje de éxito
-          *//*CustomModal.show(
-            context: navigatorKey.currentContext!,
-            icon: Icons.check_circle,
-            title: "EVIDENCIA ENVIADA",
-            message: "La evidencia fue enviada correctamente.",
-            iconColor: ColorsJunghanns.greenJ,
-          );*//*
-          Fluttertoast.showToast(
-            msg: "Evidencia enviada",
-            timeInSecForIosWeb: 16,
-            toastLength: Toast.LENGTH_LONG,
-            gravity: ToastGravity.TOP,
-            webShowClose: true,
-          );
-        }
-      });
-  }*/
-
+  //Obtener validación de entrega
   validationDelivery() async {
     bool hasData = false;
 
@@ -1348,5 +1512,19 @@ class ProviderJunghanns extends ChangeNotifier {
 
     notifyListeners();
     return hasData;
+  }
+  //Obtener ubicación
+  getDistancePlanta() async {
+    await getDistance(idR: prefs.idRouteD).then((
+        answer){
+      // loading = false;
+      if (answer.error) {
+        print('Error al obtener la distancia: ${answer.message}');
+      } else {
+        planteDistance = [DistanceModel.from(answer.body)];
+        print('Distancia: ${planteDistance}');
+      }
+      });
+    notifyListeners();
   }
 }

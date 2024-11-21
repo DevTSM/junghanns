@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:device_information/device_information.dart';
 import 'package:flutter/material.dart';
@@ -54,7 +55,11 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
   bool showErrorBanner = false;
   //bool isExpanded = false;
   late List<ValueNotifier<bool>> isExpandedList;
+  //Distancia
+  bool isDistanceValid = false; // Indica si la distancia está dentro del rango permitido
+  double? currentDistance;
 
+  //Garrafon 20 Lts
   final TextEditingController _vaciosController = TextEditingController();
   final TextEditingController _llenosController = TextEditingController();
   final TextEditingController _suciosCteController = TextEditingController();
@@ -67,12 +72,31 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
   final TextEditingController _comodatoController = TextEditingController();
   final TextEditingController _prestamoController = TextEditingController();
   final TextEditingController _enCamionetaController = TextEditingController();
+  //Desmineralizados
+  final TextEditingController _llenosDesmineralizadosController = TextEditingController();
+  final TextEditingController _suciosCteDesmineralizadosController = TextEditingController();
+  final TextEditingController _rotosCteDesmineralizadosController = TextEditingController();
+  final TextEditingController _suciosRutaDesmineralizadosController = TextEditingController();
+  final TextEditingController _rotosRutaDesmineralizadosController = TextEditingController();
+  final TextEditingController _prestamoDesmineralizadosController = TextEditingController();
+  //Garrafon 11 Lts
+  final TextEditingController _vacios11LController = TextEditingController();
+  final TextEditingController _llenos11LController = TextEditingController();
+  final TextEditingController _suciosCte11LController = TextEditingController();
+  final TextEditingController _rotosCte11LController = TextEditingController();
+  final TextEditingController _malSabor11LController = TextEditingController();
+  final TextEditingController _suciosRuta11LController = TextEditingController();
+  final TextEditingController _rotosRuta11LController = TextEditingController();
+  final TextEditingController _aLaPar11LController = TextEditingController();
+  final TextEditingController _otros11LController = TextEditingController();
+  final TextEditingController _comodato11LController = TextEditingController();
+  final TextEditingController _prestamo11LController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     // Inicializa la lista de ValueNotifiers
-    isExpandedList = List.generate(5, (_) => ValueNotifier<bool>(false));
+    isExpandedList = List.generate(7, (_) => ValueNotifier<bool>(false));
 
     _currentLocation = Position(
       altitudeAccuracy: 1,
@@ -100,16 +124,72 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
       Provider.of<ProviderJunghanns>(context, listen: false).updateStock();
       Provider.of<ProviderJunghanns>(context, listen: false).loadMissingProducts(prefs.token);
       Provider.of<ProviderJunghanns>(context, listen: false).loadAdditionalProducts();
+      Provider.of<ProviderJunghanns>(context, listen: false).getDistancePlanta();
 
     });
     _refreshTimer();
     _refreshData();
     _loadSavedValues();
-
+    funCheckDistance();
 
     _suciosRutaController.addListener(_updateLlenos);
     _rotosRutaController.addListener(_updateLlenos);
+
+    _suciosRutaDesmineralizadosController.addListener(_updateLlenosDesmineralizados);
+    _rotosRutaDesmineralizadosController.addListener(_updateLlenosDesmineralizados);
+
+    _suciosRuta11LController.addListener(_updateLlenos11L);
+    _rotosRuta11LController.addListener(_updateLlenos11L);
   }
+  //Calcular dstancia
+  funCheckDistance() async {
+    // Obtener ubicación actual
+    _currentLocation = (await LocationJunny().getCurrentLocation())!;
+
+    if (_currentLocation != null) {
+      final provider = Provider.of<ProviderJunghanns>(context, listen: false);
+
+      // Obtener distancia de la planta desde el provider
+      if (provider.planteDistance.isNotEmpty) {
+        final latitude1 = provider.planteDistance[0].lat;
+        final longitude1 = provider.planteDistance[0].long;
+        final latitude2 = _currentLocation!.latitude!;
+        final longitude2 = _currentLocation!.longitude!;
+        // Calcular distancia
+        double distance = _calculateHaversineDistance(
+          latitude1,
+          longitude1,
+          latitude2,
+          longitude2,
+        );
+        // Actualizar estado
+        setState(() {
+          currentDistance = distance;
+          isDistanceValid = distance <= provider.planteDistance[0].allowedDistance/*100*/;
+        });
+        print('Distancia ${currentDistance}');
+      }
+    }
+  }
+
+  double _calculateHaversineDistance(
+      double lat1, double lon1, double lat2, double lon2) {
+    const R = 6371000; // Radio de la Tierra en mtrs
+    final dLat = _degreesToRadians(lat2 - lat1);
+    final dLon = _degreesToRadians(lon2 - lon1);
+    final a = sin(dLat / 2) * sin(dLat / 2) +
+        cos(_degreesToRadians(lat1)) *
+            cos(_degreesToRadians(lat2)) *
+            sin(dLon / 2) *
+            sin(dLon / 2);
+    final c = 2 * atan2(sqrt(a), sqrt(1 - a));
+    return R * c; // Retorna la distancia en mtrs
+  }
+
+  double _degreesToRadians(double degrees) {
+    return degrees * pi / 180;
+  }
+
   Future<void> _refreshTimer() async {
     final provider = Provider.of<ProviderJunghanns>(context, listen: false);
     provider.fetchStockValidation();
@@ -147,9 +227,12 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
     await provider.updateStock();
     await provider.fetchProducts();
     await provider.fetchProductsStock();
+    await funCheckDistance();
 
     if (mounted) {
       _updateControllersWithCurrentStock();
+      _updateControllersDesmineralido();
+      _updateControllers11L();
     }
   }
 
@@ -176,6 +259,12 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
       setState(() {
         _rotosRutaController.text = prefs.getString('rotosRuta') ?? '';
         _suciosRutaController.text = prefs.getString('suciosRuta') ?? '';
+        //Desmineralizado
+        _rotosRutaDesmineralizadosController.text = prefs.getString('rotosRutaDesmineralizados') ?? '';
+        _suciosRutaDesmineralizadosController.text = prefs.getString('suciosRutaDesmineralizados') ?? '';
+        //11 L
+        _rotosRuta11LController.text = prefs.getString('rotosRuta11L') ?? '';
+        _suciosRuta11LController.text = prefs.getString('suciosRuta11L') ?? '';
       });
     }
   }
@@ -190,6 +279,30 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('rotosRuta', _rotosRutaController.text);
       await prefs.setString('suciosRuta', _suciosRutaController.text);
+    }
+  }
+  void _saveValuesDesmineralizados() async {
+    final provider = Provider.of<ProviderJunghanns>(context, listen: false);
+    await provider.fetchStockValidation();
+
+    final isPending = provider.validationList.any((validation) => validation.status == "P" && validation.valid == 'Planta');
+
+    if (isPending) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('rotosRutaDesmineralizados', _rotosRutaDesmineralizadosController.text);
+      await prefs.setString('suciosRutaDesmineralizados', _suciosRutaDesmineralizadosController.text);
+    }
+  }
+  void _saveValues11L() async {
+    final provider = Provider.of<ProviderJunghanns>(context, listen: false);
+    await provider.fetchStockValidation();
+
+    final isPending = provider.validationList.any((validation) => validation.status == "P" && validation.valid == 'Planta');
+
+    if (isPending) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('rotosRuta11L', _rotosRuta11LController.text);
+      await prefs.setString('suciosRuta11L', _suciosRuta11LController.text);
     }
   }
 
@@ -210,6 +323,53 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
       _updateLlenos();
     }
     validateInputs();
+  }
+  Future<void> _updateControllersDesmineralido() async {
+    final providerJunghanns = Provider.of<ProviderJunghanns>(context, listen: false);
+    final currentStock = providerJunghanns.demineralizedAccesories;
+
+    if (currentStock.isNotEmpty) {
+      _llenosDesmineralizadosController.text = currentStock.first.demineralizeds.full.toString();
+      _rotosCteDesmineralizadosController.text = currentStock.first.demineralizeds.brokenCte.toString();
+      _suciosCteDesmineralizadosController.text = currentStock.first.demineralizeds.dirtyCte.toString();
+      _prestamoDesmineralizadosController.text = currentStock.first.demineralizeds.pLoan.toString();
+      _updateLlenosDesmineralizados();
+    }
+    validateInputs();
+  }
+  void _updateLlenosDesmineralizados() {
+    final providerJunghanns = Provider.of<ProviderJunghanns>(context, listen: false);
+    final currentStock = providerJunghanns.demineralizedAccesories;
+
+    if (currentStock.isNotEmpty) {
+      int llenos = currentStock.first.demineralizeds.full;
+
+      int rotosRuta = int.tryParse(_rotosRutaDesmineralizadosController.text) ?? 0;
+      int suciosRuta = int.tryParse(_suciosRutaDesmineralizadosController.text) ?? 0;
+
+      // Verificar si la suma de rotos y sucios excede los llenos disponibles
+      if ((rotosRuta + suciosRuta) > llenos) {
+        // Determinar cuánto queda disponible después de asignar a uno de los campos
+        int maxPermitido = llenos;
+
+        // Ajustar "rotos" primero si la suma excede los llenos
+        if (rotosRuta > maxPermitido) {
+          rotosRuta = maxPermitido;
+          _rotosRutaDesmineralizadosController.text = rotosRuta.toString();
+        }
+        maxPermitido -= rotosRuta;
+
+        // Luego ajustar "sucios" con lo que queda disponible
+        if (suciosRuta > maxPermitido) {
+          suciosRuta = maxPermitido;
+          _suciosRutaDesmineralizadosController.text = suciosRuta.toString();
+        }
+      }
+
+      // Actualizar el valor de llenos, restando los rotos y sucios
+      int llenosRestantes = llenos - (rotosRuta + suciosRuta);
+      _llenosDesmineralizadosController.text = llenosRestantes.toString();
+    }
   }
   void _updateLlenos() {
     final providerJunghanns = Provider.of<ProviderJunghanns>(context, listen: false);
@@ -245,6 +405,59 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
       _llenosController.text = llenosRestantes.toString();
     }
   }
+
+  Future<void> _updateControllers11L() async {
+    final providerJunghanns = Provider.of<ProviderJunghanns>(context, listen: false);
+    final currentStock = providerJunghanns.carboyElevenAccesories;
+
+    if (currentStock.isNotEmpty) {
+      _vacios11LController.text = currentStock.first.carboysEleven.empty.toString();
+      _llenos11LController.text = currentStock.first.carboysEleven.full.toString();
+      _rotosCte11LController.text = currentStock.first.carboysEleven.brokenCte.toString();
+      _suciosCte11LController.text = currentStock.first.carboysEleven.dirtyCte.toString();
+      _malSabor11LController.text = currentStock.first.carboysEleven.badTaste.toString();
+      _aLaPar11LController.text = currentStock.first.carboysEleven.aLongWay.toString();
+      _comodato11LController.text = currentStock.first.carboysEleven.loan.toString();
+      _prestamo11LController.text = currentStock.first.carboysEleven.pLoan.toString();
+      _updateLlenos11L();
+    }
+    validateInputs();
+  }
+  void _updateLlenos11L() {
+    final providerJunghanns = Provider.of<ProviderJunghanns>(context, listen: false);
+    final currentStock = providerJunghanns.carboyElevenAccesories;
+
+    if (currentStock.isNotEmpty) {
+      int llenos = currentStock.first.carboysEleven.full;
+
+      int rotosRuta = int.tryParse(_rotosRuta11LController.text) ?? 0;
+      int suciosRuta = int.tryParse(_suciosRuta11LController.text) ?? 0;
+
+      // Verificar si la suma de rotos y sucios excede los llenos disponibles
+      if ((rotosRuta + suciosRuta) > llenos) {
+        // Determinar cuánto queda disponible después de asignar a uno de los campos
+        int maxPermitido = llenos;
+
+        // Ajustar "rotos" primero si la suma excede los llenos
+        if (rotosRuta > maxPermitido) {
+          rotosRuta = maxPermitido;
+          _rotosRuta11LController.text = rotosRuta.toString();
+        }
+        maxPermitido -= rotosRuta;
+
+        // Luego ajustar "sucios" con lo que queda disponible
+        if (suciosRuta > maxPermitido) {
+          suciosRuta = maxPermitido;
+          _suciosRuta11LController.text = suciosRuta.toString();
+        }
+      }
+
+      // Actualizar el valor de llenos, restando los rotos y sucios
+      int llenosRestantes = llenos - (rotosRuta + suciosRuta);
+      _llenos11LController.text = llenosRestantes.toString();
+    }
+  }
+
   void validateInputs() {
     setState(() {
       errorMessage = null;
@@ -261,6 +474,20 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
         _otrosController,
         _comodatoController,
         _prestamoController,
+        //Desmineralizados
+        _llenosDesmineralizadosController,
+        _rotosCteDesmineralizadosController,
+        _suciosCteDesmineralizadosController,
+        _prestamoDesmineralizadosController,
+        // 11 L
+        _vacios11LController,
+        _llenos11LController,
+        _rotosCte11LController,
+        _suciosCte11LController,
+        _malSabor11LController,
+        _aLaPar11LController,
+        _comodato11LController,
+        _prestamo11LController,
       ];
 
       for (var controller in controllers) {
@@ -296,6 +523,26 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
     int comodato = int.tryParse(_comodatoController.text) ?? 0;
     int prestamo = int.tryParse(_prestamoController.text) ?? 0;
     int malSabor = int.tryParse(_malSaborController.text) ?? 0;
+
+    //Desmineralizado
+    int llenosDesmineralizado = int.tryParse(_llenosDesmineralizadosController.text) ?? 0;
+    int rotosCteDesmineralizado = int.tryParse(_rotosCteDesmineralizadosController.text) ?? 0;
+    int suciosCteDesmineralizado = int.tryParse(_suciosCteDesmineralizadosController.text) ?? 0;
+    int rotosRutaDesmineralizado = int.tryParse(_rotosCteDesmineralizadosController.text) ?? 0;
+    int suciosRutaDesmineralizado = int.tryParse(_suciosRutaDesmineralizadosController.text) ?? 0;
+    int prestamoDesmineralizado = int.tryParse(_prestamoDesmineralizadosController.text) ?? 0;
+
+    //11 L
+    int vacios11L = int.tryParse(_vacios11LController.text) ?? 0;
+    int llenos11L = int.tryParse(_llenos11LController.text) ?? 0;
+    int rotosCte11L = int.tryParse(_rotosCte11LController.text) ?? 0;
+    int suciosCte11L = int.tryParse(_suciosCte11LController.text) ?? 0;
+    int rotosRuta11L = int.tryParse(_rotosRuta11LController.text) ?? 0;
+    int suciosRuta11L = int.tryParse(_suciosRuta11LController.text) ?? 0;
+    int aLaPar11L = int.tryParse(_aLaPar11LController.text) ?? 0;
+    int comodato11L = int.tryParse(_comodato11LController.text) ?? 0;
+    int prestamo11L = int.tryParse(_prestamo11LController.text) ?? 0;
+    int malSabor11L = int.tryParse(_malSabor11LController.text) ?? 0;
 
     // Obtener listas de productos
     List<Map<String, dynamic>> missingProducts = providerJunghanns.missingProducts.map((product) {
@@ -350,6 +597,26 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
         "prestamo": prestamo,
         "mal_sabor": malSabor,
       },
+      "desmineralizados": {
+        "llenos_des": llenosDesmineralizado,
+        "rotos_cte": rotosCteDesmineralizado,
+        "sucios_cte": suciosCteDesmineralizado,
+        "roto_ruta_des": rotosRutaDesmineralizado,
+        "sucio_ruta_des": suciosRutaDesmineralizado,
+        "prestamo": prestamoDesmineralizado,
+      },
+      "garradon11l": {
+        "llenos_11": llenos11L,
+        "vacios_11": vacios11L,
+        "roto_cte_11": rotosCte11L,
+        "sucios_cte_11": suciosCte11L,
+        "roto_ruta_11": rotosRuta11L,
+        "sucio_ruta_11": suciosRuta11L,
+        "a_la_par_11": aLaPar11L,
+        "comodato_11": comodato11L,
+        "prestamo_11": prestamo11L,
+        "mal_sabor_11": malSabor11L,
+      },
       "faltantes": missingProducts,
       "otros": otherProducts,
       "adicionales": additionalProducts,
@@ -376,6 +643,8 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
     if (isPendiente) {
       setState(() {
         _saveValues();
+        _saveValuesDesmineralizados();
+        _saveValues11L();
       });
     }
 
@@ -429,6 +698,12 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
       if (filteredData.isNotEmpty) {
         _rotosRutaController.clear();
         _suciosRutaController.clear();
+        //Desmineralizado
+        _rotosRutaDesmineralizadosController.clear();
+        _suciosRutaDesmineralizadosController.clear();
+        //11 L
+        _rotosRuta11LController.clear();
+        _suciosRuta11LController.clear();
       }
 
       if (isRejected) {
@@ -436,12 +711,20 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
           areFieldsEditable = true;
           _rotosRutaController.text = "";
           _suciosRutaController.text = "";
+          //Desmineralizado
+          _rotosRutaDesmineralizadosController.text = "";
+          _suciosRutaDesmineralizadosController.text = "";
+          //11 L
+          _rotosRuta11LController.text = "";
+          _suciosRuta11LController.text = "";
         });
       }
 
       if (isPendiente) {
         setState(() {
           _saveValues();
+          _saveValuesDesmineralizados();
+          _saveValues11L();
         });
       }
 
@@ -470,6 +753,24 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
     _prestamoController.dispose();
     _enCamionetaController.dispose();
     _malSaborController.dispose();
+    //Desmineralizado
+    _suciosRutaDesmineralizadosController.removeListener(_updateLlenosDesmineralizados);
+    _rotosRutaDesmineralizadosController.removeListener(_updateLlenosDesmineralizados);
+    _llenosDesmineralizadosController.dispose();
+    _rotosCteDesmineralizadosController.dispose();
+    _suciosCteDesmineralizadosController.dispose();
+    _prestamoDesmineralizadosController.dispose();
+    //11 L
+    _suciosRuta11LController.removeListener(_updateLlenos11L);
+    _rotosRuta11LController.removeListener(_updateLlenos11L);
+    _vacios11LController.dispose();
+    _llenos11LController.dispose();
+    _rotosCte11LController.dispose();
+    _suciosCte11LController.dispose();
+    _malSabor11LController.dispose();
+    _aLaPar11LController.dispose();
+    _comodato11LController.dispose();
+    _prestamo11LController.dispose();
     for (var notifier in isExpandedList) {
       notifier.dispose();
     }
@@ -481,6 +782,8 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
     final providerJunghanns = Provider.of<ProviderJunghanns>(context);
     size = MediaQuery.of(context).size;
     _updateControllersWithCurrentStock();
+    _updateControllersDesmineralido();
+    _updateControllers11L();
 
 
     return GestureDetector(
@@ -586,13 +889,31 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
                             showPlus: false, index: 1,
                           ),
                           _sectionWithPlus(
+                            "DESMINERALIZADOS",
+                            Icons.add,
+                            _inputFieldsForStockDesmineralizados(),
+                                () {
+                              print("Añadir productos desminalizados");
+                            },
+                            showPlus: false, index: 2,
+                          ),
+                          _sectionWithPlus(
+                            "GARRAFÓN 11 LITROS",
+                            Icons.add,
+                            _inputFieldsForStock11L(),
+                                () {
+                              print("Añadir productos 11 L");
+                            },
+                            showPlus: false, index: 3,
+                          ),
+                          _sectionWithPlus(
                             "PRODUCTOS FALTANTES",
                             Icons.add,
                             _missingProducts(),
                                 () {
                               _showAddMissingProductModal(context: context, controller: providerJunghanns);
                                 },
-                            showPlus: false, index: 2,
+                            showPlus: false, index: 4,
                           ),
                           _sectionWithPlus(
                             "PRODUCTOS ADICIONALES",
@@ -600,7 +921,7 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
                             _additionalProducts(),
                                 () {
                               _showAddAdditionalProductModal(context: context, controller: providerJunghanns);
-                            }, showPlus: false, index: 3,
+                            }, showPlus: false, index: 5,
                           ),
                           _sectionWithPlus(
                             "PRESTAMOS Y COMODATOS",
@@ -609,7 +930,7 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
                                 () {
                               print("Prestamos");
                             },
-                            showPlus: false, index: 4,
+                            showPlus: false, index: 6,
                           ),
                         ],
                       ),
@@ -619,22 +940,24 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
                             ),
                 ),
           ),
-          Visibility(
-            visible: providerJunghanns.carboyAccesories.isNotEmpty &&
-                providerJunghanns.carboyAccesories.any((carboy) =>
-                carboy.carboys.empty != 0 ||
-                    carboy.carboys.full != 0 ||
-                    carboy.carboys.brokenCte != 0 ||
-                    carboy.carboys.dirtyCte != 0 ||
-                    carboy.carboys.brokenRoute != 0 ||
-                    carboy.carboys.dirtyRoute != 0 ||
-                    carboy.carboys.aLongWay != 0 ||
-                    carboy.carboys.loan != 0 ||
-                    carboy.carboys.pLoan != 0 ||
-                    carboy.carboys.badTaste != 0),
-            child: _buildActionButton(-15),
-          ),
-
+          // Lógica para decidir qué mostrar
+          if (providerJunghanns.carboyAccesories.isNotEmpty &&
+              providerJunghanns.carboyAccesories.any((carboy) =>
+              carboy.carboys.empty != 0 ||
+                  carboy.carboys.full != 0 ||
+                  carboy.carboys.brokenCte != 0 ||
+                  carboy.carboys.dirtyCte != 0 ||
+                  carboy.carboys.brokenRoute != 0 ||
+                  carboy.carboys.dirtyRoute != 0 ||
+                  carboy.carboys.aLongWay != 0 ||
+                  carboy.carboys.loan != 0 ||
+                  carboy.carboys.pLoan != 0 ||
+                  carboy.carboys.badTaste != 0))
+          // Segunda validación: Si la distancia es válida o no
+            if (isDistanceValid)
+              _buildActionButton(-15)
+            else
+              _buttonDistance(-15),
           Visibility(
             visible: isLoadingOne,
             child: const Center(
@@ -642,6 +965,43 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
             ),
           ),
         ],
+      ),
+    );
+  }
+  Widget _buttonDistance(double bottomPadding){
+    return Positioned(
+      bottom: bottomPadding + 35,
+      left: 20,
+      right: 20,
+      child: Padding(
+          padding: const EdgeInsets.all(10),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 15),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border.all(
+              color: ColorsJunghanns.red,
+              width: 2,
+            ),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Center(
+                child: Text(
+                  currentDistance != null
+                      ? 'DISTANCIA DE ${currentDistance!.toStringAsFixed(2)} mtrs EXCEDE EL LÍMITE DE ENTREGA !!'
+                      : 'Calculando distancia...',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: ColorsJunghanns.red,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+
+                    decoration: TextDecoration.none,
+                  ),
+                ),
+          ),
+        ),
       ),
     );
   }
@@ -804,6 +1164,82 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
 
         /*// Devoluciones
         _returnsStock(),*/
+      ],
+    );
+  }
+
+  Widget _inputFieldsForStockDesmineralizados() {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 5),
+          child: Text(
+            'EN CAMIONETA',
+            style: TextStyles.blue18SemiBoldIt,
+          ),
+        ),
+        textField(_llenosDesmineralizadosController, 'Llenos', FontAwesomeIcons.droplet, enabled: false),
+        const SizedBox(height: 10),
+
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 5),
+          child: Text(
+            'POR ENTREGAR',
+            style: TextStyles.blue18SemiBoldIt,
+          ),
+        ),
+        textField(_rotosCteDesmineralizadosController, 'Rotos de clientes', FontAwesomeIcons.droplet, enabled: false),
+        const SizedBox(height: 10),
+        textField(_suciosCteDesmineralizadosController, 'Sucios de clientes', FontAwesomeIcons.droplet, enabled: false),
+        const SizedBox(height: 10),
+        textField(_rotosRutaDesmineralizadosController, 'Rotos ruta', FontAwesomeIcons.droplet),
+        const SizedBox(height: 10),
+        textField(_suciosRutaDesmineralizadosController, 'Sucios ruta', FontAwesomeIcons.droplet),
+        const SizedBox(height: 10),
+        textField(_prestamoDesmineralizadosController, 'Prestamo', FontAwesomeIcons.droplet, enabled: false),
+        const SizedBox(height: 10),
+      ],
+    );
+  }
+
+  Widget _inputFieldsForStock11L() {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 5),
+          child: Text(
+            'EN CAMIONETA',
+            style: TextStyles.blue18SemiBoldIt,
+          ),
+        ),
+        textField(_llenos11LController, 'Llenos', FontAwesomeIcons.droplet, enabled: false),
+        const SizedBox(height: 10),
+
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 5),
+          child: Text(
+            'POR ENTREGAR',
+            style: TextStyles.blue18SemiBoldIt,
+          ),
+        ),
+        textField(_vacios11LController, 'Vacios', FontAwesomeIcons.droplet, enabled: false),
+        const SizedBox(height: 10),
+        textField(_rotosCte11LController, 'Rotos de clientes', FontAwesomeIcons.droplet, enabled: false),
+        const SizedBox(height: 10),
+        textField(_suciosCte11LController, 'Sucios de clientes', FontAwesomeIcons.droplet, enabled: false),
+        const SizedBox(height: 10),
+        textField(_malSabor11LController, 'Mal sabor', FontAwesomeIcons.droplet, enabled: false),
+        const SizedBox(height: 10),
+        textField(_rotosRuta11LController, 'Rotos ruta', FontAwesomeIcons.droplet),
+        const SizedBox(height: 10),
+        textField(_suciosRuta11LController, 'Sucios ruta', FontAwesomeIcons.droplet),
+        const SizedBox(height: 10),
+        textField(_aLaPar11LController, 'A la par', FontAwesomeIcons.droplet, enabled: false),
+        const SizedBox(height: 10),
+        textField(_comodato11LController, 'Comodato', FontAwesomeIcons.droplet, enabled: false),
+        const SizedBox(height: 10),
+        textField(_prestamo11LController, 'Prestamo', FontAwesomeIcons.droplet, enabled: false),
+        const SizedBox(height: 10),
       ],
     );
   }
@@ -999,34 +1435,6 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
     );
   }
 
-  /*Widget _sectionWithPlus(String title, IconData icon,  Widget content,  VoidCallback onPressed, {required bool showPlus} ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                  color: ColorsJunghanns.blue,
-                ),
-              ),
-              IconButton(
-                onPressed: showPlus ? onPressed : null,
-                icon: showPlus ? Icon(icon, color: ColorsJunghanns.orange) : const SizedBox.shrink(),
-              ),
-            ],
-          ),
-        ),
-        content,
-      ],
-    );
-  }*/
   void _showAddAdditionalProductModal({required BuildContext context, required ProviderJunghanns controller}) {
     showModalBottomSheet(
       context: context,

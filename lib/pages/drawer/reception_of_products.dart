@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -39,6 +40,8 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
   String? errorMessage1;
   // Estado para mostrar el banner
   bool showErrorBanner = false;
+  bool isDistanceValid = false; // Indica si la distancia está dentro del rango permitido
+  double? currentDistance;
 
   @override
   void initState() {
@@ -61,12 +64,14 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _fetchData();
     });
-
+    Provider.of<ProviderJunghanns>(context, listen: false).getDistancePlanta();
     validateReception();
+    funCheckDistance();
   }
 
   Future<void> _fetchData() async {
     await Provider.of<ProviderJunghanns>(context, listen: false).fetchStockValidation();
+    await funCheckDistance();
     await _refreshTimer();
   }
 
@@ -105,6 +110,52 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
     /*if (provider.validationList.first.status =='P' && provider.validationList.first.valid == 'Ruta'){
       showReceiptModal(context);
     }*/
+  }
+  //Calcular dstancia
+  funCheckDistance() async {
+    // Obtener ubicación actual
+    _currentLocation = (await LocationJunny().getCurrentLocation())!;
+
+    if (_currentLocation != null) {
+      final provider = Provider.of<ProviderJunghanns>(context, listen: false);
+      // Obtener distancia de la planta desde el provider
+      if (provider.planteDistance.isNotEmpty) {
+        final latitude1 = provider.planteDistance[0].lat;
+        final longitude1 = provider.planteDistance[0].long;
+        final latitude2 = _currentLocation!.latitude!;
+        final longitude2 = _currentLocation!.longitude!;
+        // Calcular distancia
+        double distance = _calculateHaversineDistance(
+          latitude1,
+          longitude1,
+          latitude2,
+          longitude2,
+        );
+        // Actualizar estado
+        setState(() {
+          currentDistance = distance;
+          isDistanceValid = distance <= provider.planteDistance[0].allowedDistance;
+        });
+      }
+    }
+  }
+
+  double _calculateHaversineDistance(
+      double lat1, double lon1, double lat2, double lon2) {
+    const R = 6371000; // Radio de la Tierra en mtrs
+    final dLat = _degreesToRadians(lat2 - lat1);
+    final dLon = _degreesToRadians(lon2 - lon1);
+    final a = sin(dLat / 2) * sin(dLat / 2) +
+        cos(_degreesToRadians(lat1)) *
+            cos(_degreesToRadians(lat2)) *
+            sin(dLon / 2) *
+            sin(dLon / 2);
+    final c = 2 * atan2(sqrt(a), sqrt(1 - a));
+    return R * c; // Retorna la distancia en mtrs
+  }
+
+  double _degreesToRadians(double degrees) {
+    return degrees * pi / 180;
   }
 
   void _handleAction(String status, {required String comment}) async {
@@ -289,8 +340,38 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
               ),
             ),
           ),
-
-          Positioned(
+          // Aquí se muestra el botón de distancia si la distancia no es válida
+          if (hasData && !isDistanceValid)
+            _buttonDistance(-15),
+          // El botón de Aceptar/ Rechazar solo se muestra si la distancia es válida
+          if (isDistanceValid)
+            Positioned(
+              bottom: 25,
+              left: 20,
+              right: 20,
+              child: hasData
+                  ? CustomButtonProduct(
+                onValidate: () {
+                  _handleAction('A', comment: '');
+                },
+                onReject: () {
+                  showDeclineProduct(
+                    context: context,
+                    onReject: (comment) {
+                      _handleAction('R', comment: comment);
+                    },
+                  );
+                },
+                validateText: 'ACEPTAR',
+                rejectText: 'RECHAZAR',
+                validateColor: ColorsJunghanns.blueJ,
+                rejectColor: ColorsJunghanns.red,
+                validateIcon: Icons.check_circle,
+                rejectIcon: Icons.cancel,
+              )
+                  : Container(),
+            ),
+          /*Positioned(
             bottom: 25,
             left: 20,
             right: 20,
@@ -315,35 +396,6 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
               rejectIcon: Icons.cancel,
             )
                 : Container(), // Si no se cumple la condición, no se muestra nada
-          ),
-
-          /*Positioned(
-            bottom: 25,
-            left: 20,
-            right: 20,
-            child: CustomButtonProduct(
-              onValidate: hasData
-                  ? () {
-                _handleAction('A', comment: '');
-              }
-                  : () {},
-              onReject: hasData
-                  ? () {
-                showDeclineProduct(
-                  context: context,
-                  onReject: (comment) {
-                    _handleAction('R', comment: comment);
-                  },
-                );
-              }
-                  : () {},
-              validateText: 'ACEPTAR',
-              rejectText: 'RECHAZAR',
-              validateColor: hasData ? ColorsJunghanns.blueJ : ColorsJunghanns.grey,
-              rejectColor: hasData ? ColorsJunghanns.red : ColorsJunghanns.grey,
-              validateIcon: Icons.check_circle,
-              rejectIcon: Icons.cancel,
-            ),
           ),*/
           Visibility(
             visible: isLoadingOne,
@@ -352,6 +404,43 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
             ),
           ),
         ],
+      ),
+    );
+  }
+  Widget _buttonDistance(double bottomPadding){
+    return Positioned(
+      bottom: bottomPadding + 35,
+      left: 20,
+      right: 20,
+      child: Padding(
+        padding: const EdgeInsets.all(10), // Ajuste de padding externo
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 15),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border.all(
+              color: ColorsJunghanns.red,
+              width: 2,
+            ),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Center(
+            child: Text(
+              currentDistance != null
+                  ? 'DISTANCIA DE ${currentDistance!.toStringAsFixed(2)} mtrs EXCEDE EL LÍMITE DE RECEPCIÓN !!'
+                  : 'Calculando distancia...',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: ColorsJunghanns.red,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+
+                decoration: TextDecoration.none,
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

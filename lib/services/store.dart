@@ -1104,3 +1104,43 @@ Future<Answer> postDirtyBroken({
         error: true);
   }
 }
+Future<Answer> getDistance({required int idR}) async {
+  log("/StoreServices <getDistance>");
+  Map<String, dynamic> body = {
+    "id_ruta": idR,
+  };
+  log("Request: $body");
+  try {
+    var response = await http.get(
+      //Verificar la URL del stock
+        Uri.parse("${prefs.urlBase}almacenmovil?q=distancia_ruta_almacen&id_ruta=$idR"),
+        headers: {
+          "Content-Type": "aplication/json",
+          "x-api-key": apiKey,
+          "client_secret": prefs.clientSecret,
+          "Authorization": "Bearer ${prefs.token}",
+        }).timeout(Duration(seconds: timerDuration));
+    if (response.statusCode == 200) {
+      var decodedBody = jsonDecode(response.body);
+      log("/StoreServices <getDistance> Successfull");
+      log("Response Body: $decodedBody");
+      return Answer(body: jsonDecode(response.body), message: "",status:response.statusCode, error: false);
+    } else {
+      var decodedBody = jsonDecode(response.body);
+      log("/StoreServices <getDistance> Fail");
+      log("Response Body: $decodedBody");
+      return Answer(
+          body: response,
+          message: "No se pudieron obtener los datos actualizados de la planta. Revisa tu conexión a internet.",
+          status:response.statusCode,
+          error: true);
+    }
+  } catch (e) {
+    log("/StoreServices <getDistance> Catch ${e.toString()}");
+    return Answer(
+        body: e,
+        message: "Conexión inestable con el back",
+        status: 1002,
+        error: true);
+  }
+}

@@ -84,6 +84,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
   late bool isLoading, isRange;
   late bool isRequestFolio = false;
   late bool isOtherProduct;
+  bool isProcessing = false;
 
   List<Map<String, dynamic>> commentsData = [];
 
@@ -457,7 +458,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
                       ),
                       Expanded(
                           child: ButtonJunghanns(
-                        fun: () {
+                        fun: () async {
                           secWayToPay = SecondWayToPay(
                               wayToPay: "", typeWayToPay: "", cost: 0);
                           Navigator.pop(context);
@@ -507,7 +508,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
                       Expanded(
                           child: ButtonJunghanns(
                               fun: provider.isProcessValidate
-                                  ? () {}
+                                  ? () async {}
                                   : () async {
                                       Fluttertoast.showToast(
                                         msg: "Verificando autorización ......",
@@ -725,7 +726,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
                       ),
                       Expanded(
                           child: ButtonJunghanns(
-                        fun: () {
+                        fun: () async {
                           Navigator.pop(context);
                         },
                         decoration: Decorations.redCard,
@@ -916,90 +917,11 @@ class _ShoppingCartState extends State<ShoppingCart> {
 
 // Lógica para verificar la autorización y luego mostrar el modal de venta o de comentario
   Future<void> caseSale() async {
+    setState(() {
+      isProcessing = true; // Deshabilitar el botón
+    });
     // Verificar si el cliente tiene más de un método de pago
     if (widget.customerCurrent.payment.length > 1) {
-      /*if (provider.basketCurrent.totalPrice == 0.0){
-        await setCurrentLocation();
-        // Verificar la autorización
-        int idReasonAuth = widget.authList.isNotEmpty ? widget.authList[0].idReasonAuth : 0;
-        String? motivoGa = widget.authList.isNotEmpty && widget.authList[0].reason.isNotEmpty
-            ? widget.authList[0].reason
-            : provider.basketCurrent.authCurrent.reason;
-        // Si el idReasonAuth es 2 o 3, mostrar el modal de comentario
-
-        if ((idReasonAuth == 2 || provider.basketCurrent.authCurrent.idReasonAuth == 2) ||
-            (idReasonAuth == 3 || provider.basketCurrent.authCurrent.idReasonAuth == 3) ||
-            (idReasonAuth == 4 || provider.basketCurrent.authCurrent.idReasonAuth == 4)) {
-
-          String tipo;
-
-          if (idReasonAuth == 4 || provider.basketCurrent.authCurrent.idReasonAuth == 4) {
-            tipo = 'MS';
-          } else {
-            tipo = (idReasonAuth == 2 || provider.basketCurrent.authCurrent.idReasonAuth == 2) ? 'S' : 'R';
-          }
-          showComment(
-            context: context,
-            yesFunction: (File? image) {
-
-              commentsData.add({
-                'image': image,
-                'idRuta': prefs.idRouteD.toString(),
-                'idCliente': (widget.authList.isNotEmpty ? widget.authList[0].idClient.toString() : null) ?? provider.basketCurrent.authCurrent.idClient.toString(),
-                'tipo': tipo,
-                'cantidad': productsList.first.number.toString(),
-                'lat': latSale,
-                'lon': lngSale,
-                'idAutorization': (widget.authList.isNotEmpty ? widget.authList[0].idAuth : null) ?? provider.basketCurrent.authCurrent.idAuth,
-              });
-
-              confirmarSaleYes(widget.customerCurrent.payment[1]);
-              // Llama a showConfirmSale con el primer método de pago
-
-            },
-            current: motivoGa ?? "",
-            idRuta: prefs.idRouteD.toString(),
-            idCliente: (widget.authList.isNotEmpty ? widget.authList[0].idClient.toString() : null) ?? provider.basketCurrent.authCurrent.idClient.toString(),
-            tipo: tipo,
-            cantidad: productsList.first.number.toString(),
-            lat: latSale,
-            lon: lngSale,
-            idAutorization: (widget.authList.isNotEmpty ? widget.authList[0].idAuth : null) ?? provider.basketCurrent.authCurrent.idAuth,
-          );
-        }
-        else{
-          if (provider.basketCurrent.authCurrent.authText.toUpperCase() ==
-              "GARRAFON A LA PAR") {
-            List<Map<String, dynamic>> list = List.from(
-                jsonDecode(prefs.brands != "" ? prefs.brands : "[]"));
-            if (list.isNotEmpty) {
-              provider.basketCurrent.brandJug = list.first;
-              showBrand(context, () => showConfirmSale(widget.customerCurrent.payment.first),
-                  provider, list);
-            } else {
-              Fluttertoast.showToast(
-                msg: "No se encontraron marcas de garrafon",
-                timeInSecForIosWeb: 2,
-                toastLength: Toast.LENGTH_LONG,
-                gravity: ToastGravity.TOP,
-                webShowClose: true,
-              );
-              provider.basketCurrent.brandJug = {
-                "id": 0,
-                "descripcion": "Sin marca"
-              };
-              showConfirmSale(widget.customerCurrent.payment.first);
-            }
-          }
-          else {
-            showConfirmSale(widget.customerCurrent.payment[1]);
-          }
-        }
-      }
-      //Si tiene precio
-      else {
-        selectPayment();
-      }*/
       if (provider.basketCurrent.totalPrice == 0.0) {
         await setCurrentLocation();
         int idReasonAuth = widget.authList.isNotEmpty ? widget.authList[0].idReasonAuth : 0;
@@ -1246,6 +1168,9 @@ class _ShoppingCartState extends State<ShoppingCart> {
         );
       }
     }
+    setState(() {
+      isProcessing = false; // Reactivar el botón si es necesario
+    });
   }
 
   Future<void> _uploadAndConfirm({
@@ -1601,6 +1526,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
     );
   }
 
+
   Widget itemList() {
     return Container(
       margin: EdgeInsets.only(
@@ -1681,7 +1607,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
                         margin: const EdgeInsets.only(
                             left: 15, right: 15, bottom: 10, top: 10),
                         child: ButtonJunghanns(
-                            fun: () {
+                            fun: () async {
                               setState(() {
                                 isOtherProduct = !isOtherProduct;
                               });
@@ -1707,11 +1633,26 @@ class _ShoppingCartState extends State<ShoppingCart> {
                         height: 45,
                         alignment: Alignment.center,
                         child: ButtonJunghanns(
+                          decoration: isProcessing
+                              ? Decorations.greyBorder12 // Botón deshabilitado
+                              : Decorations.blueBorder12, // Botón habilitado
+                          fun: isProcessing
+                              ? null // Deshabilitar botón si está procesando
+                              : () async {
+                            caseSale(); // Encapsular la llamada a caseSale dentro de una función anónima
+                          }, // Lógica del botón
+                          label: isProcessing
+                              ? "Procesando..." // Texto cuando está deshabilitado
+                              : "Terminar venta", // Texto cuando está habilitado
+                          style: isProcessing
+                              ? TextStyles.white17_5 // Estilo deshabilitado
+                              : TextStyles.white17_5,
+                        )/*ButtonJunghanns(
                           decoration: Decorations.blueBorder12,
                           fun: caseSale,
                           label: "Terminar venta",
                           style: TextStyles.white17_5,
-                        )))
+                        )*/))
               ],
             ),
     );

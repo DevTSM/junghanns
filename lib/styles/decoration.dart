@@ -40,6 +40,9 @@ class Decorations {
   static const BoxDecoration blueBorder12 = BoxDecoration(
       color: ColorsJunghanns.blue,
       borderRadius: BorderRadius.all(Radius.circular(12)));
+  static const BoxDecoration greyBorder12 = BoxDecoration(
+      color: ColorsJunghanns.grey,
+      borderRadius: BorderRadius.all(Radius.circular(12)));
   static BoxDecoration blueOpacity(double opacity,double border) => BoxDecoration(
       color: ColorsJunghanns.blue.withOpacity(opacity),
       borderRadius: BorderRadius.all(Radius.circular(border)));

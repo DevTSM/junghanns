@@ -41,7 +41,7 @@ class ActivatePermissionDialog extends StatelessWidget {
           ),
           const SizedBox(height: 15),
           ButtonJunghanns(
-            fun: ()=> Navigator.pop(context), 
+            fun: () async => Navigator.pop(context),
             decoration: JunnyDecoration.orange255(50).copyWith(
               color: JunnyColor.blueA1
             ), 

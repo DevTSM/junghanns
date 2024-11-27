@@ -82,7 +82,7 @@ class _ShowBrandState extends State<ShowBrand>{
                       ),
                       Expanded(
                           child: ButtonJunghanns(
-                        fun: () {
+                        fun: () async{
                           Navigator.pop(context);
                         },
                         decoration: Decorations.redCard,

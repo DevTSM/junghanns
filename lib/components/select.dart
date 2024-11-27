@@ -103,7 +103,7 @@ class _ShowBrandState extends State<ShowBrand> {
                 ),
                 Expanded(
                     child: ButtonJunghanns(
-                  fun: widget.cancel,
+                  fun: () async {widget.cancel;},
                   decoration: Decorations.redCard,
                   style: TextStyles.white18SemiBoldIt,
                   label: "Cancelar",

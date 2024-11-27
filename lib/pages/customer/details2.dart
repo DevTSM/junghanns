@@ -1054,7 +1054,7 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
                   label: "Iniciar ruta"
                 )
           : ButtonJunghanns(
-              fun: () {},
+              fun: () async {},
               decoration: Decorations.whiteBorder5Red,
               style: TextStyles.red17_6,
               label: "ESTÁS A ${dif.ceil()} mtrs DEL CLIENTE !!"

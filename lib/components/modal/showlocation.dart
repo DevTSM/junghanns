@@ -41,7 +41,7 @@ class ShowLocation extends StatelessWidget {
             child: Container(
               height: 45,
               child:ButtonJunghanns(
-                fun: () {
+                fun: () async{
                   log("Fun update location =====> $lat $lng");
                   update();
                 },

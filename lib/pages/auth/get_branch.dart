@@ -223,7 +223,7 @@ class _GetBranchState extends State<GetBranch>{
             decoration: JunnyDecoration.orange255(8).copyWith(
               color: JunnyColor.green24
             ),
-            fun: fungetToken,
+            fun: () async {fungetToken();},
             label: "Activar",
             style: TextStyles.white16SemiBoldIt,
             decorationInactive: JunnyDecoration.orange255(8).copyWith(
@@ -354,7 +354,7 @@ class _GetBranchState extends State<GetBranch>{
                         width: size.width,
                         height: 45,
                         child: ButtonJunghanns(
-                            fun: () {
+                            fun: () async{
                               log("RESEND CODE");
                               fungetToken();
                             },

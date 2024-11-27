@@ -1580,7 +1580,7 @@ class _NewCustomerState extends State<NewCustomer> {
       height: 45,
       margin: const EdgeInsets.only(top: 24),
       child: ButtonJunghanns(
-        fun: () {
+        fun: () async{
           if (provider.connectionStatus < 4) {
             setState(() {
               if (checkValidField()) {
@@ -1775,7 +1775,7 @@ class _NewCustomerState extends State<NewCustomer> {
                           height: 45,
                           child: prefs.channelValidation == "email"
                             ? ButtonJunghanns(
-                                fun: () {
+                                fun: () async{
                                   showYesNot(
                                     context,
                                     () => funResendCode(false),
@@ -1832,7 +1832,7 @@ class _NewCustomerState extends State<NewCustomer> {
                     SizedBox(
                       height: 45,
                       child: ButtonJunghanns(
-                        fun: () {
+                        fun: () async{
                           showYesNot(
                             context,
                             () => funCancelCode(),

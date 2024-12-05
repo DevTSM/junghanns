@@ -7,7 +7,6 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:junghanns/components/empty/empty.dart';
 import 'package:junghanns/components/loading.dart';
-import 'package:junghanns/pages/drawer/map.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/styles/color.dart';
 import 'package:junghanns/styles/decoration.dart';

@@ -5,6 +5,7 @@ import 'package:device_information/device_information.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
@@ -17,6 +18,7 @@ import 'package:junghanns/styles/text.dart';
 import 'package:junghanns/widgets/card/product_missing_card.dart';
 import 'package:junghanns/widgets/card/product_others_card.dart';
 import 'package:junghanns/widgets/card/product_returns_card.dart';
+import 'package:map_launcher/map_launcher.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -58,6 +60,8 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
   //Distancia
   bool isDistanceValid = false; // Indica si la distancia está dentro del rango permitido
   double? currentDistance;
+  double? plantaLat;
+  double? plantaLog;
 
   //Garrafon 20 Lts
   final TextEditingController _vaciosController = TextEditingController();
@@ -164,6 +168,8 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
         );
         // Actualizar estado
         setState(() {
+          plantaLat = latitude1;
+          plantaLog = longitude1;
           currentDistance = distance;
           isDistanceValid = distance <= provider.planteDistance[0].allowedDistance/*100*/;
         });
@@ -193,6 +199,8 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
   Future<void> _refreshTimer() async {
     final provider = Provider.of<ProviderJunghanns>(context, listen: false);
     provider.fetchStockValidation();
+    provider.getDistancePlanta();
+    funCheckDistance();
     final filteredData = provider.validationList.where((validation) {
       return validation.status == "P" && validation.valid == "Planta";
     }).toList();
@@ -969,7 +977,103 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
     );
   }
   Widget _buttonDistance(double bottomPadding){
+    final provider = Provider.of<ProviderJunghanns>(context, listen: false);
     return Positioned(
+      bottom: bottomPadding + 35,
+      left: 20,
+      right: 20,
+      child: Column(
+        children: [
+          // Container de alerta
+          Padding(
+            padding: const EdgeInsets.all(1),
+            child: Material(
+              color: ColorsJunghanns.orange8A,
+              borderRadius: BorderRadius.circular(8),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 15),
+
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Primer texto "Atención!"
+                    const Text(
+                      'Atención!',
+                      style: TextStyle(
+                        color: ColorsJunghanns.brown,
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                        decoration: TextDecoration.none,
+                      ),
+                    ),
+                    const SizedBox(height: 8), // Espacio entre los textos
+                    // Segundo texto con la distancia
+                    Text(
+                      currentDistance != null
+                          ? 'Distancia de ${currentDistance!.toStringAsFixed(2)} Mtrs excede el límite de entrega, con respecto al límite permitido de ${provider.planteDistance[0].allowedDistance} Mtrs.'
+                          : 'Calculando distancia...',
+                      textAlign: TextAlign.left,
+                      style: const TextStyle(
+                        color: ColorsJunghanns.brown40,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w400,
+                        decoration: TextDecoration.none,
+                      ),
+                    ),
+                    //const SizedBox(height: 8), // Espacio entre los textos
+                    // Segundo texto con la distancia
+                    const Text(
+                      'Verifica tu ubicación.',
+                      textAlign: TextAlign.left,
+                      style: TextStyle(
+                        color: ColorsJunghanns.brown40,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w400,
+                        decoration: TextDecoration.none,
+                      ),
+                    ),
+                    const SizedBox(height: 16), // Espacio entre el texto y el botón
+                    // Botón
+                    ElevatedButton(
+                      onPressed: () async {
+                        // Llamamos a funCheckDistance y esperamos su resultado
+                        await funCheckDistance();
+
+                        // Si la distancia está dentro del rango, llamamos a funGoMaps
+                        if (!isDistanceValid) {
+                          funGoMaps();
+                        } else {
+                          // Si no está dentro del rango, muestra un mensaje o toma otra acción
+                          print('La distancia no está dentro del rango permitido');
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: ColorsJunghanns.orange3E, // Color del fondo del botón
+                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 15),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text(
+                        'VERIFICAR POSICIÓN',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+    /*return Positioned(
       bottom: bottomPadding + 35,
       left: 20,
       right: 20,
@@ -1003,7 +1107,41 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
           ),
         ),
       ),
-    );
+    );*/
+  }
+  funGoMaps() async {
+    if (plantaLat != 0 && plantaLog != 0) {
+      var map = await MapLauncher.isMapAvailable(MapType.google);
+      if (map ?? false) {
+
+        // log(" lat ->${plantaLat} long ->${plantaLog}" as num);
+        await MapLauncher.showMarker(
+          mapType: MapType.google,
+          coords:
+          Coords(plantaLat!, plantaLog!),
+          title: '',
+          description: "",
+        );
+      } else {
+        // log("Go Maps Not" as num);
+        Fluttertoast.showToast(
+          msg: "Sin mapa disponible",
+          timeInSecForIosWeb: 2,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+        );
+      }
+    } else {
+      //log("No LAT y No LNG" as num);
+      Fluttertoast.showToast(
+        msg: "Sin coordenadas",
+        timeInSecForIosWeb: 2,
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.TOP,
+        webShowClose: true,
+      );
+    }
   }
   Widget _buildActionButton(double bottomPadding) {
     final provider = Provider.of<ProviderJunghanns>(context, listen: false);

@@ -3,14 +3,17 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:junghanns/components/empty/empty.dart';
 import 'package:junghanns/components/loading.dart';
+import 'package:junghanns/pages/drawer/map.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/styles/color.dart';
 import 'package:junghanns/styles/decoration.dart';
 import 'package:junghanns/styles/text.dart';
 import 'package:junghanns/widgets/card/product_inventary.dart';
+import 'package:map_launcher/map_launcher.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/customer.dart';
@@ -42,6 +45,10 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
   bool showErrorBanner = false;
   bool isDistanceValid = false; // Indica si la distancia está dentro del rango permitido
   double? currentDistance;
+  double? plantaLat;
+  double? plantaLog;
+  /*LatLng? _userCoordinates;
+  LatLng? _plantCoordinates;*/
 
   @override
   void initState() {
@@ -86,6 +93,8 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
 
     // Ahora fetchStockValidation devuelve un objeto ValidationModel
     provider.fetchStockValidation();
+    provider.getDistancePlanta();
+    funCheckDistance();
 
 // Filtrar los datos según las condiciones especificadas
     final filteredData = provider.validationList.where((validation) {
@@ -124,6 +133,11 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
         final longitude1 = provider.planteDistance[0].long;
         final latitude2 = _currentLocation!.latitude!;
         final longitude2 = _currentLocation!.longitude!;
+
+        // Imprimir coordenadas de los puntos
+        print("Coordenadas de la planta: Latitud: $latitude1, Longitud: $longitude1");
+        print("Coordenadas actuales: Latitud: $latitude2, Longitud: $longitude2");
+
         // Calcular distancia
         double distance = _calculateHaversineDistance(
           latitude1,
@@ -131,10 +145,16 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
           latitude2,
           longitude2,
         );
+        // Imprimir la distancia calculada
+        print("Distancia calculada: $distance metros");
+
         // Actualizar estado
         setState(() {
+          plantaLat = latitude1;
+          plantaLog = longitude1;
           currentDistance = distance;
           isDistanceValid = distance <= provider.planteDistance[0].allowedDistance;
+
         });
       }
     }
@@ -407,7 +427,190 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
       ),
     );
   }
-  Widget _buttonDistance(double bottomPadding){
+  Widget _buttonDistance(double bottomPadding) {
+    final provider = Provider.of<ProviderJunghanns>(context, listen: false);
+    return Positioned(
+      bottom: bottomPadding + 35,
+      left: 20,
+      right: 20,
+      child: Column(
+        children: [
+          // Container de alerta
+          Padding(
+            padding: const EdgeInsets.all(1),
+            child: Material(
+              color: ColorsJunghanns.orange8A,
+              borderRadius: BorderRadius.circular(8),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 15),
+
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Primer texto "Atención!"
+                    const Text(
+                      'Atención!',
+                      style: TextStyle(
+                        color: ColorsJunghanns.brown,
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                        decoration: TextDecoration.none,
+                      ),
+                    ),
+                    const SizedBox(height: 8), // Espacio entre los textos
+                    // Segundo texto con la distancia
+                    Text(
+                      currentDistance != null
+                          ? 'Distancia de ${currentDistance!.toStringAsFixed(2)} Mtrs excede el límite de recepción, con respecto al límite permitido de ${provider.planteDistance[0].allowedDistance} Mtrs.'
+                          : 'Calculando distancia...',
+                      textAlign: TextAlign.left,
+                      style: const TextStyle(
+                        color: ColorsJunghanns.brown40,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w400,
+                        decoration: TextDecoration.none,
+                      ),
+                    ),
+                    //const SizedBox(height: 8), // Espacio entre los textos
+                    // Segundo texto con la distancia
+                    const Text(
+                      'Verifica tu ubicación.',
+                      textAlign: TextAlign.left,
+                      style: TextStyle(
+                        color: ColorsJunghanns.brown40,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w400,
+                        decoration: TextDecoration.none,
+                      ),
+                    ),
+                    const SizedBox(height: 16), // Espacio entre el texto y el botón
+                    // Botón
+                    ElevatedButton(
+                      onPressed: () async {
+                        // Llamamos a funCheckDistance y esperamos su resultado
+                        await funCheckDistance();
+
+                        // Si la distancia está dentro del rango, llamamos a funGoMaps
+                        if (!isDistanceValid) {
+                          funGoMaps();
+                        } else {
+                          // Si no está dentro del rango, muestra un mensaje o toma otra acción
+                          print('La distancia no está dentro del rango permitido');
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: ColorsJunghanns.orange3E, // Color del fondo del botón
+                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 15),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text(
+                        'VERIFICAR POSICIÓN',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  funGoMaps() async {
+
+    if (plantaLat != 0 && plantaLog != 0) {
+      var map = await MapLauncher.isMapAvailable(MapType.google);
+      if (map ?? false) {
+
+       // log(" lat ->${plantaLat} long ->${plantaLog}" as num);
+        await MapLauncher.showMarker(
+          mapType: MapType.google,
+          coords:
+          Coords(plantaLat!, plantaLog!),
+          title: '',
+          description: "",
+        );
+      } else {
+       // log("Go Maps Not" as num);
+        Fluttertoast.showToast(
+          msg: "Sin mapa disponible",
+          timeInSecForIosWeb: 2,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+        );
+      }
+    } else {
+      //log("No LAT y No LNG" as num);
+      Fluttertoast.showToast(
+        msg: "Sin coordenadas",
+        timeInSecForIosWeb: 2,
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.TOP,
+        webShowClose: true,
+      );
+    }
+  }
+
+  /*Widget _buttonDistance(double bottomPadding) {
+    final provider = Provider.of<ProviderJunghanns>(context, listen: false);
+    return Positioned(
+      bottom: bottomPadding + 35,
+      left: 20,
+      right: 20,
+      child: Padding(
+        padding: const EdgeInsets.all(10),
+        child: Material(
+          color: Colors.white, // Fondo para mostrar el efecto de onda
+          borderRadius: BorderRadius.circular(8),
+          child: InkWell(
+            onTap: () {
+              // Llamar a la función funCheckDistance
+              funCheckDistance();
+            },
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 15),
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: ColorsJunghanns.red,
+                  width: 2,
+                ),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Center(
+                child: Text(
+                  currentDistance != null
+                      ? 'DISTANCIA DE ${currentDistance!.toStringAsFixed(2)} mtrs EXCEDE EL LÍMITE DE RECEPCIÓN, CON RESPECTO AL LÍMITE PERMITIDO DE ${provider.planteDistance[0].allowedDistance} mtrs !!'
+                      : 'Calculando distancia...',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: ColorsJunghanns.red,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    decoration: TextDecoration.none,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }*/
+
+  /*Widget _buttonDistance(double bottomPadding){
     return Positioned(
       bottom: bottomPadding + 35,
       left: 20,
@@ -443,7 +646,7 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
         ),
       ),
     );
-  }
+  }*/
 
 
 

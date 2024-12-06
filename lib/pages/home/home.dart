@@ -56,6 +56,7 @@ class _HomeState extends State<Home> {
       llamaC,
       secon;
   List specialData = [];
+  bool isButtonEnabled = true;
 
   @override
   void initState() {
@@ -582,6 +583,72 @@ class _HomeState extends State<Home> {
 
   Widget buttonSync() {
     return Align(
+      alignment: Alignment.bottomCenter,
+      child: GestureDetector(
+        onTap: isButtonEnabled
+            ? () async {
+          print("Botón sincronizar presionado");
+          setState(() {
+            isButtonEnabled = false;
+          });
+
+          Position? currentLocation =
+          await LocationJunny().getCurrentLocation();
+          provider.asyncProcess = true;
+          provider.isNeedAsync = false;
+
+          Async async = Async(provider: provider);
+          await async.initAsync().then((value) async {
+            await handler.inserBitacora({
+              "lat": currentLocation != null
+                  ? currentLocation.latitude
+                  : 0,
+              "lng": currentLocation != null
+                  ? currentLocation.longitude
+                  : 0,
+              "date": DateTime.now().toString(),
+              "status": value ? "1" : "0",
+              "desc": jsonEncode({"text": "Sincronizacion Manual"})
+            });
+
+            setState(() {
+              isButtonEnabled = true; // Habilitar el botón nuevamente
+            });
+
+            getAsync();
+          });
+        }
+            : null, // Si está deshabilitado, no hace nada
+        child: Container(
+          height: 50,
+          width: MediaQuery.of(context).size.width * 0.5,
+          margin: const EdgeInsets.only(bottom: 10),
+          decoration: isButtonEnabled
+              ? Decorations.blueBorder30 // Botón activo
+              : Decorations.greyBorder30, // Botón deshabilitado (gris)
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                FontAwesomeIcons.sync,
+                color: Colors.white,
+              ),
+              Container(
+                margin: const EdgeInsets.only(left: 10),
+                child: AutoSizeText(
+                  "Sincronizar",
+                  style: TextStyles.white18Itw,
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+  /*Widget buttonSync() {
+    return Align(
         alignment: Alignment.bottomCenter,
         child: GestureDetector(
           child: Container(
@@ -614,7 +681,7 @@ class _HomeState extends State<Home> {
             });
             provider.asyncProcess = true;
             provider.isNeedAsync = false;
-            /*provider.synchronizeListDelivery();*/
+            *//*provider.synchronizeListDelivery();*//*
             
             Async async = Async(provider: provider);
             await async.initAsync().then((value) async {
@@ -633,5 +700,5 @@ class _HomeState extends State<Home> {
             });
           },
         ));
-  }
+  }*/
 }

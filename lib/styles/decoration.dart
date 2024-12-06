@@ -50,6 +50,9 @@ class Decorations {
   static const BoxDecoration blueBorder30 = BoxDecoration(
       color: ColorsJunghanns.blue,
       borderRadius: BorderRadius.all(Radius.circular(30)));
+  static const BoxDecoration greyBorder30 = BoxDecoration(
+      color: ColorsJunghanns.grey,
+      borderRadius: BorderRadius.all(Radius.circular(30)));
   static const BoxDecoration lighGreyBorder30 = BoxDecoration(
       color: ColorsJunghanns.lighGrey,
       borderRadius: BorderRadius.all(Radius.circular(30)));

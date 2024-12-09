@@ -8,6 +8,7 @@ import 'dart:io';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:junghanns/models/notification.dart';
 import 'package:junghanns/preferences/global_variables.dart';
@@ -29,7 +30,7 @@ Future<void> messageHandler(RemoteMessage message) async {
 @pragma('vm:entry-point') // Mandatory if the App is obfuscated or using Flutter 3.1+
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) {
-    initWebSocket();
+    //initWebSocket();
     print("Native called background task: $task"); //simpleTask will be emitted here.
     return Future.value(true);
   });
@@ -84,6 +85,10 @@ void initWebSocket() {
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
   await Firebase.initializeApp();
   FirebaseMessaging.onBackgroundMessage (messageHandler);
   FirebaseMessaging.onMessageOpenedApp.listen((message) {
@@ -96,7 +101,7 @@ Future<void> main() async {
   //   isInDebugMode: false 
   // );
   // Workmanager().registerOneOffTask("task-identifier", "notification");
-  initWebSocket();
+  //initWebSocket();
   runApp(const JunnyApp());
 }
 class MyHttpOverrides extends HttpOverrides {

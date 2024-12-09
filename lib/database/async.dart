@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:io';
 
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:junghanns/models/customer.dart';
@@ -12,6 +13,8 @@ import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/provider/provider.dart';
 import 'package:junghanns/services/customer.dart';
 import 'package:junghanns/services/store.dart';
+
+import 'database_evidence.dart';
 
 class Async {
   ProviderJunghanns provider;
@@ -37,10 +40,17 @@ class Async {
               provider.labelAsync = "Sincronizando QR";
               return getQR().then((value7){
                 provider.labelAsync = "Sincronizando marcas de garrafón";
-                return getDataBrand().then((value8){
+                return provider.synchronizeListDelivery().then((value8){
+                  provider.labelAsync = "Sincronizando stock de entrega";
+                  return getDataBrand().then((value9){
+                    prefs.isAsyncCurrent = false;
+                    provider.asyncProcess=false;
+                    return true;
+                });
+                /*return getDataBrand().then((value8){
                   prefs.isAsyncCurrent = false;
               provider.asyncProcess=false;
-              return true;
+              return true;*/
                 });
               });
             });
@@ -85,11 +95,19 @@ class Async {
                 isNotSuccess?null:isNotSuccess=value7;
                 log("======> $isNotSuccess");
                 provider.labelAsync = "Sincronizando marcas de garrafón";
-                return getDataBrand().then((value8){
+                return provider.synchronizeListDelivery().then((value8){
+                  provider.labelAsync = "Sincronizando stock de entrega";
+                  return getDataBrand().then((value9){
+                    prefs.isAsyncCurrent = false;
+                    provider.asyncProcess=false;
+                    return isNotSuccess;
+                  });
+                });
+                /*return getDataBrand().then((value9){
                   prefs.isAsyncCurrent = false;
               provider.asyncProcess=false;
               return isNotSuccess;
-                });
+                });*/
                 
               });
             });
@@ -101,10 +119,12 @@ class Async {
   }
   
   Future <bool> getAsyncData() async {
+    DatabaseHelper dbHelper = DatabaseHelper();
     bool isNotSuccess=false;
     List<Map<String,dynamic>> salesPen= await handler.retrieveSales();
     List<Map<String,dynamic>> devolucionesPen= await handler.retrieveDevolucionAsync();
     List<Map<String,dynamic>> stopPen=await handler.retrieveStopOffUpdate();
+    List<Map<String, dynamic>> evidencePen = await dbHelper.retrieveEvdences();
     List<StopRuta> stopRuta=await handler.retrieveStopRuta();
     if(salesPen.isNotEmpty){
       log("ventas pendientes ---------> ${salesPen.length}");
@@ -121,7 +141,16 @@ class Async {
       if(e["idAuth"]!=null){
       data["id_autorizacion"]= e["idAuth"];
       }
-      data["formas_de_pago"]= jsonDecode(e["paymentMethod"]);
+
+      if (e["idReasonAuth"] != null) {
+        data["id_autorizacion_motivo"] = e["idReasonAuth"];
+      }
+      if (e["reason"] != null) {
+        data["motivo"] = e["reason"];
+      }
+
+
+          data["formas_de_pago"]= jsonDecode(e["paymentMethod"]);
       data["id_data_origen"]= e["idOrigin"];
       if(e["folio"]!=null){
         data["folio"]= e["folio"];
@@ -132,6 +161,8 @@ class Async {
       if(e["id_marca_garrafon"]!=null){
       data["id_marca_garrafon"]=e["id_marca_garrafon"];
       }
+          // Log para verificar los datos antes de enviarlos
+          log("Datos de la venta antes de enviar: ${jsonEncode(data)}");
         await postSale(data).then((value) async {
           if(!value.error){
             //se actualiza como exitoso
@@ -188,6 +219,49 @@ class Async {
             await handler.updateDevolucion({"id":e["id"],"isUpdate":1});
           }else{
             isNotSuccess=true;
+          }
+        });
+      }
+    }
+    if (evidencePen.isNotEmpty) {
+      provider.labelAsync = "Sincronizando evidencias";
+      for (var e in evidencePen) {
+        double lat = 0.0;
+        double lon = 0.0;
+        if (e["lat"] != null && e["lat"].toString().isNotEmpty) {
+          lat = double.tryParse(e["lat"].toString()) ?? 0.0;
+        }
+        if (e["lon"] != null && e["lon"].toString().isNotEmpty) {
+          lon = double.tryParse(e["lon"].toString()) ?? 0.0;
+        }
+        String archivoFile = e["archivo"];
+        File archivo = File(archivoFile);
+
+        Map<String, dynamic> data = {
+          "id_ruta": e["idRuta"],
+          "id_cliente": e["idCliente"],
+          "tipo": e["tipo"],
+          "cantidad": e["cantidad"],
+          "lat": lat,
+          "lon": lon,
+          "id_autorization": e["idAutorization"],
+          "archivo": archivoFile
+        };
+
+        log("Datos de la evidencia antes de enviar: ${jsonEncode(data)}");
+
+        await postDirtyBroken(idRuta: e["idRuta"], idCliente: e["idCliente"], tipo: e["tipo"], cantidad: e["cantidad"], lat:lat, lon: lon, idAutorization: e["idAutorization"], archivo: archivo).then((value) async {
+          if (!value.error) {
+            int? evidenceId = await dbHelper.getEvidenceIdByAuthorization(e["idAutorization"]);
+            log("Se actualizan los datos");
+            await dbHelper.updateEvidence(evidenceId!, 1, 0);
+            provider.isNeedAsync = false;
+          } else {
+            isNotSuccess = true;
+            if (value.status != 1002) {
+              int? evidenceId = await dbHelper.getEvidenceIdByAuthorization(e["idAutorization"]);
+              await dbHelper.updateEvidence(evidenceId!, 0, 1);
+            }
           }
         });
       }

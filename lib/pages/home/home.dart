@@ -26,6 +26,8 @@ import 'package:junghanns/util/location.dart';
 import 'package:provider/provider.dart';
 
 import '../../services/store.dart';
+import '../../widgets/modal/receipt_modal.dart';
+import '../../widgets/modal/validation_modal.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -53,6 +55,8 @@ class _HomeState extends State<Home> {
       llamaCA,
       llamaC,
       secon;
+  List specialData = [];
+  bool isButtonEnabled = true;
 
   @override
   void initState() {
@@ -76,7 +80,9 @@ class _HomeState extends State<Home> {
     secon = 0;
     getDashboarR();
     getAsync();
+    _refreshTimer();
   }
+
   @override
   void dispose(){
     super.dispose();
@@ -84,6 +90,36 @@ class _HomeState extends State<Home> {
 
   getPermission() async {
     await Geolocator.requestPermission();
+  }
+
+  Future<void> _refreshTimer() async {
+    final provider = Provider.of<ProviderJunghanns>(context, listen: false);
+
+    // Ahora fetchStockValidation devuelve un objeto ValidationModel
+    await provider.fetchStockValidation();
+    await provider.fetchStockDelivery();
+
+// Filtrar los datos según las condiciones especificadas
+    final filteredData = provider.validationList.where((validation) {
+      return validation.status == "P" && validation.valid == "Planta";
+    }).toList();
+
+// Verificar si hay datos filtrados
+    setState(() {
+      if (filteredData.isNotEmpty) {
+        specialData = filteredData;  // Asigna los datos filtrados a specialData
+        // Imprimir el contenido de specialData para confirmarlo
+        print('Contenido de specialData (filtrado): $specialData');
+        print('Llama al modal');
+        showValidationModal(context);
+      } else {
+        specialData = [];  // Si no hay datos que cumplan las condiciones, asignar un arreglo vacío
+      }
+    });
+
+    if (provider.validationList.first.status =='P' && provider.validationList.first.valid == 'Ruta'){
+      showReceiptModal(context);
+    }
   }
 
   getDashboarR() async {
@@ -133,11 +169,20 @@ class _HomeState extends State<Home> {
       }
       await Async(provider: provider).getStock();
       List<ProductModel> dataList = await handler.retrieveProducts();
+      log(''' =======> 
+      ${dataList.toString()}''');
       dataList.map((e) {
         var exits =
             dashboardR.stock.where((element) => element["id"] == e.idProduct);
         if (exits.isNotEmpty) {
           setState(() {
+            print({
+              "nombre": exits.first["desc"],
+              "stock get":exits.first["stock"],
+              "stockLocal":e.stock,
+              "ventaLocal":int.parse((exits.first["stock"] ?? 0).toString()) -
+                int.parse((e.stock).toString())
+            });
             exits.first["venta_local"] =
                 int.parse((exits.first["stock"] ?? 0).toString()) -
                     int.parse((e.stock).toString());
@@ -224,6 +269,7 @@ class _HomeState extends State<Home> {
                   secon = 0;
                   getDashboarR();
                   getAsync();
+                  _refreshTimer();
                 },child:SingleChildScrollView(
         child:
                 Container(
@@ -381,7 +427,7 @@ class _HomeState extends State<Home> {
             Visibility(
                 visible: prefs.lastBitacoraUpdate != "",
                 child: Text(
-                  "Ultima actualización: ${DateFormat('hh:mm a').format(prefs.lastBitacoraUpdate != "" ? DateTime.parse(prefs.lastBitacoraUpdate) : DateTime.now())}",
+                  "Última actualización: ${DateFormat('hh:mm a').format(prefs.lastBitacoraUpdate != "" ? DateTime.parse(prefs.lastBitacoraUpdate) : DateTime.now())}",
                   style: TextStyles.blue13It,
                 )),
             const SizedBox(
@@ -433,8 +479,8 @@ class _HomeState extends State<Home> {
                 dashboardR.stock
                     .map((e) => {
                           "type": e["desc"] ?? "",
-                          "atendidos": e["venta_local"] ?? 0,
-                          "faltantes": e["stock"] ?? 0
+                          "atendidos": e["venta_local"] ?? 0,//vendidos
+                          "faltantes": e["stock"] ?? 0 //total
                         })
                     .toList(),
                 Container()),
@@ -537,6 +583,72 @@ class _HomeState extends State<Home> {
 
   Widget buttonSync() {
     return Align(
+      alignment: Alignment.bottomCenter,
+      child: GestureDetector(
+        onTap: isButtonEnabled
+            ? () async {
+          print("Botón sincronizar presionado");
+          setState(() {
+            isButtonEnabled = false;
+          });
+
+          Position? currentLocation =
+          await LocationJunny().getCurrentLocation();
+          provider.asyncProcess = true;
+          provider.isNeedAsync = false;
+
+          Async async = Async(provider: provider);
+          await async.initAsync().then((value) async {
+            await handler.inserBitacora({
+              "lat": currentLocation != null
+                  ? currentLocation.latitude
+                  : 0,
+              "lng": currentLocation != null
+                  ? currentLocation.longitude
+                  : 0,
+              "date": DateTime.now().toString(),
+              "status": value ? "1" : "0",
+              "desc": jsonEncode({"text": "Sincronizacion Manual"})
+            });
+
+            setState(() {
+              isButtonEnabled = true; // Habilitar el botón nuevamente
+            });
+
+            getAsync();
+          });
+        }
+            : null, // Si está deshabilitado, no hace nada
+        child: Container(
+          height: 50,
+          width: MediaQuery.of(context).size.width * 0.5,
+          margin: const EdgeInsets.only(bottom: 10),
+          decoration: isButtonEnabled
+              ? Decorations.blueBorder30 // Botón activo
+              : Decorations.greyBorder30, // Botón deshabilitado (gris)
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                FontAwesomeIcons.sync,
+                color: Colors.white,
+              ),
+              Container(
+                margin: const EdgeInsets.only(left: 10),
+                child: AutoSizeText(
+                  "Sincronizar",
+                  style: TextStyles.white18Itw,
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+  /*Widget buttonSync() {
+    return Align(
         alignment: Alignment.bottomCenter,
         child: GestureDetector(
           child: Container(
@@ -569,6 +681,7 @@ class _HomeState extends State<Home> {
             });
             provider.asyncProcess = true;
             provider.isNeedAsync = false;
+            *//*provider.synchronizeListDelivery();*//*
             
             Async async = Async(provider: provider);
             await async.initAsync().then((value) async {
@@ -587,5 +700,5 @@ class _HomeState extends State<Home> {
             });
           },
         ));
-  }
+  }*/
 }

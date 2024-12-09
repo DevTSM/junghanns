@@ -66,6 +66,7 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
   late double dif;
   late bool isRange;
   late bool isLoading, isLoadingHistory, isLoadingRange;
+  late TextEditingController buscadorC;
 
   @override
   void initState() {
@@ -83,6 +84,7 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
     isLoadingHistory = false;
     isLoadingRange = false;
     currentLocation = LocationData.fromMap({});
+    buscadorC = TextEditingController();
     setCurrentLocation();
     getHistory();
     getDataP();
@@ -106,6 +108,9 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
           currentLocation = await locationInstance
               .getLocation()
               .timeout(const Duration(seconds: 15));
+          //Modificación
+          /*widget.customerCurrent.lat = currentLocation.latitude!;
+          widget.customerCurrent.lng = currentLocation.longitude!;*/
           await funCheckDistance(currentLocation);
         } else {
           provider.permission = false;
@@ -130,7 +135,7 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
         isLoadingRange = false;
       });
       Fluttertoast.showToast(
-          msg: "Dispositivo sin coordenadas",
+          msg: "Dispositivo sin ubicación",
           timeInSecForIosWeb: 2,
           toastLength: Toast.LENGTH_LONG,
           gravity: ToastGravity.TOP,
@@ -1049,7 +1054,7 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
                   label: "Iniciar ruta"
                 )
           : ButtonJunghanns(
-              fun: () {},
+              fun: () async {},
               decoration: Decorations.whiteBorder5Red,
               style: TextStyles.red17_6,
               label: "ESTÁS A ${dif.ceil()} mtrs DEL CLIENTE !!"
@@ -1154,21 +1159,62 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
             currentItem
           )
         ),
+        SizedBox(height: 15),
+        buscador(),
         Column(
-          children:
-            operations.where((element) => 
-                element.typeInt==currentItem["id"])
-                .toList().map((e) => 
-              OperationsCard(
-                current: e,
-                update:getDataP,
-                currentClient:widget.customerCurrent
-              )
-            ).toList()
-        )
+          children: operations
+              .where((element) =>
+          element.typeInt == currentItem["id"] &&
+              (buscadorC.text.isEmpty ||
+                  (element.amount.toString() + " X " + element.description)
+                      .toLowerCase()
+                      .contains(buscadorC.text.toLowerCase())||
+                  ("F"+ element.folio.toString())
+                      .toLowerCase().contains(buscadorC.text.toLowerCase()))) // Filtra por descripción
+              .toList()
+              .map((e) => OperationsCard(
+            current: e,
+            update: getDataP,
+            currentClient: widget.customerCurrent,
+          ))
+              .toList(),
+        ),
       ],
     );
     
+  }
+  Widget buscador() {
+    return Container(
+        height: size.height * 0.06,
+        margin: const EdgeInsets.only(left: 15, right: 15, top: 5, bottom: 5),
+        child: TextFormField(
+            controller: buscadorC,
+            onChanged: (value) => setState(() {
+
+            }),
+            textAlignVertical: TextAlignVertical.center,
+            style: TextStyles.blueJ15SemiBold,
+            decoration: InputDecoration(
+              hintText: "Buscar ...",
+              hintStyle: TextStyles.grey15Itw,
+              filled: true,
+              fillColor: ColorsJunghanns.whiteJ,
+              contentPadding: const EdgeInsets.only(left: 24),
+              enabledBorder: OutlineInputBorder(
+                borderSide:
+                const BorderSide(width: 1, color: ColorsJunghanns.blue),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              suffixIcon: const Padding(
+                  padding: EdgeInsets.only(top: 10, bottom: 10, right: 10),
+                  child: Icon(
+                    Icons.search,
+                    color: ColorsJunghanns.blue,
+                  )),
+            )));
   }
 
   Widget observation(String titleO, String textO) {

@@ -15,6 +15,8 @@ class AuthorizationModel {
   ProductModel product;
   CustomerModel client;
   DateTime date;
+  dynamic evidence;
+  //String comment;
 
   AuthorizationModel(
       {required this.idAuth,
@@ -54,7 +56,7 @@ class AuthorizationModel {
         authText: data["autorizacion"] ?? "",
         observation: data["observacion"] ?? "",
         idReasonAuth: data["idMotivoAutorizacion"] ?? 0,
-        reason: data["motivo"] ?? "",
+        reason: data["Motivo"] ?? "",
         client: CustomerModel.fromState(),
         date: DateTime.parse(data["fecha_creado"]!=null&&data["hora_creado"]!=null?"${data["fecha_creado"]} ${data["hora_creado"]}":DateTime.now().toString()));
   }
@@ -68,23 +70,33 @@ class AuthorizationModel {
         authText: data["autorizacion"] ?? "",
         observation: data["observacion"] ?? "",
         idReasonAuth: data["idMotivoAutorizacion"] ?? 0,
-        reason: data["motivo"] ?? "",
+        reason: data["Motivo"] ?? "",
         client: CustomerModel.fromState(),
         date: DateTime.parse(data["date"]!=null?"${data["date"]}":DateTime.now().toString()));
   }
-getMap(){
-  return {
-    "id":idAuth,
-    "product":product.getMap(),
-    "idCliente":idClient,
-    "tipo":type,
-    "idCatAutorizacion":idCatAuth,
-    "autorizacion":authText,
-    "observacion":observation,
-    "date":date.toString()
-  };
-  
-}
+  getMap() {
+    Map<String, dynamic> map = {
+      "id": idAuth,
+      "product": product.getMap(),
+      "idCliente": idClient,
+      "tipo": type,
+      "idCatAutorizacion": idCatAuth,
+      "autorizacion": authText,
+      "observacion": observation,
+      "date": date.toString()
+    };
+
+    // Agrega idMotivoAutorizacion y Motivo solo si tienen valores específicos
+    if (idReasonAuth != 0) {
+      map["idMotivoAutorizacion"] = idReasonAuth;
+    }
+    if (reason.isNotEmpty) {
+      map["Motivo"] = reason;
+    }
+
+    return map;
+  }
+
 set setClient(CustomerModel client){
   this.client=client;
 }

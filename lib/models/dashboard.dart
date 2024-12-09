@@ -14,7 +14,7 @@ class DashboardModel {
   }
 
   factory DashboardModel.fromService(Map<String, dynamic> data) {
-    prefs.dashboard=jsonEncode(data);
+    prefs.dashboard = jsonEncode(data);
     return DashboardModel(
       stock: List.from(data["stock"]??[])
     );

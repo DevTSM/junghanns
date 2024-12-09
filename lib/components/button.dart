@@ -8,7 +8,7 @@ class ButtonJunghanns extends StatelessWidget {
   Widget? icon;
   BoxDecoration decoration;
   BoxDecoration decorationInactive;
-  Function fun;
+  Future<void> Function() ? fun;
   TextStyle style;
   TextStyle styleInactive;
   String label;
@@ -29,7 +29,7 @@ class ButtonJunghanns extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-        onTap: isActive?() => fun():(){},
+        onTap: isActive ? fun : null, /*isActive?() => fun():(){},*/
         child: Container(
           decoration: isActive?decoration:decorationInactive,
           padding: const EdgeInsets.only(top: 10, bottom: 10),

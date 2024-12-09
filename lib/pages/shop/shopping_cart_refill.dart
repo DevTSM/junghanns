@@ -28,6 +28,8 @@ import 'package:junghanns/widgets/card/product.dart';
 import 'package:location/location.dart';
 import 'package:provider/provider.dart';
 
+import '../../models/authorization.dart';
+
 class ShoppingCartRefill extends StatefulWidget {
   CustomerModel customerCurrent;
   ShoppingCartRefill({
@@ -47,12 +49,15 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
   late List<ConfigModel> configList;
   late bool isLoading, isRange;
   late double latSale, lngSale,distance;
+  late List<AuthorizationModel> authList;
+  bool isProcessing = false;
 
   @override
   void initState() {
     super.initState();
     configList=[];
     refillList=[];
+    authList = [];
     isLoading = false;
     isRange = false;
     distance = 0;
@@ -66,6 +71,23 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
     //provider.initShopping(CustomerModel.fromState());
   }
 
+  getAuth() async {
+    authList.clear();
+    await getAuthorization(widget.customerCurrent.idClient, prefs.idRouteD)
+        .then((answer) {
+      log(answer.body.toString());
+      if (!answer.error) {
+        answer.body
+            .map((e) => authList.add(AuthorizationModel.fromService(e)))
+            .toList();
+        widget.customerCurrent.setAuth(authList);
+      } else {
+        authList.addAll(widget.customerCurrent.auth);
+      }
+    });
+
+  }
+
   getDataRefill() async {
     Timer(const Duration(milliseconds: 800), () async {
       provider.initShopping(widget.customerCurrent);
@@ -77,6 +99,9 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
   }
   
   showConfirmSale() {
+    setState(() {
+      isProcessing = true; // Deshabilitar el botón
+    });
     showDialog(
           context: context,
           builder: (BuildContext context) {
@@ -133,7 +158,7 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
                   }, decoration: Decorations.blueBorder12, style: TextStyles.white18SemiBoldIt, label: "Si")),
                   const SizedBox(width: 25,),
            Expanded(child:ButtonJunghanns(
-              fun:() {
+              fun:() async {
                     Navigator.pop(context);
                   },
                    decoration: Decorations.redCard, style: TextStyles.white18SemiBoldIt, label: 
@@ -145,6 +170,9 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
               ),
             );
           });
+    setState(() {
+      isProcessing = false; // Reactivar el botón si es necesario
+    });
   }
 
   setCurrentLocation() async {
@@ -435,10 +463,10 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
                                     update: (ProductModel productCurrent,
                                         int isAdd) {
                                       provider.updateProductShopping(
-                                          productCurrent, isAdd);
+                                          context, productCurrent, isAdd);
                                       setState(() {});
                                     },
-                                    productCurrent: refillList[index],
+                                    productCurrent: refillList[index],  customerCurrent: widget.customerCurrent,
                                   ),
                         childCount: refillList.length),
                   ),
@@ -452,11 +480,26 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
                         height: 45,
                         alignment: Alignment.center,
                         child: ButtonJunghanns(
+                          decoration: isProcessing
+                              ? Decorations.greyBorder12 // Botón deshabilitado
+                              : Decorations.blueBorder12, // Botón habilitado
+                          fun: isProcessing
+                              ? null // Deshabilitar botón si está procesando
+                              : () async {
+                            showConfirmSale(); // Encapsular la llamada a caseSale dentro de una función anónima
+                          }, // Lógica del botón
+                          label: isProcessing
+                              ? "Procesando..." // Texto cuando está deshabilitado
+                              : "Terminar venta", // Texto cuando está habilitado
+                          style: isProcessing
+                              ? TextStyles.white17_5 // Estilo deshabilitado
+                              : TextStyles.white17_5,
+                        )/*ButtonJunghanns(
                           decoration: Decorations.blueBorder12,
                           fun: () => showConfirmSale(),
                           label: "Terminar venta",
                           style: TextStyles.white17_5,
-                        )))
+                        )*/))
               ],
             ),
     );

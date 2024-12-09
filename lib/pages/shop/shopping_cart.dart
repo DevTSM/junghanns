@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:io';
 
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
@@ -37,7 +38,11 @@ import 'package:junghanns/widgets/card/product.dart';
 import 'package:location/location.dart';
 import 'package:provider/provider.dart';
 
+import '../../database/database_evidence.dart';
 import '../../models/method_payment.dart';
+import '../../util/location.dart';
+import '../../widgets/modal/evidence.dart';
+
 
 class SecondWayToPay {
   String wayToPay;
@@ -79,6 +84,10 @@ class _ShoppingCartState extends State<ShoppingCart> {
   late bool isLoading, isRange;
   late bool isRequestFolio = false;
   late bool isOtherProduct;
+  bool isProcessing = false;
+
+  List<Map<String, dynamic>> commentsData = [];
+
 
   @override
   void initState() {
@@ -208,7 +217,10 @@ class _ShoppingCartState extends State<ShoppingCart> {
     if (paymentsList.isEmpty) {
       //Se agregan todos lo metodos de pago si no hay autorizacion
       if(provider.basketCurrent.authCurrent.idAuth != 0){
-        log("=====> Hay una autorización");
+        log("=====> Hay una autorización ${provider.basketCurrent.authCurrent.idAuth}");
+        log("=====> Hay una autorización de motivo ${provider.basketCurrent.authCurrent.idReasonAuth}");
+        log("=====> Hay una autorización de motivo ${provider.basketCurrent.authCurrent.reason}");
+        log("=====> Hay una autorización de motivo ${provider.basketCurrent.totalPrice}");
          widget.customerCurrent.payment
           .map((e) => e.wayToPay != "Monedero" && e.idAuth == -1 
             ? paymentsList.add(e)
@@ -270,6 +282,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
                   )
                 ],
               ),
+
               actions: widget.customerCurrent.payment.map((item) {
                 return showItem(item, FontAwesomeIcons.coins);
               }).toList());
@@ -445,7 +458,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
                       ),
                       Expanded(
                           child: ButtonJunghanns(
-                        fun: () {
+                        fun: () async {
                           secWayToPay = SecondWayToPay(
                               wayToPay: "", typeWayToPay: "", cost: 0);
                           Navigator.pop(context);
@@ -495,7 +508,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
                       Expanded(
                           child: ButtonJunghanns(
                               fun: provider.isProcessValidate
-                                  ? () {}
+                                  ? () async {}
                                   : () async {
                                       Fluttertoast.showToast(
                                         msg: "Verificando autorización ......",
@@ -713,7 +726,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
                       ),
                       Expanded(
                           child: ButtonJunghanns(
-                        fun: () {
+                        fun: () async {
                           Navigator.pop(context);
                         },
                         decoration: Decorations.redCard,
@@ -774,7 +787,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
       }
     } catch (e) {
       Fluttertoast.showToast(
-          msg: "Dispositivo sin coordenadas",
+          msg: "Dispositivo sin ubicación",
           timeInSecForIosWeb: 2,
           toastLength: Toast.LENGTH_LONG,
           gravity: ToastGravity.TOP,
@@ -839,55 +852,315 @@ class _ShoppingCartState extends State<ShoppingCart> {
       return false;
     }
   }
-
-  caseSale() async {
-    if (widget.customerCurrent.payment.length > 1) {
-      //si hay mas de un metodo agregamos select
-      selectPayment();
+  void confirmarSaleYes(MethodPayment methodCurrent) async {
+    setState(() {
+      isLoading = true;
+    });
+    await setCurrentLocation();
+    if (isRange) {
+      if (latSale != 0 && lngSale != 0) {
+        //se valida si es comodato
+        if (methodCurrent.wayToPay == "Comodato") {
+          await getPhonesCustomer(widget.customerCurrent.idClient).then((answer) async {
+            setState(() {
+              isLoading = false;
+            });
+            if (answer.error) {
+              Fluttertoast.showToast(
+                msg: answer.status == 1002
+                    ? 'No es posible la autorización de comodatos sin red, revisa tu conexión de internet'
+                    : 'Ocurrio un error al obtener lo numeros de telefono',
+                timeInSecForIosWeb: 2,
+                toastLength: Toast.LENGTH_LONG,
+                gravity: ToastGravity.TOP,
+                webShowClose: true,
+              );
+            } else {
+              List<String> phones = [];
+              (answer.body["telefonos"] ?? []).map((e) {
+                if ((e["tipo"] ?? "") == "MOVIL") {
+                  phones.add(e["telefono"].toString());
+                }
+              }).toList();
+              widget.customerCurrent.setPhones(phones);
+              showComodato(methodCurrent);
+            }
+          });
+        } else {
+          funSale(methodCurrent);
+        }
+      } else {
+        setState(() {
+          isLoading = false;
+        });
+        Fluttertoast.showToast(
+          msg: "Sin coordenadas",
+          timeInSecForIosWeb: 16,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+        );
+      }
     } else {
+      setState(() {
+        isLoading = false;
+      });
+      Fluttertoast.showToast(
+        msg: "Fuera de rango",
+        timeInSecForIosWeb: 16,
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.TOP,
+        webShowClose: true,
+      );
+    }
+  }
+
+// Lógica para verificar la autorización y luego mostrar el modal de venta o de comentario
+  Future<void> caseSale() async {
+    setState(() {
+      isProcessing = true; // Deshabilitar el botón
+    });
+    // Verificar si el cliente tiene más de un método de pago
+    if (widget.customerCurrent.payment.length > 1) {
+      if (provider.basketCurrent.totalPrice == 0.0) {
+        await setCurrentLocation();
+        int idReasonAuth = widget.authList.isNotEmpty ? widget.authList[0].idReasonAuth : 0;
+        String? motivoGa = widget.authList.isNotEmpty && widget.authList[0].reason.isNotEmpty
+            ? widget.authList[0].reason
+            : provider.basketCurrent.authCurrent.reason;
+
+        if ((idReasonAuth == 2 || provider.basketCurrent.authCurrent.idReasonAuth == 2) ||
+            (idReasonAuth == 3 || provider.basketCurrent.authCurrent.idReasonAuth == 3) ||
+            (idReasonAuth == 4 || provider.basketCurrent.authCurrent.idReasonAuth == 4)) {
+
+          String tipo;
+          if (idReasonAuth == 4 || provider.basketCurrent.authCurrent.idReasonAuth == 4) {
+            tipo = 'MS';
+          } else {
+            tipo = (idReasonAuth == 2 || provider.basketCurrent.authCurrent.idReasonAuth == 2) ? 'S' : 'R';
+          }
+
+          showComment(
+            context: context,
+            yesFunction: (File? image) {
+              commentsData.add({
+                'image': image,
+                'idRuta': prefs.idRouteD.toString(),
+                'idCliente': (widget.authList.isNotEmpty ? widget.authList[0].idClient.toString() : null) ?? provider.basketCurrent.authCurrent.idClient.toString(),
+                'tipo': tipo,
+                'cantidad': productsList.first.number.toString(),
+                'lat': latSale,
+                'lon': lngSale,
+                'idAutorization': (widget.authList.isNotEmpty ? widget.authList[0].idAuth : null) ?? provider.basketCurrent.authCurrent.idAuth,
+              });
+              confirmarSaleYes(widget.customerCurrent.payment[1]);
+            },
+            current: motivoGa ?? "",
+            idRuta: prefs.idRouteD.toString(),
+            idCliente: (widget.authList.isNotEmpty ? widget.authList[0].idClient.toString() : null) ?? provider.basketCurrent.authCurrent.idClient.toString(),
+            tipo: tipo,
+            cantidad: productsList.first.number.toString(),
+            lat: latSale,
+            lon: lngSale,
+            idAutorization: (widget.authList.isNotEmpty ? widget.authList[0].idAuth : null) ?? provider.basketCurrent.authCurrent.idAuth,
+          );
+
+        } else {
+          if (provider.basketCurrent.authCurrent.authText.toUpperCase() == "GARRAFON A LA PAR") {
+            List<Map<String, dynamic>> list = List.from(
+                jsonDecode(prefs.brands != "" ? prefs.brands : "[]"));
+            if (list.isNotEmpty) {
+              provider.basketCurrent.brandJug = list.first;
+              showBrand(context, () => showConfirmSale(widget.customerCurrent.payment[1]), provider, list);
+            } else {
+              Fluttertoast.showToast(
+                msg: "No se encontraron marcas de garrafon",
+                timeInSecForIosWeb: 2,
+                toastLength: Toast.LENGTH_LONG,
+                gravity: ToastGravity.TOP,
+                webShowClose: true,
+              );
+              provider.basketCurrent.brandJug = {
+                "id": 0,
+                "descripcion": "Sin marca"
+              };
+              showConfirmSale(widget.customerCurrent.payment[1]);
+            }
+          } else {
+            showConfirmSale(widget.customerCurrent.payment[1]);
+          }
+        }
+      } else {
+        await setCurrentLocation();
+        int idReasonAuth = widget.authList.isNotEmpty ? widget.authList[0].idReasonAuth : 0;
+        String? motivoGa = widget.authList.isNotEmpty && widget.authList[0].reason.isNotEmpty
+            ? widget.authList[0].reason
+            : provider.basketCurrent.authCurrent.reason;
+
+        bool validacionCumplida = false;
+
+        if ((idReasonAuth == 2 || provider.basketCurrent.authCurrent.idReasonAuth == 2) ||
+            (idReasonAuth == 3 || provider.basketCurrent.authCurrent.idReasonAuth == 3) ||
+            (idReasonAuth == 4 || provider.basketCurrent.authCurrent.idReasonAuth == 4)) {
+
+          validacionCumplida = true;
+
+          String tipo;
+          if (idReasonAuth == 4 || provider.basketCurrent.authCurrent.idReasonAuth == 4) {
+            tipo = 'MS';
+          } else {
+            tipo = (idReasonAuth == 2 || provider.basketCurrent.authCurrent.idReasonAuth == 2) ? 'S' : 'R';
+          }
+
+          showComment(
+            context: context,
+            yesFunction: (File? image) {
+              commentsData.add({
+                'image': image,
+                'idRuta': prefs.idRouteD.toString(),
+                'idCliente': (widget.authList.isNotEmpty ? widget.authList[0].idClient.toString() : null) ?? provider.basketCurrent.authCurrent.idClient.toString(),
+                'tipo': tipo,
+                'cantidad': productsList.first.number.toString(),
+                'lat': latSale,
+                'lon': lngSale,
+                'idAutorization': (widget.authList.isNotEmpty ? widget.authList[0].idAuth : null) ?? provider.basketCurrent.authCurrent.idAuth,
+              });
+              confirmarSaleYes(widget.customerCurrent.payment[1]);
+            },
+            current: motivoGa ?? "",
+            idRuta: prefs.idRouteD.toString(),
+            idCliente: (widget.authList.isNotEmpty ? widget.authList[0].idClient.toString() : null) ?? provider.basketCurrent.authCurrent.idClient.toString(),
+            tipo: tipo,
+            cantidad: productsList.first.number.toString(),
+            lat: latSale,
+            lon: lngSale,
+            idAutorization: (widget.authList.isNotEmpty ? widget.authList[0].idAuth : null) ?? provider.basketCurrent.authCurrent.idAuth,
+          );
+
+        } else {
+          if (provider.basketCurrent.authCurrent.authText.toUpperCase() == "GARRAFON A LA PAR") {
+            validacionCumplida = true;
+
+            List<Map<String, dynamic>> list = List.from(
+                jsonDecode(prefs.brands != "" ? prefs.brands : "[]"));
+            if (list.isNotEmpty) {
+              provider.basketCurrent.brandJug = list.first;
+              showBrand(context, () => showConfirmSale(widget.customerCurrent.payment[1]), provider, list);
+            } else {
+              Fluttertoast.showToast(
+                msg: "No se encontraron marcas de garrafon",
+                timeInSecForIosWeb: 2,
+                toastLength: Toast.LENGTH_LONG,
+                gravity: ToastGravity.TOP,
+                webShowClose: true,
+              );
+              provider.basketCurrent.brandJug = {
+                "id": 0,
+                "descripcion": "Sin marca"
+              };
+              showConfirmSale(widget.customerCurrent.payment[1]);
+            }
+          }
+        }
+
+        // Llamar a selectPayment solo si ninguna validación se cumplió
+        if (!validacionCumplida) {
+          selectPayment();
+        }
+      }
+
+    } else {
+      // Si existe al menos un método de pago
       if (widget.customerCurrent.payment.isNotEmpty) {
-        //validamos que existan metodos de pago
+        // Validar que el primer método de pago sea válido
         if (funCheckMethodPayment(widget.customerCurrent.payment.first)) {
+          // Si el método requiere folio
           if (widget.customerCurrent.payment.first.getIsFolio()) {
-            //habilitamos el modal para folio
             setState(() {
               isRequestFolio = true;
             });
           } else {
-            if (provider.basketCurrent.authCurrent.authText.toUpperCase() ==
-                "GARRAFON A LA PAR") {
-              List<Map<String, dynamic>> list = List.from(
-                  jsonDecode(prefs.brands != "" ? prefs.brands : "[]"));
-              if (list.isNotEmpty) {
-                provider.basketCurrent.brandJug = list.first;
-                showBrand(
-                    context,
-                    () => showConfirmSale(widget.customerCurrent.payment.first),
-                    provider,
-                    list);
+            await setCurrentLocation();
+            // Verificar la autorización
+            int idReasonAuth = widget.authList.isNotEmpty ? widget.authList[0].idReasonAuth : 0;
+            String? motivoGa = widget.authList.isNotEmpty && widget.authList[0].reason.isNotEmpty
+                ? widget.authList[0].reason
+                : provider.basketCurrent.authCurrent.reason;
+            // Si el idReasonAuth es 2 o 3, mostrar el modal de comentario
+            /*if ((idReasonAuth == 2 || provider.basketCurrent.authCurrent.idReasonAuth == 2) || (idReasonAuth == 3 || provider.basketCurrent.authCurrent.idReasonAuth == 3)) {
+              String tipo = (idReasonAuth == 2 || provider.basketCurrent.authCurrent.idReasonAuth ==2) ? 'S' : 'R';*/
+            if ((idReasonAuth == 2 || provider.basketCurrent.authCurrent.idReasonAuth == 2) ||
+                (idReasonAuth == 3 || provider.basketCurrent.authCurrent.idReasonAuth == 3) ||
+                (idReasonAuth == 4 || provider.basketCurrent.authCurrent.idReasonAuth == 4)) {
+
+              String tipo;
+
+              if (idReasonAuth == 4 || provider.basketCurrent.authCurrent.idReasonAuth == 4) {
+                tipo = 'MS';
               } else {
-                Fluttertoast.showToast(
-                  msg: "No se encontraron marcas de garrafon",
-                  timeInSecForIosWeb: 2,
-                  toastLength: Toast.LENGTH_LONG,
-                  gravity: ToastGravity.TOP,
-                  webShowClose: true,
-                );
-                provider.basketCurrent.brandJug = {
-                  "id": 0,
-                  "descripcion": "Sin marca"
-                };
+                tipo = (idReasonAuth == 2 || provider.basketCurrent.authCurrent.idReasonAuth == 2) ? 'S' : 'R';
+              }
+              showComment(
+                context: context,
+                yesFunction: (File? image) {
+
+                  commentsData.add({
+                    'image': image,
+                    'idRuta': prefs.idRouteD.toString(),
+                    'idCliente': (widget.authList.isNotEmpty ? widget.authList[0].idClient.toString() : null) ?? provider.basketCurrent.authCurrent.idClient.toString(),
+                    'tipo': tipo,
+                    'cantidad': productsList.first.number.toString(),
+                    'lat': latSale,
+                    'lon': lngSale,
+                    'idAutorization': (widget.authList.isNotEmpty ? widget.authList[0].idAuth : null) ?? provider.basketCurrent.authCurrent.idAuth,
+                  });
+                  confirmarSaleYes(widget.customerCurrent.payment.first);
+                  // Llamar a _uploadAndConfirm con los parámetros necesarios
+
+                },
+                current: motivoGa ?? "",
+                idRuta: prefs.idRouteD.toString(),
+                idCliente: (widget.authList.isNotEmpty ? widget.authList[0].idClient.toString() : null) ?? provider.basketCurrent.authCurrent.idClient.toString(),
+                tipo: tipo,
+                cantidad: productsList.first.number.toString(),
+                lat: latSale,
+                lon: lngSale,
+                idAutorization: (widget.authList.isNotEmpty ? widget.authList[0].idAuth : null) ?? provider.basketCurrent.authCurrent.idAuth,
+              );
+            } else {
+              // Si la autorización es "Garrafón a la par"
+              if (provider.basketCurrent.authCurrent.authText.toUpperCase() == "GARRAFON A LA PAR") {
+                List<Map<String, dynamic>> list = List.from(jsonDecode(prefs.brands != "" ? prefs.brands : "[]"));
+
+                if (list.isNotEmpty) {
+                  provider.basketCurrent.brandJug = list.first;
+                  showBrand(
+                    context,
+                        () => showConfirmSale(widget.customerCurrent.payment.first),
+                    provider,
+                    list,
+                  );
+                } else {
+                  Fluttertoast.showToast(
+                    msg: "No se encontraron marcas de garrafon",
+                    timeInSecForIosWeb: 2,
+                    toastLength: Toast.LENGTH_LONG,
+                    gravity: ToastGravity.TOP,
+                    webShowClose: true,
+                  );
+                  provider.basketCurrent.brandJug = {"id": 0, "descripcion": "Sin marca"};
+                  showConfirmSale(widget.customerCurrent.payment.first);
+                }
+              } else {
+                // Si no hay autorización especial, mostrar confirmación de venta normal
                 showConfirmSale(widget.customerCurrent.payment.first);
               }
-            } else {
-              showConfirmSale(widget.customerCurrent.payment.first);
             }
           }
         }
       } else {
         Fluttertoast.showToast(
-          msg:
-              "No se encontraron metodos de pago ${widget.authList.isNotEmpty ? "para la autorización ${widget.authList.first.idAuth}" : ""}",
+          msg: "No se encontraron métodos de pago ${widget.authList.isNotEmpty ? "para la autorización ${widget.authList.first.idAuth}" : ""}",
           timeInSecForIosWeb: 2,
           toastLength: Toast.LENGTH_LONG,
           gravity: ToastGravity.TOP,
@@ -895,7 +1168,34 @@ class _ShoppingCartState extends State<ShoppingCart> {
         );
       }
     }
+    setState(() {
+      isProcessing = false; // Reactivar el botón si es necesario
+    });
   }
+
+  Future<void> _uploadAndConfirm({
+    File? imageFile,
+    required String idRuta,
+    required String idCliente,
+    required String tipo,
+    required String cantidad,
+    required double lat,
+    required double lon,
+    required String idAutorization,
+  }) async {
+    // Implementar aquí la lógica de carga y confirmación
+    context.read<ProviderJunghanns>().submitDirtyBroken(
+      idRuta: idRuta,
+      idCliente: idCliente,
+      tipo: tipo,
+      cantidad: cantidad,
+      lat: lat,
+      lon: lon,
+      idAutorization: int.parse(idAutorization),
+      archivo: imageFile!,
+    );
+  }
+
 
   funSale(MethodPayment methodPayment) async {
     setState(() {
@@ -1073,6 +1373,20 @@ class _ShoppingCartState extends State<ShoppingCart> {
         await handler.updateSale(
             {'isUpdate': 1, 'fecha': DateTime.now().toString()}, id);
         //se regresa al dashboard
+        // Subir la imagen y confirmar
+        // Itera sobre los datos recopilados en `commentsData` y llama a `_uploadAndConfirm`
+        for (var data in commentsData) {
+          await _uploadAndConfirm(
+            imageFile: data['image'],
+            idRuta: data['idRuta'],
+            idCliente: data['idCliente'],
+            tipo: data['tipo'],
+            cantidad: data['cantidad'],
+            lat: double.parse(data['lat'].toString()),
+            lon: double.parse(data['lon'].toString()),
+            idAutorization: data['idAutorization'].toString(),
+          );
+        }
         //Navigator.pop(context, true);
 
         AwesomeDialog(
@@ -1084,6 +1398,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
           btnOkText: "Aceptar",
           btnOkOnPress: () => Navigator.pop(context),
         ).show();
+        provider.fetchStockDelivery();
       } else {
         //se valida si el error es por falta de red
         if (answer.status == 1002) {
@@ -1162,6 +1477,15 @@ class _ShoppingCartState extends State<ShoppingCart> {
           await handler.updateSale(
               {'isUpdate': 0, 'fecha': DateTime.now().toString(), 'isError': 1},
               id);
+          DatabaseHelper dbHelper = DatabaseHelper();
+          for (var data in commentsData) {
+            // Extraer el idAutorization para cada iteración
+            String? idAutorizationString = data['idAutorization']?.toString();
+            int? idAutorization = int.tryParse(idAutorizationString ?? '');
+
+            int? evidenceId = await dbHelper.getEvidenceIdByAuthorization(idAutorization!);
+            await dbHelper.updateEvidence(evidenceId!, 0, 1);
+          }
         }
         return AwesomeDialog(
           context: context,
@@ -1202,6 +1526,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
     );
   }
 
+
   Widget itemList() {
     return Container(
       margin: EdgeInsets.only(
@@ -1241,11 +1566,17 @@ class _ShoppingCartState extends State<ShoppingCart> {
                               (context, index) => ProductSaleCard(
                                     update: (ProductModel productCurrent,
                                         int isAdd) {
+                                      // Extrae el AuthorizationModel de la lista
+                                      AuthorizationModel? authData = widget.authList.isNotEmpty
+                                          ? widget.authList.first
+                                          : null;
                                       provider.updateProductShopping(
-                                          productCurrent, isAdd);
+                                          context,
+                                          productCurrent, isAdd, authData: authData);
                                       setState(() {});
                                     },
-                                    productCurrent: productListOther[index],
+                                //Se agrego customerCurrent
+                                    productCurrent: productListOther[index], customerCurrent: widget.customerCurrent,
                                   ),
                               childCount: productListOther.length),
                         ),
@@ -1260,7 +1591,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
                                   update:
                                       (ProductModel productCurrent, int isAdd) {
                                     setState(() {
-                                      provider.updateProductShopping(
+                                      provider.updateProductShopping(context,
                                           productCurrent, isAdd);
                                     });
                                   }))
@@ -1276,7 +1607,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
                         margin: const EdgeInsets.only(
                             left: 15, right: 15, bottom: 10, top: 10),
                         child: ButtonJunghanns(
-                            fun: () {
+                            fun: () async {
                               setState(() {
                                 isOtherProduct = !isOtherProduct;
                               });
@@ -1302,11 +1633,26 @@ class _ShoppingCartState extends State<ShoppingCart> {
                         height: 45,
                         alignment: Alignment.center,
                         child: ButtonJunghanns(
+                          decoration: isProcessing
+                              ? Decorations.greyBorder12 // Botón deshabilitado
+                              : Decorations.blueBorder12, // Botón habilitado
+                          fun: isProcessing
+                              ? null // Deshabilitar botón si está procesando
+                              : () async {
+                            caseSale(); // Encapsular la llamada a caseSale dentro de una función anónima
+                          }, // Lógica del botón
+                          label: isProcessing
+                              ? "Procesando..." // Texto cuando está deshabilitado
+                              : "Terminar venta", // Texto cuando está habilitado
+                          style: isProcessing
+                              ? TextStyles.white17_5 // Estilo deshabilitado
+                              : TextStyles.white17_5,
+                        )/*ButtonJunghanns(
                           decoration: Decorations.blueBorder12,
                           fun: caseSale,
                           label: "Terminar venta",
                           style: TextStyles.white17_5,
-                        )))
+                        )*/))
               ],
             ),
     );

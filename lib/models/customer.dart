@@ -607,7 +607,7 @@ String checkDate(DateTime time) {
       date += "Martes";
       break;
     case 3:
-      date += "Miercoles";
+      date += "Miércoles";
       break;
     case 4:
       date += "Jueves";
@@ -616,7 +616,7 @@ String checkDate(DateTime time) {
       date += "Viernes";
       break;
     case 6:
-      date += "Sabado";
+      date += "Sábado";
       break;
     case 7:
       date += "Domingo";

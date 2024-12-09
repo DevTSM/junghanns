@@ -20,6 +20,8 @@ import 'package:junghanns/widgets/card/routes.dart';
 import 'package:provider/provider.dart';
 
 import '../../preferences/global_variables.dart';
+import '../../widgets/modal/receipt_modal.dart';
+import '../../widgets/modal/validation_modal.dart';
 
 class Routes extends StatefulWidget {
   const Routes({Key? key}) : super(key: key);
@@ -36,6 +38,7 @@ class _RoutesState extends State<Routes> {
   //
   late TextEditingController buscadorC;
   late List<CustomerModel> searchList;
+  List specialData = [];
 
   @override
   void initState() {
@@ -45,6 +48,37 @@ class _RoutesState extends State<Routes> {
     buscadorC = TextEditingController();
     searchList = [];
     getCustomerListDB();
+    _refreshTimer();
+  }
+
+  Future<void> _refreshTimer() async {
+    final provider = Provider.of<ProviderJunghanns>(context, listen: false);
+
+    // Ahora fetchStockValidation devuelve un objeto ValidationModel
+    await provider.fetchStockValidation();
+    await provider.fetchStockDelivery();
+
+// Filtrar los datos según las condiciones especificadas
+    final filteredData = provider.validationList.where((validation) {
+      return validation.status == "P" && validation.valid == "Planta";
+    }).toList();
+
+// Verificar si hay datos filtrados
+    setState(() {
+      if (filteredData.isNotEmpty) {
+        specialData = filteredData;  // Asigna los datos filtrados a specialData
+        // Imprimir el contenido de specialData para confirmarlo
+        print('Contenido de specialData (filtrado): $specialData');
+        print('Llama al modal');
+        showValidationModal(context);
+      } else {
+        specialData = [];  // Si no hay datos que cumplan las condiciones, asignar un arreglo vacío
+      }
+    });
+
+    if (provider.validationList.first.status =='P' && provider.validationList.first.valid == 'Ruta'){
+      showReceiptModal(context);
+    }
   }
   
   funSearch(CustomerModel value) {
@@ -214,7 +248,7 @@ class _RoutesState extends State<Routes> {
                 visible: prefs.lastRouteUpdate != "",
                 child: Padding(padding: const EdgeInsets.only(left: 15,top: 5,bottom: 5),
                 child:Text(
-                  "Ultima actualización: ${DateFormat('hh:mm a').format(prefs.lastBitacoraUpdate != "" ? DateTime.parse(prefs.lastBitacoraUpdate) : DateTime.now())}",
+                  "Última actualización: ${DateFormat('hh:mm a').format(prefs.lastBitacoraUpdate != "" ? DateTime.parse(prefs.lastBitacoraUpdate) : DateTime.now())}",
                   style: TextStyles.blue13It,
                 ))),
                 customerList.isNotEmpty

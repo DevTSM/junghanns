@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:device_info/device_info.dart';
 import 'package:device_information/device_information.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -18,6 +19,7 @@ import 'package:junghanns/styles/text.dart';
 import 'package:junghanns/widgets/card/product_missing_card.dart';
 import 'package:junghanns/widgets/card/product_others_card.dart';
 import 'package:junghanns/widgets/card/product_returns_card.dart';
+import 'package:mac_address/mac_address.dart';
 import 'package:map_launcher/map_launcher.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -520,6 +522,13 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
 
     _currentLocation = (await LocationJunny().getCurrentLocation())!;
     String marca = await DeviceInformation.deviceManufacturer;
+    String modelo =await DeviceInformation.deviceModel;
+    DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+    AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+    String serial = await GetMac.macAddress;
+    if(serial.isEmpty||serial.length<2){
+      serial=androidInfo.id??"";
+    }
 
     int vacios = int.tryParse(_vaciosController.text) ?? 0;
     int llenos = int.tryParse(_llenosController.text) ?? 0;
@@ -635,7 +644,9 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
       idRuta: prefs.idRouteD,
       lat: _currentLocation.latitude,
       lng: _currentLocation.longitude,
-      team: marca,
+      team: serial,
+      brand: marca,
+      model: modelo,
       delivery: deliveryData, provider: providerJunghanns,
     );
 

@@ -8,7 +8,7 @@ class CarboyModel {
   int aLongWay;
   int loan;
   int pLoan;
-  String test;
+  //String test;
   int badTaste;
 
   CarboyModel({
@@ -21,7 +21,7 @@ class CarboyModel {
     required this.aLongWay,
     required this.loan,
     required this.pLoan,
-    required this.test,
+    //required this.test,
     required this.badTaste,
   });
 
@@ -36,7 +36,7 @@ class CarboyModel {
       aLongWay: 1,
       loan: 1,
       pLoan: 1,
-      test: '',
+      //test: '',
       badTaste: 1,
     );
   }
@@ -52,7 +52,7 @@ class CarboyModel {
       aLongWay: int.parse((data["a_la_par"] ?? 0).toString()),
       loan:  int.parse((data["comodato"] ?? 0).toString()),
       pLoan:  int.parse((data["prestamo"] ?? 0).toString()),
-      test: data["test"] ?? "",
+      //test: data["test"] ?? "",
       badTaste: int.parse((data["mal_sabor"] ?? 0).toString()),
     );
   }
@@ -67,7 +67,7 @@ class CarboyModel {
       'a_la_par': aLongWay,
       'comodato': loan,
       "prestamo": pLoan,
-      "test": test,
+      //"test": test,
       'mal_sabor': badTaste,
     };
   }
@@ -82,7 +82,7 @@ class CarboyModel {
       'a_la_par': aLongWay,
       'comodato': loan,
       "prestamo": pLoan,
-      "test": test,
+      //"test": test,
       'mal_sabor': badTaste,
     };
   }
@@ -97,7 +97,7 @@ class CarboyModel {
       aLongWay: this.aLongWay,
       loan: this.loan,
       pLoan: this.pLoan,
-      test: this.test,
+      //test: this.test,
       badTaste: this.badTaste,
     );
   }
@@ -116,7 +116,7 @@ class CarboyModel {
 
   @override
   String toString() {
-    return 'ProductCarboy(vacios: $empty, llenos: $full, rotos_cte: $brokenCte, sucios_cte: $dirtyCte, rotos_ruta: $brokenRoute, sucios_ruta: $dirtyRoute, a_la_par: $aLongWay, comodato: $loan, prestamo: $pLoan, test: $test, mal_sabor: $badTaste)';
+    return 'ProductCarboy(vacios: $empty, llenos: $full, rotos_cte: $brokenCte, sucios_cte: $dirtyCte, rotos_ruta: $brokenRoute, sucios_ruta: $dirtyRoute, a_la_par: $aLongWay, comodato: $loan, prestamo: $pLoan, mal_sabor: $badTaste)';
   }
 
   @override
@@ -133,7 +133,7 @@ class CarboyModel {
         other.aLongWay == aLongWay &&
         other.loan == loan &&
         other.pLoan == pLoan &&
-        other.test == test &&
+        //other.test == test &&
         other.badTaste == badTaste;
   }
 
@@ -148,7 +148,7 @@ class CarboyModel {
     aLongWay.hashCode ^
     loan.hashCode ^
     pLoan.hashCode ^
-    test.hashCode ^
+    //test.hashCode ^
     badTaste.hashCode;
   }
 }

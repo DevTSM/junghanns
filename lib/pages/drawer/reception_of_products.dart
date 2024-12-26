@@ -334,7 +334,7 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
                   ],
 
 
-                  provider.validationList.isEmpty || provider.validationList.first.valid == 'Planta'|| provider.validationList.first.status == 'A'|| provider.validationList.first.status == 'R'
+                  provider.validationList.isEmpty|| provider.validationList.first.products.isEmpty || provider.validationList.first.valid == 'Planta'|| provider.validationList.first.status == 'A'|| provider.validationList.first.status == 'R'
                       ? empty(context)
                       : GridView.builder(
                     shrinkWrap: true,  // Importante para que funcione dentro de SingleChildScrollView

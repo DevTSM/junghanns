@@ -1277,6 +1277,8 @@ class ProviderJunghanns extends ChangeNotifier {
     required double lat,
     required double lng,
     required String team,
+    required String brand,
+    required String model,
     required Map<String, dynamic> delivery,
     required ProviderJunghanns provider,
   }) async {
@@ -1342,6 +1344,8 @@ class ProviderJunghanns extends ChangeNotifier {
       lat: lat,
       lon: lng,
       equipo: team,
+      marca: brand,
+      modelo: model,
       entrega: deliveryData,
     ).then((answer) async {
       if (answer.error) {

@@ -929,6 +929,8 @@ Future<Answer> postDelivery({
   required double lat,
   required double lon,
   required String equipo,
+  required String marca,
+  required String modelo,
   required Map<String, dynamic> entrega,
 }) async {
   log("/StoreServices <postDelivery> ¡");
@@ -940,6 +942,8 @@ Future<Answer> postDelivery({
       "lat": lat.toString(), // Convertir los doubles a String
       "lon": lon.toString(),
       "equipo": equipo,
+      'marca': marca,
+      'modelo': modelo,
       "entrega": entrega, // Pasar directamente el Map de la entrega
     };
 

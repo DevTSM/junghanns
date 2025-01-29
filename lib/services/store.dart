@@ -849,33 +849,87 @@ Future<Answer> getStockDeliveryList({required int idR}) async {
         error: true);
   }
 }
-Future<Answer> getValidationList({required int idR}) async {
+// Future<Answer> getValidationList({required int idR} String? type) async {
+//   log("/StoreServices <getValidationList>");
+//   /*// Imprimir el request
+//   log("Request URL: ${prefs.urlBase}almacenmovil?q=EstatusValidacion&id_ruta=$idR");
+// */
+//   try {
+//     var response = await http.get(
+//         Uri.parse("${prefs.urlBase}almacenmovil?q=EstatusValidacion&id_ruta=$idR"),
+//         headers: {
+//           "Content-Type": "aplication/json",
+//           "x-api-key": apiKey,
+//           "client_secret": prefs.clientSecret,
+//           "Authorization": "Bearer ${prefs.token}",
+//         }).timeout(Duration(seconds: timerDuration));
+//     if (response.statusCode == 200) {
+//       var decodedBody = jsonDecode(response.body);
+//       log("/StoreServices <getValidationList> Successfull");
+//       log("Response Body: $decodedBody");
+//       return Answer(body: jsonDecode(response.body), message: "",status:response.statusCode, error: false);
+//     } else {
+//       var decodedBody = jsonDecode(response.body);
+//       log("/StoreServices <getValidationList> Fail");
+//       log("Response Body: $decodedBody");
+//       return Answer(
+//           body: jsonDecode(response.body),
+//           message: "Algo salio mal, intentalo mas tarde.",status:response.statusCode,
+//           error: true);
+//     }
+//   } catch (e) {
+//     log("/StoreServices <getValidationList> Catch ${e.toString()}");
+//     return Answer(
+//         body: e,
+//         message: "Conexión inestable con el back",
+//         status: 1002,
+//         error: true);
+//   }
+// }
+Future<Answer> getValidationList({
+  required int idR,
+  String? type,
+}) async {
   log("/StoreServices <getValidationList>");
-  /*// Imprimir el request
-  log("Request URL: ${prefs.urlBase}almacenmovil?q=EstatusValidacion&id_ruta=$idR");
-*/
+
+  // Construir la URL base
+  String url = "${prefs.urlBase}almacenmovil?q=EstatusValidacion&id_ruta=$idR";
+
+  // Si 'type' no es null, agregar el parámetro tipo_validacion
+  if (type != null) {
+    url += "&tipo_validacion=$type";
+  }
+
   try {
     var response = await http.get(
-        Uri.parse("${prefs.urlBase}almacenmovil?q=EstatusValidacion&id_ruta=$idR"),
+        Uri.parse(url),
         headers: {
-          "Content-Type": "aplication/json",
+          "Content-Type": "application/json",
           "x-api-key": apiKey,
           "client_secret": prefs.clientSecret,
           "Authorization": "Bearer ${prefs.token}",
         }).timeout(Duration(seconds: timerDuration));
+
     if (response.statusCode == 200) {
       var decodedBody = jsonDecode(response.body);
       log("/StoreServices <getValidationList> Successfull");
       log("Response Body: $decodedBody");
-      return Answer(body: jsonDecode(response.body), message: "",status:response.statusCode, error: false);
+      return Answer(
+          body: decodedBody,
+          message: "",
+          status: response.statusCode,
+          error: false
+      );
     } else {
       var decodedBody = jsonDecode(response.body);
       log("/StoreServices <getValidationList> Fail");
       log("Response Body: $decodedBody");
       return Answer(
-          body: jsonDecode(response.body),
-          message: "Algo salio mal, intentalo mas tarde.",status:response.statusCode,
-          error: true);
+          body: decodedBody,
+          message: "Algo salió mal, intentalo más tarde.",
+          status: response.statusCode,
+          error: true
+      );
     }
   } catch (e) {
     log("/StoreServices <getValidationList> Catch ${e.toString()}");
@@ -883,9 +937,11 @@ Future<Answer> getValidationList({required int idR}) async {
         body: e,
         message: "Conexión inestable con el back",
         status: 1002,
-        error: true);
+        error: true
+    );
   }
 }
+
 Future<Answer> putValidated({required String action, required int idV, required double lat, required double lng, required String status, String ?comment}) async {
   log("/StoreServices <postValidated> ¡");
   try {
@@ -931,6 +987,7 @@ Future<Answer> postDelivery({
   required String equipo,
   required String marca,
   required String modelo,
+  int ? idDestination,
   required Map<String, dynamic> entrega,
 }) async {
   log("/StoreServices <postDelivery> ¡");
@@ -946,6 +1003,10 @@ Future<Answer> postDelivery({
       'modelo': modelo,
       "entrega": entrega, // Pasar directamente el Map de la entrega
     };
+
+    if (idDestination != null || idDestination != 0) {
+      body["id_ruta_destino"] = idDestination;
+    }
 
     // Imprimir el cuerpo antes de enviarlo
     log("Body enviado: ${jsonEncode(body)}");

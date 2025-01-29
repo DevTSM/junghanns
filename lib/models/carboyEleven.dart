@@ -9,6 +9,7 @@ class CarboyElevenModel {
   int loan;
   int pLoan;
   int badTaste;
+  int transferLiquid;
 
   CarboyElevenModel({
     required this.empty,
@@ -21,6 +22,7 @@ class CarboyElevenModel {
     required this.loan,
     required this.pLoan,
     required this.badTaste,
+    required this.transferLiquid,
   });
 
   factory CarboyElevenModel.empty() {
@@ -35,6 +37,7 @@ class CarboyElevenModel {
       loan: 1,
       pLoan: 1,
       badTaste: 1,
+      transferLiquid: 1,
     );
   }
 
@@ -50,6 +53,7 @@ class CarboyElevenModel {
       loan: int.parse((data["comodato_11"] ?? data["comodato"] ?? 0).toString()),
       pLoan: int.parse((data["prestamo_11"] ?? data["prestamo"] ?? 0).toString()),
       badTaste: int.parse((data["mal_sabor_11"] ?? data["mal_sabor"] ?? 0).toString()),
+      transferLiquid: int.parse((data["liquido_11"] ?? 0).toString()),
     );
   }
 
@@ -65,6 +69,7 @@ class CarboyElevenModel {
       'comodato_11': loan,
       "prestamo_11": pLoan,
       'mal_sabor_11': badTaste,
+      'liquido_11': transferLiquid,
     };
   }
 
@@ -80,6 +85,7 @@ class CarboyElevenModel {
       'comodato': loan,
       "prestamo": pLoan,
       'mal_sabor': badTaste,
+      'liquido_11': transferLiquid,
     };
   }
   CarboyElevenModel copy() {
@@ -94,6 +100,7 @@ class CarboyElevenModel {
       loan: this.loan,
       pLoan: this.pLoan,
       badTaste: this.badTaste,
+      transferLiquid: this.transferLiquid,
     );
   }
 
@@ -111,7 +118,7 @@ class CarboyElevenModel {
 
   @override
   String toString() {
-    return 'ProductCarboyElevenModel(vacios: $empty, llenos: $full, rotos_cte: $brokenCte, sucios_cte: $dirtyCte, rotos_ruta: $brokenRoute, sucios_ruta: $dirtyRoute, a_la_par: $aLongWay, comodato: $loan, prestamo: $pLoan, mal_sabor: $badTaste)';
+    return 'ProductCarboyElevenModel(vacios: $empty, llenos: $full, rotos_cte: $brokenCte, sucios_cte: $dirtyCte, rotos_ruta: $brokenRoute, sucios_ruta: $dirtyRoute, a_la_par: $aLongWay, comodato: $loan, prestamo: $pLoan, mal_sabor: $badTaste, liquido_11: $transferLiquid)';
   }
 
   @override
@@ -128,7 +135,8 @@ class CarboyElevenModel {
         other.aLongWay == aLongWay &&
         other.loan == loan &&
         other.pLoan == pLoan &&
-        other.badTaste == badTaste;
+        other.badTaste == badTaste &&
+        other.transferLiquid == transferLiquid;
   }
 
   @override
@@ -142,6 +150,7 @@ class CarboyElevenModel {
     aLongWay.hashCode ^
     loan.hashCode ^
     pLoan.hashCode ^
-    badTaste.hashCode;
+    badTaste.hashCode ^
+    transferLiquid.hashCode;
   }
 }

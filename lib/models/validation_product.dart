@@ -7,6 +7,8 @@ class ValidationProductModel {
   String statusText;
   String rejection_comment;
   String valid;
+  String typeValidation;
+  String validationText;
   List<ProductReceiptionModel> products;
   // ProductModel products;
 
@@ -18,6 +20,8 @@ class ValidationProductModel {
     required this.statusText,
     required this.rejection_comment,
     String? valid,
+    required this.typeValidation,
+    required this.validationText,
     required this.products,
   }): valid = valid ?? '';
 
@@ -29,6 +33,8 @@ class ValidationProductModel {
       statusText: json["estatus_text"] ?? '',
       rejection_comment: json["cometario_baja_rechazo"] ?? '',
       valid: json["valida"] ?? '',
+      typeValidation: json["tipo_validacion"] ?? '',
+      validationText: json["tipo_validacion_text"] ?? '',
       // products: ProductModel.fromProductInventary(json['productos'] ?? {}),
       /*products: List<ProductReceiptionModel>.from(
         json['productos'].map((x) => ProductReceiptionModel.from(x)),
@@ -48,11 +54,13 @@ class ValidationProductModel {
       'estatus_text': status,
       'cometario_baja_rechazo': rejection_comment,
       'valida': valid,
+      'tipo_validacion': typeValidation,
+      'tipo_validacion_text': validationText,
       // 'productos': products.toJson(),
     };
   }
   @override
   String toString() {
-    return 'ValidationModel( id_validacion: $idValidation, id_ruta:$idRoute, estatus: $status, estatus_text: $statusText, cometario_baja_rechazo: $rejection_comment, valida: $valid, products: $products)';
+    return 'ValidationModel( id_validacion: $idValidation, id_ruta:$idRoute, estatus: $status, estatus_text: $statusText, cometario_baja_rechazo: $rejection_comment, valida: $valid, tipo_validacion: $typeValidation, tipo_validacion_text: $validationText, products: $products)';
   }
 }

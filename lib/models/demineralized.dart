@@ -5,6 +5,7 @@ class DemineralizedModel {
   int brokenRoute;
   int dirtyRoute;
   int pLoan;
+  int transferLiquid;
 
   DemineralizedModel({
     required this.full,
@@ -13,6 +14,7 @@ class DemineralizedModel {
     required this.brokenRoute,
     required this.dirtyRoute,
     required this.pLoan,
+    required this.transferLiquid,
   });
 
   factory DemineralizedModel.empty() {
@@ -23,6 +25,7 @@ class DemineralizedModel {
       brokenRoute: 1,
       dirtyRoute: 1,
       pLoan: 1,
+      transferLiquid: 1,
     );
   }
 
@@ -34,6 +37,7 @@ class DemineralizedModel {
       brokenRoute: int.parse((data["roto_ruta_des"] ?? data["roto_ruta"] ?? 0).toString()),
       dirtyRoute: int.parse((data["sucio_ruta_des"] ?? data["sucio_ruta"] ?? 0).toString()),
       pLoan: int.parse((data["prestamo"] ?? data["prestamo"] ?? 0).toString()),
+      transferLiquid: int.parse((data["liquido_desmi"]?? data["liquido_desmi"] ?? 0).toString()),
     );
   }
   Map<String, dynamic> toPostJson() {
@@ -44,6 +48,7 @@ class DemineralizedModel {
       'sucios_ruta_des': dirtyRoute,
       'rotos_ruta_des': brokenRoute,
       'prestamo': pLoan,
+      "liquido_desmi": transferLiquid,
     };
   }
 
@@ -55,6 +60,7 @@ class DemineralizedModel {
       'roto_ruta': brokenRoute,
       'sucio_ruta': dirtyRoute,
       "prestamo": pLoan,
+      "liquido_desmi": transferLiquid,
     };
   }
   DemineralizedModel copy() {
@@ -65,6 +71,7 @@ class DemineralizedModel {
       brokenRoute: this.brokenRoute,
       dirtyRoute: this.dirtyRoute,
       pLoan: this.pLoan,
+      transferLiquid: this.transferLiquid,
     );
   }
 
@@ -82,7 +89,7 @@ class DemineralizedModel {
 
   @override
   String toString() {
-    return 'ProductDemineralizedModel(llenos: $full, rotos_cte: $brokenCte, sucios_cte: $dirtyCte, rotos_ruta: $brokenRoute, sucios_ruta: $dirtyRoute,  prestamo: $pLoan)';
+    return 'ProductDemineralizedModel(llenos: $full, rotos_cte: $brokenCte, sucios_cte: $dirtyCte, rotos_ruta: $brokenRoute, sucios_ruta: $dirtyRoute,  prestamo: $pLoan, liquido_desmi: $transferLiquid)';
   }
 
   @override
@@ -95,7 +102,8 @@ class DemineralizedModel {
         other.dirtyCte == dirtyCte &&
         other.brokenRoute == brokenRoute &&
         other.dirtyRoute == dirtyRoute &&
-        other.pLoan == pLoan;
+        other.pLoan == pLoan &&
+        other.transferLiquid == transferLiquid;
   }
 
   @override
@@ -105,6 +113,7 @@ class DemineralizedModel {
     dirtyCte.hashCode ^
     brokenRoute.hashCode ^
     dirtyRoute.hashCode ^
-    pLoan.hashCode;
+    pLoan.hashCode ^
+    transferLiquid.hashCode;
   }
 }

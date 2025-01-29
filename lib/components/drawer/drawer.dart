@@ -24,6 +24,8 @@ import 'package:junghanns/styles/decoration.dart';
 import 'package:junghanns/styles/text.dart';
 import 'package:location/location.dart';
 
+import '../../pages/drawer/transfers.dart';
+
 updateStatus(ProviderJunghanns provider, String status) async {
   try {
     LocationData currentLocation = LocationData.fromMap({});
@@ -210,7 +212,7 @@ drawer(ProviderJunghanns provider, BuildContext context,
                     item(
                       () => Navigator.push(context,
                         MaterialPageRoute<void>(builder: (BuildContext context) =>
-                          const Transfer()
+                        const Transfers()
                         )
                       ),
                       "assets/icons/menuOp4B.png",

@@ -177,7 +177,7 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
     return degrees * pi / 180;
   }
 
-  void _handleAction(String status, {required String comment}) async {
+  void _handleAction(String status, {required String comment, required String typeValidation}) async {
     final provider = Provider.of<ProviderJunghanns>(context, listen: false);
 
     setState(() {
@@ -231,6 +231,9 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
     final provider = Provider.of<ProviderJunghanns>(context, listen: false);
     final validationList = provider.validationList;
     final hasData = validationList.isNotEmpty && (validationList.first.status == 'P' && validationList.first.valid != 'Planta');
+
+    // Obtener el tipo de validación (typeValidation)
+    final typeValidation = validationList.isNotEmpty ? validationList.first.typeValidation : '';
 
     return RefreshIndicator(
       onRefresh: () async{
@@ -360,10 +363,10 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
             ),
           ),
           // Aquí se muestra el botón de distancia si la distancia no es válida
-          if (hasData && !isDistanceValid)
+          if (hasData && !isDistanceValid && typeValidation != 'T')
             _buttonDistance(-15),
           // El botón de Aceptar/ Rechazar solo se muestra si la distancia es válida
-          if (isDistanceValid)
+          if (isDistanceValid || typeValidation == 'T')
             Positioned(
               bottom: 25,
               left: 20,
@@ -371,13 +374,13 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
               child: hasData
                   ? CustomButtonProduct(
                 onValidate: () {
-                  _handleAction('A', comment: '');
+                  _handleAction('A', comment: '', typeValidation: typeValidation);
                 },
                 onReject: () {
                   showDeclineProduct(
                     context: context,
                     onReject: (comment) {
-                      _handleAction('R', comment: comment);
+                      _handleAction('R', comment: comment, typeValidation: typeValidation);
                     },
                   );
                 },
@@ -390,32 +393,6 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
               )
                   : Container(),
             ),
-          /*Positioned(
-            bottom: 25,
-            left: 20,
-            right: 20,
-            child: hasData
-                ? CustomButtonProduct(
-              onValidate: () {
-                _handleAction('A', comment: '');
-              },
-              onReject: () {
-                showDeclineProduct(
-                  context: context,
-                  onReject: (comment) {
-                    _handleAction('R', comment: comment);
-                  },
-                );
-              },
-              validateText: 'ACEPTAR',
-              rejectText: 'RECHAZAR',
-              validateColor: ColorsJunghanns.blueJ,
-              rejectColor: ColorsJunghanns.red,
-              validateIcon: Icons.check_circle,
-              rejectIcon: Icons.cancel,
-            )
-                : Container(), // Si no se cumple la condición, no se muestra nada
-          ),*/
           Visibility(
             visible: isLoadingOne,
             child: const Center(
@@ -560,94 +537,6 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
       );
     }
   }
-
-  /*Widget _buttonDistance(double bottomPadding) {
-    final provider = Provider.of<ProviderJunghanns>(context, listen: false);
-    return Positioned(
-      bottom: bottomPadding + 35,
-      left: 20,
-      right: 20,
-      child: Padding(
-        padding: const EdgeInsets.all(10),
-        child: Material(
-          color: Colors.white, // Fondo para mostrar el efecto de onda
-          borderRadius: BorderRadius.circular(8),
-          child: InkWell(
-            onTap: () {
-              // Llamar a la función funCheckDistance
-              funCheckDistance();
-            },
-            borderRadius: BorderRadius.circular(8),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 15),
-              decoration: BoxDecoration(
-                border: Border.all(
-                  color: ColorsJunghanns.red,
-                  width: 2,
-                ),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Center(
-                child: Text(
-                  currentDistance != null
-                      ? 'DISTANCIA DE ${currentDistance!.toStringAsFixed(2)} mtrs EXCEDE EL LÍMITE DE RECEPCIÓN, CON RESPECTO AL LÍMITE PERMITIDO DE ${provider.planteDistance[0].allowedDistance} mtrs !!'
-                      : 'Calculando distancia...',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: ColorsJunghanns.red,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    decoration: TextDecoration.none,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }*/
-
-  /*Widget _buttonDistance(double bottomPadding){
-    return Positioned(
-      bottom: bottomPadding + 35,
-      left: 20,
-      right: 20,
-      child: Padding(
-        padding: const EdgeInsets.all(10), // Ajuste de padding externo
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 15),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border.all(
-              color: ColorsJunghanns.red,
-              width: 2,
-            ),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Center(
-            child: Text(
-              currentDistance != null
-                  ? 'DISTANCIA DE ${currentDistance!.toStringAsFixed(2)} mtrs EXCEDE EL LÍMITE DE RECEPCIÓN !!'
-                  : 'Calculando distancia...',
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: ColorsJunghanns.red,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-
-                decoration: TextDecoration.none,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }*/
-
-
 
   Widget header() {
     return Column(

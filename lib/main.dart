@@ -38,8 +38,8 @@ void callbackDispatcher() {
 
 
 void initWebSocket() {
-  
-  var socket = IO.io('https://sandbox.junghanns.app:3002', 
+  var url = '${prefs.urlBase}:3002';
+  var socket = IO.io('https://sandbox.junghanns.app:3002',
     <String, dynamic>{
       'auth': {"token":"123456789"},
       'transports': ['websocket'],

@@ -10,6 +10,7 @@ class CarboyModel {
   int pLoan;
   //String test;
   int badTaste;
+  int transferLiquid;
 
   CarboyModel({
     required this.empty,
@@ -23,6 +24,7 @@ class CarboyModel {
     required this.pLoan,
     //required this.test,
     required this.badTaste,
+    required this.transferLiquid,
   });
 
   factory CarboyModel.empty() {
@@ -38,6 +40,7 @@ class CarboyModel {
       pLoan: 1,
       //test: '',
       badTaste: 1,
+      transferLiquid: 1,
     );
   }
 
@@ -54,6 +57,7 @@ class CarboyModel {
       pLoan:  int.parse((data["prestamo"] ?? 0).toString()),
       //test: data["test"] ?? "",
       badTaste: int.parse((data["mal_sabor"] ?? 0).toString()),
+      transferLiquid: int.parse((data["liquido_20"] ?? 0).toString()),
     );
   }
   Map<String, dynamic> toPostCarboyJson() {
@@ -69,6 +73,7 @@ class CarboyModel {
       "prestamo": pLoan,
       //"test": test,
       'mal_sabor': badTaste,
+      'liquido_20': transferLiquid,
     };
   }
   Map<String, dynamic> toJson() {
@@ -84,6 +89,7 @@ class CarboyModel {
       "prestamo": pLoan,
       //"test": test,
       'mal_sabor': badTaste,
+      'liquido_20': transferLiquid,
     };
   }
   CarboyModel copy() {
@@ -99,6 +105,7 @@ class CarboyModel {
       pLoan: this.pLoan,
       //test: this.test,
       badTaste: this.badTaste,
+      transferLiquid: this.transferLiquid,
     );
   }
 
@@ -116,7 +123,7 @@ class CarboyModel {
 
   @override
   String toString() {
-    return 'ProductCarboy(vacios: $empty, llenos: $full, rotos_cte: $brokenCte, sucios_cte: $dirtyCte, rotos_ruta: $brokenRoute, sucios_ruta: $dirtyRoute, a_la_par: $aLongWay, comodato: $loan, prestamo: $pLoan, mal_sabor: $badTaste)';
+    return 'ProductCarboy(vacios: $empty, llenos: $full, rotos_cte: $brokenCte, sucios_cte: $dirtyCte, rotos_ruta: $brokenRoute, sucios_ruta: $dirtyRoute, a_la_par: $aLongWay, comodato: $loan, prestamo: $pLoan, mal_sabor: $badTaste, liquido_20: $transferLiquid)';
   }
 
   @override
@@ -134,7 +141,8 @@ class CarboyModel {
         other.loan == loan &&
         other.pLoan == pLoan &&
         //other.test == test &&
-        other.badTaste == badTaste;
+        other.badTaste == badTaste &&
+        other.transferLiquid == transferLiquid;
   }
 
   @override
@@ -149,6 +157,7 @@ class CarboyModel {
     loan.hashCode ^
     pLoan.hashCode ^
     //test.hashCode ^
-    badTaste.hashCode;
+    badTaste.hashCode ^
+    transferLiquid.hashCode;
   }
 }

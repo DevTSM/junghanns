@@ -23,6 +23,7 @@ import 'package:junghanns/styles/color.dart';
 import 'package:junghanns/styles/decoration.dart';
 import 'package:junghanns/styles/text.dart';
 import 'package:junghanns/util/location.dart';
+import 'package:junghanns/widgets/modal/transfers_modal.dart';
 import 'package:provider/provider.dart';
 
 import '../../services/store.dart';
@@ -95,6 +96,7 @@ class _HomeState extends State<Home> {
   Future<void> _refreshTimer() async {
     final provider = Provider.of<ProviderJunghanns>(context, listen: false);
 
+    await _refreshTransfers();
     // Ahora fetchStockValidation devuelve un objeto ValidationModel
     await provider.fetchStockValidation();
     await provider.fetchStockDelivery();
@@ -117,9 +119,52 @@ class _HomeState extends State<Home> {
       }
     });
 
+    // Filtrar los datos según las condiciones especificadas
+    final filteredDataTranfers = provider.validationList.where((validation) {
+      return validation.status == "P" && validation.valid == "Ruta" && validation.typeValidation == 'T' && validation.idRoute != prefs.idRouteD;
+    }).toList();
+
+// Verificar si hay datos filtrados
+    setState(() {
+      if (filteredData.isNotEmpty) {
+        specialData = filteredDataTranfers;  // Asigna los datos filtrados a specialData
+        // Imprimir el contenido de specialData para confirmarlo
+        print('Contenido de specialData (filtrado): $specialData');
+        print('Llama al modal');
+        showTransferModal(context);
+      } else {
+        specialData = [];  // Si no hay datos que cumplan las condiciones, asignar un arreglo vacío
+      }
+    });
+
     if (provider.validationList.first.status =='P' && provider.validationList.first.valid == 'Ruta'){
       showReceiptModal(context);
     }
+  }
+
+  Future<void> _refreshTransfers() async {
+    final provider = Provider.of<ProviderJunghanns>(context, listen: false);
+
+    // Ahora fetchStockValidation devuelve un objeto ValidationModel
+    await provider.fetchValidation();
+
+    // Filtrar los datos según las condiciones especificadas
+    final filteredDataTranfers = provider.validationList.where((validation) {
+      return validation.status == "P" && validation.valid == "Ruta" && validation.typeValidation == 'T' && validation.idRoute != prefs.idRouteD;
+    }).toList();
+
+    // Verificar si hay datos filtrados
+    setState(() {
+      if (filteredDataTranfers.isNotEmpty) {
+        specialData = filteredDataTranfers;  // Asigna los datos filtrados a specialData
+        // Imprimir el contenido de specialData para confirmarlo
+        print('Contenido de specialData (filtrado): $specialData');
+        print('Llama al modal');
+        showTransferModal(context);
+      } else {
+        specialData = [];  // Si no hay datos que cumplan las condiciones, asignar un arreglo vacío
+      }
+    });
   }
 
   getDashboarR() async {

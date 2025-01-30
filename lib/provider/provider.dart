@@ -474,8 +474,41 @@ class ProviderJunghanns extends ChangeNotifier {
     });
     notifyListeners();
   }
+
+  fetchValidation({int? idR, String? type}) async {
+    final validIdR = idR ?? 0;
+    await getValidationList(idR: prefs.idRouteD, type: 'T').then((answer) {
+      if (answer.error) {
+        Fluttertoast.showToast(
+          msg: "${answer.message}",
+          timeInSecForIosWeb: 16,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          webShowClose: true,
+        );
+      } else {
+        if (answer.body is List) {
+          validationList = (answer.body as List)
+              .map((item) => ValidationProductModel.fromJson(item))
+              .toList();
+        } else if (answer.body is Map) {
+          final validation = ValidationProductModel.fromJson(answer.body);
+          validationList = [validation];
+        }
+
+
+        print("Lista de validaciones obtenida: ${validationList.length} items.");
+        // Imprimir cada validación para depuración
+        for (var validation in validationList) {
+          print(validation);
+        }
+        print("---Llamando--");
+      }
+    });
+    notifyListeners();
+  }
   //Funcionalidad de la recepción
-  receiptionProducts({required int idValidacion, required double lat, required double lng, required String status, String? comment,}) async {
+  receiptionProducts({required int idValidacion, required double lat, required double lng, required String status, String? comment}) async {
     notifyListeners();
     // Llamada al servicio postValidated
     await putValidated(
@@ -485,6 +518,7 @@ class ProviderJunghanns extends ChangeNotifier {
       lng: lng,
       status: status,
       comment: status == 'R' ? comment : null,
+
     ).then((answer) {
       /*loading = false;*/
       if (answer.error) {
@@ -1279,6 +1313,7 @@ class ProviderJunghanns extends ChangeNotifier {
     required String team,
     required String brand,
     required String model,
+    int? idDestination,
     required Map<String, dynamic> delivery,
     required ProviderJunghanns provider,
   }) async {
@@ -1346,6 +1381,92 @@ class ProviderJunghanns extends ChangeNotifier {
       equipo: team,
       marca: brand,
       modelo: model,
+      idDestination: idDestination,
+      entrega: deliveryData,
+    ).then((answer) async {
+      if (answer.error) {
+        // Mostrar mensaje de error
+        CustomModal.show(
+          context: navigatorKey.currentContext!,
+          icon: Icons.cancel_outlined,
+          title: "ENTREGA FALLIDA",
+          message: "${answer.message}",
+          iconColor: ColorsJunghanns.red,
+        );
+      } else {
+        // Limpiar las listas de faltantes y adicionales
+        /*missingProducts.clear();
+        additionalProducts.clear();*/
+        // Mostrar mensaje de éxito
+        print('Iniciando getStock');
+        await Async(provider: provider).getStock();
+        print('Iniciando terminando');
+        CustomModal.show(
+          context: navigatorKey.currentContext!,
+          icon: Icons.check_circle,
+          title: "ENTREGA CORRECTA",
+          message: "El registro de entrega fue exitoso.",
+          iconColor: ColorsJunghanns.greenJ,
+        );
+        fetchStockValidation();
+      }
+      notifyListeners();
+    });
+  }
+
+  Future<void> transfersProducts({
+    required int idRuta,
+    required double lat,
+    required double lng,
+    required String team,
+    required String brand,
+    required String model,
+    int? idDestination,
+    required Map<String, dynamic> delivery,
+    required ProviderJunghanns provider,
+  }) async {
+
+    // Preparar las listas de productos
+
+    List<Map<String, dynamic>> missingProductsList = missingProducts.map((product) {
+      final productMap = {
+        "id_producto": product.idProduct,
+        "cantidad": product.count,
+      };
+      return productMap;
+    }).toList();
+
+    // Estructura de entrega
+    final Map<String, dynamic> deliveryData = {
+      "garrafon": {
+        "vacios": delivery["garrafon"]["vacios"],
+        "llenos": delivery["garrafon"]["llenos"],
+        /*"sucios_cte": delivery["garrafon"]["sucios_cte"],
+        "rotos_cte": delivery["garrafon"]["rotos_cte"],
+        "sucios_ruta": delivery["garrafon"]["sucios_ruta"],
+        "rotos_ruta": delivery["garrafon"]["rotos_ruta"],
+        "a_la_par": delivery["garrafon"]["a_la_par"],
+        "comodato": delivery["garrafon"]["comodato"],
+        "prestamo": delivery["garrafon"]["prestamo"],
+        "mal_sabor": delivery["garrafon"]["mal_sabor"],*/
+        "liquido_20": delivery["garrafon"]["liquido_20"],
+      },
+      "desmineralizados": DemineralizedModel.from(delivery["desmineralizados"]).toPostJson(),
+      "garrafon11l": CarboyElevenModel.from(delivery["garradon11l"]).toPostElevenJson(),
+      "faltantes": [],
+      "otros": missingProductsList,
+      "adicionales": [],
+      "devoluciones": [],
+    };
+
+    await postDelivery(
+      idR: idRuta,
+      lat: lat,
+      lon: lng,
+      equipo: team,
+      marca: brand,
+      modelo: model,
+      idDestination: idDestination,
       entrega: deliveryData,
     ).then((answer) async {
       if (answer.error) {
@@ -1507,6 +1628,77 @@ class ProviderJunghanns extends ChangeNotifier {
                 icon: Icons.cancel,
                 title: "VALIDACIÓN RECHAZADA",
                 message: "La validación fue rechazada por el almacén, verifiqué sus datos enviados.",
+                iconColor: ColorsJunghanns.red
+            );
+          }
+        }
+      }
+    });
+
+    notifyListeners();
+    return hasData;
+  }
+
+  validationTranfers({int? idR}) async {
+    bool hasData = false;
+    final validIdR = idR ?? 0;
+
+    await getValidationList(idR: prefs.idRouteD, type: 'T').then((answer) {
+      if (answer.error) {
+        print('Error al obtener la lista: ${answer.message}');
+      } else {
+        if (answer.body is List) {
+          validationDeliveryList = (answer.body as List)
+              .map((item) => ValidationProductModel.fromJson(item))
+              .toList();
+        } else if (answer.body is Map) {
+          final validation = ValidationProductModel.fromJson(answer.body);
+          validationDeliveryList = [validation];
+        }
+
+        hasData = validationDeliveryList.isNotEmpty;
+        print("Lista de validaciones obtenida: ${validationDeliveryList.length} items.");
+
+        // Recorre cada validación y verifica el estatus
+        for (var validation in validationDeliveryList) {
+          if (validation.status == "P" && validation.valid == 'Ruta' && validation.typeValidation == 'T') {
+            CustomModal.show(
+                context: navigatorKey.currentContext!,
+                icon: FontAwesomeIcons.clock,
+                title: "VALIDACIÓN PENDIENTE",
+                message: "Validación pendiente, esperando....",
+                iconColor: ColorsJunghanns.blueJ
+            );
+            print('Entro al metodo de  validationTranfers');
+          } else if (validation.status == "A" && validation.valid == 'Ruta') {
+            //Pendiente por revisar si carboy la limpeamos
+            carboyAccesories.clear();
+            accessoriesWithStock.clear();
+            returnsWithStock.clear();
+            missingProducts.clear();
+            additionalProducts.clear();
+
+            Navigator.pushReplacement(
+              navigatorKey.currentContext!,
+              MaterialPageRoute(builder: (context) => HomePrincipal()),
+            );
+            // Mostrar mensaje de éxito
+            CustomModal.show(
+              context: navigatorKey.currentContext!,
+              icon: Icons.check_circle,
+              title: "VALIDACIÓN CORRECTA",
+              message: "El registro de la validación fue exitoso.",
+              iconColor: ColorsJunghanns.greenJ,
+            );
+            print("Validación aceptada.");
+            // Aquí puedes llamar a tu función para redirigir al home
+            /* home();*/
+          } else if (validation.status == "R" && validation.valid == 'Ruta') {
+            CustomModal.show(
+                context: navigatorKey.currentContext!,
+                icon: Icons.cancel,
+                title: "VALIDACIÓN RECHAZADA",
+                message: "La validación fue rechazada por la ruta, verifiqué los datos enviados.",
                 iconColor: ColorsJunghanns.red
             );
           }

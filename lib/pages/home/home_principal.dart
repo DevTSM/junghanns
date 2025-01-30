@@ -26,6 +26,7 @@ import 'package:location/location.dart';
 import 'package:provider/provider.dart';
 
 import '../../widgets/modal/receipt_modal.dart';
+import '../../widgets/modal/transfers_modal.dart';
 import '../../widgets/modal/validation_modal.dart';
 
 const List<Widget> pages = [
@@ -71,6 +72,7 @@ class _HomePrincipalState extends State<HomePrincipal> {
     final provider = Provider.of<ProviderJunghanns>(context, listen: false);
 
     // Ahora fetchStockValidation devuelve un objeto ValidationModel
+    await _refreshTransfers();
     await provider.fetchStockValidation();
 
     // Filtrar los datos según las condiciones especificadas
@@ -96,6 +98,31 @@ class _HomePrincipalState extends State<HomePrincipal> {
     if (provider.validationList.first.status =='P' && provider.validationList.first.valid == 'Ruta'){
       showReceiptModal(context);
     }
+  }
+
+  Future<void> _refreshTransfers() async {
+    final provider = Provider.of<ProviderJunghanns>(context, listen: false);
+
+    // Ahora fetchStockValidation devuelve un objeto ValidationModel
+    await provider.fetchValidation();
+
+    // Filtrar los datos según las condiciones especificadas
+    final filteredDataTranfers = provider.validationList.where((validation) {
+      return validation.status == "P" && validation.valid == "Ruta" && validation.typeValidation == 'T' && validation.idRoute != prefs.idRouteD;
+    }).toList();
+
+    // Verificar si hay datos filtrados
+    setState(() {
+      if (filteredDataTranfers.isNotEmpty) {
+        specialData = filteredDataTranfers;  // Asigna los datos filtrados a specialData
+        // Imprimir el contenido de specialData para confirmarlo
+        print('Contenido de specialData (filtrado): $specialData');
+        print('Llama al modal');
+        showTransferModal(context);
+      } else {
+        specialData = [];  // Si no hay datos que cumplan las condiciones, asignar un arreglo vacío
+      }
+    });
   }
 
   void setIndexCurrent(int current) {

@@ -126,14 +126,7 @@ class Async {
     List<Map<String,dynamic>> stopPen=await handler.retrieveStopOffUpdate();
     List<Map<String, dynamic>> evidencePen = await dbHelper.retrieveEvdences();
     List<StopRuta> stopRuta=await handler.retrieveStopRuta();
-
-    /*int pendingSalesCount = await handler.countPendingSales();
-    log("Ventas pendientes después de sincronización inicialmente: $pendingSalesCount");
-*/
     List<Map<String, dynamic>> pendingSales = await handler.getPendingSales();
-    for (var sale in pendingSales) {
-      log("Venta pendiente: ${sale.toString()}");
-    }
 
     if(salesPen.isNotEmpty){
       log("ventas pendientes ---------> ${salesPen.length}");
@@ -272,10 +265,6 @@ class Async {
               provider.isNeedAsync = false;
               log("Es trueeeeeeeeee");
             }
-            /*else{
-              provider.isNeedAsync =false;
-              log("Es falseeeeeeeeeee");
-            }*/
             for (var sale in pendingSales) {
               log("Venta pendiente en la ultima parte para verificar: ${sale.toString()}");
               provider.isNeedAsync = true;
@@ -297,11 +286,7 @@ class Async {
         await handler.updateStopRuta(1, e.id);
       }
     }
-    //List<Map<String, dynamic>> pendingSales = await handler.getPendingSales();
-    for (var sale in pendingSales) {
-      log("Venta pendiente en la ultima parte para verificar: ${sale.toString()}");
-      provider.isNeedAsync = true;
-    }
+
     return !isNotSuccess;
   }
   

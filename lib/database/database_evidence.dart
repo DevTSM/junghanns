@@ -117,4 +117,12 @@ class DatabaseHelper {
       );
     });
   }
+
+  Future<int> countPendingEvidences() async {
+    final db = await database;
+    var result = await db.rawQuery(
+        "SELECT COUNT(*) as count FROM evidencesCortesia WHERE isUploaded = 0 AND isError = 0");
+    return Sqflite.firstIntValue(result) ?? 0;
+  }
+
 }

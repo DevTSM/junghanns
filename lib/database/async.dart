@@ -126,6 +126,15 @@ class Async {
     List<Map<String,dynamic>> stopPen=await handler.retrieveStopOffUpdate();
     List<Map<String, dynamic>> evidencePen = await dbHelper.retrieveEvdences();
     List<StopRuta> stopRuta=await handler.retrieveStopRuta();
+
+    /*int pendingSalesCount = await handler.countPendingSales();
+    log("Ventas pendientes después de sincronización inicialmente: $pendingSalesCount");
+*/
+    List<Map<String, dynamic>> pendingSales = await handler.getPendingSales();
+    for (var sale in pendingSales) {
+      log("Venta pendiente: ${sale.toString()}");
+    }
+
     if(salesPen.isNotEmpty){
       log("ventas pendientes ---------> ${salesPen.length}");
        provider.labelAsync = "Sincronizando ventas locales";
@@ -255,7 +264,22 @@ class Async {
             int? evidenceId = await dbHelper.getEvidenceIdByAuthorization(e["idAutorization"]);
             log("Se actualizan los datos");
             await dbHelper.updateEvidence(evidenceId!, 1, 0);
-            provider.isNeedAsync = false;
+            //provider.isNeedAsync = false;
+            // Verificar si quedan evidencias pendientes con (0, 0)
+            int pendingCount = await dbHelper.countPendingEvidences();
+            log("Ya paso el conteno de evidenciassss");
+            if (pendingCount == 0) {
+              provider.isNeedAsync = false;
+              log("Es trueeeeeeeeee");
+            }
+            /*else{
+              provider.isNeedAsync =false;
+              log("Es falseeeeeeeeeee");
+            }*/
+            for (var sale in pendingSales) {
+              log("Venta pendiente en la ultima parte para verificar: ${sale.toString()}");
+              provider.isNeedAsync = true;
+            }
           } else {
             isNotSuccess = true;
             if (value.status != 1002) {
@@ -272,6 +296,11 @@ class Async {
         await setInitRoute(e.lat,e.lng,status: e.status);
         await handler.updateStopRuta(1, e.id);
       }
+    }
+    //List<Map<String, dynamic>> pendingSales = await handler.getPendingSales();
+    for (var sale in pendingSales) {
+      log("Venta pendiente en la ultima parte para verificar: ${sale.toString()}");
+      provider.isNeedAsync = true;
     }
     return !isNotSuccess;
   }

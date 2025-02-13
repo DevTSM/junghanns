@@ -112,28 +112,7 @@ class _HomeState extends State<Home> {
     setState(() {
       if (filteredData.isNotEmpty) {
         specialData = filteredData;  // Asigna los datos filtrados a specialData
-        // Imprimir el contenido de specialData para confirmarlo
-        print('Contenido de specialData (filtrado): $specialData');
-        print('Llama al modal');
         showValidationModal(context);
-      } else {
-        specialData = [];  // Si no hay datos que cumplan las condiciones, asignar un arreglo vacío
-      }
-    });
-
-    // Filtrar los datos según las condiciones especificadas
-    final filteredDataTranfers = provider.validationList.where((validation) {
-      return validation.status == "P" && validation.valid == "Ruta" && validation.typeValidation == 'T' && validation.idRoute != prefs.idRouteD;
-    }).toList();
-
-// Verificar si hay datos filtrados
-    setState(() {
-      if (filteredData.isNotEmpty) {
-        specialData = filteredDataTranfers;  // Asigna los datos filtrados a specialData
-        // Imprimir el contenido de specialData para confirmarlo
-        print('Contenido de specialData (filtrado): $specialData');
-        print('Llama al modal');
-        showTransferModal(context);
       } else {
         specialData = [];  // Si no hay datos que cumplan las condiciones, asignar un arreglo vacío
       }
@@ -159,9 +138,7 @@ class _HomeState extends State<Home> {
     setState(() {
       if (filteredDataTranfers.isNotEmpty) {
         specialData = filteredDataTranfers;  // Asigna los datos filtrados a specialData
-        // Imprimir el contenido de specialData para confirmarlo
-        print('Contenido de specialData (filtrado): $specialData');
-        print('Llama al modal');
+        print('Llama al modal trasferencias');
         showTransferModal(context);
       } else {
         specialData = [];  // Si no hay datos que cumplan las condiciones, asignar un arreglo vacío
@@ -339,7 +316,7 @@ class _HomeState extends State<Home> {
           Visibility(visible: isLoading, child: const LoadingJunghanns())
         ],
       ),
-      floatingActionButton: Consumer<ChatProvider>(
+      /*floatingActionButton: Consumer<ChatProvider>(
         builder: (context, chatProvider, child) {
           return Stack(
             clipBehavior: Clip.none,
@@ -375,7 +352,7 @@ class _HomeState extends State<Home> {
             ],
           );
         },
-      ),
+      ),*/
       /*floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(

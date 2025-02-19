@@ -27,7 +27,7 @@ class SocketService {
     if(serial.isEmpty||serial.length<2){
       serial=androidInfo.id??"";
     }
-    socket = IO.io('http://192.168.0.16:3000', <String, dynamic>{
+    socket = IO.io('http://192.168.0.15:3000', <String, dynamic>{
       'auth': {
         'user': prefs.nameUserD,
         'route': prefs.idRouteD,

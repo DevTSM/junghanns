@@ -1,44 +1,260 @@
+/*
 import 'package:flutter/material.dart';
+import 'package:junghanns/preferences/global_variables.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
-
 import '../pages/socket/socket_service.dart';
+import '../util/push_notifications_provider.dart';
 
 class ChatProvider with ChangeNotifier {
   late IO.Socket socket;
-  List<Map<String, String>> messages = [];
-  final String myUserId = "user123";
+  List<Map<String, dynamic>> messages = []; // Permite texto y archivos
+  final String myUserId = prefs.nameUserD;
 
   bool _hasNewMessage = false;
   bool get hasNewMessage => _hasNewMessage;
 
   ChatProvider() {
-    socket = SocketService().getSocket(); // Usa la conexión global
+    socket = SocketService().getSocket();
     _setupListeners();
   }
 
   void _setupListeners() {
     socket.on("receiveMessage", (data) {
-      if (data is Map<String, dynamic> && data["message"] != null) {
-        messages.add({
-          "text": data["message"],
-          "userId": data["userId"] ?? "desconocido",
-        });
+      if (data is Map<String, dynamic>) {
+        // ✅ Evitar duplicados
+        bool exists = messages.any((msg) =>
+        msg["type"] == data["type"] &&
+            msg["userId"] == data["user"] &&
+            (msg["text"] == data["message"] || msg["fileName"] == data["fileName"]));
 
-        _hasNewMessage = true;
-        notifyListeners();
+        if (!exists) {
+          messages.add({
+            "type": data["type"],
+            "userId": data["user"] ?? "desconocido",
+            "text": data["message"] ?? "",
+            "fileName": data["fileName"],
+            "fileType": data["fileType"],
+            "fileBase64": data["fileBase64"],
+          });
+
+          _hasNewMessage = true;
+          notifyListeners();
+        }
+
+        // 📢 Si el mensaje viene del servidor, podrías manejarlo de forma distinta
+        if (data["user"] != myUserId) {
+          print("📢 Mensaje del servidor: ${data['message']}");
+
+          // Si el mensaje es de tipo archivo
+          if (data["type"] == "file") {
+            // Mostrar la notificación para archivos
+            NotificationService().showNotifications(
+                "Nuevo archivo del Servidor",
+                "Archivo recibido: ${data['fileName']}");
+          } else {
+            // Mostrar la notificación para texto
+            NotificationService().showNotifications(
+                "Mensaje del Servidor",
+                data['message'].toString());
+          }
+        }
       }
     });
+// Escuchar la notificación "junny_notify" enviada por el servidor
+    socket.on("junny_notify", (notification) {
+      print("🚨 Notificación del servidor: $notification");
 
+      // Mostrar la notificación en la interfaz
+      NotificationService().showNotifications("Notificación", notification.toString());
+    });
     socket.onConnect((_) => print("✅ Conectado al chat"));
     socket.onDisconnect((_) => print("❌ Desconectado del chat"));
   }
 
+  // 📩 Enviar mensaje de texto
   void sendMessage(String message) {
     if (message.isNotEmpty) {
-      socket.emit("sendMessage", {"message": message, "userId": myUserId});
-      messages.add({"text": message, "userId": myUserId});
-      _hasNewMessage = false;
+      final data = {"type": "text", "message": message, "user": myUserId};
+      socket.emit("sendMessage", data);
+
+      messages.add(data);
+      _hasNewMessage = true;
       notifyListeners();
+    }
+  }
+
+  // 📂 Enviar archivo
+  */
+/*void sendFile(String fileName, String fileType, String fileBase64) {
+    final data = {
+      "type": "file",
+      "fileName": fileName,
+      "fileType": fileType,
+      "fileBase64": fileBase64,
+      "user": myUserId
+    };
+
+    socket.emit("sendMessage", data);
+
+    // ❌ No agregar manualmente el mensaje aquí para evitar duplicados
+     messages.add(data);
+
+    _hasNewMessage = true;
+    notifyListeners();
+  }*//*
+
+
+  void sendFile(String fileName, String fileType, String fileBase64) {
+    if (myUserId.isEmpty) {
+      print("⚠️ Error: userId vacío, no se enviará el archivo.");
+      return;
+    }
+
+    final data = {
+      "type": "file",
+      "fileName": fileName,
+      "fileType": fileType,
+      "fileBase64": fileBase64,
+      "user": myUserId // Asegurar que se envía correctamente
+    };
+
+    print("📤 Enviando archivo con userId: ${myUserId}");
+
+    socket.emit("sendMessage", data);
+    messages.add(data);
+
+    _hasNewMessage = true;
+    notifyListeners();
+  }
+
+  void resetNewMessageFlag() {
+    _hasNewMessage = false;
+    notifyListeners();
+  }
+}
+*/
+import 'package:flutter/material.dart';
+import 'package:junghanns/preferences/global_variables.dart';
+import 'package:socket_io_client/socket_io_client.dart' as IO;
+import '../pages/socket/socket_service.dart';
+import '../util/push_notifications_provider.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:mime/mime.dart';
+import 'package:path/path.dart';
+
+class ChatProvider with ChangeNotifier {
+  late IO.Socket socket;
+  List<Map<String, dynamic>> messages = []; // Permite texto y archivos
+  final String myUserId = prefs.nameUserD;
+
+  bool _hasNewMessage = false;
+  bool get hasNewMessage => _hasNewMessage;
+
+  ChatProvider() {
+    socket = SocketService().getSocket();
+    _setupListeners();
+  }
+  void _setupListeners() {
+    socket.on("receiveMessage", (data) {
+      if (data is Map<String, dynamic>) {
+        // Evitar duplicados de mensajes
+        bool exists = messages.any((msg) =>
+        msg["type"] == data["type"] &&
+            msg["userId"] == data["user"] &&
+            (msg["message"] == data["message"] || msg["fileName"] == data["fileName"]));
+
+        if (!exists) {
+          // Si el mensaje proviene del servidor, lo manejamos de manera especial
+          if (data["user"]
+          != myUserId) {
+            messages.add({
+              "type": data["type"],
+              "userId": "Servidor",  // Esto asegura que el mensaje sea identificado como del servidor
+              "message": data["message"] ?? "",
+              "fileName": data["fileName"],
+              "fileType": data["fileType"],
+              "fileUrl": data["fileUrl"],
+            });
+
+            NotificationService().showNotifications(
+              "Nuevo mensaje de ${data["userId"]}",
+              data["message"] ?? "Nuevo mensaje recibido",
+            );
+
+            // Solo marcar como nuevo mensaje si no es del usuario actual
+            _hasNewMessage = true;
+            notifyListeners();  // Notificar que el estado ha cambiado
+          } else {
+            // Si el mensaje proviene del usuario, lo agregamos normalmente
+            messages.add({
+              "type": data["type"],
+              "userId": data["user"] ?? "desconocido",
+              "message": data["message"] ?? "",
+              "fileName": data["fileName"],
+              "fileType": data["fileType"],
+              "fileUrl": data["fileUrl"],
+            });
+          }
+
+          /*_hasNewMessage = true;
+          notifyListeners();  // Notificar que el estado ha cambiado*/
+        }
+      }
+    });
+  }
+
+  // 📩 Enviar mensaje de texto
+  void sendMessage(String message) {
+    if (message.isNotEmpty) {
+      final data = {"type": "text", "message": message, "user": myUserId};
+      socket.emit("sendMessage", data);  // Enviar al servidor
+
+      // Agregar el mensaje a la lista localmente para que se vea inmediatamente
+      messages.add({
+        "type": "text",
+        "message": message,
+        "userId": myUserId,  // Asegúrate de que el 'userId' sea el correcto
+      });
+
+      /*_hasNewMessage = true;*/
+      notifyListeners();  // Notificar para actualizar la UI
+    }
+  }
+
+
+  // 📂 Enviar archivo mediante API REST
+  Future<void> sendFile(String filePath) async {
+    try {
+      final uri = Uri.parse("http://192.168.0.15:3000/send-message");
+      final request = http.MultipartRequest("POST", uri);
+
+      // Adjuntar archivo
+      var file = await http.MultipartFile.fromPath("file", filePath);
+      request.files.add(file);
+
+      // Enviar petición
+      final response = await request.send();
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(await response.stream.bytesToString());
+
+        // Agregar a mensajes solo si la API responde correctamente
+        messages.add({
+          "type": "file",
+          "userId": myUserId,
+          "fileName": basename(filePath),
+          "fileType": lookupMimeType(filePath),
+          "fileUrl": responseData["data"]["fileUrl"],
+        });
+
+        _hasNewMessage = true;
+        notifyListeners();
+      } else {
+        print("⚠️ Error al enviar archivo: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("❌ Error al subir el archivo: $e");
     }
   }
 
@@ -47,91 +263,3 @@ class ChatProvider with ChangeNotifier {
     notifyListeners();
   }
 }
-
-/*class ChatProvider with ChangeNotifier {
-  late IO.Socket socket;
-  List<Map<String, String>> messages = [];
-  final String myUserId = "user123"; // Simula un ID de usuario
-
-  bool _hasNewMessage = false; // Nueva propiedad para el punto rojo
-  bool get hasNewMessage => _hasNewMessage; // Getter para acceder a la propiedad
-
-  bool _isConnected = false; // Variable para manejar la conexión
-
-  bool get isConnected => _isConnected; // Getter para acceso al estado de conexión
-
-  ChatProvider() {
-    _initSocket();
-  }
-
-  void _initSocket() {
-    socket = IO.io("http://192.168.0.16:3000", <String, dynamic>{
-      "transports": ["websocket"],
-      "autoConnect": true,
-    });
-
-    socket.connect();
-
-    socket.on("receiveMessage", (data) {
-      if (data is Map<String, dynamic> && data["message"] != null) {
-        messages.add({
-          "text": data["message"],
-          "userId": data["userId"] ?? "desconocido",
-        });
-
-        _hasNewMessage = true; // Se marca como nuevo mensaje
-        notifyListeners();
-
-        Activar el servicio de notificación al recibir el mensaje
-        NotificationService _notificationService = NotificationService();
-        _notificationService.showNotifications("Nuevo mensaje", data["message"]);
-      }
-    });
-
-    // Escucha el evento junny_notify para mostrar notificación
-    socket.on("junny_notify", (data) {
-      if (data != null) {
-        // Aquí se activa el servicio de notificación cuando se recibe un mensaje
-        NotificationService _notificationService = NotificationService();
-        _notificationService.showNotifications("Notificación del servidor", data.toString());
-      }
-    });
-
-     Escuchar el evento de desconexión
-    socket.onDisconnect((_) {
-      print("Desconectado del servidor");
-      NotificationService _notificationService = NotificationService();
-      _notificationService.showNotifications("Conexión perdida", "No se pudo conectar al servidor.");
-    });
-
-    // Escuchar el error de conexión
-    socket.onConnectError((error) {
-      print("Error de conexión: $error");
-      NotificationService _notificationService = NotificationService();
-      _notificationService.showNotifications("Error de conexión", "Ocurrió un error al intentar conectar.");
-    });
-
-    socket.onConnect((_) => print("Conectado al chat"));
-    socket.onDisconnect((_) => print("Desconectado del chat"));
-  }
-
-  void sendMessage(String message) {
-    if (message.isNotEmpty) {
-      socket.emit("sendMessage", {"message": message, "userId": myUserId});
-      messages.add({"text": message, "userId": myUserId});
-      _hasNewMessage = false; // Al enviar el mensaje, desactivamos el nuevo mensaje
-      notifyListeners();
-    }
-  }
-
-  void resetNewMessageFlag() {
-    _hasNewMessage = false; // Resetea el estado del nuevo mensaje
-    notifyListeners();
-  }
-
-  @override
-  void dispose() {
-    socket.disconnect();
-    super.dispose();
-  }
-}*/

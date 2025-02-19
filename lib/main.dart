@@ -121,6 +121,7 @@ Future<void> main() async {
   //initWebSocket();
   // Inicia el WebSocket global
   SocketService();
+
   runApp(const JunnyApp());
 }
 class MyHttpOverrides extends HttpOverrides {

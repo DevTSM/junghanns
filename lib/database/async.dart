@@ -247,12 +247,13 @@ class Async {
           "lat": lat,
           "lon": lon,
           "id_autorization": e["idAutorization"],
-          "archivo": archivoFile
+          "archivo": archivoFile,
+          "fecha_registro": e["fechaRegistro"]
         };
 
         log("Datos de la evidencia antes de enviar: ${jsonEncode(data)}");
 
-        await postDirtyBroken(idRuta: e["idRuta"], idCliente: e["idCliente"], tipo: e["tipo"], cantidad: e["cantidad"], lat:lat, lon: lon, idAutorization: e["idAutorization"], archivo: archivo).then((value) async {
+        await postDirtyBroken(idRuta: e["idRuta"], idCliente: e["idCliente"], tipo: e["tipo"], cantidad: e["cantidad"], lat:lat, lon: lon, idAutorization: e["idAutorization"],  archivo: archivo, fechaRegistro: e["fechaRegistro"]).then((value) async {
           if (!value.error) {
             int? evidenceId = await dbHelper.getEvidenceIdByAuthorization(e["idAutorization"]);
             log("Se actualizan los datos");

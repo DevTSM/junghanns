@@ -1090,6 +1090,7 @@ Future<Answer> postDirtyBroken({
   required double lat,
   required double lon,
   required File archivo,
+  required String fechaRegistro,
   required int idAutorization,
 }) async {
   log("/StoreServices <postDirtyBroken> ¡");
@@ -1124,6 +1125,7 @@ Future<Answer> postDirtyBroken({
     request.fields['lat'] = lat.toString();
     request.fields['lon'] = lon.toString();
     request.fields['id_autorizacion'] = idAutorization.toString();
+    request.fields['fecha_registro'] = fechaRegistro;
 
     // Validar archivo antes de agregarlo
     if (!archivo.existsSync()) {

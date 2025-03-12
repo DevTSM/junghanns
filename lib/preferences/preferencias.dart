@@ -283,4 +283,12 @@ class PreferenciasUsuario {
   set codeD(String codeD) {
     prefs!.setString("codeD", codeD);
   }
+
+  int get idChat {
+    return prefs!.getInt("idChat") ?? 0;
+  }
+
+  set idChat(int idRouteD) {
+    prefs!.setInt("idChat", idRouteD);
+  }
 }

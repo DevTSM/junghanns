@@ -8,6 +8,36 @@ import 'package:junghanns/preferences/global_variables.dart';
 
 Future<Answer> getClientSecret(String user, String password) async {
   log("/AuthServices <getClientSecret>");
+
+  final uri = Uri.parse("${prefs.urlBase}token?q=secret&u=$user&p=$password");
+  log("Request URL: $uri");
+
+  try {
+    var response = await http.get(
+      uri,
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+      },
+    );
+
+    log("Response Status: ${response.statusCode}");
+    log("Response Body: ${response.body}");
+
+    return Answer.fromService(response, response.statusCode);
+  } catch (e) {
+    log("/AuthServices <getClientSecret> Catch ${e.toString()}");
+    return Answer(
+      body: e.toString(),
+      message: "Conexión inestable con el back jusoft",
+      status: 1002,
+      error: true,
+    );
+  }
+}
+
+/*Future<Answer> getClientSecret(String user, String password) async {
+  log("/AuthServices <getClientSecret>");
   try {
     var body = await http.get(
       Uri.parse("${prefs.urlBase}token?q=secret&u=$user&p=$password"),
@@ -25,7 +55,7 @@ Future<Answer> getClientSecret(String user, String password) async {
         status: 1002,
         error: true);
   }
-}
+}*/
 
 Future<Answer> login(Map<String, dynamic> data) async {
   log("/AuthServices <login>");

@@ -31,21 +31,25 @@ class _WhatsAppVideoPreviewState extends State<WhatsAppVideoPreview> {
   // Verifica si el video ya está descargado localmente
   Future<void> _checkVideoDownloaded() async {
     final tempDir = await getTemporaryDirectory();
-    final localPath = '${tempDir.path}/${widget.videoUrl.split('/').last}';
+    final fileName = widget.videoUrl.split('/').last.split('?').first; // Elimina parámetros
+    final localPath = '${tempDir.path}/$fileName';
+
+    print("Verificando si el video ya está descargado en: $localPath");
 
     if (await File(localPath).exists()) {
       setState(() {
         _isVideoDownloaded = true;
         _localVideoPath = localPath;
       });
-      print("El video ya está descargado en: $localPath");
+      print("El video ya está descargado en: $_localVideoPath");
     } else {
       print("El video no está descargado. Iniciando descarga...");
       _downloadVideo(localPath);
     }
   }
 
-  // Descarga el video y guarda el archivo localmente
+
+// Descarga el video y guarda el archivo localmente
   Future<void> _downloadVideo(String localPath) async {
     final response = await http.get(Uri.parse(widget.videoUrl));
 
@@ -56,7 +60,7 @@ class _WhatsAppVideoPreviewState extends State<WhatsAppVideoPreview> {
         _isVideoDownloaded = true;
         _localVideoPath = localPath;
       });
-      print("El video se descargó y se guardó en: $localPath");
+      print("El video se descargó y se guardó en: $_localVideoPath");
     } else {
       setState(() {
         _hasError = true;
@@ -64,6 +68,18 @@ class _WhatsAppVideoPreviewState extends State<WhatsAppVideoPreview> {
       });
       print("Error al descargar el video");
     }
+  }
+
+// Abre el video en pantalla completa
+  void _openFullScreenVideo() {
+    String videoPath = _isVideoDownloaded ? _localVideoPath! : widget.videoUrl;
+    print("Abriendo video desde: $videoPath");
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => WhatsAppFullScreenVideo(videoUrl: videoPath),
+      ),
+    );
   }
 
   // Genera la miniatura del video
@@ -96,17 +112,6 @@ class _WhatsAppVideoPreviewState extends State<WhatsAppVideoPreview> {
         _isLoading = false;
       });
     }
-  }
-
-  // Abre el video en pantalla completa
-  void _openFullScreenVideo() {
-    String videoPath = _isVideoDownloaded ? _localVideoPath! : widget.videoUrl;
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => WhatsAppFullScreenVideo(videoUrl: videoPath),
-      ),
-    );
   }
 
   @override

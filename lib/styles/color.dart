@@ -4,6 +4,9 @@ abstract class ColorsJunghanns {
   static const Color green = Color(0xFF78bc24);
   static const Color yellow = Color.fromARGB(255, 159, 142, 7);
   static const Color blue = Color(0xFF0434a4);
+  static const Color blueT = Color(0xFF414F6A);
+  static const Color blueA = Color(0xFF2E3F66);
+  static const Color blueF = Color(0xFF252E42);
   static const Color orange = Color.fromARGB(255, 238, 145, 69);
   static const Color brown = Color(0xFF886815);
   static const Color brown40 = Color(0xFF968540);

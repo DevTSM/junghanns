@@ -191,7 +191,9 @@ class _LoginState extends State<Login> {
                     prefs.dayWorkTextD =
                         answer2.body["dia_trabajo_texto"] ?? "TEST";
                     prefs.codeD = answer2.body["codigo_empresa"] ?? "";
+                    prefs.idChat = int.parse((answer2.body["id_chat"] ?? 0).toString());
                     log(prefs.nameD);
+                    log(prefs.idChat.toString());
                     //-----------------------------------------
                     //Navigator.pop(context);
 

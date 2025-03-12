@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
+import 'package:path/path.dart'; // Asegúrate de importar 'path'
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:http_parser/http_parser.dart';
@@ -14,9 +15,9 @@ import 'package:junghanns/models/answer.dart';
 import '../preferences/global_variables.dart';
 
 ////////////////////////////////////////////
-Future<Answer> sendMessage({
-  required int idRuta,
-  required String fechaOperacion,
+Future<Answer> sendMessageService({
+   int? idRuta,
+   String? fechaOperacion,
   required String mensaje,
 }) async {
   log("/StoreServices <sendMessage>");
@@ -40,7 +41,7 @@ Future<Answer> sendMessage({
       body: jsonEncode(body),
     ).timeout(Duration(seconds: timerDuration));
 
-    if (response.statusCode == 200) {
+    if (response.statusCode == 201) {
       var decodedBody = jsonDecode(response.body);
       log("/StoreServices <sendMessage> Successfull");
       log("Response Body: $decodedBody");
@@ -66,6 +67,291 @@ Future<Answer> sendMessage({
     );
   }
 }
+
+/*Future<Answer> sendMessageServiceFile({
+  int? idRuta,
+  String? fechaOperacion,
+  required File archivo, // Aceptamos el archivo
+}) async {
+  log("/StoreServices <sendMessage>");
+
+  // Verificar la ruta del archivo
+  print('File path: ${archivo.path}');
+  print('File exists: ${archivo.existsSync()}'); // Verifica si el archivo existe
+
+  // Obtener solo el nombre del archivo (sin la ruta completa)
+  String fileName = basename(archivo.path);
+  print('File Name: $fileName');
+
+  // Crear un MultipartRequest
+  var uri = Uri.parse("${prefs.urlBase}chat");
+
+  var request = http.MultipartRequest("POST", uri)
+    ..headers.addAll({
+      "x-api-key": apiKey,
+      "client_secret": prefs.clientSecret,
+      "Authorization": "Bearer ${prefs.token}",
+      "Content-Type": "multipart/form-data", // Agregar tipo de contenido adecuado
+    })
+    ..fields["id_ruta"] = idRuta.toString()
+    ..fields["fecha_envio"] = fechaOperacion ?? '';
+
+  // Imprimir los campos de la solicitud
+  print('Request Fields:');
+  print('id_ruta: ${idRuta.toString()}');
+  print('fecha_envio: ${fechaOperacion ?? 'No se proporcionó fecha'}');
+
+  // Verificar si el archivo tiene una ruta no vacía antes de agregarlo
+  if (archivo.existsSync() && archivo.path.isNotEmpty) {
+    print("File to send: $fileName");
+
+    // Verifica si el archivo realmente existe antes de enviarlo
+    if (await archivo.exists()) {
+      // Enviar el archivo usando MultipartFile.fromPath
+      request.files.add(await http.MultipartFile.fromPath('archivo', archivo.path));
+      print("Archivo añadido al request.");
+    } else {
+      print("El archivo no existe en la ruta proporcionada.");
+    }
+  } else {
+    print("No file selected!");
+  }
+
+  // Verifica los archivos que se van a enviar
+  print("Files in request:");
+  request.files.forEach((file) {
+    print("File: ${file.filename}, Size: ${file.length}");
+  });
+
+  // Verificar las cabeceras de la solicitud
+  print("Request Headers:");
+  request.headers.forEach((key, value) {
+    print('$key: $value');
+  });
+
+  try {
+    var response = await request.send().timeout(Duration(seconds: timerDuration));
+
+    if (response.statusCode == 201) {
+      var responseBody = await response.stream.bytesToString();
+      var decodedBody = jsonDecode(responseBody);
+      log("/StoreServices <sendMessage> Successfull");
+      log("Response Body: $decodedBody");
+
+      return Answer(
+        body: decodedBody,
+        message: "Mensaje con archivo enviado exitosamente",
+        status: response.statusCode,
+        error: false,
+      );
+    } else {
+      var responseBody = await response.stream.bytesToString();
+      var decodedBody = jsonDecode(responseBody);
+      log("/StoreServices <sendMessage> Fail");
+      log("Response Body: $decodedBody");
+
+      return Answer(
+        body: response,
+        message: "No se pudo enviar el archivo. Revisa tu conexión a internet.",
+        status: response.statusCode,
+        error: true,
+      );
+    }
+  } catch (e) {
+    log("/StoreServices <sendMessage> Catch ${e.toString()}");
+    return Answer(
+      body: e,
+      message: "Conexión inestable con el back",
+      status: 1002,
+      error: true,
+    );
+  }
+}*/
+Future<Answer> sendMessageServiceFile({
+  int? idRuta,
+  String? fechaOperacion,
+  required List<File> archivos, // Aceptamos una lista de archivos
+}) async {
+  log("/StoreServices <sendMessage>");
+
+  // Verificar si los archivos no están vacíos
+  if (archivos.isEmpty) {
+    print("No files selected!");
+    return Answer(
+      body: null,
+      message: "No se seleccionaron archivos.",
+      status: 1001,
+      error: true,
+    );
+  }
+
+  // Crear un MultipartRequest
+  var uri = Uri.parse("${prefs.urlBase}chat");
+
+  var request = http.MultipartRequest("POST", uri)
+    ..headers.addAll({
+      "x-api-key": apiKey,
+      "client_secret": prefs.clientSecret,
+      "Authorization": "Bearer ${prefs.token}",
+      "Content-Type": "multipart/form-data", // Agregar tipo de contenido adecuado
+    })
+    ..fields["id_ruta"] = idRuta.toString()
+    ..fields["fecha_envio"] = fechaOperacion ?? '';
+
+  // Imprimir los campos de la solicitud
+  print('Request Fields:');
+  print('id_ruta: ${idRuta.toString()}');
+  print('fecha_envio: ${fechaOperacion ?? 'No se proporcionó fecha'}');
+
+  // Agregar archivos al request
+  for (var archivo in archivos) {
+    // Verificar si el archivo tiene una ruta válida antes de agregarlo
+    if (archivo.existsSync() && archivo.path.isNotEmpty) {
+      String fileName = basename(archivo.path);
+      print("File to send: $fileName");
+
+      // Enviar el archivo usando MultipartFile.fromPath
+      if (await archivo.exists()) {
+        request.files.add(await http.MultipartFile.fromPath('archivo[]', archivo.path));
+        print("Archivo añadido al request.");
+      } else {
+        print("El archivo no existe en la ruta proporcionada: $fileName");
+      }
+    } else {
+      print("Archivo vacío o no válido.");
+    }
+  }
+
+  // Verifica los archivos que se van a enviar
+  print("Files in request:");
+  request.files.forEach((file) {
+    print("File: ${file.filename}, Size: ${file.length}");
+  });
+
+  // Verificar las cabeceras de la solicitud
+  print("Request Headers:");
+  request.headers.forEach((key, value) {
+    print('$key: $value');
+  });
+
+  try {
+    var response = await request.send().timeout(Duration(seconds: timerDuration));
+
+    if (response.statusCode == 201) {
+      var responseBody = await response.stream.bytesToString();
+      var decodedBody = jsonDecode(responseBody);
+      log("/StoreServices <sendMessage> Successful");
+      log("Response Body: $decodedBody");
+
+      return Answer(
+        body: decodedBody,
+        message: "Mensaje con archivos enviados exitosamente",
+        status: response.statusCode,
+        error: false,
+      );
+    } else {
+      var responseBody = await response.stream.bytesToString();
+      var decodedBody = jsonDecode(responseBody);
+      log("/StoreServices <sendMessage> Fail");
+      log("Response Body: $decodedBody");
+
+      return Answer(
+        body: response,
+        message: "No se pudo enviar los archivos. Revisa tu conexión a internet.",
+        status: response.statusCode,
+        error: true,
+      );
+    }
+  } catch (e) {
+    log("/StoreServices <sendMessage> Catch ${e.toString()}");
+    return Answer(
+      body: e,
+      message: "Conexión inestable con el back",
+      status: 1002,
+      error: true,
+    );
+  }
+}
+
+
+
+/////////////////////
+Future<Answer> getMessagesService({DateTime? date, int? idChat}) async {
+  log("/StoreServices <getMessages>");
+  Map<String, dynamic> params = {};
+
+  // Si hay una fecha proporcionada
+  if (date != null) {
+    params["fecha"] = (date.millisecondsSinceEpoch ~/ 1000);
+  } /*else {
+    *//*DateTime yesterday = DateTime.now().subtract(Duration(days: 1));
+    params["fecha"] = (yesterday.millisecondsSinceEpoch ~/ 1000);*//*
+    // Toma la fecha actual si no se proporciona ninguna
+    params["fecha"] = (DateTime.now().millisecondsSinceEpoch ~/ 1000);
+  }*/
+
+  // Imprimir la URL generada antes de realizar la solicitud
+  String url = "${prefs.urlBase}chat?q=conversacion&id_chat=${idChat}&f_inicio=${params['fecha']}";
+
+
+  log("URL generada: $url");
+
+  try {
+    var response = await http.get(
+      Uri.parse(url),
+      headers: {
+        HttpHeaders.contentTypeHeader: "application/json",
+        "x-api-key": apiKey,
+        "client_secret": prefs.clientSecret,
+        "Authorization": "Bearer ${prefs.token}",
+      },
+    ).timeout(Duration(seconds: timerDuration));
+
+    log("${response.body} -----");
+    return Answer.fromService(response, 200);
+  } catch (e) {
+    log("/CustomerServices <getMessages> Catch ${e.toString()}");
+    return Answer(
+        body: {"error": e.toString()},
+        message: "Conexion inestable con el back",
+        status: 1002,
+        error: true);
+  }
+}
+////////////////////////
+Future<Answer> putStatus({required String action, required String idM}) async {
+  log("/StoreServices <putStatus> ¡");
+  try {
+    Map<String, dynamic> body = {
+      "action": action,
+      "id_mensaje": idM,
+    };
+
+    // Si la acción es 'R' y el comentario no es nulo ni vacío, agregarlo al cuerpo
+    // Imprimir el cuerpo antes de enviarlo
+    log("Body enviado mensaje recivido: ${jsonEncode(body)}");
+
+    var response = await http.put(Uri.parse("${prefs.urlBase}chat"),
+        headers: {
+          HttpHeaders.contentTypeHeader: 'application/json; charset=UTF-8',
+          "x-api-key": apiKey,
+          "client_secret": prefs.clientSecret,
+          "Authorization": "Bearer ${prefs.token}",
+        },
+        // Verificar lso datos
+        body: jsonEncode(body) );
+    log("/StoreServices <postValidated>");
+    return Answer.fromService(response,201);
+  } catch (e) {
+    log("/StoreServices <putStatus> Catch");
+    return Answer(
+        body: e,
+        message: "Algo salio mal, revisa tu conexión a internet.",
+        status: 1002,
+        error: true);
+  }
+}
+////////////
 
 Future<Answer> getValidationList({
   required int idR,

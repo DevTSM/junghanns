@@ -58,7 +58,7 @@ class _FullScreenImageState extends State<FullScreenImage> {
   // Prepara la imagen, descargándola si es necesario
   Future<void> _prepareImage() async {
     final directory = await getExternalStorageDirectory();
-    final fileName = widget.imageUrl.split('/').last;
+    final fileName = widget.imageUrl.split('/').last.split('?').first; // ✅ Elimina parámetros
     _localFilePath = '${directory!.path}/$fileName';
 
     if (await _isFileExists(_localFilePath!)) {

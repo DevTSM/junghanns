@@ -42,7 +42,7 @@ void callbackDispatcher() {
 void initWebSocket() {
   var url = '${prefs.urlBase}:3002';
   //var socket = IO.io('https://sandbox.junghanns.app:3002',
-  var socket = IO.io('http://192.168.0.16:3000',
+  var socket = IO.io('https://sandbox.junghanns.app:3002',
     <String, dynamic>{
       'auth': {"token":"123456789"},
       'transports': ['websocket'],
@@ -120,7 +120,7 @@ Future<void> main() async {
   // Workmanager().registerOneOffTask("task-identifier", "notification");
   //initWebSocket();
   // Inicia el WebSocket global
-  SocketService();
+  //SocketService();
 
   runApp(const JunnyApp());
 }
@@ -173,7 +173,7 @@ class _JunnyAppState extends State<JunnyApp> with WidgetsBindingObserver{
     return MultiProvider(
         providers: [
           ChangeNotifierProvider(create: (context) => ProviderJunghanns()),
-          ChangeNotifierProvider(create: (context) => ChatProvider()), // Aquí agregas el ChatProvider
+          //ChangeNotifierProvider(create: (context) => ChatProvider()), // Aquí agregas el ChatProvider
         ],
       child: MaterialApp(
         navigatorKey: navigatorKey,

@@ -38,7 +38,7 @@ const List<Widget> pages = [
   Notificactions(),
   NewCustomer(),
   Call(),
-  ChatScreen(),
+  //ChatScreen(),
 ];
 
 class HomePrincipal extends StatefulWidget {

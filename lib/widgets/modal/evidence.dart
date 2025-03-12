@@ -52,11 +52,14 @@ class _CommentState extends State<Comment> {
   final ImagePicker _picker = ImagePicker();
   bool isLoadingOne = false;
   final DatabaseHelper dbHelper = DatabaseHelper();
+  late bool imageTooLarge; // Variable para mostrar alerta
+
 
   @override
   void initState() {
     super.initState();
     isLoadingOne = false;
+    imageTooLarge = false;
     print("Fecha de registro recibida: ${widget.fechaRegistro}");
   }
 
@@ -78,16 +81,19 @@ class _CommentState extends State<Comment> {
       double fileSizeInMB = fileSizeInBytes / (1024 * 1024); // Convertir a MB
 
       if (fileSizeInMB > 2) {
+        //imageTooLarge = true;
         Fluttertoast.showToast(
           msg: "La imagen supera los 2 MB. Por favor, toma otra foto.",
           toastLength: Toast.LENGTH_LONG,
           gravity: ToastGravity.TOP,
         );
-        return; // Evita asignar la imagen si es demasiado grande
+        //return; // Evita asignar la imagen si es demasiado grande
       }
 
       setState(() {
+      imageTooLarge = true; // Mostrar alerta
         _imageFile = imageFile;
+        print('imprime el valor dentro de take: ${imageTooLarge}');
       });
     }
   }*/
@@ -109,7 +115,7 @@ class _CommentState extends State<Comment> {
       double compressedSizeInMB = compressedSizeInBytes / (1024 * 1024);
       print("Tamaño comprimido: ${compressedSizeInMB.toStringAsFixed(2)} MB");
 
-      if (fileSizeInMB > 2) {
+      /*if (fileSizeInMB > 2) {
         Fluttertoast.showToast(
           msg: "La imagen sigue superando los 2 MB. Por favor, toma otra foto.",
           toastLength: Toast.LENGTH_LONG,
@@ -124,14 +130,23 @@ class _CommentState extends State<Comment> {
           toastLength: Toast.LENGTH_LONG,
           gravity: ToastGravity.TOP,
         );
-      }
+      }*/
 
-      setState(() {
+      /*setState(() {
         _imageFile = compressedImage;
+      });
+      */
+      setState(() {
+        if (fileSizeInMB > 2) {
+          imageTooLarge = true; // Mostrar alerta
+          _imageFile = compressedImage; // No asignar la imagen si es muy grande
+        } else {
+          imageTooLarge = false; // Ocultar alerta
+          _imageFile = compressedImage;
+        }
       });
     }
   }
-
 // Función para comprimir la imagen
   Future<File> _compressImage(File file) async {
     Uint8List imageBytes = await file.readAsBytes();
@@ -279,6 +294,37 @@ class _CommentState extends State<Comment> {
       ],
     );
   }
+  Widget _buildAlert() {
+    if (imageTooLarge == true) {
+      print('IMPRIMIENDO EL VALO DE : ${imageTooLarge}');
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+        child: Container(
+          padding: EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: Colors.red.withOpacity(0.1),
+            border: Border.all(color: Colors.red, width: 1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: const Row(
+            children: [
+              FaIcon(FontAwesomeIcons.warning, color: Colors.red, size: 25,),
+              SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  "Revisa la configuración y parámetros de la cámara. La imagen supera los 2MB.",
+                  style: TextStyle(color: Colors.red, fontSize: 14),
+                  textAlign: TextAlign.justify,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    return SizedBox.shrink();
+  }
+
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -314,6 +360,7 @@ class _CommentState extends State<Comment> {
               ),
               textAlign: TextAlign.center,
             ),
+            _buildAlert(),
             const SizedBox(height: 10),
             if (_imageFile != null)
               Image.file(

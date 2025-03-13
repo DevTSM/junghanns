@@ -109,7 +109,7 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
               .getLocation()
               .timeout(const Duration(seconds: 15));
           //Modificación
-          /*widget.customerCurrent.lat = currentLocation.latitude!;
+         /* widget.customerCurrent.lat = currentLocation.latitude!;
           widget.customerCurrent.lng = currentLocation.longitude!;*/
           await funCheckDistance(currentLocation);
         } else {

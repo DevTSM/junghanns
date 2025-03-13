@@ -11,7 +11,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:junghanns/models/notification.dart';
+import 'package:junghanns/pages/socket/socket_service.dart';
 import 'package:junghanns/preferences/global_variables.dart';
+import 'package:junghanns/provider/chat_provider.dart';
 import 'package:junghanns/provider/provider.dart';
 import 'package:junghanns/routes/routes.dart';
 import 'package:junghanns/styles/color.dart';
@@ -39,6 +41,7 @@ void callbackDispatcher() {
 
 void initWebSocket() {
   var url = '${prefs.urlBase}:3002';
+  //var socket = IO.io('https://sandbox.junghanns.app:3002',
   var socket = IO.io('https://sandbox.junghanns.app:3002',
     <String, dynamic>{
       'auth': {"token":"123456789"},
@@ -71,6 +74,20 @@ void initWebSocket() {
       NotificationService _notificationService = NotificationService();
       _notificationService.showNotifications("Notify", data.toString());
     });
+
+    // Escuchar el evento de desconexión
+    socket.onDisconnect((_) {
+      print("Desconectado del servidor");
+      NotificationService _notificationService = NotificationService();
+      _notificationService.showNotifications("Conexión perdida", "No se pudo conectar al servidor.");
+    });
+
+    // Escuchar el error de conexión
+    socket.onConnectError((error) {
+      print("Error de conexión: $error");
+      NotificationService _notificationService = NotificationService();
+      _notificationService.showNotifications("Error de conexión", "Ocurrió un error al intentar conectar.");
+    });
     Future.delayed(Duration(seconds: 10),(){
       if(!socket.connected){
         print("Terminando socket");
@@ -102,6 +119,9 @@ Future<void> main() async {
   // );
   // Workmanager().registerOneOffTask("task-identifier", "notification");
   //initWebSocket();
+  // Inicia el WebSocket global
+  //SocketService();
+
   runApp(const JunnyApp());
 }
 class MyHttpOverrides extends HttpOverrides {
@@ -150,8 +170,11 @@ class _JunnyAppState extends State<JunnyApp> with WidgetsBindingObserver{
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (BuildContext context) => ProviderJunghanns(),
+    return MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (context) => ProviderJunghanns()),
+          //ChangeNotifierProvider(create: (context) => ChatProvider()), // Aquí agregas el ChatProvider
+        ],
       child: MaterialApp(
         navigatorKey: navigatorKey,
         localizationsDelegates: const [

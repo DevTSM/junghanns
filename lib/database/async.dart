@@ -126,6 +126,8 @@ class Async {
     List<Map<String,dynamic>> stopPen=await handler.retrieveStopOffUpdate();
     List<Map<String, dynamic>> evidencePen = await dbHelper.retrieveEvdences();
     List<StopRuta> stopRuta=await handler.retrieveStopRuta();
+    List<Map<String, dynamic>> pendingSales = await handler.getPendingSales();
+
     if(salesPen.isNotEmpty){
       log("ventas pendientes ---------> ${salesPen.length}");
        provider.labelAsync = "Sincronizando ventas locales";
@@ -245,17 +247,29 @@ class Async {
           "lat": lat,
           "lon": lon,
           "id_autorization": e["idAutorization"],
-          "archivo": archivoFile
+          "archivo": archivoFile,
+          "fecha_registro": e["fechaRegistro"]
         };
 
         log("Datos de la evidencia antes de enviar: ${jsonEncode(data)}");
 
-        await postDirtyBroken(idRuta: e["idRuta"], idCliente: e["idCliente"], tipo: e["tipo"], cantidad: e["cantidad"], lat:lat, lon: lon, idAutorization: e["idAutorization"], archivo: archivo).then((value) async {
+        await postDirtyBroken(idRuta: e["idRuta"], idCliente: e["idCliente"], tipo: e["tipo"], cantidad: e["cantidad"], lat:lat, lon: lon, idAutorization: e["idAutorization"],  archivo: archivo, fechaRegistro: e["fechaRegistro"]).then((value) async {
           if (!value.error) {
             int? evidenceId = await dbHelper.getEvidenceIdByAuthorization(e["idAutorization"]);
             log("Se actualizan los datos");
             await dbHelper.updateEvidence(evidenceId!, 1, 0);
-            provider.isNeedAsync = false;
+            //provider.isNeedAsync = false;
+            // Verificar si quedan evidencias pendientes con (0, 0)
+            int pendingCount = await dbHelper.countPendingEvidences();
+            log("Ya paso el conteno de evidenciassss");
+            if (pendingCount == 0) {
+              provider.isNeedAsync = false;
+              log("Es trueeeeeeeeee");
+            }
+            for (var sale in pendingSales) {
+              log("Venta pendiente en la ultima parte para verificar: ${sale.toString()}");
+              provider.isNeedAsync = true;
+            }
           } else {
             isNotSuccess = true;
             if (value.status != 1002) {
@@ -273,6 +287,7 @@ class Async {
         await handler.updateStopRuta(1, e.id);
       }
     }
+
     return !isNotSuccess;
   }
   

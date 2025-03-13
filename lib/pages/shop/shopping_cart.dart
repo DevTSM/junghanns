@@ -934,6 +934,9 @@ class _ShoppingCartState extends State<ShoppingCart> {
             (idReasonAuth == 4 || provider.basketCurrent.authCurrent.idReasonAuth == 4)) {
 
           String tipo;
+          String fecha = (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString();
+          print('fechahaaaaa${fecha}');
+
           if (idReasonAuth == 4 || provider.basketCurrent.authCurrent.idReasonAuth == 4) {
             tipo = 'MS';
           } else {
@@ -951,6 +954,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
                 'cantidad': productsList.first.number.toString(),
                 'lat': latSale,
                 'lon': lngSale,
+                'fechaRegistro': fecha,
                 'idAutorization': (widget.authList.isNotEmpty ? widget.authList[0].idAuth : null) ?? provider.basketCurrent.authCurrent.idAuth,
               });
               confirmarSaleYes(widget.customerCurrent.payment[1]);
@@ -962,6 +966,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
             cantidad: productsList.first.number.toString(),
             lat: latSale,
             lon: lngSale,
+            fechaRegistro: fecha,
             idAutorization: (widget.authList.isNotEmpty ? widget.authList[0].idAuth : null) ?? provider.basketCurrent.authCurrent.idAuth,
           );
 
@@ -1006,6 +1011,9 @@ class _ShoppingCartState extends State<ShoppingCart> {
           validacionCumplida = true;
 
           String tipo;
+          String fecha = (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString();
+          print('fechahaaaaa${fecha}');
+
           if (idReasonAuth == 4 || provider.basketCurrent.authCurrent.idReasonAuth == 4) {
             tipo = 'MS';
           } else {
@@ -1023,6 +1031,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
                 'cantidad': productsList.first.number.toString(),
                 'lat': latSale,
                 'lon': lngSale,
+                'fechaRegistro': fecha,
                 'idAutorization': (widget.authList.isNotEmpty ? widget.authList[0].idAuth : null) ?? provider.basketCurrent.authCurrent.idAuth,
               });
               confirmarSaleYes(widget.customerCurrent.payment[1]);
@@ -1034,6 +1043,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
             cantidad: productsList.first.number.toString(),
             lat: latSale,
             lon: lngSale,
+            fechaRegistro: fecha,
             idAutorization: (widget.authList.isNotEmpty ? widget.authList[0].idAuth : null) ?? provider.basketCurrent.authCurrent.idAuth,
           );
 
@@ -1094,6 +1104,8 @@ class _ShoppingCartState extends State<ShoppingCart> {
                 (idReasonAuth == 4 || provider.basketCurrent.authCurrent.idReasonAuth == 4)) {
 
               String tipo;
+              String fecha = (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString();
+              print('fechahaaaaa${fecha}');
 
               if (idReasonAuth == 4 || provider.basketCurrent.authCurrent.idReasonAuth == 4) {
                 tipo = 'MS';
@@ -1112,6 +1124,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
                     'cantidad': productsList.first.number.toString(),
                     'lat': latSale,
                     'lon': lngSale,
+                    'fechaRegistro': fecha,
                     'idAutorization': (widget.authList.isNotEmpty ? widget.authList[0].idAuth : null) ?? provider.basketCurrent.authCurrent.idAuth,
                   });
                   confirmarSaleYes(widget.customerCurrent.payment.first);
@@ -1125,6 +1138,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
                 cantidad: productsList.first.number.toString(),
                 lat: latSale,
                 lon: lngSale,
+                fechaRegistro: fecha,
                 idAutorization: (widget.authList.isNotEmpty ? widget.authList[0].idAuth : null) ?? provider.basketCurrent.authCurrent.idAuth,
               );
             } else {
@@ -1182,7 +1196,19 @@ class _ShoppingCartState extends State<ShoppingCart> {
     required double lat,
     required double lon,
     required String idAutorization,
+    required String fechaRegistro,
   }) async {
+    print("🚀 Enviando datos a submitDirtyBroken estan en _uploadAndConfirm:");
+    print("idRuta: $idRuta");
+    print("idCliente: $idCliente");
+    print("tipo: $tipo");
+    print("cantidad: $cantidad");
+    print("lat: $lat");
+    print("lon: $lon");
+    print("idAutorization: $idAutorization");
+    print("fechaRegistro: $fechaRegistro");
+    print("archivo: ${imageFile?.path ?? 'Sin archivo'}");
+
     // Implementar aquí la lógica de carga y confirmación
     context.read<ProviderJunghanns>().submitDirtyBroken(
       idRuta: idRuta,
@@ -1193,6 +1219,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
       lon: lon,
       idAutorization: int.parse(idAutorization),
       archivo: imageFile!,
+      fechaRegistro: fechaRegistro,
     );
   }
 
@@ -1293,6 +1320,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
     // se asigna el id de operacion local para evitar duplicidad
     data["id_local"] = id;
     log("venta enviada con :::::::: $data");
+
     //se intenta enviar la venta
     await postSale(data).then((answer) async {
       setState(() {
@@ -1373,9 +1401,10 @@ class _ShoppingCartState extends State<ShoppingCart> {
         await handler.updateSale(
             {'isUpdate': 1, 'fecha': DateTime.now().toString()}, id);
         //se regresa al dashboard
-        // Subir la imagen y confirmar
+        // Subir la evidencia y confirmar
         // Itera sobre los datos recopilados en `commentsData` y llama a `_uploadAndConfirm`
         for (var data in commentsData) {
+          print("Datos a subir----------------------: $data");
           await _uploadAndConfirm(
             imageFile: data['image'],
             idRuta: data['idRuta'],
@@ -1385,6 +1414,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
             lat: double.parse(data['lat'].toString()),
             lon: double.parse(data['lon'].toString()),
             idAutorization: data['idAutorization'].toString(),
+            fechaRegistro: data['fechaRegistro'].toString(),
           );
         }
         //Navigator.pop(context, true);

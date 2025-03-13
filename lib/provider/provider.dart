@@ -1508,10 +1508,11 @@ class ProviderJunghanns extends ChangeNotifier {
     required double lon,
     required int idAutorization,
     required File archivo,
+    required String fechaRegistro,
   }) async {
     notifyListeners();
     DatabaseHelper dbHelper = DatabaseHelper();
-
+print("Fecha registro en el provider: ${fechaRegistro}");
     await postDirtyBroken(
       idRuta: idRuta,
       idCliente: idCliente,
@@ -1521,6 +1522,8 @@ class ProviderJunghanns extends ChangeNotifier {
       lon: lon,
       idAutorization: idAutorization,
       archivo: archivo,
+      fechaRegistro: fechaRegistro,
+
     ).then((answer) async {
       // Buscar el ID de la evidencia en la base de datos usando idAutorization
       int? evidenceId = await dbHelper.getEvidenceIdByAuthorization(idAutorization);

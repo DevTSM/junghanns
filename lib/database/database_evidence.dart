@@ -20,14 +20,14 @@ class DatabaseHelper {
 
   Future<Database> _initDatabase() async {
     Directory documentsDirectory = await getApplicationDocumentsDirectory();
-    String path = join(documentsDirectory.path, 'evidencesCortesia.db');
+    String path = join(documentsDirectory.path, 'evidenciasMerma.db');
 
     return await openDatabase(
       path,
       version: 1,
       onCreate: (Database db, int version) async {
         await db.execute('''
-          CREATE TABLE evidencesCortesia (
+          CREATE TABLE evidenciasMerma (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             idRuta TEXT,
             idCliente TEXT,
@@ -37,6 +37,7 @@ class DatabaseHelper {
             lon DOUBLE,
             idAutorization INTEGER,
             archivo TEXT,
+            fechaRegistro TEXT,
             isUploaded INTEGER,
             isError INTEGER DEFAULT 0
           )
@@ -45,9 +46,9 @@ class DatabaseHelper {
     );
   }
 
-  Future<int> insertEvidence(String idRuta, String idCliente, String tipo, String cantidad, double lat, double lon, int idAutorization, String archivo, int isUploaded, int isError) async {
+  Future<int> insertEvidence(String idRuta, String idCliente, String tipo, String cantidad, double lat, double lon, int idAutorization, String archivo, String fechaRegistro, int isUploaded, int isError) async {
     final db = await database;
-    return await db.insert('evidencesCortesia', {
+    return await db.insert('evidenciasMerma', {
       'idRuta': idRuta,
       'idCliente': idCliente,
       'tipo': tipo,
@@ -56,6 +57,7 @@ class DatabaseHelper {
       'lon': lon,
       'idAutorization': idAutorization,
       'archivo': archivo,
+      'fechaRegistro': fechaRegistro,
       'isUploaded': isUploaded,
       'isError': isError,
     });
@@ -64,7 +66,7 @@ class DatabaseHelper {
   Future<int> updateEvidence(int id, int isUploaded, int isError) async {
     final db = await database;
     return await db.update(
-      'evidencesCortesia',
+      'evidenciasMerma',
       {
         'isUploaded': isUploaded,
         'isError': isError
@@ -77,7 +79,7 @@ class DatabaseHelper {
   Future<int?> getEvidenceIdByAuthorization(int idAutorization) async {
     final db = await database;
     List<Map<String, dynamic>> result = await db.query(
-      'evidencesCortesia',
+      'evidenciasMerma',
       columns: ['id'],
       where: 'idAutorization = ?',
       whereArgs: [idAutorization],
@@ -91,7 +93,7 @@ class DatabaseHelper {
   Future<List<Map<String, dynamic>>> retrieveEvdences() async {
     final db = await database;
     return await db.query(
-        'evidencesCortesia',
+        'evidenciasMerma',
         where: "isUploaded = ? AND isError = ?",
         whereArgs: [0, 0],
         orderBy: 'id DESC'
@@ -100,7 +102,7 @@ class DatabaseHelper {
 
   Future<List<Evidence>> getAllEvidences() async {
     final db = await database;
-    final List<Map<String, dynamic>> maps = await db.query('evidencesCortesia');
+    final List<Map<String, dynamic>> maps = await db.query('evidenciasMerma');
 
     return List.generate(maps.length, (i) {
       return Evidence(
@@ -112,9 +114,18 @@ class DatabaseHelper {
         lon: maps[i]['lon'] ?? 0.0,
         idAutorization: maps[i]['idAutorization'] ?? 0,
         filePath: maps[i]['archivo'] ?? '',
+        fechaRegistro: maps[i]['fechaRegistro'] ?? '',
         isUploaded: (maps[i]['isUploaded'] ?? 0) == 1 ? true : false,
         isError: (maps[i]['isError'] ?? 0 )== 1 ? true : false,  // Obtener idError
       );
     });
   }
+
+  Future<int> countPendingEvidences() async {
+    final db = await database;
+    var result = await db.rawQuery(
+        "SELECT COUNT(*) as count FROM evidenciasMerma WHERE isUploaded = 0 AND isError = 0");
+    return Sqflite.firstIntValue(result) ?? 0;
+  }
+
 }

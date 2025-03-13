@@ -56,7 +56,24 @@ class NotificationService {
   final IOSNotificationDetails _iosNotificationDetails =
       const IOSNotificationDetails(sound: 'slow_spring_board.aiff');
 
+  // Método actualizado para generar un ID único
   Future<void> showNotifications(String title, String body) async {
+    try {
+      // Genera un ID único para cada notificación (timestamp)
+      int notificationId = DateTime.now().millisecondsSinceEpoch % (1 << 31);  // Limita al rango de 32 bits
+
+      await flutterLocalNotificationsPlugin.show(
+        notificationId, // Usar un ID único
+        title,
+        body,
+        NotificationDetails(
+            android: _androidNotificationDetails, iOS: _iosNotificationDetails),
+      );
+    } catch (e) {
+      log("error notificacionService=====> ${e.toString()}");
+    }
+  }
+  /*Future<void> showNotifications(String title, String body) async {
     try{
     await flutterLocalNotificationsPlugin.show(
       0,
@@ -68,7 +85,7 @@ class NotificationService {
     }catch(e){
       log("error =====> ${e.toString()}");
     }
-  }
+  }*/
 
   Future<void> scheduleNotifications() async {
     await flutterLocalNotificationsPlugin.zonedSchedule(

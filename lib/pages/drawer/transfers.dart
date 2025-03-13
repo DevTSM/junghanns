@@ -34,6 +34,7 @@ import '../../util/location.dart';
 import '../../widgets/card/product_others_card.dart';
 import '../../widgets/modal/add_missing_product.dart';
 
+import '../../widgets/modal/informative.dart';
 import '../home/home_principal.dart';
 
 class Transfers extends StatefulWidget {
@@ -699,36 +700,15 @@ class _TransfersState extends State<Transfers> {
       "garrafon": {
         "vacios": vacios,
         "llenos": 0,
-        /*"sucios_cte": 0,
-        "rotos_cte": 0,
-        "sucios_ruta": 0,
-        "rotos_ruta": 0,
-        "a_la_par": 0,
-        "comodato": 0,
-        "prestamo": 0,
-        "mal_sabor": 0,*/
         "liquido_20": liquidos,
       },
       "desmineralizados": {
         "llenos_des": 0,
-        /*"rotos_cte": 0,
-        "sucios_cte": 0,
-        "roto_ruta_des": 0,
-        "sucio_ruta_des": 0,
-        "prestamo": 0,*/
         "liquido_desmi": liquidosDesmineralizado,
       },
       "garradon11l": {
         "llenos_11": 0,
         "vacios_11": vacios11L,
-        /*"roto_cte_11": 0,
-        "sucios_cte_11": 0,
-        "roto_ruta_11": 0,
-        "sucio_ruta_11": 0,
-        "a_la_par_11": 0,
-        "comodato_11": 0,
-        "prestamo_11": 0,
-        "mal_sabor_11": 0,*/
         "liquido_11": liquidos11L
       },
       "faltantes": [],
@@ -739,6 +719,9 @@ class _TransfersState extends State<Transfers> {
 
     int? deliveryId = route['id']; // Extrae un entero del Map
 
+    // Validar si los campos están vacíos y la lista está vacía
+    if ((vacios != 0 ||liquidos != 0 ||liquidosDesmineralizado != 0 ||liquidos11L != 0 ||vacios11L != 0 ) || !missingProducts.isEmpty) {
+      print('Si se envia con datoss');
     await providerJunghanns.transfersProducts(
       idRuta: prefs.idRouteD,
       lat: _currentLocation.latitude,
@@ -749,7 +732,6 @@ class _TransfersState extends State<Transfers> {
       idDestination: deliveryId,
       delivery: deliveryData, provider: providerJunghanns,
     );
-
     await _refreshData();
     providerJunghanns.fetchValidation(
 
@@ -791,6 +773,26 @@ class _TransfersState extends State<Transfers> {
     setState(() {
       isButtonDisabled = false;
     });
+    } else{
+
+      print('Vacios todos los campos');
+
+      CustomModal.show(
+        context: context,
+        icon: Icons.cancel_outlined,
+        title: "ERROR",
+        message: "Datos vacios, verifique la información",
+        iconColor: ColorsJunghanns.red,
+      );
+      setState(() {
+        isLoadingOne = false;
+      });
+
+      setState(() {
+        isButtonDisabled = false;
+      });
+
+    }
 
   }
 

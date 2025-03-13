@@ -17,7 +17,9 @@ import 'package:junghanns/database/async.dart';
 import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/models/dashboard.dart';
 import 'package:junghanns/models/product.dart';
+import 'package:junghanns/pages/chat/chat.dart';
 import 'package:junghanns/preferences/global_variables.dart';
+import 'package:junghanns/provider/chat_provider.dart';
 import 'package:junghanns/provider/provider.dart';
 import 'package:junghanns/styles/color.dart';
 import 'package:junghanns/styles/decoration.dart';
@@ -110,28 +112,7 @@ class _HomeState extends State<Home> {
     setState(() {
       if (filteredData.isNotEmpty) {
         specialData = filteredData;  // Asigna los datos filtrados a specialData
-        // Imprimir el contenido de specialData para confirmarlo
-        print('Contenido de specialData (filtrado): $specialData');
-        print('Llama al modal');
         showValidationModal(context);
-      } else {
-        specialData = [];  // Si no hay datos que cumplan las condiciones, asignar un arreglo vacío
-      }
-    });
-
-    // Filtrar los datos según las condiciones especificadas
-    final filteredDataTranfers = provider.validationList.where((validation) {
-      return validation.status == "P" && validation.valid == "Ruta" && validation.typeValidation == 'T' && validation.idRoute != prefs.idRouteD;
-    }).toList();
-
-// Verificar si hay datos filtrados
-    setState(() {
-      if (filteredData.isNotEmpty) {
-        specialData = filteredDataTranfers;  // Asigna los datos filtrados a specialData
-        // Imprimir el contenido de specialData para confirmarlo
-        print('Contenido de specialData (filtrado): $specialData');
-        print('Llama al modal');
-        showTransferModal(context);
       } else {
         specialData = [];  // Si no hay datos que cumplan las condiciones, asignar un arreglo vacío
       }
@@ -157,9 +138,7 @@ class _HomeState extends State<Home> {
     setState(() {
       if (filteredDataTranfers.isNotEmpty) {
         specialData = filteredDataTranfers;  // Asigna los datos filtrados a specialData
-        // Imprimir el contenido de specialData para confirmarlo
-        print('Contenido de specialData (filtrado): $specialData');
-        print('Llama al modal');
+        print('Llama al modal trasferencias');
         showTransferModal(context);
       } else {
         specialData = [];  // Si no hay datos que cumplan las condiciones, asignar un arreglo vacío
@@ -288,8 +267,108 @@ class _HomeState extends State<Home> {
     }).toList();
     prefs.dataSale = true;
   }
-
   @override
+  Widget build(BuildContext context) {
+    size = MediaQuery.of(context).size;
+    provider = Provider.of<ProviderJunghanns>(context);
+
+    return Scaffold(
+      body: Stack(
+        children: [
+          RefreshIndicator(
+            onRefresh: () async {
+              dashboardR = DashboardModel.fromPrefs();
+              isLoading = false;
+              isLoadingAsync = false;
+              atendidos = 0;
+              routeTotal = 0;
+              specials = 0;
+              specialsA = 0;
+              entrega = 0;
+              entregaA = 0;
+              llama = 0;
+              llamaA = 0;
+              rutaA = 0;
+              llamaC = 0;
+              llamaCA = 0;
+              secon = 0;
+              getDashboarR();
+              getAsync();
+              _refreshTimer();
+            },
+            child: SingleChildScrollView(
+              child: Container(
+                height: size.height * 1.01,
+                color: ColorsJunghanns.lightBlue,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    provider.connectionStatus == 4 ? const WithoutInternet() : provider.isNeedAsync ? const NeedAsync() : Container(),
+                    deliveryMenZone(),
+                    const SizedBox(height: 20),
+                    customersZone(),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          isLoadingAsync ? const Align(alignment: Alignment.bottomCenter, child: SpinKitCircle(color: ColorsJunghanns.blue)) : buttonSync(),
+          Visibility(visible: isLoading, child: const LoadingJunghanns())
+        ],
+      ),
+      /*floatingActionButton: Consumer<ChatProvider>(
+        builder: (context, chatProvider, child) {
+          return Stack(
+            clipBehavior: Clip.none,
+            children: [
+              FloatingActionButton(
+                onPressed: () {
+                  chatProvider.resetNewMessageFlag(); // Resetea el estado al presionar el botón
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(builder: (BuildContext context) => const ChatScreen()),
+                  );
+                },
+                backgroundColor: ColorsJunghanns.blue,
+                child: const Icon(Icons.chat, color: Colors.white),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30), // Controla el redondeo del botón
+                ),
+              ),
+              // Mostrar un punto rojo si hay un nuevo mensaje
+              if (chatProvider.hasNewMessage)
+                Positioned(
+                  right: 5,
+                  top: 0,
+                  child: Container(
+                    height: 12,
+                    width: 12,
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+            ],
+          );
+        },
+      ),*/
+      /*floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute<void>(
+              builder: (BuildContext context) => const ChatScreen(),
+            ),
+          );
+        },
+        backgroundColor: ColorsJunghanns.blue, // Usa el color de tu aplicación
+        child: const Icon(Icons.chat, color: Colors.white),
+      ),*/
+    );
+  }
+
+  /* @override
   Widget build(BuildContext context) {
     size = MediaQuery.of(context).size;
     provider = Provider.of<ProviderJunghanns>(context);
@@ -346,7 +425,7 @@ class _HomeState extends State<Home> {
         Visibility(visible: isLoading, child: const LoadingJunghanns())
       ],
     );
-  }
+  }*/
 
   Widget deliveryMenZone() {
     return Container(

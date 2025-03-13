@@ -545,4 +545,13 @@ class DataBase {
     );
     log("stopRuta $id actualizada con $update");
   }
+  Future<List<Map<String, dynamic>>> getPendingSales() async {
+    final Database db = await initializeDB();
+    return await db.query(
+      'sale',
+      where: 'isUpdate = ?',
+      whereArgs: [0], // Filtra solo las ventas pendientes
+    );
+  }
+
 }

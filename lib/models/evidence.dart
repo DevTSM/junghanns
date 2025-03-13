@@ -7,6 +7,7 @@ class Evidence {
   final double lon;
   final int idAutorization;
   final String filePath;
+  final String fechaRegistro;
   final bool isUploaded;
   final bool isError;
 
@@ -19,6 +20,7 @@ class Evidence {
     required this.lon,
     required this.idAutorization,
     required this.filePath,
+    required this.fechaRegistro,
     required this.isUploaded,
     required this.isError,
   });

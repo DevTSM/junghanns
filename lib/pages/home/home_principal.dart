@@ -25,9 +25,11 @@ import 'package:linear_progress_bar/linear_progress_bar.dart';
 import 'package:location/location.dart';
 import 'package:provider/provider.dart';
 
+import '../../components/modal/chat_message.dart';
 import '../../widgets/modal/receipt_modal.dart';
 import '../../widgets/modal/transfers_modal.dart';
 import '../../widgets/modal/validation_modal.dart';
+import '../chat/chat.dart';
 
 const List<Widget> pages = [
   Home(),
@@ -36,6 +38,7 @@ const List<Widget> pages = [
   Notificactions(),
   NewCustomer(),
   Call(),
+  //ChatScreen(),
 ];
 
 class HomePrincipal extends StatefulWidget {
@@ -85,9 +88,6 @@ class _HomePrincipalState extends State<HomePrincipal> {
     setState(() {
       if (filteredData.isNotEmpty) {
         specialData = filteredData;  // Asigna los datos filtrados a specialData
-        // Imprimir el contenido de specialData para confirmarlo
-        print('Contenido de specialData (filtrado): $specialData');
-        print('Llama al modal');
         showValidationModal(context);
       } else {
         specialData = [];  // Si no hay datos que cumplan las condiciones, asignar un arreglo vacío
@@ -115,9 +115,7 @@ class _HomePrincipalState extends State<HomePrincipal> {
     setState(() {
       if (filteredDataTranfers.isNotEmpty) {
         specialData = filteredDataTranfers;  // Asigna los datos filtrados a specialData
-        // Imprimir el contenido de specialData para confirmarlo
-        print('Contenido de specialData (filtrado): $specialData');
-        print('Llama al modal');
+        print('Llama al modal trasferencias');
         showTransferModal(context);
       } else {
         specialData = [];  // Si no hay datos que cumplan las condiciones, asignar un arreglo vacío

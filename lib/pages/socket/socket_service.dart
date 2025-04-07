@@ -161,7 +161,7 @@ class SocketService {
 
     String token = _generateToken();
 
-    socket = IO.io('https://sandbox.junghanns.app:3002', <String, dynamic>{
+    socket = IO.io('https://sandbox.junghanns.app:4102', <String, dynamic>{
       'auth': {
         'token': token,
         'user': prefs.nameUserD,

@@ -10,6 +10,7 @@ class Evidence {
   final String fechaRegistro;
   final bool isUploaded;
   final bool isError;
+  final String idTransaccion;
 
   Evidence({
     required this.idRuta,
@@ -23,5 +24,6 @@ class Evidence {
     required this.fechaRegistro,
     required this.isUploaded,
     required this.isError,
+    required this.idTransaccion,
   });
 }

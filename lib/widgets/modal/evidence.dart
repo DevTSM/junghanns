@@ -26,6 +26,7 @@ class Comment extends StatefulWidget {
   final double lon;
   final String fechaRegistro;
   final int idAutorization;
+  final String idTransaccion;
 
   Comment({
     super.key,
@@ -40,6 +41,7 @@ class Comment extends StatefulWidget {
     required this.lon,
     required this.fechaRegistro,
     required this.idAutorization,
+    required this.idTransaccion,
   });
 
   @override
@@ -64,39 +66,6 @@ class _CommentState extends State<Comment> {
   }
 
   // Función para capturar imagen
-  /*Future<void> _takePicture() async {
-    final pickedFile = await _picker.pickImage(source: ImageSource.camera);
-    if (pickedFile != null) {
-      setState(() {
-        _imageFile = File(pickedFile.path);
-      });
-    }
-  }*/
-  /*Future<void> _takePicture() async {
-    final pickedFile = await _picker.pickImage(source: ImageSource.camera);
-
-    if (pickedFile != null) {
-      File imageFile = File(pickedFile.path);
-      int fileSizeInBytes = await imageFile.length();
-      double fileSizeInMB = fileSizeInBytes / (1024 * 1024); // Convertir a MB
-
-      if (fileSizeInMB > 2) {
-        //imageTooLarge = true;
-        Fluttertoast.showToast(
-          msg: "La imagen supera los 2 MB. Por favor, toma otra foto.",
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.TOP,
-        );
-        //return; // Evita asignar la imagen si es demasiado grande
-      }
-
-      setState(() {
-      imageTooLarge = true; // Mostrar alerta
-        _imageFile = imageFile;
-        print('imprime el valor dentro de take: ${imageTooLarge}');
-      });
-    }
-  }*/
   Future<void> _takePicture() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.camera);
 
@@ -115,27 +84,6 @@ class _CommentState extends State<Comment> {
       double compressedSizeInMB = compressedSizeInBytes / (1024 * 1024);
       print("Tamaño comprimido: ${compressedSizeInMB.toStringAsFixed(2)} MB");
 
-      /*if (fileSizeInMB > 2) {
-        Fluttertoast.showToast(
-          msg: "La imagen sigue superando los 2 MB. Por favor, toma otra foto.",
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.TOP,
-        );
-        return;
-      }
-      else {
-        // Si el tamaño es menor o igual a 2 MB, imprime el tamaño
-        Fluttertoast.showToast(
-          msg: "La imagen tiene un tamaño de ${compressedSizeInMB.toStringAsFixed(2)} MB.",
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.TOP,
-        );
-      }*/
-
-      /*setState(() {
-        _imageFile = compressedImage;
-      });
-      */
       setState(() {
         if (fileSizeInMB > 2) {
           imageTooLarge = true; // Mostrar alerta
@@ -190,7 +138,7 @@ class _CommentState extends State<Comment> {
       // Comprobar la conectividad
       var connectivityResult = await (Connectivity().checkConnectivity());
 
-      await dbHelper.insertEvidence(widget.idRuta, widget.idCliente,widget.tipo, widget.cantidad, widget.lat, widget.lon, widget.idAutorization, filePath, fecha, 0, 0);
+      await dbHelper.insertEvidence(widget.idRuta, widget.idCliente,widget.tipo, widget.cantidad, widget.lat, widget.lon, widget.idAutorization, filePath, fecha, widget.idTransaccion, 0, 0);
 
       // Llamar al método para imprimir los datos guardados en la base de datos
       await printEvidencesFromDB();
@@ -212,7 +160,7 @@ class _CommentState extends State<Comment> {
 
       // Imprimir las evidencias en la consola
       for (var evidence in evidences) {
-        print("ID Ruta: ${evidence.idRuta}, ID Cliente: ${evidence.idCliente}, Tipo: ${evidence.tipo}, Cantidad: ${evidence.cantidad}, Lat: ${evidence.lat}, Lon: ${evidence.lon}, ID Autorización: ${evidence.idAutorization}, Path: ${evidence.filePath}, Date:${evidence.fechaRegistro}, Subido: ${evidence.isUploaded}");
+        print("ID Ruta: ${evidence.idRuta}, ID Cliente: ${evidence.idCliente}, Tipo: ${evidence.tipo}, Cantidad: ${evidence.cantidad}, Lat: ${evidence.lat}, Lon: ${evidence.lon}, ID Autorización: ${evidence.idAutorization}, Path: ${evidence.filePath}, Date:${evidence.fechaRegistro}, Subido: ${evidence.isUploaded}, idTransaccion: ${evidence.idTransaccion}");
       }
     } catch (e) {
       print("Error al obtener evidencias: $e");
@@ -250,18 +198,6 @@ class _CommentState extends State<Comment> {
                 if (_imageFile != null) {
                   // Guardar la imagen en el almacenamiento local
                   await _saveImageToLocalStorage(_imageFile!);
-
-                  // Llamamos al provider y submitDirtyBroken
-                  /*context.read<ProviderJunghanns>().submitDirtyBroken(
-                    idRuta: widget.idRuta,
-                    idCliente: widget.idCliente,
-                    tipo: widget.tipo,
-                    cantidad: widget.cantidad,
-                    lat: widget.lat,
-                    lon: widget.lon,
-                    idAutorization: widget.idAutorization,
-                    archivo: _imageFile!,
-                  );*/
 
                   Navigator.pop(context);
                   // Llamar a la función yesFunction
@@ -421,6 +357,7 @@ void showComment({
   required double lon,
   required int idAutorization,
   required String fechaRegistro,
+  required String idTransaccion,
 }) {
   showDialog(
     context: context,
@@ -443,6 +380,7 @@ void showComment({
         lon: lon,
         idAutorization: idAutorization,
         fechaRegistro: fechaRegistro,
+        idTransaccion: idTransaccion,
       ),
     ),
   );

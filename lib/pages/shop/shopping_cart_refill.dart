@@ -3,16 +3,16 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
-import 'package:junghanns/components/need_async.dart';
-import 'package:junghanns/widgets/card/product.dart';
-import 'package:location/location.dart';
+
+import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 import 'package:junghanns/components/bottom_bar.dart';
 import 'package:junghanns/components/button.dart';
 import 'package:junghanns/components/loading.dart';
+import 'package:junghanns/components/need_async.dart';
 import 'package:junghanns/components/without_internet.dart';
 import 'package:junghanns/models/config.dart';
 import 'package:junghanns/models/customer.dart';
@@ -24,8 +24,11 @@ import 'package:junghanns/services/store.dart';
 import 'package:junghanns/styles/color.dart';
 import 'package:junghanns/styles/decoration.dart';
 import 'package:junghanns/styles/text.dart';
-import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:junghanns/widgets/card/product.dart';
+import 'package:location/location.dart';
 import 'package:provider/provider.dart';
+
+import '../../models/authorization.dart';
 
 class ShoppingCartRefill extends StatefulWidget {
   CustomerModel customerCurrent;
@@ -46,12 +49,15 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
   late List<ConfigModel> configList;
   late bool isLoading, isRange;
   late double latSale, lngSale,distance;
+  late List<AuthorizationModel> authList;
+  bool isProcessing = false;
 
   @override
   void initState() {
     super.initState();
     configList=[];
     refillList=[];
+    authList = [];
     isLoading = false;
     isRange = false;
     distance = 0;
@@ -62,7 +68,24 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
   @override
   void dispose(){
     super.dispose();
-    provider.initShopping(CustomerModel.fromState());
+    //provider.initShopping(CustomerModel.fromState());
+  }
+
+  getAuth() async {
+    authList.clear();
+    await getAuthorization(widget.customerCurrent.idClient, prefs.idRouteD)
+        .then((answer) {
+      log(answer.body.toString());
+      if (!answer.error) {
+        answer.body
+            .map((e) => authList.add(AuthorizationModel.fromService(e)))
+            .toList();
+        widget.customerCurrent.setAuth(authList);
+      } else {
+        authList.addAll(widget.customerCurrent.auth);
+      }
+    });
+
   }
 
   getDataRefill() async {
@@ -76,6 +99,9 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
   }
   
   showConfirmSale() {
+    setState(() {
+      isProcessing = true; // Deshabilitar el botón
+    });
     showDialog(
           context: context,
           builder: (BuildContext context) {
@@ -132,7 +158,7 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
                   }, decoration: Decorations.blueBorder12, style: TextStyles.white18SemiBoldIt, label: "Si")),
                   const SizedBox(width: 25,),
            Expanded(child:ButtonJunghanns(
-              fun:() {
+              fun:() async {
                     Navigator.pop(context);
                   },
                    decoration: Decorations.redCard, style: TextStyles.white18SemiBoldIt, label: 
@@ -144,6 +170,9 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
               ),
             );
           });
+    setState(() {
+      isProcessing = false; // Reactivar el botón si es necesario
+    });
   }
 
   setCurrentLocation() async {
@@ -280,7 +309,15 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
     };
     int id= await handler.insertSale(dataLocal);
     data["id_local"]=id;
-    widget.customerCurrent.setMoney(((provider.basketCurrent.sales.map((element) => element.price*element.number).toList()).reduce((value, element) => value+element))+widget.customerCurrent.purse,isOffline:true,type:0);
+    
+    await postSale(data).then((answer) async {
+      setState(() {
+        isLoading = false;
+      });
+      if (!answer.error){
+        await handler.updateSale({'isUpdate': 1,
+      'fecha':DateTime.now().toString()}, id).then((value){
+        widget.customerCurrent.setMoney(((provider.basketCurrent.sales.map((element) => element.price*element.number).toList()).reduce((value, element) => value+element))+widget.customerCurrent.purse,isOffline:true,type:0);
     widget.customerCurrent.addHistory({
     'fecha':DateTime.now().toString(),
     'tipo':"RECARGA",
@@ -289,27 +326,32 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
     'cantidad':provider.basketCurrent.sales .map((e) => e.number).toList().reduce((value, element) => value+element)
   });
     widget.customerCurrent.setType(7);
-    log("====> request $data");
-    await postSale(data).then((answer) async {
-      setState(() {
-        isLoading = false;
-      });
-      if (!answer.error){
-        await handler.updateSale({'isUpdate': 1,
-      'fecha_update':DateTime.now().toString(),'isError':0}, id).then((value){
-          Fluttertoast.showToast(
-          msg: "Venta realizada con exito",
-          timeInSecForIosWeb: 2,
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.TOP,
-          webShowClose: true,
-        );
-        
+        return AwesomeDialog(
+          context: context,
+          dialogType:
+             DialogType.success,
+          animType: AnimType.rightSlide,
+          title:'Recarga registrada con exito',
+          dismissOnTouchOutside: false,
+          btnOkText: "Aceptar",
+          btnOkOnPress: () => Navigator.pop(context, true),
+        ).show();
         });
+      }else{
+        await handler.updateSale({"isError":1,'isUpdate': 1,},id).then((value) => AwesomeDialog(
+          context: context,
+          dialogType: DialogType.error,
+          animType: AnimType.rightSlide,
+          title:'¡Upss!',
+          dismissOnTouchOutside: false,
+          desc: answer.status == 1002 ? "No es posible registrar una recarga sin red, verifica tu conexion." : answer.message,
+          btnOkText: "Aceptar",
+          btnOkOnPress: () => Navigator.pop(context, true),
+        ).show());
         
       }
     });
-        Navigator.pop(context,true);
+        //Navigator.pop(context,true);
   }
 
   @override
@@ -318,24 +360,13 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
     provider = Provider.of<ProviderJunghanns>(context);
     return Scaffold(
       backgroundColor: ColorsJunghanns.white,
-      appBar: AppBar(
-        backgroundColor: ColorsJunghanns.greenJ,
-        systemOverlayStyle: const SystemUiOverlayStyle(
-            statusBarColor: ColorsJunghanns.greenJ,
-            statusBarIconBrightness: Brightness.light,
-            statusBarBrightness: Brightness.light),
-        leading: GestureDetector(
-          child: Container(
-              padding: const EdgeInsets.only(left: 24),
-              child: Image.asset("assets/icons/menuWhite.png")),
-          onTap: () {},
-        ),
-        elevation: 0,
-      ),
+      appBar: PreferredSize(
+                preferredSize: const Size.fromHeight(0),
+                child: Container(),),
       body: Stack(
         children: [header(), isLoading ? const LoadingJunghanns() : itemList()],
       ),
-      bottomNavigationBar: bottomBar(() {}, 2, isHome: false, context: context),
+      bottomNavigationBar: bottomBar(() {}, 2,context, isHome: false),
     );
   }
 
@@ -432,10 +463,10 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
                                     update: (ProductModel productCurrent,
                                         int isAdd) {
                                       provider.updateProductShopping(
-                                          productCurrent, isAdd);
+                                          context, productCurrent, isAdd);
                                       setState(() {});
                                     },
-                                    productCurrent: refillList[index],
+                                    productCurrent: refillList[index],  customerCurrent: widget.customerCurrent,
                                   ),
                         childCount: refillList.length),
                   ),
@@ -446,14 +477,29 @@ class _ShoppingCartRefillState extends State<ShoppingCartRefill> {
                         margin: const EdgeInsets.only(
                             left: 15, right: 15, bottom: 30, top: 30),
                         width: double.infinity,
-                        height: 40,
+                        height: 45,
                         alignment: Alignment.center,
                         child: ButtonJunghanns(
+                          decoration: isProcessing
+                              ? Decorations.greyBorder12 // Botón deshabilitado
+                              : Decorations.blueBorder12, // Botón habilitado
+                          fun: isProcessing
+                              ? null // Deshabilitar botón si está procesando
+                              : () async {
+                            showConfirmSale(); // Encapsular la llamada a caseSale dentro de una función anónima
+                          }, // Lógica del botón
+                          label: isProcessing
+                              ? "Procesando..." // Texto cuando está deshabilitado
+                              : "Terminar venta", // Texto cuando está habilitado
+                          style: isProcessing
+                              ? TextStyles.white17_5 // Estilo deshabilitado
+                              : TextStyles.white17_5,
+                        )/*ButtonJunghanns(
                           decoration: Decorations.blueBorder12,
                           fun: () => showConfirmSale(),
                           label: "Terminar venta",
                           style: TextStyles.white17_5,
-                        )))
+                        )*/))
               ],
             ),
     );

@@ -12,9 +12,8 @@ import 'package:junghanns/models/stop_ruta.dart';
 import 'package:junghanns/pages/home/call.dart';
 import 'package:junghanns/pages/home/home.dart';
 import 'package:junghanns/pages/home/new_customer.dart';
-import 'package:junghanns/pages/home/qr.dart';
+import 'package:junghanns/pages/home/notifications.dart';
 import 'package:junghanns/pages/home/routes.dart';
-import 'package:junghanns/pages/home/second.dart';
 import 'package:junghanns/pages/home/specials.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/provider/provider.dart';
@@ -26,13 +25,20 @@ import 'package:linear_progress_bar/linear_progress_bar.dart';
 import 'package:location/location.dart';
 import 'package:provider/provider.dart';
 
+import '../../components/modal/chat_message.dart';
+import '../../widgets/modal/receipt_modal.dart';
+import '../../widgets/modal/transfers_modal.dart';
+import '../../widgets/modal/validation_modal.dart';
+import '../chat/chat.dart';
+
 const List<Widget> pages = [
   Home(),
   Specials(),
   Routes(),
-  QRSeller(),
+  Notificactions(),
   NewCustomer(),
   Call(),
+  //ChatScreen(),
 ];
 
 class HomePrincipal extends StatefulWidget {
@@ -49,6 +55,7 @@ class _HomePrincipalState extends State<HomePrincipal> {
   late LocationData currentLocation;
   late int indexCurrent;
   late bool isloading,isFinRuta;
+  List specialData = [];
   @override
   void initState() {
     super.initState();
@@ -57,14 +64,67 @@ class _HomePrincipalState extends State<HomePrincipal> {
     currentLocation = LocationData.fromMap({});
     isloading=false;
     getFinRuta();
+    _refreshTimer();
   }
 
   @override
   void dispose() {
     super.dispose();
   }
+  Future<void> _refreshTimer() async {
+    final provider = Provider.of<ProviderJunghanns>(context, listen: false);
+
+    // Ahora fetchStockValidation devuelve un objeto ValidationModel
+    await _refreshTransfers();
+    await provider.fetchStockValidation();
+
+    // Filtrar los datos según las condiciones especificadas
+    final filteredData = provider.validationList.where((validation) {
+      return validation.status == "P" && validation.valid == "Planta";
+    }).toList();
+
+
+    // Verificar si hay datos filtrados
+    setState(() {
+      if (filteredData.isNotEmpty) {
+        specialData = filteredData;  // Asigna los datos filtrados a specialData
+        showValidationModal(context);
+      } else {
+        specialData = [];  // Si no hay datos que cumplan las condiciones, asignar un arreglo vacío
+        print('No se encontraron datos que cumplan las condiciones----Home principal');
+      }
+    });
+
+    if (provider.validationList.first.status =='P' && provider.validationList.first.valid == 'Ruta'){
+      showReceiptModal(context);
+    }
+  }
+
+  Future<void> _refreshTransfers() async {
+    final provider = Provider.of<ProviderJunghanns>(context, listen: false);
+
+    // Ahora fetchStockValidation devuelve un objeto ValidationModel
+    await provider.fetchValidation();
+
+    // Filtrar los datos según las condiciones especificadas
+    final filteredDataTranfers = provider.validationList.where((validation) {
+      return validation.status == "P" && validation.valid == "Ruta" && validation.typeValidation == 'T' && validation.idRoute != prefs.idRouteD;
+    }).toList();
+
+    // Verificar si hay datos filtrados
+    setState(() {
+      if (filteredDataTranfers.isNotEmpty) {
+        specialData = filteredDataTranfers;  // Asigna los datos filtrados a specialData
+        print('Llama al modal trasferencias');
+        showTransferModal(context);
+      } else {
+        specialData = [];  // Si no hay datos que cumplan las condiciones, asignar un arreglo vacío
+      }
+    });
+  }
 
   void setIndexCurrent(int current) {
+     Provider.of<ProviderJunghanns>(context,listen: false).getPendingNotification();
     setState(() {
       indexCurrent = current;
     });
@@ -126,19 +186,22 @@ class _HomePrincipalState extends State<HomePrincipal> {
       size = MediaQuery.of(context).size;
       provider = Provider.of<ProviderJunghanns>(context);
     });
+    return _body();
+  }
+  Widget _body(){
     return prefs.statusRoute == "INCM"
-        ? comidaWidget()
-        : Scaffold(
-            //key: GlobalKey<ScaffoldState>(),
-            appBar: appBarJunghanns(context, size, provider),
-            drawer: drawer(provider, context,setIndexCurrent,/*isFinRuta*/true),//se comenta el valor de confirmacion de ruta debido a una adecuacion pendiente
-            body: !provider.asyncProcess
-                ? provider.isStatusloading
-                    ? const Center(child: LoadingJunghanns())
-                    : pages[indexCurrent]
-                : asyncProcess(),
-            bottomNavigationBar: bottomBar(setIndexCurrent, indexCurrent),
-          );
+      ? comidaWidget()
+      : Scaffold(
+          //key: GlobalKey<ScaffoldState>(),
+          appBar: appBarJunghanns(context, size, provider),
+          drawer: drawer(provider, context,setIndexCurrent,/*isFinRuta*/true),//se comenta el valor de confirmacion de ruta debido a una adecuacion pendiente
+          body: !provider.asyncProcess
+            ? provider.isStatusloading
+              ? const Center(child: LoadingJunghanns())
+              : pages[indexCurrent]
+            : asyncProcess(),
+          bottomNavigationBar: bottomBar(setIndexCurrent, indexCurrent,context),
+        );
   }
 
   Widget asyncProcess() {

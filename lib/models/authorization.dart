@@ -1,3 +1,6 @@
+import 'dart:developer';
+
+import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/models/product.dart';
 
 class AuthorizationModel {
@@ -10,6 +13,10 @@ class AuthorizationModel {
   int idReasonAuth;
   String reason;
   ProductModel product;
+  CustomerModel client;
+  DateTime date;
+  dynamic evidence;
+  //String comment;
 
   AuthorizationModel(
       {required this.idAuth,
@@ -20,7 +27,9 @@ class AuthorizationModel {
       required this.observation,
       required this.idReasonAuth,
       required this.reason,
-      required this.product});
+      required this.product,
+      required this.client,
+      required this.date});
 
   factory AuthorizationModel.fromState() {
     return AuthorizationModel(
@@ -32,7 +41,9 @@ class AuthorizationModel {
         type: "0",
         observation: "",
         idReasonAuth: 0,
-        reason: "TEST");
+        reason: "TEST",
+        client: CustomerModel.fromState(),
+        date: DateTime.now());
   }
 
   factory AuthorizationModel.fromService(Map<String, dynamic> data) {
@@ -45,7 +56,9 @@ class AuthorizationModel {
         authText: data["autorizacion"] ?? "",
         observation: data["observacion"] ?? "",
         idReasonAuth: data["idMotivoAutorizacion"] ?? 0,
-        reason: data["Motivo"] ?? "");
+        reason: data["Motivo"] ?? "",
+        client: CustomerModel.fromState(),
+        date: DateTime.parse(data["fecha_creado"]!=null&&data["hora_creado"]!=null?"${data["fecha_creado"]} ${data["hora_creado"]}":DateTime.now().toString()));
   }
   factory AuthorizationModel.fromDataBase(Map<String, dynamic> data) {
     return AuthorizationModel(
@@ -57,18 +70,37 @@ class AuthorizationModel {
         authText: data["autorizacion"] ?? "",
         observation: data["observacion"] ?? "",
         idReasonAuth: data["idMotivoAutorizacion"] ?? 0,
-        reason: data["Motivo"] ?? "");
+        reason: data["Motivo"] ?? "",
+        client: CustomerModel.fromState(),
+        date: DateTime.parse(data["date"]!=null?"${data["date"]}":DateTime.now().toString()));
   }
-getMap(){
-  return {
-    "id":idAuth,
-    "product":product.getMap(),
-    "idCliente":idClient,
-    "tipo":type,
-    "idCatAutorizacion":idCatAuth,
-    "autorizacion":authText
-  };
+  getMap() {
+    Map<String, dynamic> map = {
+      "id": idAuth,
+      "product": product.getMap(),
+      "idCliente": idClient,
+      "tipo": type,
+      "idCatAutorizacion": idCatAuth,
+      "autorizacion": authText,
+      "observacion": observation,
+      "date": date.toString()
+    };
+
+    // Agrega idMotivoAutorizacion y Motivo solo si tienen valores específicos
+    if (idReasonAuth != 0) {
+      map["idMotivoAutorizacion"] = idReasonAuth;
+    }
+    if (reason.isNotEmpty) {
+      map["Motivo"] = reason;
+    }
+
+    return map;
+  }
+
+set setClient(CustomerModel client){
+  this.client=client;
 }
+
   // ProductModel getProduct() {
   //   return ProductModel(
   //       idProduct: idProduct,

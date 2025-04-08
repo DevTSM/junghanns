@@ -3,8 +3,6 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:junghanns/components/button.dart';
-import 'package:junghanns/models/transfer.dart';
-import 'package:junghanns/styles/color.dart';
 import 'package:junghanns/styles/decoration.dart';
 import 'package:junghanns/styles/text.dart';
 
@@ -41,9 +39,9 @@ class ShowLocation extends StatelessWidget {
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(
-              height: 40,
+              height: 45,
               child:ButtonJunghanns(
-                fun: () {
+                fun: () async{
                   log("Fun update location =====> $lat $lng");
                   update();
                 },

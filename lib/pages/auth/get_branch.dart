@@ -1,4 +1,4 @@
-import 'dart:convert';
+import 'dart:async';
 import 'dart:developer';
 
 import 'package:auto_size_text/auto_size_text.dart';
@@ -14,6 +14,7 @@ import 'package:junghanns/services/auth.dart';
 import 'package:location/location.dart';
 import 'package:pin_code_text_field/pin_code_text_field.dart';
 import 'package:provider/provider.dart';
+
 import '../../components/loading.dart';
 import '../../styles/color.dart';
 import '../../styles/decoration.dart';
@@ -26,36 +27,37 @@ class GetBranch extends StatefulWidget {
   State<GetBranch> createState() => _GetBranchState();
 }
 
-class _GetBranchState extends State<GetBranch> {
+class _GetBranchState extends State<GetBranch>{
   late Size size;
   late TextEditingController token,pinC;
   late bool isLoading,isValitedOtp;
   late LocationData currentLocation;
-  //
-  late ProviderJunghanns provider;
 
   @override
   void initState() {
     super.initState();
     pinC = TextEditingController();
-    token = TextEditingController();
-    currentLocation=LocationData.fromMap({});
-    isLoading=false;
-    isValitedOtp=false;
+    token = TextEditingController(text: prefs.branchOTP);
+    currentLocation = LocationData.fromMap({});
+    isLoading = false;
+    isValitedOtp = false;
+    if(prefs.branchOTP != ""){
+      setCurrentLocation();
+    }
   }
-  
+  @override
+  void dispose() {
+    super.dispose();
+  }
   setCurrentLocation() async {
     try{
-    Location locationInstance=Location();
+    Location locationInstance = Location();
     PermissionStatus permission = await locationInstance.hasPermission();
     if (permission == PermissionStatus.granted) {
-      provider.permission = true;
       locationInstance.changeSettings(accuracy: LocationAccuracy.high);
       if(await locationInstance.serviceEnabled()){
-        provider.permission = true;
       currentLocation = await locationInstance.getLocation().timeout(const Duration(seconds: 15));
       }else{
-        provider.permission = false;
         Fluttertoast.showToast(
               msg: "Activa el servicio de Ubicacion e intentalo de nuevo.",
               timeInSecForIosWeb: 2,
@@ -65,9 +67,10 @@ class _GetBranchState extends State<GetBranch> {
               backgroundColor:ColorsJunghanns.red);
       }
     } else {
-      provider.permission = false;
-      await locationInstance.requestPermission().then((value) => setCurrentLocation());
-      
+      Timer(const Duration(seconds: 2), () async { 
+        await Provider.of<ProviderJunghanns>(context,listen: false)
+          .requestAllPermissions(); 
+      });
     }
     } catch (e) {
           log("***ERROR -- $e");
@@ -93,7 +96,10 @@ class _GetBranchState extends State<GetBranch> {
           });
           if(answer.error){
             Fluttertoast.showToast(
-          msg: answer.message,
+          msg: answer.message 
+          == "No es posible realizar una activación fuera del CEDIS."
+            ? "Solo se pueden realizar activaciones dentro del CEDIS" 
+            : "Acceso denegado. El token ingresado es incorrecto.",
           timeInSecForIosWeb: 2,
           toastLength: Toast.LENGTH_LONG,
           gravity: ToastGravity.TOP,
@@ -101,7 +107,8 @@ class _GetBranchState extends State<GetBranch> {
         );
           }else{
             setState(() {
-              isValitedOtp=true;
+              isValitedOtp = true;
+              prefs.branchOTP = token.text;
             });
           }
         });
@@ -119,7 +126,7 @@ class _GetBranchState extends State<GetBranch> {
     });
       if(answer.error){
         Fluttertoast.showToast(
-          msg: answer.message,
+          msg: "Acceso denegado. El token ingresado es incorrecto.",
           timeInSecForIosWeb: 2,
           toastLength: Toast.LENGTH_LONG,
           gravity: ToastGravity.TOP,
@@ -128,6 +135,7 @@ class _GetBranchState extends State<GetBranch> {
       }else{
         prefs.urlBase=answer.body["endpoint"];
         prefs.labelCedis=answer.body["claveCedis"];
+        prefs.branchOTP = "";
         Navigator.pushReplacement<void, void>(
                 context,
                 MaterialPageRoute<void>(
@@ -139,46 +147,62 @@ class _GetBranchState extends State<GetBranch> {
   @override
   Widget build(BuildContext context) {
     size = MediaQuery.of(context).size;
-    provider = Provider.of<ProviderJunghanns>(context);
-    return Scaffold(
-        body: Stack(children: [
-      Container(
-        width: size.width,
-        height: size.height,
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-              image: AssetImage(
-                "assets/images/junghannsWater.png",
+    return Consumer<ProviderJunghanns>(
+      builder: (BuildContext context, ProviderJunghanns controller,_){
+        return _body(provider:controller);
+      } 
+    );
+  }
+  Widget _body({required ProviderJunghanns provider}){
+    return Scaffold (
+      body: Stack (
+        children: [
+          Container(
+            width: size.width,
+            height: size.height,
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage(
+                  "assets/images/junghannsWater.png",
+                ),
+                fit: BoxFit.cover
               ),
-              fit: BoxFit.cover),
-        ),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(15),
-          child: Column(
-            children: [
-              Visibility(
-                  visible: provider.connectionStatus == 4,
-                  child: const WithoutInternet()),
-              Container(
-                  margin: EdgeInsets.only(
-                      top: size.height * .13, left: 30, right: 30),
-                  child: Image.asset(
+            ),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 15,
+                vertical: kBottomNavigationBarHeight + 50
+              ),
+              child: Column(
+                children: [
+                  Visibility(
+                    visible: provider.connectionStatus == 4,
+                    child: const WithoutInternet()
+                  ),
+                  Image.asset(
                     "assets/images/junghannsLogo.png",
-                  )),
-              const SizedBox(
-                height: 25,
+                  ),
+                  const SizedBox(height: 25),
+                  isValitedOtp ? otpField() : cardLogin(provider: provider)
+                ],
               ),
-              isValitedOtp?otpField():cardLogin()
-            ],
+            ),
           ),
-        ),
-      ),
-      textVersion(),
-      Visibility(visible: isLoading, child: const LoadingJunghanns())
-    ]));
+          textVersion(),
+          Visibility(visible: isLoading, child: const LoadingJunghanns()),
+          Visibility(
+            visible: !provider.permission,
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: _notPermission(msj:provider.labelPermission)
+            )
+          ),
+        ]
+      )
+    );
   }
 
-  Widget cardLogin() {
+  Widget cardLogin({required ProviderJunghanns provider}) {
     return Container(
       width: size.width * 0.85,
       //height: size.width * 0.75,
@@ -187,29 +211,60 @@ class _GetBranchState extends State<GetBranch> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          textField(token, "Código", Image.asset(
-                    "assets/icons/user.png"), false,max: 8),
-                    const SizedBox(height: 15,),
-          button(),
+          textField(
+            token, 
+            "Código", 
+            Image.asset("assets/icons/user.png"), 
+            false,
+            max: 8
+          ),
+          const SizedBox(height: 15),
+          ButtonJunghanns(
+            decoration: JunnyDecoration.orange255(8).copyWith(
+              color: JunnyColor.green24
+            ),
+            fun: () async {fungetToken();},
+            label: "Activar",
+            style: TextStyles.white16SemiBoldIt,
+            decorationInactive: JunnyDecoration.orange255(8).copyWith(
+              color: ColorsJunghanns.lighGrey
+            ),
+            isActive: provider.permission && token.text.isNotEmpty,
+          ),
+          
         ],
       ),
     );
   }
-
-  Widget button() {
-    return GestureDetector(
-        child: Container(
-          width: double.infinity,
-          height: 40,
-          alignment: Alignment.center,
-          color: ColorsJunghanns.greenJ,
-          child: Text(
-            "Iniciar sesión",
-            style: TextStyles.white16SemiBoldIt,
-          ),
-        ),
-        onTap: () => fungetToken());
+  Widget _notPermission({required String msj}){
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10,vertical: 5),
+      width: double.infinity,
+      height: 120,
+      alignment: Alignment.center,
+      color: JunnyColor.red5c,
+      child: AutoSizeText(
+        msj,
+        style: JunnyText.semiBoldBlueA1(18).copyWith(color: JunnyColor.white),
+        textAlign: TextAlign.center,
+      ),
+    );
   }
+
+  // Widget button() {
+  //   return GestureDetector(
+  //       child: Container(
+  //         width: double.infinity,
+  //         height: 40,
+  //         alignment: Alignment.center,
+  //         color: ColorsJunghanns.greenJ,
+  //         child: Text(
+  //           "Activar",
+  //           style: TextStyles.white16SemiBoldIt,
+  //         ),
+  //       ),
+  //       onTap: () => fungetToken());
+  // }
   
   Widget textBottom() {
     return Container(
@@ -267,7 +322,8 @@ class _GetBranchState extends State<GetBranch> {
             children: [
               Container(
                 alignment: Alignment.centerLeft,
-                child:IconButton(onPressed: ()=>setState((){isValitedOtp=false;}), icon: Icon(Icons.arrow_back_ios,color: ColorsJunghanns.green,))),
+                child:IconButton(onPressed: ()=> setState((){ isValitedOtp=false;
+                pinC.clear();}), icon: Icon(Icons.arrow_back_ios,color: ColorsJunghanns.green,))),
               //Info Phone
               Container(
                       padding: const EdgeInsets.only(bottom: 5),
@@ -296,9 +352,9 @@ class _GetBranchState extends State<GetBranch> {
               Container(
                         margin: const EdgeInsets.only(left: 15,right: 15),
                         width: size.width,
-                        height: 35,
+                        height: 45,
                         child: ButtonJunghanns(
-                            fun: () {
+                            fun: () async{
                               log("RESEND CODE");
                               fungetToken();
                             },

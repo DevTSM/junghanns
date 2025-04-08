@@ -1,14 +1,18 @@
-// ignore_for_file: must_be_immutable
 import 'dart:developer';
 
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:junghanns/components/textfield/text_field.text.dart';
 import 'package:junghanns/models/product.dart';
 import 'package:junghanns/styles/color.dart';
 
+import '../../models/authorization.dart';
+import '../../models/customer.dart';
+import '../../preferences/global_variables.dart';
+import '../../services/store.dart';
 import '../../styles/decoration.dart';
 import '../../styles/text.dart';
 
@@ -59,7 +63,7 @@ class ProductSaleCardPriorityState extends State<ProductSaleCardPriority> {
                 alignment: Alignment.center,
                 decoration: Decorations.greenJCardB30,
                 child: AutoSizeText(
-                  "Stock: ${widget.productCurrent.stock - widget.productCurrent.number}",
+                  "Stock: ${widget.productCurrent.stock}",
                   style: TextStyles.white15Itw,
                 )),
                     ])),
@@ -255,11 +259,12 @@ class ProductSaleCard extends StatefulWidget {
   ProductModel productCurrent;
   Function update;
   bool isRefill;
+  CustomerModel customerCurrent;
   ProductSaleCard(
       {Key? key,
       required this.productCurrent,
       required this.update,
-      this.isRefill = false})
+      this.isRefill = false, required this.customerCurrent})
       : super(key: key);
 
   @override
@@ -270,10 +275,12 @@ class ProductSaleCardState extends State<ProductSaleCard> {
   var myGroup = AutoSizeGroup();
   late NumberFormat formatMoney = NumberFormat("\$#,##0.00");
   late TextEditingController count;
+  late List<AuthorizationModel> authList;
 
   @override
   void initState() {
     super.initState();
+    authList = [];
     count=TextEditingController();
   }
 
@@ -473,9 +480,12 @@ class ProductSaleCardState extends State<ProductSaleCard> {
                               style: TextStyles.white17_5,
                             ),
                           ),
-                          onTap: () {
+                          onTap: () async {
                             Navigator.of(context).pop();
                           },
+                          /*onTap: () {
+                            Navigator.of(context).pop();
+                          },*/
                         )
                       ],
                     ),

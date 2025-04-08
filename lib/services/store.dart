@@ -1,16 +1,15 @@
 // ignore_for_file: depend_on_referenced_packages
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
-import 'dart:async';
+
 import 'package:device_info_plus/device_info_plus.dart';
-import 'package:image_cropper/image_cropper.dart';
-import 'package:intl/intl.dart';
-import 'package:path/path.dart';
-import 'package:async/async.dart';
-import 'package:junghanns/models/answer.dart';
+import 'package:http_parser/http_parser.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
+import 'package:junghanns/models/answer.dart';
 
 import '../preferences/global_variables.dart';
 Future<Answer> getDataQr() async {
@@ -27,7 +26,7 @@ Future<Answer> getDataQr() async {
     log("${response.statusCode}");
     return Answer.fromService(response,200);
   } catch (e) {
-    log("/StoreServices <getStockList> Catch ${e.toString()}");
+    log("/StoreServices <getDataQr> Catch ${e.toString()}");
     return Answer(
         body: e,
         message: "Conexion inestable con el back",
@@ -48,7 +47,7 @@ Future<Answer> postSale(Map<String, dynamic> data) async {
         body: jsonEncode(data)).timeout(Duration(seconds: timerDuration));
         return Answer.fromService(response,201);
   } catch (e) {
-    log("/StoreServices <setSale> Catch ${e.toString()}");
+    print("/StoreServices <setSale> Catch ${e.toString()}");
     return Answer(
         body: e,
         message: "Conexion inestable con el back",
@@ -57,6 +56,33 @@ Future<Answer> postSale(Map<String, dynamic> data) async {
   }
 }
 Future<Answer> getStopsList() async {
+  final url = "${prefs.urlBase}paradas";
+  log("/StoreServices <getStopsList>");
+  print("Request URL: $url"); // Imprime la URL antes de hacer la petición
+
+  try {
+    var body = await http.get(Uri.parse(url), headers: {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey,
+      "client_secret": prefs.clientSecret,
+      "Authorization": "Bearer ${prefs.token}",
+    }).timeout(Duration(seconds: timerDuration));
+
+    //print('Response status: ${response.statusCode}');
+    //print('Response body: ${response.body}');
+
+    return Answer.fromService(body, body.statusCode);
+  } catch (e) {
+    log("/StoreServices <getStopsList> Catch ${e.toString()}");
+    return Answer(
+        body: e.toString(),
+        message: "Conexión inestable con el back",
+        status: 1002,
+        error: true);
+  }
+}
+
+/*Future<Answer> getStopsList() async {
   log("/StoreServices <getStopsList>");
   try {
     var body = await http.get(Uri.parse("${prefs.urlBase}paradas"), headers: {
@@ -65,6 +91,7 @@ Future<Answer> getStopsList() async {
       "client_secret": prefs.clientSecret,
       "Authorization": "Bearer ${prefs.token}",
     }).timeout(Duration(seconds: timerDuration));
+    print('imprimeindo body ${body}');
     return Answer.fromService(body,200);
   } catch (e) {
     log("/StoreServices <getStopsList> Catch ${e.toString()}");
@@ -74,7 +101,7 @@ Future<Answer> getStopsList() async {
         status: 1002,
         error: true);
   }
-}
+}*/
 Future<Answer> postStop(Map<String, dynamic> data) async {
   log("/StoreServices <PostStop>");
   try {
@@ -140,7 +167,7 @@ Future<Answer> postResendCode(Map<String, dynamic> data) async {
   }
 }
 Future<Answer> setComodato(AndroidDeviceInfo build, int id, double lat,
-    double lng, int idProduct,int cantidad,int idAuth) async {
+    double lng, int idProduct,int cantidad,int idAuth,String phone) async {
   log("/StoreServices <setComodato> $cantidad");
   try {
     var response = await http.post(Uri.parse("${prefs.urlBase}rutasolicitud"),
@@ -152,7 +179,7 @@ Future<Answer> setComodato(AndroidDeviceInfo build, int id, double lat,
         },
         body: jsonEncode({
           "tipo": "FC",
-          //"telefono": phone.toString(),
+          "phone": phone,
           "lat": lat.toString(),
           "lon": lng.toString(),
           "id_cliente": id,
@@ -422,7 +449,7 @@ Future<Answer> getStockList(int idR) async {
   log("/StoreServices <getStockList>");
   try {
     var response = await http.get(
-        Uri.parse("${prefs.urlBase}almacenmovil?q=stock&idRuta=$idR"),
+        Uri.parse("${prefs.urlBase}almacenmovil?q=stock&id_ruta=$idR"),
         headers: {
           "Content-Type": "aplication/json",
           "x-api-key": apiKey,
@@ -430,10 +457,15 @@ Future<Answer> getStockList(int idR) async {
           "Authorization": "Bearer ${prefs.token}",
         }).timeout(Duration(seconds: timerDuration));
     if (response.statusCode == 200) {
+      var decodedBody = jsonDecode(response.body);
+      log("Response Body: $decodedBody");
       log("/StoreServices <getStockList> Successfull");
       return Answer(body: jsonDecode(response.body), message: "",status:response.statusCode, error: false);
     } else {
       log("/StoreServices <getStockList> Fail");
+      var decodedBody = jsonDecode(response.body);
+      log("/StoreServices <getStockList> Fail");
+      log("Response Body: $decodedBody");
       return Answer(
           body: response,
           message: "Algo salio mal, intentalo mas tarde.",status:response.statusCode,
@@ -492,7 +524,7 @@ Future<Answer> getRefillList(int idR) async {
   log("/StoreServices <getRefillList>");
   try {
     var response = await http.get(
-        Uri.parse("${prefs.urlBase}almacenmovil?q=recarga&idRuta=$idR"),
+        Uri.parse("${prefs.urlBase}almacenmovil?q=recarga&id_ruta=$idR"),
         headers: {
           "Content-Type": "aplication/json",
           "x-api-key": apiKey,
@@ -503,6 +535,9 @@ Future<Answer> getRefillList(int idR) async {
       log("/StoreServices <getRefillList> Successfull");
       return Answer(body: jsonDecode(response.body), message: "",status: response.statusCode, error: false);
     } else {
+      log("/StoreServices <getRefillList> Failed with status: ${response.statusCode}, body: ${response.body}");
+      log("/StoreServices <getRefillList> Failed with status: ${response.statusCode}, body: ${response.body}");
+
       log("/StoreServices <getRefillList> Fail");
       return Answer(
           body: response,
@@ -532,7 +567,7 @@ Future<Answer> getPaymentMethods(int idClient, int idR) async {
           "Authorization": "Bearer ${prefs.token}",
         });
     if (response.statusCode == 200) {
-      log("/StoreServices <getPaymentMethods> Successfull");
+      log("/StoreServices <getPaymentMethods> Successfull ${response.body} ");
       return Answer(body: jsonDecode(response.body), message: "",status: response.statusCode, error: false);
     } else {
       log("/StoreServices <getPaymentMethods> Fail");
@@ -673,7 +708,7 @@ Future<Answer> getTypesOfSalesC() async {
   } catch (e) {
     return Answer(
         body: {"error": e},
-        message: "Conexion inestable con el back",
+        message: "Conexión inestable con el back",
         status: 1002,
         error: true);
   }
@@ -704,7 +739,7 @@ Future<Answer> getEmployees() async {
   } catch (e) {
     return Answer(
         body: {"error": e},
-        message: "Conexion inestable con el back",
+        message: "Conexión inestable con el back",
         status: 1002,
         error: true);
   }
@@ -741,7 +776,7 @@ Future<Answer> putValidateOTP(Map<String, dynamic> data) async {
   } catch (e) {
     return Answer(
         body: {"error": e},
-        message: "Conexion inestable con el back",
+        message: "Conexión inestable con el back",
         status: 1002,
         error: true);
   }
@@ -776,9 +811,433 @@ Future<Answer> putCancelOTP(Map<String, dynamic> data) async {
   } catch (e) {
     return Answer(
         body: {"error": e},
-        message: "Conexion inestable con el back",
+        message: "Conexión inestable con el back",
+        status: 1002,
+        error: true);
+  }
+}
+Future<Answer> getCancelAuth(Map<String, dynamic> data) async {
+  log("/StoreServices <getCancelAuth> $data");
+  try {
+    var response = await http.delete(Uri.parse("${prefs.urlBase}clienteautorizacion"),
+        headers: {
+          HttpHeaders.contentTypeHeader: 'application/json; charset=UTF-8',
+          "x-api-key": apiKey,
+          "client_secret": prefs.clientSecret,
+          "Authorization": "Bearer ${prefs.token}"
+        },
+        body: jsonEncode(data)).timeout(Duration(seconds: timerDuration+5));
+        return Answer.fromService(response, 202);
+  } catch (e) {
+    return Answer(
+        body: {"error": e},
+        message: "Conexión inestable con el back",
+        status: 1002,
+        error: true);
+  }
+}
+////////////////////////////////////////////
+Future<Answer> getStockDeliveryList({required int idR}) async {
+  log("/StoreServices <getStockReturnList>");
+  Map<String, dynamic> body = {
+    "id_ruta": idR,
+  };
+  log("Request: $body");
+  try {
+    var response = await http.get(
+      //Verificar la URL del stock
+        Uri.parse("${prefs.urlBase}almacenmovil?q=StockDevolverRuta&id_ruta=$idR"),
+        headers: {
+          "Content-Type": "aplication/json",
+          "x-api-key": apiKey,
+          "client_secret": prefs.clientSecret,
+          "Authorization": "Bearer ${prefs.token}",
+        }).timeout(Duration(seconds: timerDuration));
+    if (response.statusCode == 200) {
+      var decodedBody = jsonDecode(response.body);
+      log("/StoreServices <getStockReturnList> Successfull");
+      log("Response Body: $decodedBody");
+      return Answer(body: jsonDecode(response.body), message: "",status:response.statusCode, error: false);
+    } else {
+      var decodedBody = jsonDecode(response.body);
+      log("/StoreServices <getStockReturnList> Fail");
+      log("Response Body: $decodedBody");
+      return Answer(
+          body: response,
+          message: "No se pudieron obtener los datos actualizados de la planta. Revisa tu conexión a internet.",
+          status:response.statusCode,
+          error: true);
+    }
+  } catch (e) {
+    log("/StoreServices <getStockList> Catch ${e.toString()}");
+    return Answer(
+        body: e,
+        message: "Conexión inestable con el back",
+        status: 1002,
+        error: true);
+  }
+}
+// Future<Answer> getValidationList({required int idR} String? type) async {
+//   log("/StoreServices <getValidationList>");
+//   /*// Imprimir el request
+//   log("Request URL: ${prefs.urlBase}almacenmovil?q=EstatusValidacion&id_ruta=$idR");
+// */
+//   try {
+//     var response = await http.get(
+//         Uri.parse("${prefs.urlBase}almacenmovil?q=EstatusValidacion&id_ruta=$idR"),
+//         headers: {
+//           "Content-Type": "aplication/json",
+//           "x-api-key": apiKey,
+//           "client_secret": prefs.clientSecret,
+//           "Authorization": "Bearer ${prefs.token}",
+//         }).timeout(Duration(seconds: timerDuration));
+//     if (response.statusCode == 200) {
+//       var decodedBody = jsonDecode(response.body);
+//       log("/StoreServices <getValidationList> Successfull");
+//       log("Response Body: $decodedBody");
+//       return Answer(body: jsonDecode(response.body), message: "",status:response.statusCode, error: false);
+//     } else {
+//       var decodedBody = jsonDecode(response.body);
+//       log("/StoreServices <getValidationList> Fail");
+//       log("Response Body: $decodedBody");
+//       return Answer(
+//           body: jsonDecode(response.body),
+//           message: "Algo salio mal, intentalo mas tarde.",status:response.statusCode,
+//           error: true);
+//     }
+//   } catch (e) {
+//     log("/StoreServices <getValidationList> Catch ${e.toString()}");
+//     return Answer(
+//         body: e,
+//         message: "Conexión inestable con el back",
+//         status: 1002,
+//         error: true);
+//   }
+// }
+Future<Answer> getValidationList({
+  required int idR,
+  String? type,
+}) async {
+  log("/StoreServices <getValidationList>");
+
+  // Construir la URL base
+  String url = "${prefs.urlBase}almacenmovil?q=EstatusValidacion&id_ruta=$idR";
+
+  // Si 'type' no es null, agregar el parámetro tipo_validacion
+  if (type != null) {
+    url += "&tipo_validacion=$type";
+  }
+
+  try {
+    var response = await http.get(
+        Uri.parse(url),
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey,
+          "client_secret": prefs.clientSecret,
+          "Authorization": "Bearer ${prefs.token}",
+        }).timeout(Duration(seconds: timerDuration));
+
+    if (response.statusCode == 200) {
+      var decodedBody = jsonDecode(response.body);
+      log("/StoreServices <getValidationList> Successfull");
+      log("Response Body: $decodedBody");
+      return Answer(
+          body: decodedBody,
+          message: "",
+          status: response.statusCode,
+          error: false
+      );
+    } else {
+      var decodedBody = jsonDecode(response.body);
+      log("/StoreServices <getValidationList> Fail");
+      log("Response Body: $decodedBody");
+      return Answer(
+          body: decodedBody,
+          message: "Algo salió mal, intentalo más tarde.",
+          status: response.statusCode,
+          error: true
+      );
+    }
+  } catch (e) {
+    log("/StoreServices <getValidationList> Catch ${e.toString()}");
+    return Answer(
+        body: e,
+        message: "Conexión inestable con el back",
+        status: 1002,
+        error: true
+    );
+  }
+}
+
+Future<Answer> putValidated({required String action, required int idV, required double lat, required double lng, required String status, String ?comment}) async {
+  log("/StoreServices <postValidated> ¡");
+  try {
+    Map<String, dynamic> body = {
+      "action": action,
+      "id_validacion": idV,
+      "lat": lat.toString(),
+      "lon": lng.toString(),
+      "estatus": status,
+    };
+
+    // Si la acción es 'R' y el comentario no es nulo ni vacío, agregarlo al cuerpo
+    if (status == 'R' && comment != null && comment.isNotEmpty) {
+      body["comentario"] = comment;
+    }
+    // Imprimir el cuerpo antes de enviarlo
+    log("Body enviado: ${jsonEncode(body)}");
+
+    var response = await http.put(Uri.parse("${prefs.urlBase}almacenmovil"),
+        headers: {
+          HttpHeaders.contentTypeHeader: 'application/json; charset=UTF-8',
+          "x-api-key": apiKey,
+          "client_secret": prefs.clientSecret,
+          "Authorization": "Bearer ${prefs.token}",
+        },
+        // Verificar lso datos
+        body: jsonEncode(body) );
+    log("/StoreServices <postValidated>");
+    return Answer.fromService(response,201);
+  } catch (e) {
+    log("/StoreServices <postValidated> Catch");
+    return Answer(
+        body: e,
+        message: "Algo salio mal, revisa tu conexión a internet.",
+        status: 1002,
+        error: true);
+  }
+}
+Future<Answer> postDelivery({
+  required int idR,
+  required double lat,
+  required double lon,
+  required String equipo,
+  required String marca,
+  required String modelo,
+  int ? idDestination,
+  required Map<String, dynamic> entrega,
+}) async {
+  log("/StoreServices <postDelivery> ¡");
+
+  try {
+    // Construir el cuerpo de la petición
+    Map<String, dynamic> body = {
+      "id_ruta": idR,
+      "lat": lat.toString(), // Convertir los doubles a String
+      "lon": lon.toString(),
+      "equipo": equipo,
+      'marca': marca,
+      'modelo': modelo,
+      "entrega": entrega, // Pasar directamente el Map de la entrega
+    };
+
+    if (idDestination != null || idDestination != 0) {
+      body["id_ruta_destino"] = idDestination;
+    }
+
+    // Imprimir el cuerpo antes de enviarlo
+    log("Body enviado: ${jsonEncode(body)}");
+
+    // Realizar la petición POST
+    var response = await http.post(
+      Uri.parse("${prefs.urlBase}almacenmovil"),
+      headers: {
+        HttpHeaders.contentTypeHeader: 'application/json; charset=UTF-8',
+        "x-api-key": apiKey,
+        "client_secret": prefs.clientSecret,
+        "Authorization": "Bearer ${prefs.token}",
+      },
+      body: jsonEncode(body),
+    );
+
+    log("/StoreServices <postDelivery>");
+    var dataOTP = jsonDecode(response.body);
+    log("Estatus code ${response.statusCode} body ${response.body}");
+    if (response.statusCode == 201) {
+      log("/StoreServices <postDelivery> Successfull, ${response.body}");
+      return Answer(body: jsonDecode(response.body), message: "",status: response.statusCode, error: false);
+    } else {
+      log("/StoreServices <postDelivery> Fail");
+      return Answer(
+        body: response.body,
+        message: dataOTP['message'],
+        status: response.statusCode,
+        error: true,
+      );
+    }
+  } catch (e) {
+    log("/StoreServices <postDelivery> Catch");
+    return Answer(
+      body: e.toString(),
+      message: "Algo salió mal, revisa tu conexión a internet.",
+      status: 1002,
+      error: true,
+    );
+  }
+}
+Future<Answer> deleteReceiption({required int idV, String? comment, required double lat, required double lng}) async {
+  log("/StoreServices <deleteValidated> ¡");
+  try {
+    Map<String, dynamic> body = {
+      "id_validacion": idV,
+      "comentario": comment,
+      "lat": lat.toString(),
+      "lon": lng.toString(),
+    };
+
+    // Imprimir el cuerpo antes de enviarlo
+    log("Body enviado: ${jsonEncode(body)}");
+
+    var response = await http.delete(Uri.parse("${prefs.urlBase}almacenmovil"),
+        headers: {
+          HttpHeaders.contentTypeHeader: 'application/json; charset=UTF-8',
+          "x-api-key": apiKey,
+          "client_secret": prefs.clientSecret,
+          "Authorization": "Bearer ${prefs.token}",
+        },
+        // Verificar lso datos
+        body: jsonEncode(body) );
+    log("/StoreServices <deleteValidated>");
+    return Answer.fromService(response,201);
+  } catch (e) {
+    log("/StoreServices <deleteValidated> Catch");
+    return Answer(
+        body: e,
+        message: "Algo salio mal, revisa tu conexion a internet.",
         status: 1002,
         error: true);
   }
 }
 
+Future<Answer> postDirtyBroken({
+  required String idRuta,
+  required String idCliente,
+  required String tipo,
+  required String cantidad,
+  required double lat,
+  required double lon,
+  required File archivo,
+  required String fechaRegistro,
+  required int idAutorization,
+  required String idTransaccion,
+}) async {
+  log("/StoreServices <postDirtyBroken> ¡");
+
+  try {
+    // Validación del tipo
+    if (tipo != "S" && tipo != "R" && tipo != "MS") {
+      throw Exception("Tipo inválido. Solo se acepta 'S' o 'R' o 'MS'.");
+    }
+
+    // Prepara la URI
+    var uri = Uri.parse("${prefs.urlBase}mermaruta");
+
+    // Crea la solicitud MultipartRequest
+    var request = http.MultipartRequest("POST", uri);
+
+    // Agrega los encabezados
+    request.headers.addAll({
+      "x-api-key": apiKey,
+      "client_secret": prefs.clientSecret,
+      "Authorization": "Bearer ${prefs.token}",
+    });
+
+    // Imprimir encabezados para depuración
+    log("Headers: ${request.headers}");
+
+    // Agrega los campos al body
+    request.fields['id_ruta'] = idRuta;
+    request.fields['id_cliente'] = idCliente;
+    request.fields['tipo'] = tipo;
+    request.fields['cantidad'] = cantidad;
+    request.fields['lat'] = lat.toString();
+    request.fields['lon'] = lon.toString();
+    request.fields['id_autorizacion'] = idAutorization.toString();
+    request.fields['fecha_registro'] = fechaRegistro;
+    request.fields['id_transaccion'] = idTransaccion;
+
+    // Validar archivo antes de agregarlo
+    if (!archivo.existsSync()) {
+      throw Exception("El archivo no existe.");
+    }
+
+    // Archivo de imagen (usando el tipo MIME explícito)
+    request.files.add(
+      await http.MultipartFile.fromPath(
+        'archivo', // Nombre del campo
+        archivo.path,
+        contentType: MediaType('archivo', 'jpg'), // MIME tipo explícito
+      ),
+    );
+
+    // Imprimir detalles de los campos para depuración
+    log("Request fields: ${request.fields}");
+    log("Archivo a subir: ${archivo.path}");
+
+    // Envía la solicitud
+    var streamedResponse = await request.send();
+    var response = await http.Response.fromStream(streamedResponse);
+
+    log("Response status: ${response.statusCode}");
+    log("Response body: ${response.body}");
+
+    // Verifica el estado de la respuesta
+    if (response.statusCode == 201) {
+      return Answer.fromService(response, 201);
+    } else {
+      return Answer(
+          body: response.body,
+          message: "Error en la solicitud.",
+          status: response.statusCode,
+          error: true);
+    }
+  } catch (e) {
+    log("/StoreServices <postDirtyBroken> Catch - Error: $e");
+    return Answer(
+        body: e.toString(),
+        message: "Algo salió mal, revisa tu conexión a internet.",
+        status: 1002,
+        error: true);
+  }
+}
+Future<Answer> getDistance({required int idR}) async {
+  log("/StoreServices <getDistance>");
+  Map<String, dynamic> body = {
+    "id_ruta": idR,
+  };
+  log("Request: $body");
+  try {
+    var response = await http.get(
+      //Verificar la URL del stock
+        Uri.parse("${prefs.urlBase}almacenmovil?q=distancia_ruta_almacen&id_ruta=$idR"),
+        headers: {
+          "Content-Type": "aplication/json",
+          "x-api-key": apiKey,
+          "client_secret": prefs.clientSecret,
+          "Authorization": "Bearer ${prefs.token}",
+        }).timeout(Duration(seconds: timerDuration));
+    if (response.statusCode == 200) {
+      var decodedBody = jsonDecode(response.body);
+      log("/StoreServices <getDistance> Successfull");
+      log("Response Body: $decodedBody");
+      return Answer(body: jsonDecode(response.body), message: "",status:response.statusCode, error: false);
+    } else {
+      var decodedBody = jsonDecode(response.body);
+      log("/StoreServices <getDistance> Fail");
+      log("Response Body: $decodedBody");
+      return Answer(
+          body: response,
+          message: "No se pudieron obtener los datos actualizados de la planta. Revisa tu conexión a internet.",
+          status:response.statusCode,
+          error: true);
+    }
+  } catch (e) {
+    log("/StoreServices <getDistance> Catch ${e.toString()}");
+    return Answer(
+        body: e,
+        message: "Conexión inestable con el back",
+        status: 1002,
+        error: true);
+  }
+}

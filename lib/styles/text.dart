@@ -22,6 +22,12 @@ class TextStyles {
     color: ColorsJunghanns.grey,
     fontFamily: 'Roboto',
   );
+  static const TextStyle grey12_4 = TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.w400,
+    color: ColorsJunghanns.grey,
+    fontFamily: 'Roboto',
+  );
   static const TextStyle green14_4 = TextStyle(
     fontSize: 14,
     fontWeight: FontWeight.w400,
@@ -337,4 +343,33 @@ class TextStyles {
       fontSize: 14,
       fontWeight: FontWeight.w400,
       color: ColorsJunghanns.orange);
+}
+class JunnyText {
+  static TextStyle bluea4(FontWeight weight,double size) => TextStyle(
+    fontSize: size,
+    fontWeight: weight,
+    color: JunnyColor.bluea4,
+    fontFamily: 'MyriadPro-Bold',
+  );
+  static TextStyle green24(FontWeight weight,double size) => TextStyle(
+    fontSize: size,
+    fontWeight: weight,
+    color: JunnyColor.green24,
+    fontFamily: 'Roboto',
+  );
+  static TextStyle grey_255(FontWeight weight,double size) => TextStyle(
+    fontSize: size,
+    fontWeight: weight,
+    color: JunnyColor.grey_255,
+    fontFamily: 'Roboto',
+  );
+  static TextStyle semiBoldBlueA1(double size) => TextStyle(
+    fontSize: size,
+    fontFamily: 'MyriadPro-SemiBold',
+    color: JunnyColor.blueA1
+  );
+  static TextStyle red5c(double size) => TextStyle(
+    fontSize: size,
+    color: JunnyColor.red5c,
+  );
 }

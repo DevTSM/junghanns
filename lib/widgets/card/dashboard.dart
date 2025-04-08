@@ -6,7 +6,7 @@ Widget customersType(String icon,String type,String atendidos, String enRuta) {
   return Card(
       elevation: 1.5,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12.0),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Container(
         padding: const EdgeInsets.only(top: 8, bottom: 8,left: 10,right: 10),

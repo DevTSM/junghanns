@@ -56,7 +56,7 @@ class _ConnectionModalState extends State<ConnectionModal> {
               ),
               Expanded(
                   child: ButtonJunghanns(
-                fun: () {
+                fun: () async{
                   Navigator.pop(context);
                 },
                 decoration: Decorations.redCard,

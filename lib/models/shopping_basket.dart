@@ -23,6 +23,7 @@ class BasketModel {
   int idCustomer;
   int idRoute;
   int idAuth;
+  int idReasonAuth;
   int idDataOrigin;
   int folio;
   
@@ -44,6 +45,7 @@ class BasketModel {
       required this.lng,
       required this.sales,
       required this.idAuth,
+      required this.idReasonAuth,
       required this.waysToPay,
       required this.idDataOrigin,
       required this.folio,
@@ -62,6 +64,7 @@ class BasketModel {
         lng: 0.0,
         sales: [],
         idAuth: -1,
+        idReasonAuth: -1,
         waysToPay: [],
         idDataOrigin: -1,
         folio: -1,
@@ -79,6 +82,7 @@ class BasketModel {
         lng: customerCurrent.lng,
         sales: [],
         idAuth: -1,
+        idReasonAuth: -1,
         waysToPay: [],
         brandJug: {},
         idDataOrigin: customerCurrent.id,

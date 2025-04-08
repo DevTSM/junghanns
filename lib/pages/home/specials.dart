@@ -1,15 +1,16 @@
 import 'dart:async';
 import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:junghanns/components/empty/empty.dart';
 import 'package:junghanns/components/loading.dart';
 import 'package:junghanns/components/need_async.dart';
 import 'package:junghanns/components/without_internet.dart';
 import 'package:junghanns/components/without_location.dart';
 import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/provider/provider.dart';
-import 'package:junghanns/services/customer.dart';
 import 'package:junghanns/services/store.dart';
 import 'package:junghanns/styles/color.dart';
 import 'package:junghanns/styles/decoration.dart';
@@ -18,6 +19,8 @@ import 'package:junghanns/widgets/card/routes.dart';
 import 'package:provider/provider.dart';
 
 import '../../preferences/global_variables.dart';
+import '../../widgets/modal/receipt_modal.dart';
+import '../../widgets/modal/validation_modal.dart';
 
 class Specials extends StatefulWidget {
   const Specials({Key? key}) : super(key: key);
@@ -34,6 +37,7 @@ class _SpecialsState extends State<Specials> {
   //
   late TextEditingController buscadorC;
   late List<CustomerModel> searchList;
+  List specialData = [];
 
   @override
   void initState() {
@@ -45,6 +49,38 @@ class _SpecialsState extends State<Specials> {
     searchList = [];
     //
     getCustomerListDB();
+    _refreshTimer();
+  }
+
+  Future<void> _refreshTimer() async {
+    final provider = Provider.of<ProviderJunghanns>(context, listen: false);
+
+    // Ahora fetchStockValidation devuelve un objeto ValidationModel
+    provider.fetchStockValidation();
+
+// Filtrar los datos según las condiciones especificadas
+    final filteredData = provider.validationList.where((validation) {
+      return validation.status == "P" && validation.valid == "Planta";
+    }).toList();
+
+
+// Verificar si hay datos filtrados
+    setState(() {
+      if (filteredData.isNotEmpty) {
+        specialData = filteredData;  // Asigna los datos filtrados a specialData
+        // Imprimir el contenido de specialData para confirmarlo
+        print('Contenido de specialData (filtrado): $specialData');
+        print('Llama al modal');
+        showValidationModal(context);
+      } else {
+        specialData = [];  // Si no hay datos que cumplan las condiciones, asignar un arreglo vacío
+        print('No se encontraron datos que cumplan las condiciones');
+      }
+    });
+
+    if (provider.validationList.first.status =='P' && provider.validationList.first.valid == 'Ruta'){
+      showReceiptModal(context);
+    }
   }
 
   getCustomerListDB() async {
@@ -135,6 +171,22 @@ class _SpecialsState extends State<Specials> {
     }
   }
 
+  funSearch(CustomerModel value) {
+    if (buscadorC.text != "") {
+      if(value.name.toLowerCase().contains(buscadorC.text.toLowerCase()) ){
+        return true;
+      }
+      if(value.address.toLowerCase().contains(buscadorC.text.toLowerCase()) ){
+        return true;
+      }
+      if(value.idClient.toString().toLowerCase().contains(buscadorC.text.toLowerCase()) ){
+        return true;
+      }
+    } else {
+      return true;
+    }
+    return false;
+  }
   @override
   Widget build(BuildContext context) {
     setState(() {
@@ -159,16 +211,12 @@ class _SpecialsState extends State<Specials> {
                 const SizedBox(
                   height: 15,
                 ),
-                Visibility(
-                    visible: provider.connectionStatus < 4 &&
-                        customerList.isNotEmpty,
-                    child: buscador()),
+                buscador(),
                 customerList.isNotEmpty
                     ? Expanded(
                         child: SingleChildScrollView(
                             child: Column(
-                        children: searchList.map((e) {
-                          return Column(children: [
+                        children: customerList.map((e) =>funSearch(e)?Column(children: [
                             RoutesCard(
                                 updateList: getCustomerListDB,
                                 indexHome: 1,
@@ -199,15 +247,9 @@ class _SpecialsState extends State<Specials> {
                                 height: 15,
                               )
                             ])
-                          ]);
-                        }).toList(),
+                          ]):Container()).toList(),
                       )))
-                    : Expanded(
-                        child: Center(
-                            child: Text(
-                        "Sin clientes",
-                        style: TextStyles.blue18SemiBoldIt,
-                      )))
+                    : Expanded(child:empty(context))
               ],
             ),
           )),
@@ -282,8 +324,9 @@ class _SpecialsState extends State<Specials> {
         margin: const EdgeInsets.only(left: 15, right: 15, top: 5, bottom: 5),
         child: TextFormField(
             controller: buscadorC,
-            onEditingComplete: funSearch,
-            onChanged: (value) => funEmpty(value),
+            onChanged: (value) => setState(() {
+              
+            }),
             textAlignVertical: TextAlignVertical.center,
             style: TextStyles.blueJ15SemiBold,
             decoration: InputDecoration(
@@ -295,10 +338,10 @@ class _SpecialsState extends State<Specials> {
               enabledBorder: OutlineInputBorder(
                 borderSide:
                     const BorderSide(width: 1, color: ColorsJunghanns.blue),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(8),
               ),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10.0),
+                borderRadius: BorderRadius.circular(8),
               ),
               suffixIcon: const Padding(
                   padding: EdgeInsets.only(top: 10, bottom: 10, right: 10),
@@ -307,47 +350,5 @@ class _SpecialsState extends State<Specials> {
                     color: ColorsJunghanns.blue,
                   )),
             )));
-  }
-
-  funEmpty(String value) {
-    if (value == "") {
-      setState(() {
-        searchList = customerList;
-      });
-    }
-  }
-
-  funSearch() {
-    log("Cliente : ${buscadorC.text}");
-
-    if (buscadorC.text != "") {
-      searchList = [];
-      setState(() {
-        for (var element in customerList) {
-          if (element.name
-              .toLowerCase()
-              .startsWith(buscadorC.text.toLowerCase())) {
-            searchList.add(element);
-          } else {
-            if (element.address
-                .toLowerCase()
-                .startsWith(buscadorC.text.toLowerCase())) {
-              searchList.add(element);
-            } else {
-              if (element.idClient
-                  .toString()
-                  .toLowerCase()
-                  .startsWith(buscadorC.text.toLowerCase())) {
-                searchList.add(element);
-              }
-            }
-          }
-        }
-      });
-    } else {
-      setState(() {
-        searchList = customerList;
-      });
-    }
   }
 }

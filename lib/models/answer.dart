@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:developer';
+
 import 'package:http/http.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 class Answer {
@@ -17,10 +18,10 @@ class Answer {
   ///get
   ///200
   factory Answer.fromService(Response response, int statusOk,{String? message}) {
-    try{
-    log("Status => ${response.statusCode}");
+  try{
+    print("Status => ${response.statusCode}");
     if(response.statusCode==statusOk){
-      log("/Respuesta exitosa");
+      print("/Respuesta exitosa");
       dynamic body = jsonDecode(response.body);
       return Answer(
                 body: body,
@@ -29,7 +30,7 @@ class Answer {
                 error: false);
     }else{
       if(response.statusCode>=100&&response.statusCode<=199){
-        log("/Respuesta informativa");
+        print("/Respuesta informativa");
         return Answer(
                 body: response.body,
                 message: "Respuesta informativa",
@@ -37,9 +38,10 @@ class Answer {
                 error: true);
       }
       if(response.statusCode>=200&&response.statusCode<=299){
-        log("/Respuesta satisfactoria");
+        print("/Respuesta satisfactoria");
         if (response.statusCode == 203) {
-          log("/Respuesta Non-Authoritative Information");
+          print("/Respuesta Non-Authoritative Information");
+          dynamic body = jsonDecode(response.body==""?'{}':response.body);
           String urlBaseSafe = prefs.urlBase;
           String nameCEDIS = prefs.labelCedis;
           prefs.prefs!.clear();
@@ -48,7 +50,7 @@ class Answer {
           prefs.labelCedis = nameCEDIS;
           return Answer(
               body: {},
-              message: "Código de error ${response.statusCode}",
+              message: body["message"]??"Código de error ${response.statusCode}",
               status: response.statusCode,
               error: true);
         }
@@ -62,12 +64,12 @@ class Answer {
         dynamic body = jsonDecode(response.body);
         return Answer(
                 body: response.body,
-                message: body["message"] ?? "Código de error ${response.statusCode}",
+                message: body["message"] ?? "La solicitud se proceso correctamente, pero jusoft la rechazo o cancelo la operación",
                 status: response.statusCode,
                 error: true);
       }
-      if(response.statusCode>=400&&response.statusCode<=499){
-        log("/Respuesta fallida");
+      if(response.statusCode >= 400 && response.statusCode <= 499){
+        log("Respuesta en cash ${jsonDecode(response.body)}");
         if (response.statusCode == 403 || response.statusCode == 401) {
           String urlBaseSafe = prefs.urlBase;
           String nameCEDIS = prefs.labelCedis;
@@ -77,9 +79,13 @@ class Answer {
           prefs.labelCedis = nameCEDIS;
         }
         dynamic body = jsonDecode(response.body);
+        print("/Respuesta fallida ${body.toString()}");
         return Answer(
                 body: response.body,
-                message: response.statusCode==422?(body.map((e)=>e["message"]).toString()).toString():body["message"] ?? "Código de error ${response.statusCode}",
+                message: response.statusCode == 422
+                  ? (body.map((e)=> e["message"]).toString()).toString()
+                  : (body["message"] 
+                      ?? "Código de error ${response.statusCode}").toString(),
                 status: response.statusCode,
                 error: true);
       }
@@ -91,7 +97,6 @@ class Answer {
                 error: true);
     }
     }catch(e){
-      log("/Error en respuesta");
       return Answer(
           body: {"error": ""},
           message: "Error inesperado: $e",

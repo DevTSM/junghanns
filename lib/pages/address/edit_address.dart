@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:junghanns/styles/color.dart';
 
 class EditAddress extends StatefulWidget {
@@ -18,7 +18,18 @@ class _EditAddressState extends State<EditAddress> {
   @override
   void initState() {
     super.initState();
-    _currentLocation=Position(altitude: 1,longitude: widget.lng, accuracy: 1, heading: 1, latitude: widget.lat, speed: 1, speedAccuracy: 1, timestamp: DateTime.now(),);
+    _currentLocation = Position(
+      altitudeAccuracy: 1,
+      headingAccuracy: 1,
+      altitude: 1,
+      longitude: widget.lng, 
+      accuracy: 1, 
+      heading: 1, 
+      latitude: widget.lat, 
+      speed: 1, 
+      speedAccuracy: 1, 
+      timestamp: DateTime.now(),  
+    );
     _lista = [];
     setState(() {
       if(widget.lat!=0&&widget.lng!=0){

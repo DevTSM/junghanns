@@ -1,4 +1,3 @@
-import 'package:junghanns/models/delivery_man.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PreferenciasUsuario {
@@ -32,6 +31,18 @@ class PreferenciasUsuario {
   }
   set qr(String qr) {
     prefs!.setString("qr", qr);
+  }
+   String get lastBitacoraUpdate {
+    return prefs!.getString("lastBitacoraUpdate") ?? "";
+  }
+  set lastBitacoraUpdate(String lastBitacoraUpdate) {
+    prefs!.setString("lastBitacoraUpdate", lastBitacoraUpdate);
+  }
+   String get lastRouteUpdate {
+    return prefs!.getString("lastRouteUpdate") ?? "";
+  }
+  set lastRouteUpdate(String lastRouteUpdate) {
+    prefs!.setString("lastRouteUpdate", lastRouteUpdate);
   }
   String get statusRoute {
     return prefs!.getString("statusRoute") ?? "";
@@ -153,6 +164,13 @@ class PreferenciasUsuario {
   set dataStop(bool dataStop) {
     prefs!.setBool("dataStop", dataStop);
   }
+  String get branchOTP {
+    return prefs!.getString("branchOTP") ?? "";
+  }
+
+  set branchOTP(String branchOTP) {
+    prefs!.setString("branchOTP", branchOTP);
+  }
 
   bool get dataSale {
     return prefs!.getBool("dataSale") ?? false;
@@ -168,6 +186,21 @@ class PreferenciasUsuario {
 
   set isUpdateDB(bool isUpdateDB) {
     prefs!.setBool("isUpdateDB", isUpdateDB);
+  }
+  bool get isRequest {
+    return prefs!.getBool("isRequest") ?? false;
+  }
+
+  set isRequest(bool isRequest) {
+    prefs!.setBool("isRequest", isRequest);
+  }
+
+  bool get conectado {
+    return prefs!.getBool("conectado") ?? false;
+  }
+
+  set conectado(bool conectado) {
+    prefs!.setBool("conectado", conectado);
   }
   //Info DeliveryMan
   //---------------------------------------------------------
@@ -249,5 +282,13 @@ class PreferenciasUsuario {
 
   set codeD(String codeD) {
     prefs!.setString("codeD", codeD);
+  }
+
+  int get idChat {
+    return prefs!.getInt("idChat") ?? 0;
+  }
+
+  set idChat(int idRouteD) {
+    prefs!.setInt("idChat", idRouteD);
   }
 }

@@ -8,8 +8,7 @@ import 'package:provider/provider.dart';
 
 import '../pages/chat/chat.dart';
 import '../provider/chat_provider.dart';
-/*
-Widget bottomBar(Function setIndexCurrent, int indexCurrent, BuildContext context, {bool isHome = true}) {
+/*Widget bottomBar(Function setIndexCurrent, int indexCurrent, BuildContext context, {bool isHome = true}) {
   return BottomNavigationBar(
     items: <BottomNavigationBarItem>[
       BottomNavigationBarItem(
@@ -188,8 +187,7 @@ Widget bottomBar(Function setIndexCurrent, int indexCurrent, BuildContext contex
         _openChatModal(context);
         // Abrir el Chat como un modal cuando se selecciona la opción de 'Chat'
 
-        */
-/*showDialog(
+         *//*showDialog(
           context: context,
           barrierDismissible: true, // Permite cerrar el diálogo al tocar fuera
           builder: (context) => Dialog(
@@ -206,8 +204,8 @@ Widget bottomBar(Function setIndexCurrent, int indexCurrent, BuildContext contex
           ),
         ).whenComplete(() {
           // Aquí puedes hacer algo después de cerrar el diálogo si es necesario
-        });*//*
-
+        });
+*//*
       } else {
         // Para las otras opciones de navegación
         isHome ? setIndexCurrent(value) : navigator(context, value, indexCurrent);
@@ -243,11 +241,8 @@ void _openChatModal(BuildContext context) {
       );
     },
   );
-}
+}*/
 
-
-
-*/
 
 Widget bottomBar(Function setIndexCurrent, int indexCurrent,BuildContext context,{bool isHome=true}) {
   return BottomNavigationBar(

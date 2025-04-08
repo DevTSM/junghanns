@@ -1509,6 +1509,7 @@ class ProviderJunghanns extends ChangeNotifier {
     required int idAutorization,
     required File archivo,
     required String fechaRegistro,
+    required String idTransaccion
   }) async {
     notifyListeners();
     DatabaseHelper dbHelper = DatabaseHelper();
@@ -1523,6 +1524,7 @@ print("Fecha registro en el provider: ${fechaRegistro}");
       idAutorization: idAutorization,
       archivo: archivo,
       fechaRegistro: fechaRegistro,
+      idTransaccion: idTransaccion,
 
     ).then((answer) async {
       // Buscar el ID de la evidencia en la base de datos usando idAutorization

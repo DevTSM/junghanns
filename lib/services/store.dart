@@ -56,6 +56,33 @@ Future<Answer> postSale(Map<String, dynamic> data) async {
   }
 }
 Future<Answer> getStopsList() async {
+  final url = "${prefs.urlBase}paradas";
+  log("/StoreServices <getStopsList>");
+  print("Request URL: $url"); // Imprime la URL antes de hacer la petición
+
+  try {
+    var body = await http.get(Uri.parse(url), headers: {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey,
+      "client_secret": prefs.clientSecret,
+      "Authorization": "Bearer ${prefs.token}",
+    }).timeout(Duration(seconds: timerDuration));
+
+    //print('Response status: ${response.statusCode}');
+    //print('Response body: ${response.body}');
+
+    return Answer.fromService(body, body.statusCode);
+  } catch (e) {
+    log("/StoreServices <getStopsList> Catch ${e.toString()}");
+    return Answer(
+        body: e.toString(),
+        message: "Conexión inestable con el back",
+        status: 1002,
+        error: true);
+  }
+}
+
+/*Future<Answer> getStopsList() async {
   log("/StoreServices <getStopsList>");
   try {
     var body = await http.get(Uri.parse("${prefs.urlBase}paradas"), headers: {
@@ -64,6 +91,7 @@ Future<Answer> getStopsList() async {
       "client_secret": prefs.clientSecret,
       "Authorization": "Bearer ${prefs.token}",
     }).timeout(Duration(seconds: timerDuration));
+    print('imprimeindo body ${body}');
     return Answer.fromService(body,200);
   } catch (e) {
     log("/StoreServices <getStopsList> Catch ${e.toString()}");
@@ -73,7 +101,7 @@ Future<Answer> getStopsList() async {
         status: 1002,
         error: true);
   }
-}
+}*/
 Future<Answer> postStop(Map<String, dynamic> data) async {
   log("/StoreServices <PostStop>");
   try {
@@ -1092,6 +1120,7 @@ Future<Answer> postDirtyBroken({
   required File archivo,
   required String fechaRegistro,
   required int idAutorization,
+  required String idTransaccion,
 }) async {
   log("/StoreServices <postDirtyBroken> ¡");
 
@@ -1126,6 +1155,7 @@ Future<Answer> postDirtyBroken({
     request.fields['lon'] = lon.toString();
     request.fields['id_autorizacion'] = idAutorization.toString();
     request.fields['fecha_registro'] = fechaRegistro;
+    request.fields['id_transaccion'] = idTransaccion;
 
     // Validar archivo antes de agregarlo
     if (!archivo.existsSync()) {

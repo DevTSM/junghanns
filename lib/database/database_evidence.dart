@@ -20,14 +20,14 @@ class DatabaseHelper {
 
   Future<Database> _initDatabase() async {
     Directory documentsDirectory = await getApplicationDocumentsDirectory();
-    String path = join(documentsDirectory.path, 'evidenciasMermas.db');
+    String path = join(documentsDirectory.path, 'evidenciasMerma.db');
 
     return await openDatabase(
       path,
       version: 1,
       onCreate: (Database db, int version) async {
         await db.execute('''
-          CREATE TABLE evidenciasMermas (
+          CREATE TABLE evidenciasMerma (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             idRuta TEXT,
             idCliente TEXT,
@@ -49,7 +49,7 @@ class DatabaseHelper {
 
   Future<int> insertEvidence(String idRuta, String idCliente, String tipo, String cantidad, double lat, double lon, int idAutorization, String archivo, String fechaRegistro, String idTransaccion, int isUploaded, int isError) async {
     final db = await database;
-    return await db.insert('evidenciasMermas', {
+    return await db.insert('evidenciasMerma', {
       'idRuta': idRuta,
       'idCliente': idCliente,
       'tipo': tipo,
@@ -68,7 +68,7 @@ class DatabaseHelper {
   Future<int> updateEvidence(int id, int isUploaded, int isError) async {
     final db = await database;
     return await db.update(
-      'evidenciasMermas',
+      'evidenciasMerma',
       {
         'isUploaded': isUploaded,
         'isError': isError
@@ -78,10 +78,19 @@ class DatabaseHelper {
     );
   }
 
+  Future<int> deleteEvidence(int id) async {
+    final db = await database;
+    return await db.delete(
+      'evidenciasMerma',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
   Future<int?> getEvidenceIdByAuthorization(int idAutorization) async {
     final db = await database;
     List<Map<String, dynamic>> result = await db.query(
-      'evidenciasMermas',
+      'evidenciasMerma',
       columns: ['id'],
       where: 'idAutorization = ?',
       whereArgs: [idAutorization],
@@ -95,7 +104,7 @@ class DatabaseHelper {
   Future<List<Map<String, dynamic>>> retrieveEvdences() async {
     final db = await database;
     return await db.query(
-        'evidenciasMermas',
+        'evidenciasMerma',
         where: "isUploaded = ? AND isError = ?",
         whereArgs: [0, 0],
         orderBy: 'id DESC'
@@ -104,7 +113,7 @@ class DatabaseHelper {
 
   Future<List<Evidence>> getAllEvidences() async {
     final db = await database;
-    final List<Map<String, dynamic>> maps = await db.query('evidenciasMermas');
+    final List<Map<String, dynamic>> maps = await db.query('evidenciasMerma');
 
     return List.generate(maps.length, (i) {
       return Evidence(
@@ -127,7 +136,7 @@ class DatabaseHelper {
   Future<int> countPendingEvidences() async {
     final db = await database;
     var result = await db.rawQuery(
-        "SELECT COUNT(*) as count FROM evidenciasMermas WHERE isUploaded = 0 AND isError = 0");
+        "SELECT COUNT(*) as count FROM evidenciasMerma WHERE isUploaded = 0 AND isError = 0");
     return Sqflite.firstIntValue(result) ?? 0;
   }
 

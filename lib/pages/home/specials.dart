@@ -55,25 +55,18 @@ class _SpecialsState extends State<Specials> {
   Future<void> _refreshTimer() async {
     final provider = Provider.of<ProviderJunghanns>(context, listen: false);
 
-    // Ahora fetchStockValidation devuelve un objeto ValidationModel
     provider.fetchStockValidation();
 
-// Filtrar los datos según las condiciones especificadas
     final filteredData = provider.validationList.where((validation) {
       return validation.status == "P" && validation.valid == "Planta";
     }).toList();
 
-
-// Verificar si hay datos filtrados
     setState(() {
       if (filteredData.isNotEmpty) {
-        specialData = filteredData;  // Asigna los datos filtrados a specialData
-        // Imprimir el contenido de specialData para confirmarlo
-        print('Contenido de specialData (filtrado): $specialData');
-        print('Llama al modal');
+        specialData = filteredData;
         showValidationModal(context);
       } else {
-        specialData = [];  // Si no hay datos que cumplan las condiciones, asignar un arreglo vacío
+        specialData = [];
         print('No se encontraron datos que cumplan las condiciones');
       }
     });
@@ -155,9 +148,14 @@ class _SpecialsState extends State<Specials> {
         }
       });
       getPermission();
-      setState(() {
+      /*setState(() {
         isLoading = false;
-      });
+      });*/
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
     });
   }
 

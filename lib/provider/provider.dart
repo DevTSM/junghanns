@@ -84,7 +84,9 @@ class ProviderJunghanns extends ChangeNotifier {
   List<ProductCatalogModel> _productsCatalog = [];
   List<ProductCatalogModel> _accesories = [];
   List<ProductCatalogModel> additionalProducts = [];
+  List<ProductModel> transfersProductsList = [];
   List<ProductModel> missingProducts = [];
+  List<ProductModel> transProductsL = [];
   List<ProductModel> _stockProducts = [];
   List<DeliverProductsModel> originalAccessoriesWithStock = [];
   List<DeliverProductsModel> accessoriesWithStock = [];
@@ -462,14 +464,6 @@ class ProviderJunghanns extends ChangeNotifier {
           final validation = ValidationProductModel.fromJson(answer.body);
           validationList = [validation];
         }
-
-
-        print("Lista de validaciones obtenida: ${validationList.length} items.");
-        // Imprimir cada validación para depuración
-        for (var validation in validationList) {
-          print(validation);
-        }
-        print("---Llamando--");
       }
     });
     notifyListeners();
@@ -495,14 +489,6 @@ class ProviderJunghanns extends ChangeNotifier {
           final validation = ValidationProductModel.fromJson(answer.body);
           validationList = [validation];
         }
-
-
-        print("Lista de validaciones obtenida: ${validationList.length} items.");
-        // Imprimir cada validación para depuración
-        for (var validation in validationList) {
-          print(validation);
-        }
-        print("---Llamando--");
       }
     });
     notifyListeners();
@@ -919,7 +905,7 @@ class ProviderJunghanns extends ChangeNotifier {
     notifyListeners();
   }
 
-  synchronizeListDelivery() async {
+  Future<bool> synchronizeListDelivery() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('missingProducts');
 
@@ -938,6 +924,8 @@ class ProviderJunghanns extends ChangeNotifier {
     print("missingProducts después de clear: $missingProducts");
     additionalProducts.clear();
     print("additionalProducts después de clear: $additionalProducts");
+    transfersProductsList.clear();
+    print("transfersProductsList después de clear: $transfersProductsList");
 
     await prefs.remove('carboyAccesories');
     await prefs.remove('demineralizedAccesories');
@@ -949,6 +937,7 @@ class ProviderJunghanns extends ChangeNotifier {
 
     bool missingProductsExists = prefs.containsKey('missingProducts');
     print("missingProducts eliminado: ${!missingProductsExists}");
+    return true;
   }
 
   Future<void> loadLists(String currentSessionToken) async {
@@ -1250,6 +1239,282 @@ class ProviderJunghanns extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Funcionalidad de lista de productos adicionales
+  Future<void> addTransfersProduct(ProductModel product, int count) async {
+    final existingProduct = transfersProductsList.firstWhere(
+          (p) => p.idProduct == product.idProduct,
+      orElse: () => ProductModel.empty(),
+    );
+
+    // Manejo del producto faltante
+    if (existingProduct.idProduct != 0) {
+      // Si ya existe, se actualiza la cantidad
+      existingProduct.count = (int.parse(existingProduct.count) + count).toString();
+    } else {
+      // Si no existe, se agrega a la lista
+      transfersProductsList.add(product.copyWith(count: count.toString(), label: "Transferir"));
+    }
+
+    // Determina si se debe pasar count o -count
+    int countChange;
+    if (product.idProduct == 22 || product.idProduct == 21 || product.idProduct == 136 || product.idProduct == 125 || product.idProduct == 50) {
+      countChange = count; // Para id 22 o 21, usar count positivo
+    } else {
+      countChange = -count; // Para otros productos, usar -count
+    }
+
+    // Actualiza el stock basado en el id del producto
+    /*await saveLists();
+    await saveMissingProducts(); // Guardar la lista actualizada*/
+    notifyListeners();
+    //_updateStock(product.idProduct, countChange);
+  }
+  Future<void> removeTransfersProduct(ProductModel product, int count) async {
+    final existingProduct = transfersProductsList.firstWhere(
+          (p) => p.idProduct == product.idProduct,
+      orElse: () => ProductModel.empty(),
+    );
+
+    if (existingProduct.idProduct != 0) {
+      int currentCount = int.tryParse(existingProduct.count) ?? 0;
+      currentCount -= count;
+
+      if (currentCount <= 0) {
+        transfersProductsList.removeWhere((p) => p.idProduct == product.idProduct);
+      } else {
+        existingProduct.count = currentCount.toString();
+      }
+    }
+
+    notifyListeners();
+  }
+
+  /*Future<void> removeTransfersProduct(ProductModel product, int count) async {
+    final existingProduct = transfersProductsList.firstWhere(
+          (p) => p.idProduct == product.idProduct,
+      orElse: () => ProductModel.empty(),
+    );
+
+    if (existingProduct.idProduct != 0) {
+      int currentCount = int.tryParse(existingProduct.count) ?? 0;
+      currentCount -= count;
+
+      // Actualiza los carboys directamente según el id del producto
+      if (product.idProduct == 22) {
+        // Lógica para carboys llenos
+        _updateTransferStock(product.idProduct, -count); // Aquí se aumenta el stock de carboys llenos
+      } else if (product.idProduct == 21) {
+        // Lógica para carboys vacíos
+       _updateTransferStock(product.idProduct, -count); // Aquí se aumenta el stock de carboys vacíos
+      } else if (product.idProduct == 125){
+        _updateTransferStock(product.idProduct, -count);
+      } else if (product.idProduct == 136){
+        _updateTransferStock(product.idProduct, -count);
+      } else if (product.idProduct == 50){
+        _updateTransferStock(product.idProduct, -count);
+      } else {
+        // Para otros productos, se elimina directamente el stock
+        _updateTransferStock(product.idProduct, count); // Restamos el stock normal
+      }
+
+      // Eliminar el producto si su cuenta es menor o igual a cero
+      if (currentCount <= 0) {
+        transfersProductsList.removeWhere((p) => p.idProduct == product.idProduct);
+      } else {
+        existingProduct.count = currentCount.toString();
+      }
+    }
+   *//* await saveLists();
+    await saveMissingProducts(); *//*// Guardar la lista actualizada
+    notifyListeners();
+  }
+*/
+  void updateTransferProduct(ProductModel product, int change) {
+    final accessoryWithStock = accessoriesWithStock.firstWhere(
+          (p) => p.others.first.id == product.idProduct,
+      orElse: () => DeliverProductsModel.empty(),
+    );
+
+    if (accessoryWithStock.others.first.id == 0) return;
+    if (change > 0 && accessoryWithStock.others.first.count < change) return;
+
+    final existingProduct = transfersProductsList.firstWhere(
+          (p) => p.idProduct == product.idProduct,
+      orElse: () => ProductModel.empty(),
+    );
+
+    if (existingProduct.idProduct != 0) {
+      existingProduct.count = (int.parse(existingProduct.count) + change).toString();
+
+      if (int.parse(existingProduct.count) <= 0) {
+        transfersProductsList.removeWhere((p) => p.idProduct == product.idProduct);
+      }
+    } else if (change > 0) {
+      transfersProductsList.add(product.copyWith(count: change.toString(), label: "Transferir"));
+    }
+    _updateStock(product.idProduct, -change);
+    notifyListeners();
+  }
+
+  void _updateTransferStock(int productId, int countChange) {
+    // Primero, actualizamos la lista de accesorios con stock
+    final product = accessoriesWithStock.firstWhere(
+          (p) => p.others.isNotEmpty && p.others.first.id == productId,
+      orElse: () => DeliverProductsModel.empty(),
+    );
+    print('CountChange: $countChange');
+
+    if (product.others.isNotEmpty && product.others.first.id != 0) {
+      product.others.first.count += countChange;
+
+      if (product.others.first.count < 0) {
+        product.others.first.count = 0;
+      }
+
+      int index = accessoriesWithStock.indexWhere((p) => p.others.isNotEmpty && p.others.first.id == productId);
+      if (index != -1) {
+        accessoriesWithStock[index] = product;
+      }
+    } else {
+      print('Producto no encontrado en accessoriesWithStock: ID ${productId}');
+    }
+
+    // Manejo específico para carboys (id == 22)
+    if (productId == 22) {
+      // Aquí puedes agregar la lógica adicional si es necesario para carboys
+      _updateTransferCarboyAccesories(countChange, true);
+    }
+
+    // Manejo específico para carboys vacíos (id == 21)
+    if (productId == 21) {
+      // Aquí puedes agregar la lógica adicional si es necesario para carboys vacíos
+      _updateTransferCarboyAccesories(countChange, false);
+    }
+
+    // Manejo específico para carboys vacíos (id == 136)
+    if (productId == 136) {
+      // Aquí puedes agregar la lógica adicional si es necesario para carboys vacíos
+      _updateTransferCarboyElevenAccesories(countChange, false);
+    }
+    // Manejo específico para carboys vacíos (id == 125)
+    if (productId == 125) {
+      // Aquí puedes agregar la lógica adicional si es necesario para carboys vacíos
+      _updateTransferCarboyElevenAccesories(countChange, true);
+    }
+    if (productId == 50) {
+      // Aquí puedes agregar la lógica adicional si es necesario para carboys vacíos
+      _updateTransferCarboyDemineralizedsAccesories(countChange, true);
+    }
+    saveLists();
+    notifyListeners();
+  }
+
+  void _updateTransferCarboyAccesories(int countChange, bool isFull) {
+    if (carboyAccesories.isNotEmpty) {
+      final carboys = carboyAccesories.first.carboys;
+      print('CountChange: $countChange');
+      if (isFull == true) {
+        if (carboys.full >= countChange) {
+          carboys.full -= countChange;  // Descontar de carboys llenos
+          carboys.empty += countChange;  // Aumentar en carboys vacíos
+          print('Carboys llenos disminuidos: ${carboys.full}, Carboys vacíos aumentados: ${carboys.empty}');
+
+        } else {
+          print('No hay suficientes carboys llenos disponibles para descontar. Disponibles: ${carboys.full}');
+        }
+      } else {
+        if (carboys.empty >= countChange) {
+          carboys.empty -= countChange; // Descontar de carboys vacíos
+        } else {
+          print('No hay suficientes carboys vacíos disponibles para descontar. Disponibles: ${carboys.empty}');
+        }
+      }
+
+      // Asegurar que el cambio persista en la lista
+      int carboyIndex = carboyAccesories.indexWhere((a) => a.carboys == carboys);
+      if (carboyIndex != -1) {
+        carboyAccesories[carboyIndex].carboys = carboys;
+      }
+
+      print('Actualización de carboys: Full: ${carboys.full}, Empty: ${carboys.empty}');
+      notifyListeners();
+    }
+  }
+  void _updateTransferCarboyElevenAccesories(int countChange, bool isFull) {
+    if (carboyElevenAccesories.isNotEmpty) {
+      final carboys = carboyElevenAccesories.first.carboysEleven;
+      print('CountChange: $countChange');
+      print('--- Actualización de carboys Eleven ---');
+      print('CountChange: $countChange, isFull: $isFull');
+      print('Antes de descontar: Full: ${carboys.full}, Empty: ${carboys.empty}');
+      if (isFull == true) {
+        if (carboys.full >= countChange) {
+          carboys.full -= countChange;  // Descontar de carboys llenos
+          carboys.empty += countChange;  // Aumentar en carboys vacíos
+          print('Carboys llenos disminuidos: ${carboys.full}, Carboys vacíos aumentados: ${carboys.empty}');
+
+        } else {
+          print('No hay suficientes carboys llenos disponibles para descontar. Disponibles: ${carboys.full}');
+        }
+      } else {
+        if (carboys.empty >= countChange) {
+          carboys.empty -= countChange; // Descontar de carboys vacíos
+        } else {
+          print('No hay suficientes carboys vacíos disponibles para descontar. Disponibles: ${carboys.empty}');
+        }
+      }
+
+      // Asegurar que el cambio persista en la lista
+      int carboyIndex = carboyElevenAccesories.indexWhere((a) => a.carboysEleven == carboys);
+      if (carboyIndex != -1) {
+        carboyElevenAccesories[carboyIndex].carboysEleven = carboys;
+      }
+
+      print('Actualización de carboys: Full: ${carboys.full}, Empty: ${carboys.empty}');
+      notifyListeners();
+    }
+  }
+
+  void _updateTransferCarboyDemineralizedsAccesories(int countChange, bool isFull) {
+
+    final carboysDemi = demineralizedAccesories.first.demineralizeds;
+    final carboys =carboyAccesories.first.carboys;
+    print('CountChange: $countChange');
+    print('--- Actualización de carboys DEsmi ---');
+    print('CountChange: $countChange, isFull: $isFull');
+    print('Antes de descontar: Full: ${carboysDemi.full}, Empty: ${carboys.empty}');
+    if (isFull == true) {
+      if (carboysDemi.full >= countChange) {
+        carboysDemi.full -= countChange;  // Descontar de carboys llenos
+        carboys.empty += countChange;  // Aumentar en carboys vacíos
+        print('Carboys llenos disminuidos: ${carboysDemi.full}, Carboys vacíos aumentados: ${carboys.empty}');
+
+      } else {
+        print('No hay suficientes carboys llenos disponibles para descontar. Disponibles: ${carboysDemi.full}');
+      }
+    } else {
+      if (carboys.empty >= countChange) {
+        carboys.empty -= countChange; // Descontar de carboys vacíos
+      } else {
+        print('No hay suficientes carboys vacíos disponibles para descontar. Disponibles: ${carboys.empty}');
+      }
+    }
+
+    // Asegurar que el cambio persista en la lista
+    int carboyIndex = demineralizedAccesories.indexWhere((a) => a.demineralizeds == carboysDemi);
+    if (carboyIndex != -1) {
+      demineralizedAccesories[carboyIndex].demineralizeds = carboysDemi;
+    }
+
+    print('Actualización de carboys: Full: ${carboysDemi.full}, Empty: ${carboys.empty}');
+    notifyListeners();
+
+  }
+  /*removeTransfersProduct(ProductCatalogModel accessory) async {
+    transfersProductsList.removeWhere((item) => item.products == accessory.products);
+    await saveAdditionalProducts();
+    notifyListeners();
+  }*/
   Future<void> saveAdditionalProducts() async {
     final prefs = await SharedPreferences.getInstance();
     // Convierte la lista a JSON y guárdala
@@ -1428,13 +1693,24 @@ class ProviderJunghanns extends ChangeNotifier {
 
     // Preparar las listas de productos
 
-    List<Map<String, dynamic>> missingProductsList = missingProducts.map((product) {
+    /*List<Map<String, dynamic>> missingProductsList = missingProducts.map((product) {
       final productMap = {
         "id_producto": product.idProduct,
         "cantidad": product.count,
       };
       return productMap;
+    }).toList();*/
+    final List<int> idsEspeciales = [21, 22, 50, 125, 136];
+
+    List<Map<String, dynamic>> missingProductsList = provider.transfersProductsList
+        .where((product) => !idsEspeciales.contains(int.parse(product.idProduct.toString())))
+        .map((product) {
+      return {
+        "id_producto": int.parse(product.idProduct.toString()),
+        "cantidad": int.parse(product.count.toString()),
+      };
     }).toList();
+
 
     // Estructura de entrega
     final Map<String, dynamic> deliveryData = {
@@ -1535,6 +1811,9 @@ print("Fecha registro en el provider: ${fechaRegistro}");
           // Si hay un error y el código es diferente de 1002, actualizar isError a 1
           if (answer.status != 1002) {
             await dbHelper.updateEvidence(evidenceId, 0, 1);
+
+            await dbHelper.deleteEvidence(evidenceId);
+
             Fluttertoast.showToast(
               msg: "${answer.message}",
               timeInSecForIosWeb: 16,
@@ -1554,6 +1833,10 @@ print("Fecha registro en el provider: ${fechaRegistro}");
         } else {
           // Si la respuesta es exitosa, actualizar isUploaded a 1 y isError a 0
           await dbHelper.updateEvidence(evidenceId, 1, 0);
+
+          // Eliminar la evidencia después de marcarla como enviada
+          await dbHelper.deleteEvidence(evidenceId);
+
           Fluttertoast.showToast(
             msg: "Evidencia enviada",
             timeInSecForIosWeb: 16,
@@ -1727,5 +2010,42 @@ print("Fecha registro en el provider: ${fechaRegistro}");
       }
       });
     notifyListeners();
+  }
+  //Funcionalidad eliminar validacion
+  deleteValidation({required int idValidacion, required double lat, required double lng, required String comment}) async {
+    notifyListeners();
+    // Llamada al servicio postValidated
+    await deleteValidated(
+      idV: idValidacion,
+      comment: comment,
+      lat: lat,
+      lng: lng,
+
+    ).then((answer) {
+      /*loading = false;*/
+      if (answer.error) {
+        // Redirigir a la vista de Home
+        print('Error: ${answer.message}');
+        CustomModal.show(
+          context: navigatorKey.currentContext!,
+          icon: Icons.cancel_outlined,
+          title: "ERROR",
+          message: "${answer.message}",
+          iconColor: ColorsJunghanns.red,
+        );
+      } else {
+          CustomModal.show(
+            context: navigatorKey.currentContext!,
+            icon: Icons.check_circle,
+            title: "TRASPASO ELIMINADO",
+            message: "Proceso realizado correctamente, la solicitud fue eliminada.",
+            iconColor: ColorsJunghanns.red,
+          );
+          synchronizeListDelivery();
+          fetchStockValidation();
+
+        notifyListeners();
+      }
+    });
   }
 }

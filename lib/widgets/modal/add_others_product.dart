@@ -21,13 +21,6 @@ class AddOthersProductModal extends StatefulWidget {
 }
 
 class _AddMissingProductModalState extends State<AddOthersProductModal> {
-  Future<void> _refreshData() async {
-    final provider = Provider.of<ProviderJunghanns>(context, listen: false);
-    await provider.fetchStockDelivery();
-    await provider.updateStock();
-    await provider.fetchProducts();
-    await provider.fetchProductsStock();
-  }
   @override
   Widget build(BuildContext context) {
     return Consumer<ProviderJunghanns>(
@@ -70,16 +63,6 @@ class _AddMissingProductModalState extends State<AddOthersProductModal> {
                           ),
                           child: Row(
                             children: [
-                              /*IconButton(
-                                icon: const Icon(Icons.remove, color: ColorsJunghanns.blueJ),
-                                onPressed: widget.controller.accesoryCurrent != null
-                                    ? () {
-                                  if (widget.controller.productCurrent!.count > 1) {
-                                    setState(() => widget.controller.productCurrent!.count--);
-                                  }
-                                }
-                                    : null,
-                              ),*/
                               IconButton(
                                 icon: const Icon(Icons.remove, color: ColorsJunghanns.blueJ),
                                 onPressed: widget.controller.productCurrent != null

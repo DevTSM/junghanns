@@ -204,8 +204,8 @@ import '../provider/chat_provider.dart';
           ),
         ).whenComplete(() {
           // Aquí puedes hacer algo después de cerrar el diálogo si es necesario
-        });
-*//*
+        });*//*
+
       } else {
         // Para las otras opciones de navegación
         isHome ? setIndexCurrent(value) : navigator(context, value, indexCurrent);

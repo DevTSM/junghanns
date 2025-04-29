@@ -1,19 +1,15 @@
-// ignore_for_file: must_be_immutable
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:junghanns/models/produc_receiption.dart';
-
-
+import '../../styles/color.dart';
 import '../../styles/decoration.dart';
 import '../../styles/text.dart';
 
 class ProductInventaryCardPriority extends StatefulWidget {
   ProductReceiptionModel productCurrent;
-  /*Function update;*/
-  ProductInventaryCardPriority(
-      {Key? key, required this.productCurrent/*, required this.update*/})
-      : super(key: key);
+
+  ProductInventaryCardPriority({Key? key, required this.productCurrent}) : super(key: key);
 
   @override
   ProductInventaryCardPriorityState createState() => ProductInventaryCardPriorityState();
@@ -22,125 +18,89 @@ class ProductInventaryCardPriority extends StatefulWidget {
 class ProductInventaryCardPriorityState extends State<ProductInventaryCardPriority> {
   late Size size;
   late NumberFormat formatMoney = NumberFormat("\$#,##0.00");
-  late TextEditingController count;
-
-  @override
-  void initState() {
-    super.initState();
-    count=TextEditingController();
-  }
 
   @override
   Widget build(BuildContext context) {
     size = MediaQuery.of(context).size;
-    return GestureDetector(
-        child: Container(
-            padding: const EdgeInsets.all(8),
-            margin: const EdgeInsets.only(bottom: 8),
-            width: size.width *0.50,
-            height: size.height * 0.21,
-            decoration: widget.productCurrent.count > 0
-                ? Decorations.blueCard
-                : Decorations.blueCard,
-            child: Row(
-              children: [
-                Expanded(
-                  flex: 5,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      // Imagen del producto con espacio flexible
-                      Flexible(
-                        flex: 5,
-                        child: imageProduct(),
-                      ),
-                      const SizedBox(height: 15),
-                      Flexible(
-                        flex: 2,
-                        child: AutoSizeText(
-                          widget.productCurrent.product,
-                          maxLines: 1,
-                          style: TextStyles.blueJ20BoldIt,
-                        ),
-                      ),
-                      const SizedBox(height: 5),
-                      Container(
-                        margin: const EdgeInsets.only(bottom: 2, left: 28, right: 28),
-                        padding: const EdgeInsets.only(top: 2, bottom: 2),
-                        alignment: Alignment.center,
-                        decoration: Decorations.greenJCardB30,
-                        child: AutoSizeText(
-                          "Stock: ${widget.productCurrent.count}",
-                          style: TextStyles.white15Itw,
-                        ),
-                      ),
-                    ],
-                  ),
-                )
 
-                /*Expanded(flex: 5,
-                    child: Column(
-                        children: [
-                          imageProduct(),
-                          const SizedBox(height: 10),
-                          AutoSizeText(
-                            widget.productCurrent.description,
-                            maxLines: 1,
-                            style: TextStyles.blueJ20BoldIt,
-                          ),
-                          const SizedBox(height: 5),
-                          Container(
-                              margin: const EdgeInsets.only(bottom: 2, left: 28, right: 28),
-                              padding: const EdgeInsets.only(top: 2, bottom: 2),
-                              alignment: Alignment.center,
-                              decoration: Decorations.greenJCardB30,
-                              child: AutoSizeText(
-                                "Stock: ${widget.productCurrent.stock}",
-                                style: TextStyles.white15Itw,
-                              )),
-                        ])),*/
-                /*Expanded(flex: 7, child: info()),*/
-              ],
-            )),
-        /*onTap: () {
-          showSelect();
-        }*/);
-  }
-
-  Widget info() {
     return Container(
-        padding: const EdgeInsets.only(left: 12),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            Flexible(
-                child: AutoSizeText(
-                  widget.productCurrent.product,
-                  maxLines: 1,
-                  style: TextStyles.blueJ20BoldIt,
-                )),
+      padding: const EdgeInsets.all(8),
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: Decorations.blueCard.copyWith(
+        color: Decorations.blueCard.color?.withOpacity(0.3),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Flexible(
+            flex: 3,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                imageProduct(),
+                Positioned(
+                  top: -4,
+                  left: -5,
+                  child: Container(
+                    width: 35,
+                    height: 35,
+                    decoration: const BoxDecoration(
+                      color: ColorsJunghanns.green,
+                      shape: BoxShape.circle,
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      widget.productCurrent.count.toString(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
 
-          ],
-        ));
+          const SizedBox(width: 10),
+          Flexible(
+            flex: 5,
+            child: Align(
+              alignment: Alignment.center,
+              child: Column(
+                children: [
+                  const SizedBox(height: 40),
+                  AutoSizeText(
+                    widget.productCurrent.product,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyles.blueJ20BoldIt,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget imageProduct() {
     return Container(
-        width: size.height * 0.2,
-        height: size.height * 0.12,
-        decoration: Decorations.white2Card.copyWith(
-          borderRadius: BorderRadius.circular(12)
+      width: size.width * 0.3,
+      height: size.height * 0.12,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        color: Colors.white,
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Image.network(
+          widget.productCurrent.img,
+          fit: BoxFit.cover,
         ),
-        child: Stack(
-          children: [
-            Container(
-              decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  image: DecorationImage(
-                      image: NetworkImage(widget.productCurrent.img))),
-            ),
-          ],
-        ));
+      ),
+    );
   }
-
 }

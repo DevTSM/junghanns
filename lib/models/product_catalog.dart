@@ -1,6 +1,6 @@
 class ProductCatalogModel {
   final String description;
-  final List<int> products;
+  final int products;
   int count;
   String? label;
   String img;
@@ -9,16 +9,17 @@ class ProductCatalogModel {
   ProductCatalogModel({required this.description, required this.products, required this.count, required this.label, required this.img});
 
   factory ProductCatalogModel.empty(){
-    return ProductCatalogModel(description: '', products: [], count: 1, label: '', img: '');
+    return ProductCatalogModel(description: '', products: 0, count: 1, label: '', img: '');
   }
   // Método para crear una instancia de Producto desde un JSON
   factory ProductCatalogModel.fromJson(Map<String, dynamic> json) {
     return ProductCatalogModel(
       description: json['descripcion'],
-      products: List<int>.from(json['productos']['id']),
+      /*products: List<int>.from(json['productos']['id']),*/
+      products: json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? '0') ?? 0,
       count: int.parse(json['cantidad'] ?? '1'),
       label: '',
-      img: json['productos']['url'] ?? "",
+      img: json['url'] ?? "",
     );
   }
 

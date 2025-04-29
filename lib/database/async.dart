@@ -60,7 +60,7 @@ class Async {
       });
     });
   }
-  
+
   Future<bool> initAsync() async {
      bool isNotSuccess=false;
     provider.asyncProcess=true;
@@ -95,14 +95,25 @@ class Async {
                 isNotSuccess?null:isNotSuccess=value7;
                 log("======> $isNotSuccess");
                 provider.labelAsync = "Sincronizando marcas de garrafón";
-                return provider.synchronizeListDelivery().then((value8){
+                /*return provider.synchronizeListDelivery().then((value8){
                   provider.labelAsync = "Sincronizando stock de entrega";
                   return getDataBrand().then((value9){
                     prefs.isAsyncCurrent = false;
                     provider.asyncProcess=false;
                     return isNotSuccess;
                   });
+                });*/
+                return provider.synchronizeListDelivery().then((value8) {
+                  isNotSuccess ? null : isNotSuccess = value8;
+                  provider.labelAsync = "Sincronizando stock de entrega";
+                  return getDataBrand().then((value9) {
+                    isNotSuccess ? null : isNotSuccess = value9;
+                    prefs.isAsyncCurrent = false;
+                    provider.asyncProcess = false;
+                    return isNotSuccess;
+                  });
                 });
+
                 /*return getDataBrand().then((value9){
                   prefs.isAsyncCurrent = false;
               provider.asyncProcess=false;
@@ -259,8 +270,11 @@ class Async {
             int? evidenceId = await dbHelper.getEvidenceIdByAuthorization(e["idAutorization"]);
             log("Se actualizan los datos");
             await dbHelper.updateEvidence(evidenceId!, 1, 0);
+            // Eliminar la evidencia después de marcarla como enviada
+            log("Elimina despues de sincronizar la evidencia con id: ${evidenceId}");
+            await dbHelper.deleteEvidence(evidenceId);
             //provider.isNeedAsync = false;
-            // Verificar si quedan evidencias pendientes con (0, 0)
+            /*// Verificar si quedan evidencias pendientes con (0, 0)
             int pendingCount = await dbHelper.countPendingEvidences();
             log("Ya paso el conteno de evidenciassss");
             if (pendingCount == 0) {
@@ -270,12 +284,16 @@ class Async {
             for (var sale in pendingSales) {
               log("Venta pendiente en la ultima parte para verificar: ${sale.toString()}");
               provider.isNeedAsync = true;
-            }
+            }*/
           } else {
             isNotSuccess = true;
             if (value.status != 1002) {
               int? evidenceId = await dbHelper.getEvidenceIdByAuthorization(e["idAutorization"]);
               await dbHelper.updateEvidence(evidenceId!, 0, 1);
+
+              log("Elimina la evidencia en sincronizar y si fallo con id: ${evidenceId}");
+              await dbHelper.deleteEvidence(evidenceId);
+
             }
           }
         });

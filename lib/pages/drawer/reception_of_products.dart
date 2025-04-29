@@ -22,6 +22,7 @@ import '../../widgets/button/button_reception.dart';
 import '../../widgets/modal/decline.dart';
 import '../../widgets/modal/validation_modal.dart';
 import '../home/home_principal.dart';
+import 'mapa_actual.dart';
 
 class ReceptionOfProducts extends StatefulWidget {
   const ReceptionOfProducts({Key? key}) : super(key: key);
@@ -46,6 +47,7 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
   double? currentDistance;
   double? plantaLat;
   double? plantaLog;
+  bool _isMapInteracting = false;
   /*LatLng? _userCoordinates;
   LatLng? _plantCoordinates;*/
 
@@ -223,24 +225,35 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
       }
     });
   }
-
-
   @override
   Widget build(BuildContext context) {
     size = MediaQuery.of(context).size;
     final provider = Provider.of<ProviderJunghanns>(context, listen: false);
     final validationList = provider.validationList;
-    final hasData = validationList.isNotEmpty && (validationList.first.status == 'P' && validationList.first.valid != 'Planta');
+    final hasData = validationList.isNotEmpty &&
+        (validationList.first.status == 'P' && validationList.first.valid != 'Planta');
 
-    // Obtener el tipo de validación (typeValidation)
-    final typeValidation = validationList.isNotEmpty ? validationList.first.typeValidation : '';
+    final pendingValidations = provider.validationList.where((validation) =>
+    validation.status == "P" &&
+        validation.valid == "Ruta" &&
+        validation.typeValidation == "T").toList();
+
+    double? destinoLat;
+    double? destinoLon;
+
+    if (pendingValidations.isNotEmpty) {
+      destinoLat = double.tryParse(pendingValidations.first.lat.toString());
+      destinoLon = double.tryParse(pendingValidations.first.lon.toString());
+    }
+
+    final typeValidation =
+    validationList.isNotEmpty ? validationList.first.typeValidation : '';
 
     return RefreshIndicator(
-      onRefresh: () async{
+      onRefresh: () async {
         await _refreshInventory();
         await _fetchData();
         await validateReception();
-
       },
       child: Stack(
         children: [
@@ -254,12 +267,10 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
               ),
               elevation: 0,
               leading: IconButton(
-                /*onPressed: () => Navigator.pushReplacementNamed(context, '/HomePrincipal')*//*Navigator.pop(context)*//*,*/
                 onPressed: () {
                   if (Navigator.canPop(context)) {
-                    Navigator.pop(context); // Solo hacer pop si hay algo que cerrar
+                    Navigator.pop(context);
                   } else {
-                    // Opcional: puedes navegar a HomePrincipal si no hay más pantallas
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(builder: (context) => HomePrincipal()),
@@ -272,100 +283,94 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
                 ),
               ),
             ),
-            body: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              child: Column(
-                children: [
-                  header(),
-                  const SizedBox(height: 20),
-                  if (showErrorBanner) ...[
-                    Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          border: Border.all(
-                            color: ColorsJunghanns.greenJ,
-                            width: 0,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: ColorsJunghanns.greenJ.withOpacity(0.4),
-                              blurRadius: 8,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Center(
-                          child: Wrap(
-                            alignment: WrapAlignment.center,
-                            crossAxisAlignment: WrapCrossAlignment.center,
-                            children: [
-                              const Icon(
-                                Icons.check_circle,
-                                color: ColorsJunghanns.greenJ,
-                                size: 20,
-                              ),
-                              const SizedBox(width: 5),
-                              Text(
-                                errorMessage ?? '',
-                                style: const TextStyle(
-                                  color: ColorsJunghanns.greenJ,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                              Text(
-                                errorMessage1 ?? '',
-                                style: const TextStyle(
-                                  color: ColorsJunghanns.greenJ,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                            ],
-                          ),
+            body: Column(
+              children: [
+                header(),
+                if (pendingValidations.isNotEmpty && destinoLat != null && destinoLon != null)
+                  SizedBox(
+                    height: 300,
+                    child: Listener(
+                      onPointerDown: (_) {
+                        setState(() => _isMapInteracting = true);
+                      },
+                      onPointerUp: (_) {
+                        setState(() => _isMapInteracting = false);
+                      },
+                      child: AbsorbPointer(
+                        absorbing: false,
+                        child: MapaUbicacionActual(
+                          destinoLat: destinoLat,
+                          destinoLon: destinoLon,
                         ),
                       ),
                     ),
-                    const SizedBox(height: 20),
-                  ],
-
-
-                  provider.validationList.isEmpty|| provider.validationList.first.products.isEmpty || provider.validationList.first.valid == 'Planta'|| provider.validationList.first.status == 'A'|| provider.validationList.first.status == 'R'
-                      ? empty(context)
-                      : GridView.builder(
-                    shrinkWrap: true,  // Importante para que funcione dentro de SingleChildScrollView
-                    physics: const NeverScrollableScrollPhysics(),  // Desactiva el scroll interno
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2, // 2 cards por fila
-                      childAspectRatio: 0.85,
-                      crossAxisSpacing: 10,
-                      mainAxisSpacing: 10,
-                    ),
-                    itemCount: provider.validationList.first.products.length,
-                    itemBuilder: (context, index) {
-                      final products = provider.validationList.first.products;
-                      return ProductInventaryCardPriority(
-                        productCurrent: products[index],
-                      );
-                    },
                   ),
-                  const SizedBox(height: 100), // Añade espacio adicional para permitir el scroll
-                ],
-              ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 20),
+                        if (showErrorBanner)
+                          Padding(
+                            padding: const EdgeInsets.all(24),
+                            child: Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                border: Border.all(color: ColorsJunghanns.greenJ, width: 0),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: ColorsJunghanns.greenJ.withOpacity(0.4),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Center(
+                                child: Wrap(
+                                  alignment: WrapAlignment.center,
+                                  crossAxisAlignment: WrapCrossAlignment.center,
+                                  children: [
+                                    const Icon(Icons.check_circle, color: ColorsJunghanns.greenJ, size: 20),
+                                    const SizedBox(width: 5),
+                                    Text(errorMessage ?? '', style: _bannerTextStyle()),
+                                    Text(errorMessage1 ?? '', style: _bannerTextStyle()),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        provider.validationList.isEmpty ||
+                            provider.validationList.first.products.isEmpty ||
+                            provider.validationList.first.valid == 'Planta' ||
+                            provider.validationList.first.status == 'A' ||
+                            provider.validationList.first.status == 'R'
+                            ? empty(context)
+                            : Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                          child: Column(
+                            children: provider.validationList.first.products
+                                .map((product) => Padding(
+                              padding: const EdgeInsets.only(bottom: 10),
+                              child: ProductInventaryCardPriority(
+                                productCurrent: product,
+                              ),
+                            ))
+                                .toList(),
+                          ),
+                        ),
+                        const SizedBox(height: 100),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-          // Aquí se muestra el botón de distancia si la distancia no es válida
-          if (hasData && !isDistanceValid && typeValidation != 'T')
-            _buttonDistance(-15),
-          // El botón de Aceptar/ Rechazar solo se muestra si la distancia es válida
+          if (hasData && !isDistanceValid && typeValidation != 'T') _buttonDistance(-15),
           if (isDistanceValid || typeValidation == 'T')
             Positioned(
               bottom: 25,
@@ -393,16 +398,22 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
               )
                   : Container(),
             ),
-          Visibility(
-            visible: isLoadingOne,
-            child: const Center(
+          if (isLoadingOne)
+            const Center(
               child: LoadingJunghanns(),
             ),
-          ),
         ],
       ),
     );
   }
+
+  TextStyle _bannerTextStyle() => const TextStyle(
+    color: ColorsJunghanns.greenJ,
+    fontSize: 14,
+    fontWeight: FontWeight.w500,
+    letterSpacing: 0.5,
+  );
+
   Widget _buttonDistance(double bottomPadding) {
     final provider = Provider.of<ProviderJunghanns>(context, listen: false);
     return Positioned(
@@ -424,7 +435,6 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Primer texto "Atención!"
                     const Text(
                       'Atención!',
                       style: TextStyle(
@@ -434,8 +444,7 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
                         decoration: TextDecoration.none,
                       ),
                     ),
-                    const SizedBox(height: 8), // Espacio entre los textos
-                    // Segundo texto con la distancia
+                    const SizedBox(height: 8),
                     Text(
                       currentDistance != null
                           ? 'Distancia de ${currentDistance!.toStringAsFixed(2)} Mtrs excede el límite de recepción, con respecto al límite permitido de ${provider.planteDistance[0].allowedDistance} Mtrs.'
@@ -448,8 +457,6 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
                         decoration: TextDecoration.none,
                       ),
                     ),
-                    //const SizedBox(height: 8), // Espacio entre los textos
-                    // Segundo texto con la distancia
                     const Text(
                       'Verifica tu ubicación.',
                       textAlign: TextAlign.left,
@@ -460,23 +467,19 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
                         decoration: TextDecoration.none,
                       ),
                     ),
-                    const SizedBox(height: 16), // Espacio entre el texto y el botón
+                    const SizedBox(height: 16),
                     // Botón
                     ElevatedButton(
                       onPressed: () async {
-                        // Llamamos a funCheckDistance y esperamos su resultado
                         await funCheckDistance();
-
-                        // Si la distancia está dentro del rango, llamamos a funGoMaps
                         if (!isDistanceValid) {
                           funGoMaps();
                         } else {
-                          // Si no está dentro del rango, muestra un mensaje o toma otra acción
                           print('La distancia no está dentro del rango permitido');
                         }
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: ColorsJunghanns.orange3E, // Color del fondo del botón
+                        backgroundColor: ColorsJunghanns.orange3E,
                         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 15),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),

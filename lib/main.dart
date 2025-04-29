@@ -39,7 +39,7 @@ void callbackDispatcher() {
 }
 
 
-void initWebSocket() {
+/*void initWebSocket() {
   var url = '${prefs.urlBase}:3002';
   //var socket = IO.io('https://sandbox.junghanns.app:3002',
   var socket = IO.io('https://sandbox.junghanns.app:3002',
@@ -98,7 +98,7 @@ void initWebSocket() {
   }catch(e){
     log("ERORR: ${e.toString()}");
   }
-}
+}*/
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

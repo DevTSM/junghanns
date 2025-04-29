@@ -27,6 +27,7 @@ import 'package:junghanns/styles/text.dart';
 import 'package:junghanns/util/location.dart';
 import 'package:junghanns/widgets/modal/transfers_modal.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../services/store.dart';
 import '../../widgets/modal/receipt_modal.dart';
@@ -61,9 +62,24 @@ class _HomeState extends State<Home> {
   List specialData = [];
   bool isButtonEnabled = true;
 
+ // bool isButtonEnabled = true;
+  /*Timer? _countdownTimer;
+  Duration remainingTime = Duration.zero;
+  DateTime? lastSyncTime;*/
+  Timer? _countdownTimer;  // Temporizador
+  Duration remainingTime = Duration.zero;  // Tiempo restante
+  DateTime? lastSyncTime;  // Última sincronización
+
+
+
   @override
   void initState() {
     super.initState();
+    print('entra al init y actualiza');
+    //checkLastSyncTime();
+    Future.delayed(Duration.zero, () {
+      checkLastSyncTime();
+    });
     getPermission();
     dashboardR = DashboardModel.fromPrefs();
     isLoading = false;
@@ -83,13 +99,82 @@ class _HomeState extends State<Home> {
     secon = 0;
     getDashboarR();
     getAsync();
+    //checkLastSyncTime();
     _refreshTimer();
   }
 
   @override
   void dispose(){
+   // _countdownTimer?.cancel();
+    checkLastSyncTime();
     super.dispose();
   }
+
+  // Método para guardar el tiempo de sincronización
+   saveLastSyncTime() async {
+    final prefs = await SharedPreferences.getInstance();
+    //await prefs.remove('lastSyncTime');
+    final now = DateTime.now();
+    await prefs.setInt('lastSyncTime', now.millisecondsSinceEpoch);
+    print("Tiempo de sincronización guardado: ${now.toString()}");
+  }
+
+  // Método para comprobar el último tiempo de sincronización
+  checkLastSyncTime() async {
+    final prefs = await SharedPreferences.getInstance();
+    final lastSyncMillis = prefs.getInt('lastSyncTime');
+
+    if (lastSyncMillis != null) {
+      final lastSyncTime = DateTime.fromMillisecondsSinceEpoch(lastSyncMillis);
+      final elapsed = DateTime.now().difference(lastSyncTime);
+      print("Última sincronización: $lastSyncTime, tiempo transcurrido: ${elapsed.inMinutes} minutos");
+
+      if (elapsed < Duration(minutes: 10)) {
+        if (!mounted) return; // Verifica antes de setState
+        setState(() {
+          isButtonEnabled = false;
+          remainingTime = Duration(minutes: 10) - elapsed;
+        });
+        print("Deshabilitando botón, tiempo restante: $remainingTime");
+        startCountdown();
+      } else {
+        if (!mounted) return; // <- 💥 ESTA VERIFICACIÓN FALTABA AQUÍ
+        setState(() {
+          isButtonEnabled = true;
+        });
+        print("Habilitando botón, ya ha pasado más de 1 minuto.");
+      }
+    } else {
+      print("No se ha encontrado un registro de sincronización anterior.");
+    }
+  }
+
+
+  void startCountdown() {
+    _countdownTimer?.cancel(); // Cancelar cualquier temporizador previo
+    print("Iniciando cuenta regresiva.");
+
+    _countdownTimer = Timer.periodic(Duration(seconds: 1), (timer) async {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+
+      if (remainingTime.inSeconds > 0) {
+        setState(() {
+          remainingTime -= Duration(seconds: 1);
+          print("Tiempo restante: ${remainingTime.inMinutes}:${(remainingTime.inSeconds % 60).toString().padLeft(2, '0')}");
+        });
+      } else {
+        timer.cancel();
+        checkLastSyncTime();
+        print("Tiempo agotado, habilitando el botón y limpiando la preferencia.");
+      }
+    });
+  }
+
+
+
 
   getPermission() async {
     await Geolocator.requestPermission();
@@ -97,24 +182,22 @@ class _HomeState extends State<Home> {
 
   Future<void> _refreshTimer() async {
     final provider = Provider.of<ProviderJunghanns>(context, listen: false);
-
+    await checkLastSyncTime();
     await _refreshTransfers();
-    // Ahora fetchStockValidation devuelve un objeto ValidationModel
+
     await provider.fetchStockValidation();
     await provider.fetchStockDelivery();
 
-// Filtrar los datos según las condiciones especificadas
     final filteredData = provider.validationList.where((validation) {
       return validation.status == "P" && validation.valid == "Planta";
     }).toList();
 
-// Verificar si hay datos filtrados
     setState(() {
       if (filteredData.isNotEmpty) {
-        specialData = filteredData;  // Asigna los datos filtrados a specialData
+        specialData = filteredData;
         showValidationModal(context);
       } else {
-        specialData = [];  // Si no hay datos que cumplan las condiciones, asignar un arreglo vacío
+        specialData = [];
       }
     });
 
@@ -126,10 +209,8 @@ class _HomeState extends State<Home> {
   Future<void> _refreshTransfers() async {
     final provider = Provider.of<ProviderJunghanns>(context, listen: false);
 
-    // Ahora fetchStockValidation devuelve un objeto ValidationModel
     await provider.fetchValidation();
 
-    // Filtrar los datos según las condiciones especificadas
     final filteredDataTranfers = provider.validationList.where((validation) {
       return validation.status == "P" && validation.valid == "Ruta" && validation.typeValidation == 'T' && validation.idRoute != prefs.idRouteD;
     }).toList();
@@ -137,11 +218,10 @@ class _HomeState extends State<Home> {
     // Verificar si hay datos filtrados
     setState(() {
       if (filteredDataTranfers.isNotEmpty) {
-        specialData = filteredDataTranfers;  // Asigna los datos filtrados a specialData
-        print('Llama al modal trasferencias');
+        specialData = filteredDataTranfers;
         showTransferModal(context);
       } else {
-        specialData = [];  // Si no hay datos que cumplan las condiciones, asignar un arreglo vacío
+        specialData = [];
       }
     });
   }
@@ -294,6 +374,7 @@ class _HomeState extends State<Home> {
               secon = 0;
               getDashboarR();
               getAsync();
+              checkLastSyncTime();
               _refreshTimer();
             },
             child: SingleChildScrollView(
@@ -704,7 +785,6 @@ class _HomeState extends State<Home> {
       ),
     );
   }
-
   Widget buttonSync() {
     return Align(
       alignment: Alignment.bottomCenter,
@@ -712,37 +792,53 @@ class _HomeState extends State<Home> {
         onTap: isButtonEnabled
             ? () async {
           print("Botón sincronizar presionado");
+
+          // Deshabilitar el botón mientras se realiza la sincronización
           setState(() {
             isButtonEnabled = false;
           });
 
-          Position? currentLocation =
-          await LocationJunny().getCurrentLocation();
+          Position? currentLocation = await LocationJunny().getCurrentLocation();
           provider.asyncProcess = true;
           provider.isNeedAsync = false;
 
           Async async = Async(provider: provider);
           await async.initAsync().then((value) async {
             await handler.inserBitacora({
-              "lat": currentLocation != null
-                  ? currentLocation.latitude
-                  : 0,
-              "lng": currentLocation != null
-                  ? currentLocation.longitude
-                  : 0,
+              "lat": currentLocation?.latitude ?? 0,
+              "lng": currentLocation?.longitude ?? 0,
               "date": DateTime.now().toString(),
               "status": value ? "1" : "0",
               "desc": jsonEncode({"text": "Sincronizacion Manual"})
             });
 
-            setState(() {
-              isButtonEnabled = true; // Habilitar el botón nuevamente
-            });
+            print('despues de bitacora');
+            await saveLastSyncTime(); // Guardamos el tiempo de sincronización
 
+            //checkLastSyncTime();
+            startCountdown(); // Comienza el conteo regresivo
+            print('va a async');
             getAsync();
+            print('deshabilita el boton despues de que esta sincronizando');
+
+            isButtonEnabled = false;
+            print('valor de ${isButtonEnabled}');
+             // isButtonEnabled = false;
+            // Verificar si el widget está montado antes de llamar setState
+            /*if (mounted) {
+              setState(() {
+                //remainingTime = Duration(minutes: 1); // Reiniciar el contador
+               // isButtonEnabled = true; // Rehabilitar el botón después de la sincronización
+              });
+
+              startCountdown(); // Comienza el conteo regresivo
+              print('va a async');
+              getAsync();
+            }*/
           });
         }
-            : null, // Si está deshabilitado, no hace nada
+            : null, // Si el botón está deshabilitado, no hace nada
+
         child: Container(
           height: 50,
           width: MediaQuery.of(context).size.width * 0.5,
@@ -760,7 +856,9 @@ class _HomeState extends State<Home> {
               Container(
                 margin: const EdgeInsets.only(left: 10),
                 child: AutoSizeText(
-                  "Sincronizar",
+                  isButtonEnabled
+                      ? "Sincronizar"
+                      : "Espera ${remainingTime.inMinutes}:${(remainingTime.inSeconds % 60).toString().padLeft(2, '0')}",
                   style: TextStyles.white18Itw,
                   textAlign: TextAlign.center,
                 ),
@@ -771,58 +869,4 @@ class _HomeState extends State<Home> {
       ),
     );
   }
-  /*Widget buttonSync() {
-    return Align(
-        alignment: Alignment.bottomCenter,
-        child: GestureDetector(
-          child: Container(
-            height: 50,
-            width: size.width * 0.5,
-            margin: const EdgeInsets.only(bottom: 10),
-            decoration: Decorations.blueBorder30,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  FontAwesomeIcons.sync,
-                  color: Colors.white,
-                ),
-                Container(
-                    margin: const EdgeInsets.only(left: 10),
-                    child: AutoSizeText(
-                      "Sincronizar",
-                      style: TextStyles.white18Itw,
-                      textAlign: TextAlign.center,
-                    ))
-              ],
-            ),
-          ),
-          onTap: () async {
-            Position? currentLocation =
-                await LocationJunny().getCurrentLocation();
-            setState(() {
-              isLoadingAsync = true;
-            });
-            provider.asyncProcess = true;
-            provider.isNeedAsync = false;
-            *//*provider.synchronizeListDelivery();*//*
-            
-            Async async = Async(provider: provider);
-            await async.initAsync().then((value) async {
-              await handler.inserBitacora({
-                "lat": (currentLocation != null ? currentLocation.latitude : 0),
-                "lng": currentLocation != null ? currentLocation.longitude : 0,
-                "date": DateTime.now().toString(),
-                "status": value ? "1" : "0",
-                "desc": jsonEncode({"text": "Sincronizacion Manual"})
-              });
-              setState(() {
-                isLoading = false;
-                isLoadingAsync = false;
-              });
-              getAsync();
-            });
-          },
-        ));
-  }*/
 }

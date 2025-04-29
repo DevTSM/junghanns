@@ -35,19 +35,6 @@ class ProductOthersCardState extends State<ProductOthersCard> {
     });
   }
 
-  /*void decrementCount() {
-    if (widget.product.count > 0) {
-      setState(() {
-        widget.product.count--;
-        count.text = widget.product.count.toString();
-        if (widget.product.count == 0) {
-          context.read<ProviderJunghanns>().removeAdditionalProduct(widget.product);
-        }
-      });
-    }
-  }*/
-
-
   void removeProduct() {
     setState(() {
       widget.product.count = 0;
@@ -62,13 +49,9 @@ class ProductOthersCardState extends State<ProductOthersCard> {
     final productCatalog = Provider.of<ProviderJunghanns>(context).productsCatalog;
 
     final catalogProduct = productCatalog.firstWhere(
-          (catalogItem) => catalogItem.products.contains(widget.product.id),
+          (catalogItem) => catalogItem.products == widget.product.id,
       orElse: () => ProductCatalogModel.empty(),
     );
-
-    /*print("ID del producto: ${widget.product.id}");
-    print("Catálogo de productos: ${productCatalog.map((item) => item.products)}");*/
-
 
     return GestureDetector(
       child: Stack(
@@ -77,21 +60,16 @@ class ProductOthersCardState extends State<ProductOthersCard> {
             padding: const EdgeInsets.all(8),
             margin: const EdgeInsets.only(bottom: 8),
             decoration: Decorations.blueCard.copyWith(
-              color: Decorations.blueCard.color?.withOpacity(0.3), // Aplica opacidad al color del card
+              color: Decorations.blueCard.color?.withOpacity(0.3),
             ),
-            /*decoration: widget.product.count > 0
-                ? Decorations.blueCard
-                : Decorations.blueCard,*/
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Imagen a la izquierda
                 Flexible(
                   flex: 3,
                   child: imageProduct(),
                 ),
                 const SizedBox(width: 10),
-                // Descripción y controles a la derecha
                 Flexible(
                   flex: 5,
                   child: Column(
@@ -119,23 +97,11 @@ class ProductOthersCardState extends State<ProductOthersCard> {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                /*IconButton(
-                                  icon: const Icon(Icons.remove, color: Colors.white),
-                                  padding: const EdgeInsets.all(0),
-                                  constraints: const BoxConstraints(),
-                                  onPressed: decrementCount,
-                                ),*/
                                 AutoSizeText(
                                   'Piezas: ${widget.product.count.toString()}',
                                   style: TextStyles.white15Itw,
                                   textAlign: TextAlign.center,
                                 ),
-                                /*IconButton(
-                                  icon: const Icon(Icons.add, color: Colors.white),
-                                  padding: const EdgeInsets.all(0),
-                                  constraints: const BoxConstraints(),
-                                  onPressed: incrementCount,
-                                ),*/
                               ],
                             ),
                           ),
@@ -147,7 +113,6 @@ class ProductOthersCardState extends State<ProductOthersCard> {
               ],
             ),
           ),
-          // Etiqueta "Adicional" superpuesta
         ],
       ),
     );

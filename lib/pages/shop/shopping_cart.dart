@@ -929,66 +929,19 @@ class _ShoppingCartState extends State<ShoppingCart> {
             ? widget.authList[0].reason
             : provider.basketCurrent.authCurrent.reason;
 
-        /*if ((idReasonAuth == 2 || provider.basketCurrent.authCurrent.idReasonAuth == 2) ||
+        if ((idReasonAuth == 2 || provider.basketCurrent.authCurrent.idReasonAuth == 2) ||
             (idReasonAuth == 3 || provider.basketCurrent.authCurrent.idReasonAuth == 3) ||
             (idReasonAuth == 4 || provider.basketCurrent.authCurrent.idReasonAuth == 4)) {
 
           String tipo;
-          String fecha = (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString();
-          print('fechahaaaaa${fecha}');
-
-          if (idReasonAuth == 4 || provider.basketCurrent.authCurrent.idReasonAuth == 4) {
-            tipo = 'MS';
-          } else {
-            tipo = (idReasonAuth == 2 || provider.basketCurrent.authCurrent.idReasonAuth == 2) ? 'S' : 'R';
-          }
-
-          showComment(
-            context: context,
-            yesFunction: (File? image) {
-              commentsData.add({
-                'image': image,
-                'idRuta': prefs.idRouteD.toString(),
-                'idCliente': (widget.authList.isNotEmpty ? widget.authList[0].idClient.toString() : null) ?? provider.basketCurrent.authCurrent.idClient.toString(),
-                'tipo': tipo,
-                'cantidad': productsList.first.number.toString(),
-                'lat': latSale,
-                'lon': lngSale,
-                'fechaRegistro': fecha,
-                'idAutorization': (widget.authList.isNotEmpty ? widget.authList[0].idAuth : null) ?? provider.basketCurrent.authCurrent.idAuth,
-              });
-              confirmarSaleYes(widget.customerCurrent.payment[1]);
-            },
-            current: motivoGa ?? "",
-            idRuta: prefs.idRouteD.toString(),
-            idCliente: (widget.authList.isNotEmpty ? widget.authList[0].idClient.toString() : null) ?? provider.basketCurrent.authCurrent.idClient.toString(),
-            tipo: tipo,
-            cantidad: productsList.first.number.toString(),
-            lat: latSale,
-            lon: lngSale,
-            fechaRegistro: fecha,
-            idAutorization: (widget.authList.isNotEmpty ? widget.authList[0].idAuth : null) ?? provider.basketCurrent.authCurrent.idAuth,
-          );
-
-        }*/if ((idReasonAuth == 2 || provider.basketCurrent.authCurrent.idReasonAuth == 2) ||
-            (idReasonAuth == 3 || provider.basketCurrent.authCurrent.idReasonAuth == 3) ||
-            (idReasonAuth == 4 || provider.basketCurrent.authCurrent.idReasonAuth == 4)) {
-
-          String tipo;
-          //String fecha = (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString();
-          //print('fechahaaaaa${fecha}');
-
-
           DateTime now = DateTime.now();
           String fecha = (now.millisecondsSinceEpoch ~/ 1000).toString();
-          print('fechahaaaaa$fecha');
 
           // Obtener idAutorization
           final idAutorizacion = (widget.authList.isNotEmpty ? widget.authList[0].idAuth : null) ?? provider.basketCurrent.authCurrent.idAuth;
 
           // Crear idTransaccion: idAutorizacion + mes + dia
           String idTransaccion = '${idAutorizacion}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}';
-          print('idTransaccion: $idTransaccion');
 
           if (idReasonAuth == 4 || provider.basketCurrent.authCurrent.idReasonAuth == 4) {
             tipo = 'MS';
@@ -1008,11 +961,10 @@ class _ShoppingCartState extends State<ShoppingCart> {
                 'lat': latSale,
                 'lon': lngSale,
                 'fechaRegistro': fecha,
-                'idAutorization':idAutorizacion /*(widget.authList.isNotEmpty ? widget.authList[0].idAuth : null) ?? provider.basketCurrent.authCurrent.idAuth*/,
+                'idAutorization':idAutorizacion,
                 'idTransaccion': idTransaccion,
               });
               confirmarSaleYes(widget.customerCurrent.payment.first);
-              // Llamar a _uploadAndConfirm con los parámetros necesarios
 
             },
             current: motivoGa ?? "",
@@ -1060,68 +1012,19 @@ class _ShoppingCartState extends State<ShoppingCart> {
 
         bool validacionCumplida = false;
 
-        /*if ((idReasonAuth == 2 || provider.basketCurrent.authCurrent.idReasonAuth == 2) ||
-            (idReasonAuth == 3 || provider.basketCurrent.authCurrent.idReasonAuth == 3) ||
-            (idReasonAuth == 4 || provider.basketCurrent.authCurrent.idReasonAuth == 4)) {
-
-          validacionCumplida = true;
-
-          String tipo;
-          String fecha = (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString();
-          print('fechahaaaaa${fecha}');
-
-          if (idReasonAuth == 4 || provider.basketCurrent.authCurrent.idReasonAuth == 4) {
-            tipo = 'MS';
-          } else {
-            tipo = (idReasonAuth == 2 || provider.basketCurrent.authCurrent.idReasonAuth == 2) ? 'S' : 'R';
-          }
-
-          showComment(
-            context: context,
-            yesFunction: (File? image) {
-              commentsData.add({
-                'image': image,
-                'idRuta': prefs.idRouteD.toString(),
-                'idCliente': (widget.authList.isNotEmpty ? widget.authList[0].idClient.toString() : null) ?? provider.basketCurrent.authCurrent.idClient.toString(),
-                'tipo': tipo,
-                'cantidad': productsList.first.number.toString(),
-                'lat': latSale,
-                'lon': lngSale,
-                'fechaRegistro': fecha,
-                'idAutorization': (widget.authList.isNotEmpty ? widget.authList[0].idAuth : null) ?? provider.basketCurrent.authCurrent.idAuth,
-              });
-              confirmarSaleYes(widget.customerCurrent.payment[1]);
-            },
-            current: motivoGa ?? "",
-            idRuta: prefs.idRouteD.toString(),
-            idCliente: (widget.authList.isNotEmpty ? widget.authList[0].idClient.toString() : null) ?? provider.basketCurrent.authCurrent.idClient.toString(),
-            tipo: tipo,
-            cantidad: productsList.first.number.toString(),
-            lat: latSale,
-            lon: lngSale,
-            fechaRegistro: fecha,
-            idAutorization: (widget.authList.isNotEmpty ? widget.authList[0].idAuth : null) ?? provider.basketCurrent.authCurrent.idAuth,
-          );
-
-        }*/if ((idReasonAuth == 2 || provider.basketCurrent.authCurrent.idReasonAuth == 2) ||
+        if ((idReasonAuth == 2 || provider.basketCurrent.authCurrent.idReasonAuth == 2) ||
             (idReasonAuth == 3 || provider.basketCurrent.authCurrent.idReasonAuth == 3) ||
             (idReasonAuth == 4 || provider.basketCurrent.authCurrent.idReasonAuth == 4)) {
 
           String tipo;
-          //String fecha = (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString();
-          //print('fechahaaaaa${fecha}');
-
-
           DateTime now = DateTime.now();
           String fecha = (now.millisecondsSinceEpoch ~/ 1000).toString();
-          print('fechahaaaaa$fecha');
 
           // Obtener idAutorization
           final idAutorizacion = (widget.authList.isNotEmpty ? widget.authList[0].idAuth : null) ?? provider.basketCurrent.authCurrent.idAuth;
 
           // Crear idTransaccion: idAutorizacion + mes + dia
           String idTransaccion = '${idAutorizacion}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}';
-          print('idTransaccion: $idTransaccion');
 
           if (idReasonAuth == 4 || provider.basketCurrent.authCurrent.idReasonAuth == 4) {
             tipo = 'MS';
@@ -1141,11 +1044,10 @@ class _ShoppingCartState extends State<ShoppingCart> {
                 'lat': latSale,
                 'lon': lngSale,
                 'fechaRegistro': fecha,
-                'idAutorization':idAutorizacion /*(widget.authList.isNotEmpty ? widget.authList[0].idAuth : null) ?? provider.basketCurrent.authCurrent.idAuth*/,
+                'idAutorization':idAutorizacion,
                 'idTransaccion': idTransaccion,
               });
               confirmarSaleYes(widget.customerCurrent.payment.first);
-              // Llamar a _uploadAndConfirm con los parámetros necesarios
 
             },
             current: motivoGa ?? "",
@@ -1209,27 +1111,19 @@ class _ShoppingCartState extends State<ShoppingCart> {
                 ? widget.authList[0].reason
                 : provider.basketCurrent.authCurrent.reason;
             // Si el idReasonAuth es 2 o 3, mostrar el modal de comentario
-            /*if ((idReasonAuth == 2 || provider.basketCurrent.authCurrent.idReasonAuth == 2) || (idReasonAuth == 3 || provider.basketCurrent.authCurrent.idReasonAuth == 3)) {
-              String tipo = (idReasonAuth == 2 || provider.basketCurrent.authCurrent.idReasonAuth ==2) ? 'S' : 'R';*/
             if ((idReasonAuth == 2 || provider.basketCurrent.authCurrent.idReasonAuth == 2) ||
                 (idReasonAuth == 3 || provider.basketCurrent.authCurrent.idReasonAuth == 3) ||
                 (idReasonAuth == 4 || provider.basketCurrent.authCurrent.idReasonAuth == 4)) {
 
               String tipo;
-              //String fecha = (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString();
-              //print('fechahaaaaa${fecha}');
-
-
               DateTime now = DateTime.now();
               String fecha = (now.millisecondsSinceEpoch ~/ 1000).toString();
-              print('fechahaaaaa$fecha');
 
               // Obtener idAutorization
               final idAutorizacion = (widget.authList.isNotEmpty ? widget.authList[0].idAuth : null) ?? provider.basketCurrent.authCurrent.idAuth;
 
               // Crear idTransaccion: idAutorizacion + mes + dia
               String idTransaccion = '${idAutorizacion}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}';
-              print('idTransaccion: $idTransaccion');
 
               if (idReasonAuth == 4 || provider.basketCurrent.authCurrent.idReasonAuth == 4) {
                 tipo = 'MS';
@@ -1249,11 +1143,10 @@ class _ShoppingCartState extends State<ShoppingCart> {
                     'lat': latSale,
                     'lon': lngSale,
                     'fechaRegistro': fecha,
-                    'idAutorization':idAutorizacion /*(widget.authList.isNotEmpty ? widget.authList[0].idAuth : null) ?? provider.basketCurrent.authCurrent.idAuth*/,
+                    'idAutorization':idAutorizacion,
                     'idTransaccion': idTransaccion,
                   });
                   confirmarSaleYes(widget.customerCurrent.payment.first);
-                  // Llamar a _uploadAndConfirm con los parámetros necesarios
 
                 },
                 current: motivoGa ?? "",
@@ -1325,17 +1218,6 @@ class _ShoppingCartState extends State<ShoppingCart> {
     required String fechaRegistro,
     required String idTransaccion,
   }) async {
-    print("🚀 Enviando datos a submitDirtyBroken estan en _uploadAndConfirm:");
-    print("idRuta: $idRuta");
-    print("idCliente: $idCliente");
-    print("tipo: $tipo");
-    print("cantidad: $cantidad");
-    print("lat: $lat");
-    print("lon: $lon");
-    print("idAutorization: $idAutorization");
-    print("fechaRegistro: $fechaRegistro");
-    print("archivo: ${imageFile?.path ?? 'Sin archivo'}");
-    print("idTransaccion: ${idTransaccion}");
 
     // Implementar aquí la lógica de carga y confirmación
     context.read<ProviderJunghanns>().submitDirtyBroken(
@@ -1560,6 +1442,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
         ).show();
         provider.fetchStockDelivery();
       } else {
+        print('Entra al error de red');
         //se valida si el error es por falta de red
         if (answer.status == 1002) {
           //se habilita el label de sincronizacion necesaria
@@ -1634,6 +1517,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
           widget.customerCurrent.setType(7);
         }
         if (answer.status != 1002) {
+          print('Entra al error');
           await handler.updateSale(
               {'isUpdate': 0, 'fecha': DateTime.now().toString(), 'isError': 1},
               id);

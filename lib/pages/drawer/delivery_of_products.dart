@@ -12,6 +12,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:junghanns/components/empty/empty.dart';
 import 'package:junghanns/components/loading.dart';
+import 'package:junghanns/components/synchronize/synchronize.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/styles/color.dart';
 import 'package:junghanns/styles/decoration.dart';
@@ -829,14 +830,12 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
                         if (Navigator.canPop(context)) {
                           Navigator.pop(context);
                         } else {
-                          // Opcional: puedes navegar a HomePrincipal si no hay más pantallas
                           Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(builder: (context) => HomePrincipal()),
                           );
                         }
                       },
-
                                   icon: const Icon(
                     Icons.arrow_back_ios,
                     color: ColorsJunghanns.blue,
@@ -880,8 +879,9 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.only(bottom: 85),
-                      /*child: providerJunghanns.carboyAccesories.isEmpty*/
-                      child: providerJunghanns.carboyAccesories.isEmpty ||
+                      child:providerJunghanns.isNeedAsync
+                          ? synchronize(context)  // Llamamos a la función sincro(context) en vez de NeedAsync()
+                          : providerJunghanns.carboyAccesories.isEmpty ||
                           providerJunghanns.carboyAccesories.every((carboy) =>
                           carboy.carboys.empty == 0 &&
                               carboy.carboys.full == 0 &&
@@ -1032,8 +1032,6 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
                         decoration: TextDecoration.none,
                       ),
                     ),
-                    //const SizedBox(height: 8), // Espacio entre los textos
-                    // Segundo texto con la distancia
                     const Text(
                       'Verifica tu ubicación.',
                       textAlign: TextAlign.left,
@@ -1044,23 +1042,19 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
                         decoration: TextDecoration.none,
                       ),
                     ),
-                    const SizedBox(height: 16), // Espacio entre el texto y el botón
+                    const SizedBox(height: 16),
                     // Botón
                     ElevatedButton(
                       onPressed: () async {
-                        // Llamamos a funCheckDistance y esperamos su resultado
                         await funCheckDistance();
-
-                        // Si la distancia está dentro del rango, llamamos a funGoMaps
                         if (!isDistanceValid) {
                           funGoMaps();
                         } else {
-                          // Si no está dentro del rango, muestra un mensaje o toma otra acción
                           print('La distancia no está dentro del rango permitido');
                         }
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: ColorsJunghanns.orange3E, // Color del fondo del botón
+                        backgroundColor: ColorsJunghanns.orange3E,
                         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 15),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
@@ -1084,41 +1078,6 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
         ],
       ),
     );
-    /*return Positioned(
-      bottom: bottomPadding + 35,
-      left: 20,
-      right: 20,
-      child: Padding(
-          padding: const EdgeInsets.all(10),
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 15),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border.all(
-              color: ColorsJunghanns.red,
-              width: 2,
-            ),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Center(
-                child: Text(
-                  currentDistance != null
-                      ? 'DISTANCIA DE ${currentDistance!.toStringAsFixed(2)} mtrs EXCEDE EL LÍMITE DE ENTREGA !!'
-                      : 'Calculando distancia...',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: ColorsJunghanns.red,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-
-                    decoration: TextDecoration.none,
-                  ),
-                ),
-          ),
-        ),
-      ),
-    );*/
   }
   funGoMaps() async {
     if (plantaLat != 0 && plantaLog != 0) {
@@ -1157,6 +1116,11 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
   Widget _buildActionButton(double bottomPadding) {
     final provider = Provider.of<ProviderJunghanns>(context, listen: false);
 /*provider.updateStock();*/
+    // Verificar si 'isNeedAsync' es true para no mostrar el botón de envío
+    if (provider.isNeedAsync) {
+      return SizedBox.shrink(); // Esto hace que no se renderice el botón
+    }
+
     final hasData = provider.carboyAccesories.isNotEmpty;
 
     final icon = specialData != null && specialData!.isNotEmpty
@@ -1167,10 +1131,6 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
       hasData ? Icons.send : Icons.send,
       color: ColorsJunghanns.white, size: 18.0,  // Color del icono de envío
     );
-        /*? Icons.check_circle
-        : hasData
-        ? Icons.send
-        : Icons.send;*/
 
     return Positioned(
       bottom: bottomPadding + 35,

@@ -9,6 +9,9 @@ class ValidationProductModel {
   String valid;
   String typeValidation;
   String validationText;
+  int date;
+  String lat;
+  String lon;
   List<ProductReceiptionModel> products;
   // ProductModel products;
 
@@ -22,6 +25,9 @@ class ValidationProductModel {
     String? valid,
     required this.typeValidation,
     required this.validationText,
+    required this.date,
+    required this.lat,
+    required this.lon,
     required this.products,
   }): valid = valid ?? '';
 
@@ -35,6 +41,9 @@ class ValidationProductModel {
       valid: json["valida"] ?? '',
       typeValidation: json["tipo_validacion"] ?? '',
       validationText: json["tipo_validacion_text"] ?? '',
+      date: json["f_registro"] ?? 0,
+      lat: json["lat"] ?? '',
+      lon: json["lon"] ?? '',
       // products: ProductModel.fromProductInventary(json['productos'] ?? {}),
       /*products: List<ProductReceiptionModel>.from(
         json['productos'].map((x) => ProductReceiptionModel.from(x)),

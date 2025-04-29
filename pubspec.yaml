@@ -59,7 +59,7 @@ dependencies:
   get_it: ^7.2.0
   web_socket_channel: ^2.0.0
   web_socket_io: ^0.0.4
-  socket_io_client: ^3.0.0
+  socket_io_client: ^3.1.1
   animated_icon: ^0.0.5
   workmanager: ^0.5.2
   http_parser: ^4.0.2
@@ -67,7 +67,6 @@ dependencies:
   accordion: ^2.6.0
   file_picker: ^5.1.10
   emoji_picker_flutter: ^4.3.0
-  flutter_sound: ^9.6.0
   just_audio: ^0.9.46
   video_player: ^2.9.2
   chewie: ^1.5.0

@@ -332,12 +332,12 @@ class NotificationsProvider with ChangeNotifier {
         }
 
 
-        print("Lista de validaciones obtenida: ${validationList.length} items.");
+        /*print("Lista de validaciones obtenida: ${validationList.length} items.");
         // Imprimir cada validación para depuración
         for (var validation in validationList) {
           print(validation);
         }
-        print("---Llamando--");
+        print("---Llamando--");*/
       }
     });
     notifyListeners();

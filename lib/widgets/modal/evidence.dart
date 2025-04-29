@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:image/image.dart' as img;
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
@@ -54,7 +55,8 @@ class _CommentState extends State<Comment> {
   final ImagePicker _picker = ImagePicker();
   bool isLoadingOne = false;
   final DatabaseHelper dbHelper = DatabaseHelper();
-  late bool imageTooLarge; // Variable para mostrar alerta
+  late bool imageTooLarge;
+  bool isCompressing = false;
 
 
   @override
@@ -86,38 +88,51 @@ class _CommentState extends State<Comment> {
 
       setState(() {
         if (fileSizeInMB > 2) {
-          imageTooLarge = true; // Mostrar alerta
-          _imageFile = compressedImage; // No asignar la imagen si es muy grande
+          imageTooLarge = true;
+          _imageFile = compressedImage;
         } else {
-          imageTooLarge = false; // Ocultar alerta
+          imageTooLarge = false;
           _imageFile = compressedImage;
         }
       });
     }
   }
-// Función para comprimir la imagen
+
   Future<File> _compressImage(File file) async {
+    setState(() {
+      isCompressing = true;
+    });
+
     Uint8List imageBytes = await file.readAsBytes();
     img.Image? image = img.decodeImage(imageBytes);
 
     if (image == null) {
+      setState(() {
+        isCompressing = false;
+      });
       return file;
     }
 
     // Redimensionar y reducir calidad
-    img.Image resizedImage = img.copyResize(image, width: 800); // Ajustar tamaño
-    List<int> compressedBytes = img.encodeJpg(resizedImage, quality: 80); // Ajustar calidad
+    img.Image resizedImage = img.copyResize(image, width: 800);
+    List<int> compressedBytes = img.encodeJpg(resizedImage, quality: 80);
 
-    // Guardar la imagen comprimida en un archivo temporal
     final tempDir = await getTemporaryDirectory();
     final compressedFile = File('${tempDir.path}/compressed.jpg');
     await compressedFile.writeAsBytes(compressedBytes);
+
+    setState(() {
+      isCompressing = false;
+    });
 
     return compressedFile;
   }
 
   Future<void> _saveImageToLocalStorage(File imageFile) async {
+    String filePath = ''; // Declarar filePath fuera del try
+
     try {
+      // Imprimir ruta del directorio y archivo para debug
       final Directory appDocDir = await getExternalStorageDirectory() ?? await getApplicationDocumentsDirectory();
       final String evidenceDirPath = '${appDocDir.path}/evidencias';
       final Directory evidenceDir = Directory(evidenceDirPath);
@@ -128,30 +143,30 @@ class _CommentState extends State<Comment> {
 
       final String fileName = '${widget.idAutorization}.jpg';
       final String filePath = '$evidenceDirPath/$fileName';
-      final File savedImage = await imageFile.copy(filePath);
 
-      print("Imagen guardada en: $filePath");
-
-
+      // Realizar más operaciones (conectividad, base de datos, etc.)
       final String fecha = '${widget.fechaRegistro}';
-      print("Fechaaaaaaaaaaaa------: $fecha");
-      // Comprobar la conectividad
       var connectivityResult = await (Connectivity().checkConnectivity());
-
-      await dbHelper.insertEvidence(widget.idRuta, widget.idCliente,widget.tipo, widget.cantidad, widget.lat, widget.lon, widget.idAutorization, filePath, fecha, widget.idTransaccion, 0, 0);
-
-      // Llamar al método para imprimir los datos guardados en la base de datos
+      await dbHelper.insertEvidence(
+          widget.idRuta, widget.idCliente, widget.tipo, widget.cantidad, widget.lat, widget.lon,
+          widget.idAutorization, filePath, fecha, widget.idTransaccion, 0, 0
+      );
       await printEvidencesFromDB();
-    } catch (e) {
+    } catch (e, stack) {
+      // Mostrar el error en un Toast con detalles
       Fluttertoast.showToast(
-        msg: "Error al guardar la imagen localmente",
+        msg: "Error: ${e.toString().substring(0, e.toString().length.clamp(0, 100))}\nRuta: $filePath",
         timeInSecForIosWeb: 16,
         toastLength: Toast.LENGTH_LONG,
         gravity: ToastGravity.TOP,
         webShowClose: true,
       );
+      // Imprimir el error y stack en consola para debugging
+      print("Error al guardar la imagen: $e");
+      print("StackTrace: $stack");
     }
   }
+
 
   Future<void> printEvidences() async {
     try {
@@ -310,16 +325,33 @@ class _CommentState extends State<Comment> {
                 width: MediaQuery.of(context).size.width * .25,
                 height: MediaQuery.of(context).size.width * .3,
               )
-            else
-            // Mostrar el mensaje de advertencia si no hay imagen
-              const Text(
-                "Agrega la evidencia",
-                style: TextStyle(
-                  color: Colors.red,
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
+            else if (isCompressing)
+                const Column(
+                  children: [
+                    Text(
+                      "Comprimiendo imagen",
+                      style: TextStyle(
+                        color: ColorsJunghanns.blue,
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 10),
+                    SpinKitCircle(
+                      color: ColorsJunghanns.blue,
+                      size: 30.0,
+                    ),
+                  ],
+                )
+              else
+                const Text(
+                  "Agrega la evidencia",
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
 
             const SizedBox(height: 10),
             ElevatedButton.icon(

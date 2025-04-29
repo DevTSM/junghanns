@@ -10,16 +10,16 @@ import 'package:provider/provider.dart';
 import '../../provider/provider.dart';
 import '../button/custom_button.dart';
 
-class AddMissingProductModal extends StatefulWidget {
+class AddTransfersProductModal extends StatefulWidget {
   final ProviderJunghanns controller;
 
-  const AddMissingProductModal({Key? key, required this.controller}) : super(key: key);
+  const AddTransfersProductModal({Key? key, required this.controller}) : super(key: key);
 
   @override
-  _AddMissingProductModalState createState() => _AddMissingProductModalState();
+  _AddTransfersProductModalState createState() => _AddTransfersProductModalState();
 }
 
-class _AddMissingProductModalState extends State<AddMissingProductModal> {
+class _AddTransfersProductModalState extends State<AddTransfersProductModal> {
   @override
   Widget build(BuildContext context) {
     return Consumer<ProviderJunghanns>(
@@ -45,7 +45,7 @@ class _AddMissingProductModalState extends State<AddMissingProductModal> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                "Agregar Producto Faltante",
+                "Agregar Producto",
                 style: Theme.of(context).textTheme.titleMedium!.
                 copyWith(color: JunnyColor.black, fontWeight: FontWeight.bold),
               ),
@@ -99,7 +99,6 @@ class _AddMissingProductModalState extends State<AddMissingProductModal> {
                                 }
                                     : null,
                               ),
-
                             ],
                           ),
                         ),
@@ -127,7 +126,7 @@ class _AddMissingProductModalState extends State<AddMissingProductModal> {
                           ? () async {
                         // Se agrega a la lista de forma local.
                         final product = widget.controller.productCurrent!;
-                        widget.controller.addMissingProduct(product, int.parse(product.count));
+                        widget.controller.addTransfersProduct(product, int.parse(product.count));
                         widget.controller.productCurrent = null;
                         Navigator.pop(context);
                       }

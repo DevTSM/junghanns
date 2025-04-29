@@ -1241,3 +1241,36 @@ Future<Answer> getDistance({required int idR}) async {
         error: true);
   }
 }
+Future<Answer> deleteValidated({required int idV, required double lat, required double lng, required String comment}) async {
+  log("/StoreServices <deleteValidated> ¡");
+  try {
+    Map<String, dynamic> body = {
+      "id_validacion": idV,
+      "comentario": comment,
+      "lat": lat.toString(),
+      "lon": lng.toString(),
+    };
+
+    // Imprimir el cuerpo antes de enviarlo
+    log("Body enviado: ${jsonEncode(body)}");
+
+    var response = await http.delete(Uri.parse("${prefs.urlBase}almacenmovil"),
+        headers: {
+          HttpHeaders.contentTypeHeader: 'application/json; charset=UTF-8',
+          "x-api-key": apiKey,
+          "client_secret": prefs.clientSecret,
+          "Authorization": "Bearer ${prefs.token}",
+        },
+        // Verificar lso datos
+        body: jsonEncode(body) );
+    log("/StoreServices <postValidated>");
+    return Answer.fromService(response,201);
+  } catch (e) {
+    log("/StoreServices <postValidated> Catch");
+    return Answer(
+        body: e,
+        message: "Algo salio mal, revisa tu conexión a internet.",
+        status: 1002,
+        error: true);
+  }
+}

@@ -1,8 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:device_info/device_info.dart';
-import 'package:device_information/device_information.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -20,7 +19,6 @@ import 'package:junghanns/styles/text.dart';
 import 'package:junghanns/widgets/card/product_missing_card.dart';
 import 'package:junghanns/widgets/card/product_others_card.dart';
 import 'package:junghanns/widgets/card/product_returns_card.dart';
-import 'package:mac_address/mac_address.dart';
 import 'package:map_launcher/map_launcher.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -53,7 +51,7 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
   bool isDeliverySuccessful = false;
   bool isValidating = false;
   bool isButtonDisabled = false;
-  bool areFieldsEditable = true; // Nuevo estado para editar los campos
+  bool areFieldsEditable = true;
   List specialData = [];
   String? errorMessage;
   // Estado para mostrar el banner
@@ -61,7 +59,7 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
   //bool isExpanded = false;
   late List<ValueNotifier<bool>> isExpandedList;
   //Distancia
-  bool isDistanceValid = false; // Indica si la distancia está dentro del rango permitido
+  bool isDistanceValid = false;
   double? currentDistance;
   double? plantaLat;
   double? plantaLog;
@@ -522,14 +520,12 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
     });
 
     _currentLocation = (await LocationJunny().getCurrentLocation())!;
-    String marca = await DeviceInformation.deviceManufacturer;
-    String modelo =await DeviceInformation.deviceModel;
-    DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
-    AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
-    String serial = await GetMac.macAddress;
-    if(serial.isEmpty||serial.length<2){
-      serial=androidInfo.id??"";
-    }
+    final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+    final AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+
+    String serial = androidInfo.id ?? "";
+    String modelo = androidInfo.model ?? "Desconocido";
+    String marca = androidInfo.manufacturer ?? "Desconocido";
 
     int vacios = int.tryParse(_vaciosController.text) ?? 0;
     int llenos = int.tryParse(_llenosController.text) ?? 0;

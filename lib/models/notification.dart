@@ -16,7 +16,9 @@ class NotificationModel {
       required this.name,
       required this.description,
       required this.status,
-      required this.id});
+      required this.id
+      });
+
   factory NotificationModel.fromState() {
     return NotificationModel(
         data: {},
@@ -26,15 +28,30 @@ class NotificationModel {
         status: 0,
         id: 0);
   }
+
   factory NotificationModel.fromDataBase(Map<String, dynamic> data) {
+    dynamic rawData = data["data"];
+    Map<String, dynamic> parsedData;
+
+    if (rawData is String && rawData.isNotEmpty) {
+      final decoded = jsonDecode(rawData);
+      parsedData = decoded is Map<String, dynamic> ? decoded : {};
+    } else if (rawData is Map) {
+      parsedData = Map<String, dynamic>.from(rawData);
+    } else {
+      parsedData = {};
+    }
+
     return NotificationModel(
-        data: data["data"] != "" ? jsonDecode(data["data"]) : {},
-        date: DateTime.parse((data["date"] ?? DateTime.now().toString())),
-        name: data["name"],
-        description: data["description"],
-        status: data["status"],
-        id: data["id"]);
+      data: parsedData,
+      date: DateTime.tryParse(data["date"] ?? "") ?? DateTime.now(),
+      name: data["name"] ?? "Sin nombre",
+      description: data["description"] ?? "",
+      status: data["status"] ?? 0,
+      id: data["id"] ?? 0,
+    );
   }
+
   factory NotificationModel.fromEvent(RemoteMessage event,{int status=0}) {
     return NotificationModel(
         data: event.data.isNotEmpty ? event.data : {},

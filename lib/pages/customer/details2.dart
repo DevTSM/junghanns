@@ -444,7 +444,7 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
   _pickImage(int type) async {
     try {
       final picker = ImagePicker();
-      final pickedImage = await picker.getImage(
+      final pickedImage = await picker.pickImage(
         source: type == 1 ? ImageSource.camera : ImageSource.gallery,
         maxHeight: 1500,
         maxWidth: 1500,

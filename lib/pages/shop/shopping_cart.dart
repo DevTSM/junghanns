@@ -1239,6 +1239,11 @@ class _ShoppingCartState extends State<ShoppingCart> {
     setState(() {
       isLoading = true;
     });
+    final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+    final AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+    String serial = androidInfo.id ?? "";
+    String modelo = androidInfo.model ?? "";
+
     //validacion de segundo metodo de pago
     if (secWayToPay.wayToPay.isEmpty) {
       provider.basketCurrent.waysToPay.add(WayToPay(
@@ -1303,6 +1308,9 @@ class _ShoppingCartState extends State<ShoppingCart> {
     }
     data["fecha_entrega"] =
         DateFormat('yyyy/MM/dd').format(provider.basketCurrent.datePrestamo);
+    //Datos de dispositivo
+    data["serial"] = serial;
+    data["model"] = modelo;
     //se crea la data local
     Map<String, dynamic> dataLocal = {
       "idCustomer": provider.basketCurrent.idCustomer,
@@ -1324,7 +1332,9 @@ class _ShoppingCartState extends State<ShoppingCart> {
       "fecha_entrega": provider.basketCurrent.idAuth != -1
           ? DateFormat('yyyy/MM/dd').format(provider.basketCurrent.datePrestamo)
           : null,
-      "id_marca_garrafon": provider.basketCurrent.brandJug["id"]
+      "id_marca_garrafon": provider.basketCurrent.brandJug["id"],
+      "serial": serial,
+      "model": modelo,
     };
     //se inserta la venta
     int id = await handler.insertSale(dataLocal);

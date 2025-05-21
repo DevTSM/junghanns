@@ -14,6 +14,7 @@ import 'package:junghanns/widgets/card/notifications.dart';
 import 'package:provider/provider.dart';
 
 import '../../preferences/global_variables.dart';
+import '../../widgets/card/notification_box_card.dart';
 import '../../widgets/modal/receipt_modal.dart';
 import '../../widgets/modal/validation_modal.dart';
 
@@ -36,32 +37,24 @@ class _NotificactionsState extends State<Notificactions> {
     super.initState();
     notifications=[];
     isLoading = false;
+    provider = Provider.of<ProviderJunghanns>(context, listen: false);
     getData();
     _refreshTimer();
   }
   Future<void> _refreshTimer() async {
     final provider = Provider.of<ProviderJunghanns>(context, listen: false);
-
-    // Ahora fetchStockValidation devuelve un objeto ValidationModel
     provider.fetchStockValidation();
 
-// Filtrar los datos según las condiciones especificadas
     final filteredData = provider.validationList.where((validation) {
       return validation.status == "P" && validation.valid == "Planta";
     }).toList();
 
-
-// Verificar si hay datos filtrados
     setState(() {
       if (filteredData.isNotEmpty) {
-        specialData = filteredData;  // Asigna los datos filtrados a specialData
-        // Imprimir el contenido de specialData para confirmarlo
-        print('Contenido de specialData (filtrado): $specialData');
-        print('Llama al modal');
+        specialData = filteredData;
         showValidationModal(context);
       } else {
-        specialData = [];  // Si no hay datos que cumplan las condiciones, asignar un arreglo vacío
-        print('No se encontraron datos que cumplan las condiciones');
+        specialData = [];
       }
     });
 
@@ -71,13 +64,14 @@ class _NotificactionsState extends State<Notificactions> {
   }
 
   getData() async {
+    provider.getNotificationBox();
     List<NotificationModel> notificationsGet = await handler.retrieveNotification();
-    //Provider.of<ProviderJunghanns>(context,listen: false).cleanPendingNotifications();
     setState(() {
       notifications.clear();
       notifications.addAll(notificationsGet);
     });
   }
+
   @override
   Widget build(BuildContext context) {
       size = MediaQuery.of(context).size;
@@ -119,15 +113,16 @@ class _NotificactionsState extends State<Notificactions> {
           header(),
           const SizedBox(height: 15),
           Expanded(
-            child: notifications.isNotEmpty 
+            child: notifications.isNotEmpty || provider.notificationBokList.isNotEmpty
               ? _listNototifications()
               : empty(context)
-          )
+          ),
+          const SizedBox(height: 63),
         ],
       )
     );
   }
-  
+
   Widget header() {
     return Padding(
       padding: const EdgeInsets.all(15),
@@ -178,31 +173,54 @@ class _NotificactionsState extends State<Notificactions> {
           )
     );
   }
-  
-  Widget _listNototifications(){
+  Widget _listNototifications() {
     return FutureBuilder(
       future: handler.retrieveNotification(),
       builder: (
-        BuildContext context,
-        AsyncSnapshot<List<NotificationModel>> snapshot
-      ) {
+          BuildContext context,
+          AsyncSnapshot<List<NotificationModel>> snapshot,
+          ) {
+        final provider = Provider.of<ProviderJunghanns>(context);
+        final list = provider.notificationBokList;
+
         if (snapshot.hasData) {
-          return  RefreshIndicator(
-            onRefresh: ()=> getData(),
+          final snapshotList = snapshot.data ?? [];
+          final totalLength = snapshotList.length + list.length;
+
+          return RefreshIndicator(
+            onRefresh: () => getData(),
             child: ListView.builder(
-              itemCount: snapshot.data?.length,
+              itemCount: totalLength,
               itemBuilder: (BuildContext context, int index) {
-                return NotificationCard(
-                  current: snapshot.data?[index]
-                    ?? NotificationModel.fromState()
-                );
-              }
-            )
+                if (index < snapshotList.length) {
+                  return NotificationCard(
+                    current: snapshotList[index],
+                  );
+                } else {
+                  final boxIndex = index - snapshotList.length;
+                  return NotificationBoxCard(
+                    current: list[boxIndex],
+                  );
+                }
+              },
+            ),
           );
         } else {
-          return empty(context);
+          if (list.isEmpty) return empty(context);
+
+          return RefreshIndicator(
+            onRefresh: () => getData(),
+            child: ListView.builder(
+              itemCount: list.length,
+              itemBuilder: (BuildContext context, int index) {
+                return NotificationBoxCard(
+                  current: list[index],
+                );
+              },
+            ),
+          );
         }
-      }
+      },
     );
   }
 }

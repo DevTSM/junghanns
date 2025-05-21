@@ -67,7 +67,7 @@ class DataBase {
         //ventas offLine
         //formas de pago y productos en jsonEncode
         await database.execute(
-          "CREATE TABLE sale(id INTEGER PRIMARY KEY AUTOINCREMENT,idCustomer INTEGER ,idRoute INTEGER, lat DOUBLE, lng DOUBLE, saleItems TEXT, idAuth INTEGER, idReasonAuth INTEGER, reason TEXT, paymentMethod TEXT,idOrigin INTEGER,folio INTEGER,type TEXT,isUpdate INTEGER,fecha_entrega TEXT,id_marca_garrafon INTEGER,isError INTEGER,fecha_update TEXT,fecha TEXT)",
+          "CREATE TABLE sale(id INTEGER PRIMARY KEY AUTOINCREMENT,idCustomer INTEGER ,idRoute INTEGER, lat DOUBLE, lng DOUBLE, saleItems TEXT, idAuth INTEGER, idReasonAuth INTEGER, reason TEXT, paymentMethod TEXT,idOrigin INTEGER,folio INTEGER,type TEXT,isUpdate INTEGER,fecha_entrega TEXT,id_marca_garrafon INTEGER,isError INTEGER,fecha_update TEXT,fecha TEXT, serial TEXT, model TEXT)",
         );
         //devoluciones offline
         await database.execute(

@@ -1,14 +1,13 @@
 import 'dart:developer';
-import 'dart:ui';
+import 'dart:io';
 import 'package:crypto/crypto.dart';
-import 'package:device_info/device_info.dart';
-import 'package:device_information/device_information.dart';
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/styles/color.dart';
-import 'package:mac_address/mac_address.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'dart:convert';
 
@@ -17,48 +16,52 @@ class SocketService {
   static final SocketService _instance = SocketService._internal();
   late IO.Socket socket;
   bool _isConnected = false;
-  bool _hasShownConnectionError = false; // Para evitar múltiples toasts
+  bool _hasShownConnectionError = false;
 
-  factory SocketService() {
-    return _instance;
-  }
+  factory SocketService() => _instance;
 
-  SocketService._internal() {
-    _initWebSocket();
+  SocketService._internal();
+
+  Future<void> connectIfLoggedIn() async {
+    if (prefs.nameUserD.isNotEmpty) {
+      await _initWebSocket();
+    } else {
+      log("No se conectará al WebSocket: usuario no logueado");
+    }
   }
 
   Future<void> _initWebSocket() async {
     log("Iniciando conexión WebSocket...");
 
-    DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
-    AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
-    String serial = await GetMac.macAddress;
-    String modelo = await DeviceInformation.deviceModel;
-    if (serial.isEmpty || serial.length < 2) {
-      serial = androidInfo.id ?? "";
-    }
+    final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+    final AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+
+    String serial = androidInfo.id ?? "";
+    String modelo = androidInfo.model ?? "";
+    String marca = androidInfo.manufacturer ?? "";
 
     String token = _generateToken();
+    String sistemaop = obtenerSistemaOperativo();
 
-    /*socket = IO.io('https://sandbox.junghanns.app:4102', <String, dynamic>{
-      'auth': {
-        'token': token,
-        'user': 'soporte',
-        'serial': 'a58s9sa5d9',
-        'model': 'a58s9sa5d9',
-      },
-      'withCredentials': true
-    });*/
+    final String urlBase = prefs.urlBase.replaceAll(RegExp(r'\/$'), '');
+    final String puerto = urlBase.contains('sandbox') ? '4102' : '4002';
+    final String urlCompleta = '$urlBase:$puerto';
+
+    print('Conectando a: $urlCompleta');
+
+
     socket = IO.io(
-      'https://sandbox.junghanns.app:4102',
+      urlCompleta,
       IO.OptionBuilder()
           .setTransports(['websocket'])
           .enableAutoConnect()
           .setAuth({
         'token': token,
-        'user': 'soporte',
-        'serial': 'a58s9sa5d9',
-        'model': 'iphone',
+        'user': prefs.nameUserD,
+        'serial': serial,
+        'model': modelo,
+        'marca': marca,
+        'so': sistemaop,
       })
           .build(),
     );
@@ -67,43 +70,49 @@ class SocketService {
 
     socket.onConnect((_) {
       log("Conectado con éxito como: ${prefs.nameUserD}");
+      _showToast("Conexión exitosa al servidor de notificaciones", ColorsJunghanns.green);
       _isConnected = true;
       _hasShownConnectionError = false;
     });
 
-    /*socket.on('connect', (data) {
-      log('Mensaje desde el servidor: $data');
-      _showToast("Mensaje: ${data['message']}", ColorsJunghanns.green);
-    });*/
     socket.on('connect', (_) {
       print('Conexión exitosa al socket con ID: ${socket.id}');
-      //socketX = socket;
-
       log('CLIENTE: Conexión exitosa al socket con ID: ${socket.id}');
-      log("---------------------------------------------------------");
-
-      // Simulando deshabilitar botones (en Flutter reemplaza esto por lógica UI)
-      //setButtonState(connect: false, disconnect: true);
     });
 
-    /*socket.on('receiveNotification', (data) {
-      log('Respuesta del servidor: $data');
+    socket.on('receiveNotification', (data) {
+      print("Notificación recibida: $data");
       PushNotificationModel notification = PushNotificationModel.fromJson(data);
       notification.showNotification();
       notification.logNotification();
-    });*/
 
-    socket.on('receiveNotification', (data) {
-      log('Notificación recibida: $data');
-      try {
-        PushNotificationModel notification = PushNotificationModel.fromJson(data);
-        notification.showNotification();
-        notification.logNotification();
-      } catch (e) {
-        log("Error al procesar notificación: $e");
-      }
+      socket.emitWithAck('confirmNotification', {
+        'id': data['id'] ?? 'no-id',
+        'id_emisor': data['id_emisor'] ?? 'no-id_emisor',
+        'id_usuario': data['id_usuario'] ?? 'no-id_usuario',
+      }, ack: (response) {
+        print('Servidor confirmó recepción: $response');
+      });
+
+      //notificationMessage = data.toString();
     });
 
+    socket.on('acceptProcess', (data) {
+      print("✅ Proceso aceptado: $data");
+      PushNotificationModel notification = PushNotificationModel.fromJson(data);
+      notification.showNotification();
+      notification.logNotification();
+
+      socket.emitWithAck('confirmAcceptProcess', {
+        'id': data['id'] ?? 'no-id',
+        'id_emisor': data['id_emisor'] ?? 'no-id_emisor',
+        'id_usuario': data['id_usuario'] ?? 'no-id_usuario',
+      }, ack: (response) {
+        print('Servidor confirmó aceptación del proceso: $response');
+      });
+
+      // processMessage = data.toString();
+    });
 
     socket.on('connect_error', (error) {
       print('Error al conectar al socket: ${error.toString()}');
@@ -124,8 +133,7 @@ class SocketService {
 
       if (!_hasShownConnectionError) {
         _hasShownConnectionError = true;
-
-        _showToast("Error de conexión: Ocurrió un error al conectarse con el servidor noti.", ColorsJunghanns.red);
+        _showToast("Error de conexión: Ocurrió un error al conectarse con el servidor notificaciones.", ColorsJunghanns.red);
       }
 
       // Intentar reconectar en 10 segundos sin mostrar más toasts
@@ -136,21 +144,34 @@ class SocketService {
         }
       });
     });
-
-    /*socket.onError((error) {
-      log("Error general del socket: $error");
-    });*/
   }
 
   void _showToast(String message, Color color) {
     Fluttertoast.showToast(
       msg: message,
       toastLength: Toast.LENGTH_LONG,
-      gravity: ToastGravity.BOTTOM,
+      gravity: ToastGravity.TOP,
       backgroundColor: color,
       textColor: Colors.white,
       fontSize: 12.0,
     );
+  }
+  String obtenerSistemaOperativo() {
+    if (kIsWeb) {
+      return 'Web';
+    } else if (Platform.isAndroid) {
+      return 'Android';
+    } else if (Platform.isIOS) {
+      return 'iOS';
+    } else if (Platform.isWindows) {
+      return 'Windows';
+    } else if (Platform.isMacOS) {
+      return 'macOS';
+    } else if (Platform.isLinux) {
+      return 'Linux';
+    } else {
+      return 'Desconocido';
+    }
   }
 
   String _generateToken() {
@@ -170,110 +191,3 @@ class SocketService {
     log("WebSocket desconectado manualmente");
   }
 }
-/*
-class SocketService {
-  static final SocketService _instance = SocketService._internal();
-  late IO.Socket socket;
-  bool _isConnected = false;
-  bool _hasShownConnectionError = false; // Nueva variable para evitar múltiples notificaciones
-
-  factory SocketService() {
-    return _instance;
-  }
-
-  SocketService._internal() {
-    _initWebSocket();
-  }
-
-  Future<void> _initWebSocket() async {
-    log("Iniciando conexión WebSocket...");
-
-    DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
-    AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
-    String serial = await GetMac.macAddress;
-    String modelo = await DeviceInformation.deviceModel;
-    if (serial.isEmpty || serial.length < 2) {
-      serial = androidInfo.id ?? "";
-    }
-
-    String token = _generateToken();
-
-    socket = IO.io('https://sandbox.junghanns.app:3002', <String, dynamic>{
-      'auth': {
-        'token': token,
-        'user': prefs.nameUserD,
-        'serial': serial,
-        'model': modelo,
-      },
-      'transports': ['websocket'],
-      'autoConnect': true,
-    });
-
-    socket.connect();
-
-    socket.onConnect((_) {
-      log("Conectado con éxito como: ${prefs.nameUserD}");
-      _isConnected = true;
-      _hasShownConnectionError = false; // Reiniciar cuando se conecte exitosamente
-    });
-
-    socket.on('test_conection', (data) {
-      log('Mensaje desde el servidor: $data');
-      PushNotificationModel notification = PushNotificationModel.fromJson(data);
-      notification.showNotification();
-      notification.logNotification();
-    });
-
-    socket.on('respuesta', (data) {
-      log('Respuesta del servidor: $data');
-      PushNotificationModel notification = PushNotificationModel.fromJson(data);
-      notification.showNotification();
-      notification.logNotification();
-    });
-
-    socket.onConnectError((error) {
-      log("Error de conexión: $error");
-
-      if (!_hasShownConnectionError) {
-        _hasShownConnectionError = true; // Marcar que ya se mostró el error
-
-        PushNotificationModel notification = PushNotificationModel(
-          title: "Error de conexión",
-          message: "Ocurrió un error al intentar conectar.",
-          code: "500",
-        );
-        notification.showNotification();
-        notification.logNotification();
-      }
-
-      // Intentar reconectar en 10 segundos sin mostrar más notificaciones
-      Future.delayed(Duration(seconds: 10), () {
-        if (!socket.connected) {
-          log("Reintentando conexión...");
-          socket.connect();
-        }
-      });
-    });
-
-    socket.onError((error) {
-      log("Error general del socket: $error");
-    });
-  }
-
-  String _generateToken() {
-    String date = DateFormat('yyyyMMdd').format(DateTime.now());
-    String dataToHash = "$date" + "_jsm";
-    var bytes = utf8.encode(dataToHash);
-    var digest = sha1.convert(bytes);
-    return digest.toString();
-  }
-
-  IO.Socket getSocket() => socket;
-
-  bool get isConnected => _isConnected;
-
-  void disconnect() {
-    socket.disconnect();
-    log("WebSocket desconectado manualmente");
-  }
-}*/

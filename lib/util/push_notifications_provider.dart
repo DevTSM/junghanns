@@ -24,14 +24,15 @@ class NotificationService {
   Future<void> init() async {
     log("------------------ NotificationService ---------------------");
     const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/launcher_icon');
+        AndroidInitializationSettings('@mipmap/ic_notification');
 
-    const IOSInitializationSettings initializationSettingsIOS =
-        IOSInitializationSettings(
+    const DarwinInitializationSettings initializationSettingsIOS =
+    DarwinInitializationSettings(
       requestSoundPermission: false,
       requestBadgePermission: false,
       requestAlertPermission: false,
     );
+
 
     const InitializationSettings initializationSettings =
         InitializationSettings(
@@ -41,51 +42,49 @@ class NotificationService {
 
     tz.initializeTimeZones();
 
-    await flutterLocalNotificationsPlugin.initialize(initializationSettings,
-        onSelectNotification: selectNotification);
+    await flutterLocalNotificationsPlugin.initialize(
+      initializationSettings,
+      onDidReceiveNotificationResponse: (NotificationResponse response) async {
+        await selectNotification(response.payload);
+      },
+    );
+
   }
 
-  final AndroidNotificationDetails _androidNotificationDetails =
-      const AndroidNotificationDetails(
-    'channel ID',
-    'channel name',
-    playSound: true,
-    priority: Priority.high,
+  final AndroidNotificationDetails _androidNotificationDetailsWithBigImage =
+  const AndroidNotificationDetails(
+    'channel_id',
+    'channel_name',
+    channelDescription: 'channel_description',
     importance: Importance.high,
-  );
-  final IOSNotificationDetails _iosNotificationDetails =
-      const IOSNotificationDetails(sound: 'slow_spring_board.aiff');
+    priority: Priority.high,
+    icon: '@mipmap/ic_notification',
+    largeIcon: DrawableResourceAndroidBitmap('launcher_icon'),
+    styleInformation: DefaultStyleInformation(true, true),
 
-  // Método actualizado para generar un ID único
+  );
+
+  final DarwinNotificationDetails _iosNotificationDetails =
+  const DarwinNotificationDetails(sound: 'slow_spring_board.aiff');
+
+
   Future<void> showNotifications(String title, String body) async {
     try {
-      // Genera un ID único para cada notificación (timestamp)
-      int notificationId = DateTime.now().millisecondsSinceEpoch % (1 << 31);  // Limita al rango de 32 bits
+      int notificationId = DateTime.now().millisecondsSinceEpoch % (1 << 31);
 
       await flutterLocalNotificationsPlugin.show(
-        notificationId, // Usar un ID único
+        notificationId,
         title,
         body,
         NotificationDetails(
-            android: _androidNotificationDetails, iOS: _iosNotificationDetails),
+          android: _androidNotificationDetailsWithBigImage,
+          iOS: _iosNotificationDetails,
+        ),
       );
     } catch (e) {
       log("error notificacionService=====> ${e.toString()}");
     }
   }
-  /*Future<void> showNotifications(String title, String body) async {
-    try{
-    await flutterLocalNotificationsPlugin.show(
-      0,
-      title,
-      body,
-      NotificationDetails(
-          android: _androidNotificationDetails, iOS: _iosNotificationDetails),
-    );
-    }catch(e){
-      log("error =====> ${e.toString()}");
-    }
-  }*/
 
   Future<void> scheduleNotifications() async {
     await flutterLocalNotificationsPlugin.zonedSchedule(
@@ -94,8 +93,8 @@ class NotificationService {
         "This is the Notification Body!",
         tz.TZDateTime.now(tz.local).add(const Duration(seconds: 5)),
         NotificationDetails(
-            android: _androidNotificationDetails, iOS: _iosNotificationDetails),
-        androidAllowWhileIdle: true,
+            android: _androidNotificationDetailsWithBigImage, iOS: _iosNotificationDetails),
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime);
   }

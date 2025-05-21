@@ -3,7 +3,6 @@ import 'dart:developer';
 
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:device_info_plus/device_info_plus.dart';
-import 'package:device_information/device_information.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -14,7 +13,6 @@ import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/provider/provider.dart';
 import 'package:junghanns/services/auth.dart';
 import 'package:junghanns/util/location.dart';
-import 'package:mac_address/mac_address.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
@@ -22,6 +20,7 @@ import '../../components/loading.dart';
 import '../../styles/color.dart';
 import '../../styles/decoration.dart';
 import '../../styles/text.dart';
+import '../socket/socket_service.dart';
 
 class Login extends StatefulWidget {
   const Login({Key? key}) : super(key: key);
@@ -65,15 +64,22 @@ class _LoginState extends State<Login> {
       await Permission.phone.request();
       }
     _currentLocation=(await LocationJunny().getCurrentLocation())!;
-     DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
-     AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
-    String serial = await GetMac.macAddress;
-    if(serial.isEmpty||serial.length<2){
-      serial=androidInfo.id??"";
-    }
-    String versionSo=await DeviceInformation.platformVersion;
-    String modelo=await DeviceInformation.deviceModel;
-    String marca=await DeviceInformation.deviceManufacturer;
+      final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+      final AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+
+      // Intentamos usar androidInfo.serialNumber si está disponible
+      String serial = androidInfo.id ?? "";
+
+      if (serial.isEmpty || serial.length < 2) {
+        // Usamos otro campo si es necesario
+        serial = androidInfo.fingerprint ?? "";
+      }
+
+      // Obtenemos la versión del SO, modelo y marca
+      String versionSo = androidInfo.version.release ?? "Desconocido";
+      String modelo = androidInfo.model ?? "Desconocido";
+      String marca = androidInfo.manufacturer ?? "Desconocido";
+
     if(_currentLocation.latitude!=0&&_currentLocation.longitude!=0){
       log('''esto enviamos 
           user ${userC.text},
@@ -116,134 +122,147 @@ class _LoginState extends State<Login> {
             return null;
     }
   }
+
   funLogin() async {
     if (provider.connectionStatus < 4) {
-      //_onLoading();
       setState(() {
         isLoading = true;
       });
+
       if (userC.text.isNotEmpty && passC.text.isNotEmpty) {
-        
-        // {
-        //   "user": userC.text,
-        //   "pass": passC.text,
-        // };
-        await getClientSecret(userC.text, passC.text).then((answer) async {
-          if (answer.error) {
-            //Navigator.pop(context);
+        try {
+          final answer = await getClientSecret(userC.text, passC.text);
+
+          if (answer.error || answer.body == null) {
             setState(() {
               isLoading = false;
             });
             Fluttertoast.showToast(
-              msg: answer.message,
+              msg: answer.message ?? "Error desconocido",
               timeInSecForIosWeb: 2,
               toastLength: Toast.LENGTH_LONG,
               gravity: ToastGravity.TOP,
               webShowClose: true,
             );
-          } else {
-            log("Respuesta 123456787899");
-            prefs.clientSecret = answer.body["client_secret"];
-            await getToken(userC.text).then((answer1) async {
-              if (answer1.error) {
-                //Navigator.pop(context);
-                setState(() {
-                  isLoading = false;
-                });
-                Fluttertoast.showToast(
-                  msg: answer.message,
-                  timeInSecForIosWeb: 2,
-                  toastLength: Toast.LENGTH_LONG,
-                  gravity: ToastGravity.TOP,
-                  webShowClose: true,
-                );
-              } else {
-                prefs.token = answer1.body["token"];
-                Map<String, dynamic> data = (await getDataLogin()) ?? {};
-                await login(data).then((answer2) {
-                  log(answer2.body.toString());
-                  if (answer2.error) {
-                    //Navigator.pop(context);
-                    setState(() {
-                      isLoading = false;
-                    });
-                    Fluttertoast.showToast(
-                      msg: answer2.message,
-                      timeInSecForIosWeb: 2,
-                      toastLength: Toast.LENGTH_LONG,
-                      gravity: ToastGravity.TOP,
-                      webShowClose: true,
-                    );
-                  } else {
-                    prefs.isLogged = true;
-                    //---------------------------------- Info DeliveryMan
-                    prefs.idUserD = answer2.body["id_usuario"] ?? 0;
-                    prefs.idProfileD =
-                        int.parse((answer2.body["id_perfil"] ?? 0).toString());
-                    prefs.nameUserD = answer2.body["nombre_usuario"] ?? "";
-
-                    prefs.nameD = answer2.body["nombre"] ?? "";
-                    prefs.idRouteD =
-                        int.parse((answer2.body["id_ruta"] ?? 0).toString());
-                    prefs.nameRouteD = answer2.body["nombre_ruta"] ?? "";
-
-                    prefs.dayWorkD = answer2.body["dia_trabajo"] ?? "T";
-                    prefs.dayWorkTextD =
-                        answer2.body["dia_trabajo_texto"] ?? "TEST";
-                    prefs.codeD = answer2.body["codigo_empresa"] ?? "";
-                    prefs.idChat = int.parse((answer2.body["id_chat"] ?? 0).toString());
-                    log(prefs.nameD);
-                    log(prefs.idChat.toString());
-                    //-----------------------------------------
-                    //Navigator.pop(context);
-
-                    prefs.credentials = jsonEncode({
-                      "user": userC.text,
-                      "pass": passC.text,
-                      "clientSecret": prefs.clientSecret,
-                      "token": prefs.token,
-                      "nameD": prefs.nameD,
-                      "idRouteD": prefs.idRouteD,
-                      "nameRouteD": prefs.nameRouteD
-                    });
-                    if(prefs.lastIdRouteD!=prefs.idRouteD){
-                      log("${prefs.asyncLast} <==== es diferente el idRoute");
-                      prefs.asyncLast="";
-                    }
-                    prefs.lastIdRouteD=prefs.idRouteD;
-                    setState(() {
-                      isLoading = false;
-                    });
-                    FirebaseMessaging messaging = FirebaseMessaging.instance;
-                    messaging.getToken().then((value) async {
-                      print("Token Messaging =======> ${value.toString()}");
-                      await updateToken(value.toString()).then((answer) {
-                        if (answer.error) {
-                          Fluttertoast.showToast(
-                            msg: "No fue posible actualizar el servicio de notificaciones",
-                            timeInSecForIosWeb: 2,
-                            toastLength: Toast.LENGTH_LONG,
-                            gravity: ToastGravity.TOP,
-                            webShowClose: true,
-                          );
-                          
-                        }
-                      });
-                    });
-                    Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute<void>(
-                            builder: (BuildContext context) => Opening(
-                                  isLogin: true,
-                                )));
-                  }
-                });
-              }
-            });
+            return;
           }
-        });
+
+          final clientSecret = answer.body["client_secret"];
+          if (clientSecret == null) {
+            setState(() {
+              isLoading = false;
+            });
+            Fluttertoast.showToast(
+              msg: "Credenciales inválidas",
+              timeInSecForIosWeb: 2,
+              toastLength: Toast.LENGTH_LONG,
+              gravity: ToastGravity.TOP,
+              webShowClose: true,
+            );
+            return;
+          }
+
+          prefs.clientSecret = clientSecret;
+
+          final answer1 = await getToken(userC.text);
+          if (answer1.error || answer1.body == null || answer1.body["token"] == null) {
+            setState(() {
+              isLoading = false;
+            });
+            Fluttertoast.showToast(
+              msg: answer1.message ?? "Error al obtener token",
+              timeInSecForIosWeb: 2,
+              toastLength: Toast.LENGTH_LONG,
+              gravity: ToastGravity.TOP,
+              webShowClose: true,
+            );
+            return;
+          }
+
+          prefs.token = answer1.body["token"];
+          Map<String, dynamic> data = (await getDataLogin()) ?? {};
+
+          final answer2 = await login(data);
+          if (answer2.error || answer2.body == null) {
+            setState(() {
+              isLoading = false;
+            });
+            Fluttertoast.showToast(
+              msg: answer2.message ?? "Error al iniciar sesión",
+              timeInSecForIosWeb: 2,
+              toastLength: Toast.LENGTH_LONG,
+              gravity: ToastGravity.TOP,
+              webShowClose: true,
+            );
+            return;
+          }
+
+          // Guardado de preferencias
+          prefs.isLogged = true;
+          prefs.idUserD = answer2.body["id_usuario"] ?? 0;
+          prefs.idProfileD = int.tryParse(answer2.body["id_perfil"].toString()) ?? 0;
+          prefs.nameUserD = answer2.body["nombre_usuario"] ?? "";
+          prefs.nameD = answer2.body["nombre"] ?? "";
+          prefs.idRouteD = int.tryParse(answer2.body["id_ruta"].toString()) ?? 0;
+          prefs.nameRouteD = answer2.body["nombre_ruta"] ?? "";
+          prefs.dayWorkD = answer2.body["dia_trabajo"] ?? "T";
+          prefs.dayWorkTextD = answer2.body["dia_trabajo_texto"] ?? "TEST";
+          prefs.codeD = answer2.body["codigo_empresa"] ?? "";
+          prefs.idChat = int.tryParse(answer2.body["id_chat"].toString()) ?? 0;
+
+          prefs.credentials = jsonEncode({
+            "user": userC.text,
+            "pass": passC.text,
+            "clientSecret": prefs.clientSecret,
+            "token": prefs.token,
+            "nameD": prefs.nameD,
+            "idRouteD": prefs.idRouteD,
+            "nameRouteD": prefs.nameRouteD,
+          });
+
+          if (prefs.lastIdRouteD != prefs.idRouteD) {
+            prefs.asyncLast = "";
+          }
+          prefs.lastIdRouteD = prefs.idRouteD;
+
+          setState(() {
+            isLoading = false;
+          });
+
+          FirebaseMessaging.instance.getToken().then((value) async {
+            if (value != null) {
+              await updateToken(value).then((ans) {
+                if (ans.error) {
+                  Fluttertoast.showToast(
+                    msg: "No fue posible actualizar el servicio de notificaciones",
+                    timeInSecForIosWeb: 2,
+                    toastLength: Toast.LENGTH_LONG,
+                    gravity: ToastGravity.TOP,
+                    webShowClose: true,
+                  );
+                }
+              });
+            }
+          });
+
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => Opening(isLogin: true)),
+          );
+          await SocketService().connectIfLoggedIn();
+        } catch (e) {
+          setState(() {
+            isLoading = false;
+          });
+          Fluttertoast.showToast(
+            msg: "Error inesperado: ${e.toString()}",
+            timeInSecForIosWeb: 2,
+            toastLength: Toast.LENGTH_LONG,
+            gravity: ToastGravity.TOP,
+            webShowClose: true,
+          );
+        }
       } else {
-        //Navigator.pop(context);
         setState(() {
           isLoading = false;
         });

@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -16,15 +17,14 @@ import 'package:junghanns/models/authorization.dart';
 import 'package:junghanns/models/carboyEleven.dart';
 import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/models/deliver_products.dart';
-import 'package:junghanns/models/delivery.dart';
 import 'package:junghanns/models/distance.dart';
 import 'package:junghanns/models/message.dart';
 import 'package:junghanns/models/notification.dart';
+import 'package:junghanns/models/notification/notification_box.dart';
 import 'package:junghanns/models/product.dart';
 import 'package:junghanns/models/product_catalog.dart';
 import 'package:junghanns/models/shopping_basket.dart';
 import 'package:junghanns/models/validation_product.dart';
-import 'package:junghanns/pages/home/home.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/styles/color.dart';
 import 'package:junghanns/util/navigator.dart';
@@ -39,7 +39,6 @@ import '../models/demineralized.dart';
 import '../models/produc_receiption.dart';
 import '../pages/home/home_principal.dart';
 import '../services/store.dart';
-import '../widgets/modal/evidence.dart';
 import '../widgets/modal/informative.dart';
 
 class ProviderJunghanns extends ChangeNotifier {
@@ -106,6 +105,7 @@ class ProviderJunghanns extends ChangeNotifier {
   List<DeliverProductsModel> carboyElevenAccesoriosOrigin = [];
   List<DeliverProductsModel> carboyElevenAccesoriosOriginSecun = [];
   List<DistanceModel> _planteDistance = [];
+  List<NotificationBox> _notificationBokList = [];
 
 
   //GETS
@@ -135,8 +135,7 @@ class ProviderJunghanns extends ChangeNotifier {
   List<ProductModel> get stockProducts => _stockProducts;
   List<ValidationProductModel> get validationDeliveryList => _validationDeliveryList;
   List<DistanceModel> get planteDistance => _planteDistance;
-
-
+  List<NotificationBox> get notificationBokList => _notificationBokList;
 
   //SETS
   set isNotificationPending(bool current){
@@ -247,6 +246,10 @@ class ProviderJunghanns extends ChangeNotifier {
   }
   set planteDistance(List<DistanceModel> current){
     _planteDistance = current;
+    notifyListeners();
+  }
+  set notificationBokList(List<NotificationBox> current){
+    _notificationBokList = current;
     notifyListeners();
   }
 
@@ -1463,13 +1466,11 @@ class ProviderJunghanns extends ChangeNotifier {
           print('No hay suficientes carboys vacíos disponibles para descontar. Disponibles: ${carboys.empty}');
         }
       }
-
       // Asegurar que el cambio persista en la lista
       int carboyIndex = carboyElevenAccesories.indexWhere((a) => a.carboysEleven == carboys);
       if (carboyIndex != -1) {
         carboyElevenAccesories[carboyIndex].carboysEleven = carboys;
       }
-
       print('Actualización de carboys: Full: ${carboys.full}, Empty: ${carboys.empty}');
       notifyListeners();
     }
@@ -1479,10 +1480,6 @@ class ProviderJunghanns extends ChangeNotifier {
 
     final carboysDemi = demineralizedAccesories.first.demineralizeds;
     final carboys =carboyAccesories.first.carboys;
-    print('CountChange: $countChange');
-    print('--- Actualización de carboys DEsmi ---');
-    print('CountChange: $countChange, isFull: $isFull');
-    print('Antes de descontar: Full: ${carboysDemi.full}, Empty: ${carboys.empty}');
     if (isFull == true) {
       if (carboysDemi.full >= countChange) {
         carboysDemi.full -= countChange;  // Descontar de carboys llenos
@@ -1510,11 +1507,7 @@ class ProviderJunghanns extends ChangeNotifier {
     notifyListeners();
 
   }
-  /*removeTransfersProduct(ProductCatalogModel accessory) async {
-    transfersProductsList.removeWhere((item) => item.products == accessory.products);
-    await saveAdditionalProducts();
-    notifyListeners();
-  }*/
+
   Future<void> saveAdditionalProducts() async {
     final prefs = await SharedPreferences.getInstance();
     // Convierte la lista a JSON y guárdala
@@ -1544,8 +1537,6 @@ class ProviderJunghanns extends ChangeNotifier {
       } else {
         stockProducts = List<ProductModel>.from(
             answer.body.map((item) => ProductModel.fromProductInventary(item)));
-        /*print('Productos en stock -- getStckList: $stockProducts');
-        print("---Llamando--Productos--Con---Stock");*/
       }
     });
     notifyListeners();
@@ -1659,9 +1650,6 @@ class ProviderJunghanns extends ChangeNotifier {
           iconColor: ColorsJunghanns.red,
         );
       } else {
-        // Limpiar las listas de faltantes y adicionales
-        /*missingProducts.clear();
-        additionalProducts.clear();*/
         // Mostrar mensaje de éxito
         print('Iniciando getStock');
         await Async(provider: provider).getStock();
@@ -1690,16 +1678,6 @@ class ProviderJunghanns extends ChangeNotifier {
     required Map<String, dynamic> delivery,
     required ProviderJunghanns provider,
   }) async {
-
-    // Preparar las listas de productos
-
-    /*List<Map<String, dynamic>> missingProductsList = missingProducts.map((product) {
-      final productMap = {
-        "id_producto": product.idProduct,
-        "cantidad": product.count,
-      };
-      return productMap;
-    }).toList();*/
     final List<int> idsEspeciales = [21, 22, 50, 125, 136];
 
     List<Map<String, dynamic>> missingProductsList = provider.transfersProductsList
@@ -1717,14 +1695,6 @@ class ProviderJunghanns extends ChangeNotifier {
       "garrafon": {
         "vacios": delivery["garrafon"]["vacios"],
         "llenos": delivery["garrafon"]["llenos"],
-        /*"sucios_cte": delivery["garrafon"]["sucios_cte"],
-        "rotos_cte": delivery["garrafon"]["rotos_cte"],
-        "sucios_ruta": delivery["garrafon"]["sucios_ruta"],
-        "rotos_ruta": delivery["garrafon"]["rotos_ruta"],
-        "a_la_par": delivery["garrafon"]["a_la_par"],
-        "comodato": delivery["garrafon"]["comodato"],
-        "prestamo": delivery["garrafon"]["prestamo"],
-        "mal_sabor": delivery["garrafon"]["mal_sabor"],*/
         "liquido_20": delivery["garrafon"]["liquido_20"],
       },
       "desmineralizados": DemineralizedModel.from(delivery["desmineralizados"]).toPostJson(),
@@ -1755,9 +1725,6 @@ class ProviderJunghanns extends ChangeNotifier {
           iconColor: ColorsJunghanns.red,
         );
       } else {
-        // Limpiar las listas de faltantes y adicionales
-        /*missingProducts.clear();
-        additionalProducts.clear();*/
         // Mostrar mensaje de éxito
         print('Iniciando getStock');
         await Async(provider: provider).getStock();
@@ -1789,7 +1756,6 @@ class ProviderJunghanns extends ChangeNotifier {
   }) async {
     notifyListeners();
     DatabaseHelper dbHelper = DatabaseHelper();
-print("Fecha registro en el provider: ${fechaRegistro}");
     await postDirtyBroken(
       idRuta: idRuta,
       idCliente: idCliente,
@@ -2045,6 +2011,47 @@ print("Fecha registro en el provider: ${fechaRegistro}");
           fetchStockValidation();
 
         notifyListeners();
+      }
+    });
+  }
+  // Indica si hay notificaciones sin leer
+  bool get hasUnreadNotifications {
+    return notificationBokList.any((notif) => notif.read == false);
+  }
+
+  /// Cuenta las notificaciones sin leer
+  int get unreadNotificationsCount {
+    return notificationBokList.where((notif) => notif.read == false).length;
+  }
+ ///Get de buzón de notificaciones
+  getNotificationBox() async {
+    final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+    final AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+
+    String serial = androidInfo.id ?? "";
+    String modelo = androidInfo.model ?? "";
+
+    await getMailbox(userR: prefs.nameUserD, serial: serial, model: modelo).then((
+        answer){
+      if (answer.error) {
+        print('Error al obtener buzón de notificaciones: ${answer.message}');
+      } else {
+        notificationBokList = (answer.body as List)
+            .map((item) => NotificationBox.fromJson(item))
+            .toList();
+        print('Notificaciones: ${notificationBokList}');
+      }
+    });
+    notifyListeners();
+  }
+  // Leer/recibir notificación
+  readAndReceived({required String id, required String delivered, required String readed}) async {
+    notifyListeners();
+    await putReadAndReceived(id: id, delivered: delivered, readed: readed,).then((answer) {
+      if (answer.error) {
+        print('Error: ${answer.message}');
+      } else {
+        print('Mensaje: ${answer.message}');
       }
     });
   }

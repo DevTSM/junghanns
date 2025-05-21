@@ -1,17 +1,14 @@
 import 'dart:io';
-import 'dart:typed_data';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:image/image.dart' as img;
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart'; // Importamos para obtener la ruta del almacenamiento local
-import 'package:provider/provider.dart';
 import '../../components/loading.dart';
 import '../../database/database_evidence.dart';
-import '../../provider/provider.dart';
 import '../../styles/color.dart';
 import '../button/button_attencion.dart';
 
@@ -67,21 +64,17 @@ class _CommentState extends State<Comment> {
     print("Fecha de registro recibida: ${widget.fechaRegistro}");
   }
 
-  // Función para capturar imagen
   Future<void> _takePicture() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.camera);
 
     if (pickedFile != null) {
       File imageFile = File(pickedFile.path);
 
-      // Comprimir la imagen
       File compressedImage = await _compressImage(imageFile);
 
-      // Verificar el tamaño después de la compresión
       int fileSizeInBytes = await compressedImage.length();
       double fileSizeInMB = fileSizeInBytes / (1024 * 1024);
 
-      // Obtener tamaño después de compresión
       int compressedSizeInBytes = await compressedImage.length();
       double compressedSizeInMB = compressedSizeInBytes / (1024 * 1024);
       print("Tamaño comprimido: ${compressedSizeInMB.toStringAsFixed(2)} MB");
@@ -103,22 +96,23 @@ class _CommentState extends State<Comment> {
       isCompressing = true;
     });
 
-    Uint8List imageBytes = await file.readAsBytes();
-    img.Image? image = img.decodeImage(imageBytes);
+    final imageBytes = await file.readAsBytes();
 
-    if (image == null) {
+    final compressedBytes = await FlutterImageCompress.compressWithList(
+      imageBytes,
+      minWidth: 800,
+      quality: 80,
+    );
+
+    if (compressedBytes == null || compressedBytes.isEmpty) {
       setState(() {
         isCompressing = false;
       });
       return file;
     }
 
-    // Redimensionar y reducir calidad
-    img.Image resizedImage = img.copyResize(image, width: 800);
-    List<int> compressedBytes = img.encodeJpg(resizedImage, quality: 80);
-
     final tempDir = await getTemporaryDirectory();
-    final compressedFile = File('${tempDir.path}/compressed.jpg');
+    final compressedFile = File('${tempDir.path}/compressed_${DateTime.now().millisecondsSinceEpoch}.jpg');
     await compressedFile.writeAsBytes(compressedBytes);
 
     setState(() {
@@ -129,7 +123,7 @@ class _CommentState extends State<Comment> {
   }
 
   Future<void> _saveImageToLocalStorage(File imageFile) async {
-    String filePath = ''; // Declarar filePath fuera del try
+    String filePath = '';
 
     try {
       // Imprimir ruta del directorio y archivo para debug

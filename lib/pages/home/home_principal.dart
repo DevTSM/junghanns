@@ -73,25 +73,20 @@ class _HomePrincipalState extends State<HomePrincipal> {
   }
   Future<void> _refreshTimer() async {
     final provider = Provider.of<ProviderJunghanns>(context, listen: false);
-
-    // Ahora fetchStockValidation devuelve un objeto ValidationModel
+    await provider.getNotificationBox();
     await _refreshTransfers();
     await provider.fetchStockValidation();
 
-    // Filtrar los datos según las condiciones especificadas
     final filteredData = provider.validationList.where((validation) {
       return validation.status == "P" && validation.valid == "Planta";
     }).toList();
 
-
-    // Verificar si hay datos filtrados
     setState(() {
       if (filteredData.isNotEmpty) {
-        specialData = filteredData;  // Asigna los datos filtrados a specialData
+        specialData = filteredData;
         showValidationModal(context);
       } else {
-        specialData = [];  // Si no hay datos que cumplan las condiciones, asignar un arreglo vacío
-        print('No se encontraron datos que cumplan las condiciones----Home principal');
+        specialData = [];
       }
     });
 
@@ -102,23 +97,18 @@ class _HomePrincipalState extends State<HomePrincipal> {
 
   Future<void> _refreshTransfers() async {
     final provider = Provider.of<ProviderJunghanns>(context, listen: false);
-
-    // Ahora fetchStockValidation devuelve un objeto ValidationModel
     await provider.fetchValidation();
 
-    // Filtrar los datos según las condiciones especificadas
     final filteredDataTranfers = provider.validationList.where((validation) {
       return validation.status == "P" && validation.valid == "Ruta" && validation.typeValidation == 'T' && validation.idRoute != prefs.idRouteD;
     }).toList();
 
-    // Verificar si hay datos filtrados
     setState(() {
       if (filteredDataTranfers.isNotEmpty) {
-        specialData = filteredDataTranfers;  // Asigna los datos filtrados a specialData
-        print('Llama al modal trasferencias');
+        specialData = filteredDataTranfers;
         showTransferModal(context);
       } else {
-        specialData = [];  // Si no hay datos que cumplan las condiciones, asignar un arreglo vacío
+        specialData = [];
       }
     });
   }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../styles/color.dart';
 
 class CustomButtonDelivery extends StatelessWidget {
@@ -25,26 +24,26 @@ class CustomButtonDelivery extends StatelessWidget {
           child: ElevatedButton(
             onPressed: onValidate,
             style: ButtonStyle(
-              backgroundColor: WidgetStateProperty.resolveWith<Color>(
-                    (Set<WidgetState> states) {
-                  if (states.contains(WidgetState.disabled)) {
+              backgroundColor: MaterialStateProperty.resolveWith<Color>(
+                    (Set<MaterialState> states) {
+                  if (states.contains(MaterialState.disabled)) {
                     return ColorsJunghanns.grey;
                   }
                   return validateColor;
                 },
               ),
-              foregroundColor: WidgetStateProperty.resolveWith<Color>(
-                    (Set<WidgetState> states) {
-                  if (states.contains(WidgetState.disabled)) {
+              foregroundColor: MaterialStateProperty.resolveWith<Color>(
+                    (Set<MaterialState> states) {
+                  if (states.contains(MaterialState.disabled)) {
                     return Colors.white;
                   }
                   return Colors.white;
                 },
               ),
-              padding: WidgetStateProperty.all(
+              padding: MaterialStateProperty.all(
                 const EdgeInsets.symmetric(vertical: 15),
               ),
-              shape: WidgetStateProperty.all(
+              shape: MaterialStateProperty.all(
                 RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -62,16 +61,8 @@ class CustomButtonDelivery extends StatelessWidget {
                 ),
                 const SizedBox(width: 6),
                 icon,
-                //Icon(icon, color: Colors.white, size: 18),
               ],
             ),
-            /*child: Text(
-              validateText,
-              style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.bold,
-              ),
-            ),*/
           ),
         ),
       ],

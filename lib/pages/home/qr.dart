@@ -325,8 +325,8 @@ class _QRSellerState extends State<QRSeller> {
                         } else {
                           log('Error al guardar la imagen: ${result['errorMessage']}');
                         }
-                        await Share.shareFiles(
-                          [file.path],
+                        await Share.shareXFiles(
+                          [XFile(file.path)],
                         );
                       });
                     },

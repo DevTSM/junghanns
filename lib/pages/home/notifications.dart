@@ -6,11 +6,11 @@ import 'package:junghanns/components/without_internet.dart';
 import 'package:junghanns/components/without_location.dart';
 import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/models/notification.dart';
+import 'package:junghanns/models/notification/notification_box.dart';
 import 'package:junghanns/provider/provider.dart';
 import 'package:junghanns/styles/color.dart';
 import 'package:junghanns/styles/decoration.dart';
 import 'package:junghanns/styles/text.dart';
-import 'package:junghanns/widgets/card/notifications.dart';
 import 'package:provider/provider.dart';
 
 import '../../preferences/global_variables.dart';
@@ -111,10 +111,10 @@ class _NotificactionsState extends State<Notificactions> {
             child: const WithoutLocation()
           ),
           header(),
-          const SizedBox(height: 15),
+          //const SizedBox(height: 10),
           Expanded(
-            child: notifications.isNotEmpty || provider.notificationBokList.isNotEmpty
-              ? _listNototifications()
+            child: provider.notificationBokList.isNotEmpty
+              ? notificationScreen()/*_listNototifications()*/
               : empty(context)
           ),
           const SizedBox(height: 63),
@@ -122,103 +122,159 @@ class _NotificactionsState extends State<Notificactions> {
       )
     );
   }
-
   Widget header() {
     return Padding(
       padding: const EdgeInsets.all(15),
-      child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                "Ruta de trabajo",
-                style: TextStyles.blue27_7,
-              ),
-              const Text(
-                "  Notificaciones",
-                style: TextStyles.green15_4,
-              ),
-              const SizedBox(height: 10),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start, 
-                children: [
-                  Expanded(
-                    flex: 4,
-                    child: Text(
-                      checkDate(DateTime.now()),
-                      style: TextStyles.blue19_7,
-                    ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 4,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "Notificaciones",
+                  style: TextStyles.blue24_5,
+                ),
+                Text(
+                  checkDate(DateTime.now()).toUpperCase(),
+                  style: TextStyles.grey19_5.copyWith(height: 0.9), // ¡Clave!
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            flex: 2,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(height: 10),
+                Container(
+                  height: 36,
+                  alignment: Alignment.center,
+                  decoration: Decorations.greenBorder5,
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Text(
+                    prefs.nameRouteD,
+                    style: TextStyles.white17_5,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    flex: 2,
-                    child: Container(
-                      alignment: Alignment.center,
-                      decoration: Decorations.orangeBorder5,
-                      padding: const EdgeInsets.only(left: 5, right: 5, top: 5, bottom: 5),
-                      child: RichText(
-                        text: TextSpan(
-                          children: [
-                            TextSpan(
-                              text: prefs.nameRouteD,
-                              style: TextStyles.white17_5
-                            ),
-                          ]
-                        )
-                      )
-                    )
-                  ),
-                ]
-              )
-            ],
-          )
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
-  Widget _listNototifications() {
+
+  Widget notificationScreen() {
+    return DefaultTabController(
+      length: 3,
+      child: Builder(
+        builder: (context) {
+          final TabController tabController = DefaultTabController.of(context);
+
+          return AnimatedBuilder(
+            animation: tabController.animation!,
+            builder: (context, _) {
+              final titles = ['Todos', 'No leídos', 'Leídos'];
+              final icons = [
+                Icons.notifications,
+                Icons.mark_email_unread,
+                Icons.mark_email_read
+              ];
+
+              return Column(
+                children: [
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(3, (index) {
+                      final isSelected = tabController.animation!.value.round() == index;
+
+                      return GestureDetector(
+                        onTap: () => tabController.animateTo(index),
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 1),
+                          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: isSelected ? ColorsJunghanns.blueJ : Colors.grey[300],
+                            borderRadius: BorderRadius.circular(5),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                icons[index],
+                                color: isSelected ? Colors.white : Colors.grey[700],
+                              ),
+                              const SizedBox(width: 3),
+                              Text(
+                                titles[index],
+                                style: TextStyle(
+                                  color: isSelected ? Colors.white : Colors.grey[800],
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                  const SizedBox(height: 10),
+                  Expanded(
+                    child: TabBarView(
+                      controller: tabController,
+                      children: [
+                        _listNotifications(filter: 'all'),
+                        _listNotifications(filter: 'unread'),
+                        _listNotifications(filter: 'read'),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _listNotifications({required String filter}) {
     return FutureBuilder(
       future: handler.retrieveNotification(),
-      builder: (
-          BuildContext context,
-          AsyncSnapshot<List<NotificationModel>> snapshot,
-          ) {
+      builder: (BuildContext context, AsyncSnapshot<List<NotificationModel>> snapshot) {
         final provider = Provider.of<ProviderJunghanns>(context);
         final list = provider.notificationBokList;
 
+        List<NotificationBox> filteredList = [];
+
         if (snapshot.hasData) {
-          final snapshotList = snapshot.data ?? [];
-          final totalLength = snapshotList.length + list.length;
+          final allList = [...list];
+
+          filteredList = switch (filter) {
+            'unread' => allList.where((n) => !n.read).toList(),
+            'read' => allList.where((n) => n.read).toList(),
+            _ => allList,
+          };
+
+          if (filteredList.isEmpty) return empty(context);
 
           return RefreshIndicator(
             onRefresh: () => getData(),
             child: ListView.builder(
-              itemCount: totalLength,
-              itemBuilder: (BuildContext context, int index) {
-                if (index < snapshotList.length) {
-                  return NotificationCard(
-                    current: snapshotList[index],
-                  );
-                } else {
-                  final boxIndex = index - snapshotList.length;
-                  return NotificationBoxCard(
-                    current: list[boxIndex],
-                  );
-                }
+              itemCount: filteredList.length,
+              itemBuilder: (context, index) {
+                return NotificationBoxCard(current: filteredList[index]);
               },
             ),
           );
         } else {
-          if (list.isEmpty) return empty(context);
-
-          return RefreshIndicator(
-            onRefresh: () => getData(),
-            child: ListView.builder(
-              itemCount: list.length,
-              itemBuilder: (BuildContext context, int index) {
-                return NotificationBoxCard(
-                  current: list[index],
-                );
-              },
-            ),
-          );
+          return const Center(child: CircularProgressIndicator());
         }
       },
     );

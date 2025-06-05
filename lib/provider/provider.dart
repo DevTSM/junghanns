@@ -106,7 +106,9 @@ class ProviderJunghanns extends ChangeNotifier {
   List<DeliverProductsModel> carboyElevenAccesoriosOriginSecun = [];
   List<DistanceModel> _planteDistance = [];
   List<NotificationBox> _notificationBokList = [];
-
+  String _tipo = '';
+  String _estatus = '';
+  String _folio = '';
 
   //GETS
   bool get isNotificationPending=>_isNotificationPending;
@@ -136,6 +138,9 @@ class ProviderJunghanns extends ChangeNotifier {
   List<ValidationProductModel> get validationDeliveryList => _validationDeliveryList;
   List<DistanceModel> get planteDistance => _planteDistance;
   List<NotificationBox> get notificationBokList => _notificationBokList;
+  String get tipo => _tipo;
+  String get estatus => _estatus;
+  String get folio => _folio;
 
   //SETS
   set isNotificationPending(bool current){
@@ -250,6 +255,20 @@ class ProviderJunghanns extends ChangeNotifier {
   }
   set notificationBokList(List<NotificationBox> current){
     _notificationBokList = current;
+    notifyListeners();
+  }
+
+  void updateProcess(String tipo, String estatus, [String? folio]) {
+    _tipo = tipo;
+    _estatus = estatus;
+    if (folio != null) _folio = folio;
+    notifyListeners();
+  }
+
+  void clearProcess() {
+    _tipo = '';
+    _estatus = '';
+    _folio = '';
     notifyListeners();
   }
 

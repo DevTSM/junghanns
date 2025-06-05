@@ -41,7 +41,7 @@ class PushNotificationModel {
       jsonData = data as Map<String, dynamic>;
     }
 
-    String id = jsonData['id'] ?? 'id desconocido.';
+    String id = jsonData['id'].toString();
     String message = jsonData['message'] ?? "Mensaje desconocido.";
     String title = jsonData['title'] ?? "Notificación";
     String code = jsonData['code'].toString();

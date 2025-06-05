@@ -183,14 +183,14 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
     final provider = Provider.of<ProviderJunghanns>(context, listen: false);
 
     setState(() {
-      isLoadingOne = true; // Muestra el indicador de carga
+      isLoadingOne = true;
     });
 
     final validation = provider.validationList.first;
     final products = validation.idValidation;
 
     _currentLocation = (await LocationJunny().getCurrentLocation())!;
-    provider.receiptionProducts(
+    await provider.receiptionProducts(
       idValidacion: products,
       lat: _currentLocation.latitude,
       lng: _currentLocation.longitude,
@@ -198,14 +198,14 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
       comment: status == 'R' ? comment : null,
     );
 
-    provider.fetchStockValidation();
-    provider.synchronizeListDelivery();
+    await provider.fetchStockValidation();
+    await provider.synchronizeListDelivery();
     await _refreshInventory();
     await _fetchData();
     await validateReception();
 
     setState(() {
-      isLoadingOne = false; // Muestra el indicador de carga
+      isLoadingOne = false;
     });
   }
 

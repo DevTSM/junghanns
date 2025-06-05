@@ -32,6 +32,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/store.dart';
 import '../../widgets/modal/receipt_modal.dart';
 import '../../widgets/modal/validation_modal.dart';
+import '../socket/socket_service.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -61,14 +62,9 @@ class _HomeState extends State<Home> {
       secon;
   List specialData = [];
   bool isButtonEnabled = true;
-
- // bool isButtonEnabled = true;
-  /*Timer? _countdownTimer;
+  Timer? _countdownTimer;
   Duration remainingTime = Duration.zero;
-  DateTime? lastSyncTime;*/
-  Timer? _countdownTimer;  // Temporizador
-  Duration remainingTime = Duration.zero;  // Tiempo restante
-  DateTime? lastSyncTime;  // Última sincronización
+  DateTime? lastSyncTime;
 
 
 
@@ -246,6 +242,8 @@ class _HomeState extends State<Home> {
               gravity: ToastGravity.TOP,
               webShowClose: true,
             );
+            ///Cerrar la conecxión con el socket si se caducan las credenciales
+            SocketService().disconnect();
             Timer(const Duration(milliseconds: 2000), () async {
               Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
             });

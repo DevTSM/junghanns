@@ -148,7 +148,7 @@ class _DeclineProductState extends State<DeclineProduct> {
       child: Container(
         padding: const EdgeInsets.all(18),
         margin: const EdgeInsets.all(10),
-        width: MediaQuery.of(context).size.width * .9,
+        width: MediaQuery.of(context).size.width * .8,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.spaceAround,

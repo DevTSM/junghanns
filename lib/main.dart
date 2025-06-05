@@ -4,11 +4,10 @@ import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
 
-//import 'package:background_fetch/background_fetch.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter_background/flutter_background.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:junghanns/models/notification.dart';
 import 'package:junghanns/pages/socket/socket_service.dart';
@@ -36,11 +35,27 @@ void callbackDispatcher() {
 }
 
 Future<void> main() async {
+  ///Mantener aplicación en segundo plano
   WidgetsFlutterBinding.ensureInitialized();
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-  ]);
+
+  const androidConfig = FlutterBackgroundAndroidConfig(
+    notificationTitle: "JUNGHANNS en segundo plano",
+    notificationText: "Conexión activa",
+    notificationImportance: AndroidNotificationImportance.High,
+    enableWifiLock: true,
+  );
+
+  try {
+    final backgroundInitialized = await FlutterBackground.initialize(androidConfig: androidConfig);
+    if (backgroundInitialized) {
+      await FlutterBackground.enableBackgroundExecution();
+    } else {
+      print("flutter_background no pudo inicializarse.");
+    }
+  } catch (e) {
+    print("Error al inicializar flutter_background: $e");
+  }
+
   await Firebase.initializeApp();
   FirebaseMessaging.onBackgroundMessage (messageHandler);
   FirebaseMessaging.onMessageOpenedApp.listen((message) {
@@ -50,7 +65,7 @@ Future<void> main() async {
   await handler.initializeDB();
   // Workmanager().initialize(
   //   callbackDispatcher,
-  //   isInDebugMode: false 
+  //   isInDebugMode: false
   // );
   // Workmanager().registerOneOffTask("task-identifier", "notification");
   // Inicia el WebSocket global
@@ -62,7 +77,7 @@ class MyHttpOverrides extends HttpOverrides {
   @override
   HttpClient createHttpClient(SecurityContext? context) {
     return super.createHttpClient(context)
-      ..badCertificateCallback = 
+      ..badCertificateCallback =
         (X509Certificate cert, String host, int port) => true;
   }
 }
@@ -74,7 +89,7 @@ class JunnyApp extends StatefulWidget {
 }
 
 class _JunnyAppState extends State<JunnyApp> with WidgetsBindingObserver{
-  
+
   final GlobalKey<ScaffoldMessengerState> _scaffoldKey = GlobalKey();
   final GlobalKey<NavigatorState> _navKey = GlobalKey();
   @override
@@ -91,7 +106,7 @@ class _JunnyAppState extends State<JunnyApp> with WidgetsBindingObserver{
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      Timer(const Duration(seconds: 2), () async { 
+      Timer(const Duration(seconds: 2), () async {
         log("####################");
         Provider.of<ProviderJunghanns>(navigatorKey.currentContext!,listen:false)
           .requestAllPermissionsResumed();

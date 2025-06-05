@@ -1280,7 +1280,7 @@ Future<Answer> getMailbox({required String userR, required String serial, requir
       //Verificar la URL del stock
         Uri.parse("${prefs.urlBase}notificacionmovil?q=all&user=${userR}&serial=${serial}&model=${model}"),
         headers: {
-          "Content-Type": "aplication/json",
+          "Content-Type": "application/json",
           "x-api-key": apiKey,
           "client_secret": prefs.clientSecret,
           "Authorization": "Bearer ${prefs.token}",

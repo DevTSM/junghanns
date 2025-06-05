@@ -32,6 +32,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/store.dart';
 import '../../widgets/modal/receipt_modal.dart';
 import '../../widgets/modal/validation_modal.dart';
+import '../socket/socket_service.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -61,14 +62,9 @@ class _HomeState extends State<Home> {
       secon;
   List specialData = [];
   bool isButtonEnabled = true;
-
- // bool isButtonEnabled = true;
-  /*Timer? _countdownTimer;
+  Timer? _countdownTimer;
   Duration remainingTime = Duration.zero;
-  DateTime? lastSyncTime;*/
-  Timer? _countdownTimer;  // Temporizador
-  Duration remainingTime = Duration.zero;  // Tiempo restante
-  DateTime? lastSyncTime;  // Última sincronización
+  DateTime? lastSyncTime;
 
 
 
@@ -99,27 +95,21 @@ class _HomeState extends State<Home> {
     secon = 0;
     getDashboarR();
     getAsync();
-    //checkLastSyncTime();
     _refreshTimer();
   }
 
   @override
   void dispose(){
-   // _countdownTimer?.cancel();
     checkLastSyncTime();
     super.dispose();
   }
 
-  // Método para guardar el tiempo de sincronización
    saveLastSyncTime() async {
     final prefs = await SharedPreferences.getInstance();
-    //await prefs.remove('lastSyncTime');
     final now = DateTime.now();
     await prefs.setInt('lastSyncTime', now.millisecondsSinceEpoch);
-    print("Tiempo de sincronización guardado: ${now.toString()}");
   }
 
-  // Método para comprobar el último tiempo de sincronización
   checkLastSyncTime() async {
     final prefs = await SharedPreferences.getInstance();
     final lastSyncMillis = prefs.getInt('lastSyncTime');
@@ -130,29 +120,25 @@ class _HomeState extends State<Home> {
       print("Última sincronización: $lastSyncTime, tiempo transcurrido: ${elapsed.inMinutes} minutos");
 
       if (elapsed < Duration(minutes: 10)) {
-        if (!mounted) return; // Verifica antes de setState
+        if (!mounted) return;
         setState(() {
           isButtonEnabled = false;
           remainingTime = Duration(minutes: 10) - elapsed;
         });
-        print("Deshabilitando botón, tiempo restante: $remainingTime");
         startCountdown();
       } else {
-        if (!mounted) return; // <- 💥 ESTA VERIFICACIÓN FALTABA AQUÍ
+        if (!mounted) return;
         setState(() {
           isButtonEnabled = true;
         });
-        print("Habilitando botón, ya ha pasado más de 1 minuto.");
       }
     } else {
       print("No se ha encontrado un registro de sincronización anterior.");
     }
   }
 
-
   void startCountdown() {
-    _countdownTimer?.cancel(); // Cancelar cualquier temporizador previo
-    print("Iniciando cuenta regresiva.");
+    _countdownTimer?.cancel();
 
     _countdownTimer = Timer.periodic(Duration(seconds: 1), (timer) async {
       if (!mounted) {
@@ -163,18 +149,13 @@ class _HomeState extends State<Home> {
       if (remainingTime.inSeconds > 0) {
         setState(() {
           remainingTime -= Duration(seconds: 1);
-          print("Tiempo restante: ${remainingTime.inMinutes}:${(remainingTime.inSeconds % 60).toString().padLeft(2, '0')}");
         });
       } else {
         timer.cancel();
         checkLastSyncTime();
-        print("Tiempo agotado, habilitando el botón y limpiando la preferencia.");
       }
     });
   }
-
-
-
 
   getPermission() async {
     await Geolocator.requestPermission();
@@ -261,6 +242,8 @@ class _HomeState extends State<Home> {
               gravity: ToastGravity.TOP,
               webShowClose: true,
             );
+            ///Cerrar la conecxión con el socket si se caducan las credenciales
+            SocketService().disconnect();
             Timer(const Duration(milliseconds: 2000), () async {
               Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
             });
@@ -397,116 +380,8 @@ class _HomeState extends State<Home> {
           Visibility(visible: isLoading, child: const LoadingJunghanns())
         ],
       ),
-      /*floatingActionButton: Consumer<ChatProvider>(
-        builder: (context, chatProvider, child) {
-          return Stack(
-            clipBehavior: Clip.none,
-            children: [
-              FloatingActionButton(
-                onPressed: () {
-                  chatProvider.resetNewMessageFlag(); // Resetea el estado al presionar el botón
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute<void>(builder: (BuildContext context) => const ChatScreen()),
-                  );
-                },
-                backgroundColor: ColorsJunghanns.blue,
-                child: const Icon(Icons.chat, color: Colors.white),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30), // Controla el redondeo del botón
-                ),
-              ),
-              // Mostrar un punto rojo si hay un nuevo mensaje
-              if (chatProvider.hasNewMessage)
-                Positioned(
-                  right: 5,
-                  top: 0,
-                  child: Container(
-                    height: 12,
-                    width: 12,
-                    decoration: BoxDecoration(
-                      color: Colors.red,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ),
-            ],
-          );
-        },
-      ),*/
-      /*floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute<void>(
-              builder: (BuildContext context) => const ChatScreen(),
-            ),
-          );
-        },
-        backgroundColor: ColorsJunghanns.blue, // Usa el color de tu aplicación
-        child: const Icon(Icons.chat, color: Colors.white),
-      ),*/
     );
   }
-
-  /* @override
-  Widget build(BuildContext context) {
-    size = MediaQuery.of(context).size;
-    provider = Provider.of<ProviderJunghanns>(context);
-    return Stack(
-      children: [
-        RefreshIndicator(
-                onRefresh: () async {
-                  dashboardR = DashboardModel.fromPrefs();
-                  isLoading = false;
-                  isLoadingAsync = false;
-                  atendidos = 0;
-                  routeTotal = 0;
-                  specials = 0;
-                  specialsA = 0;
-                  entrega = 0;
-                  entregaA = 0;
-                  llama = 0;
-                  llamaA = 0;
-                  rutaA = 0;
-                  llamaC = 0;
-                  llamaCA = 0;
-                  secon = 0;
-                  getDashboarR();
-                  getAsync();
-                  _refreshTimer();
-                },child:SingleChildScrollView(
-        child:
-                Container(
-            height: size.height*1.01,
-            color: ColorsJunghanns.lightBlue,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      provider.connectionStatus == 4
-                          ? const WithoutInternet()
-                          : provider.isNeedAsync
-                              ? const NeedAsync()
-                              : Container(),
-                      deliveryMenZone(),
-                      const SizedBox(
-                        height: 20,
-                      ),
-                      customersZone()
-                    ],
-                  ),
-                ))),
-        isLoadingAsync
-            ? const Align(
-                alignment: Alignment.bottomCenter,
-                child: SpinKitCircle(
-                  color: ColorsJunghanns.blue,
-                ))
-            : buttonSync(),
-        Visibility(visible: isLoading, child: const LoadingJunghanns())
-      ],
-    );
-  }*/
 
   Widget deliveryMenZone() {
     return Container(
@@ -793,7 +668,6 @@ class _HomeState extends State<Home> {
             ? () async {
           print("Botón sincronizar presionado");
 
-          // Deshabilitar el botón mientras se realiza la sincronización
           setState(() {
             isButtonEnabled = false;
           });
@@ -811,41 +685,21 @@ class _HomeState extends State<Home> {
               "status": value ? "1" : "0",
               "desc": jsonEncode({"text": "Sincronizacion Manual"})
             });
-
-            print('despues de bitacora');
-            await saveLastSyncTime(); // Guardamos el tiempo de sincronización
-
-            //checkLastSyncTime();
-            startCountdown(); // Comienza el conteo regresivo
-            print('va a async');
+            await saveLastSyncTime();
+            startCountdown();
             getAsync();
-            print('deshabilita el boton despues de que esta sincronizando');
-
             isButtonEnabled = false;
-            print('valor de ${isButtonEnabled}');
-             // isButtonEnabled = false;
-            // Verificar si el widget está montado antes de llamar setState
-            /*if (mounted) {
-              setState(() {
-                //remainingTime = Duration(minutes: 1); // Reiniciar el contador
-               // isButtonEnabled = true; // Rehabilitar el botón después de la sincronización
-              });
-
-              startCountdown(); // Comienza el conteo regresivo
-              print('va a async');
-              getAsync();
-            }*/
           });
         }
-            : null, // Si el botón está deshabilitado, no hace nada
+            : null,
 
         child: Container(
           height: 50,
           width: MediaQuery.of(context).size.width * 0.5,
           margin: const EdgeInsets.only(bottom: 10),
           decoration: isButtonEnabled
-              ? Decorations.blueBorder30 // Botón activo
-              : Decorations.greyBorder30, // Botón deshabilitado (gris)
+              ? Decorations.blueBorder30
+              : Decorations.greyBorder30,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [

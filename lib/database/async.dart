@@ -174,6 +174,8 @@ class Async {
       if(e["id_marca_garrafon"]!=null){
       data["id_marca_garrafon"]=e["id_marca_garrafon"];
       }
+      data["serial"] = e["serial"];
+      data["model"] =e["model"];
           // Log para verificar los datos antes de enviarlos
           log("Datos de la venta antes de enviar: ${jsonEncode(data)}");
         await postSale(data).then((value) async {

@@ -5,6 +5,8 @@ import 'package:junghanns/components/button.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/styles/decoration.dart';
 import 'package:junghanns/styles/text.dart';
+
+import '../../pages/socket/socket_service.dart';
   class LogOut extends StatelessWidget{
   const LogOut({Key? key}) : super(key: key);
 
@@ -33,6 +35,7 @@ import 'package:junghanns/styles/text.dart';
                               fun: (){
                                     Navigator.pop(context);
                                     log("LOG OUT");
+                                    SocketService().disconnect();
                                     //-------------------------*** LOG OUT
                                     prefs.isLogged = false;
                                     prefs.idUserD = 0;

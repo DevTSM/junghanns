@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:junghanns/database/async.dart';
 import 'package:junghanns/pages/auth/get_branch.dart';
 import 'package:junghanns/pages/home/home_principal.dart';
+import 'package:junghanns/pages/socket/socket_service.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/provider/provider.dart';
 import 'package:junghanns/styles/color.dart';
@@ -137,6 +138,8 @@ class _OpeningState extends State<Opening> {
         }
       } else {
         prefs.statusRoute="";
+        ///Cerrar la conecxión con el socket si se caducan las credenciales
+        SocketService().disconnect();
         Navigator.pushReplacement<void, void>(
           context,
           MaterialPageRoute<void>(
@@ -151,43 +154,6 @@ class _OpeningState extends State<Opening> {
     super.dispose();
     _connectivitySubscription.cancel();
   }
-
-  Future<void> _refreshTimer() async {
-    final provider = Provider.of<ProviderJunghanns>(context, listen: false);
-
-    // Llama a fetchStockValidation para actualizar la lista validationList
-    provider.fetchStockValidation();
-
-    /*// Filtra los datos según las condiciones especificadas
-    final filteredData = provider.validationList.where((validation) {
-      return validation.status == "P" && validation.valid == "Planta";
-    }).toList();
-
-    // Verificar si hay datos filtrados y actualizar el estado
-    setState(() {
-      if (filteredData.isNotEmpty) {
-        specialData = filteredData;
-        print('Contenido de specialData (filtrado): $specialData');
-        print('Llama al modal');
-        showValidationModal(context);
-      } else {
-        specialData = [];
-        print('No se encontraron datos que cumplan las condiciones------opening');
-      }
-    });*/
-
-    // Verifica si provider.validationList no está vacío antes de acceder a .first
-    if (provider.validationList.isNotEmpty &&
-        provider.validationList.first.status == 'P' &&
-        provider.validationList.first.valid == 'Ruta') {
-      print('Hay datos en validationList');
-      showReceiptModal(context);
-    } else {
-      // Imprime mensaje si no hay datos en validationList
-      print('No hay datos en validationList');
-    }
-  }
-
 
   Future<void> initConnectivity() async {
     late ConnectivityResult result;
@@ -207,6 +173,7 @@ class _OpeningState extends State<Opening> {
     await provider.refreshList(prefs.token);
     await provider.fetchStockValidation();
     await provider.fetchStockDelivery();
+    await provider.getNotificationBox();
 
     List<Map<String,dynamic>> list=[];
       list= await handler.retrievePrefs();

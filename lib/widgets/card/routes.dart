@@ -5,6 +5,9 @@ import 'package:junghanns/styles/color.dart';
 import 'package:junghanns/styles/decoration.dart';
 import 'package:junghanns/styles/text.dart';
 
+import '../../components/endOfRoute/end_of_route.dart';
+import '../../preferences/global_variables.dart';
+
 class RoutesCard extends StatelessWidget {
   Function updateList;
   Widget icon;
@@ -16,13 +19,28 @@ class RoutesCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-        onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(
+        onTap: () {
+          if (prefs.statusRoute == 'FNRT') {
+            /// Navega a Empty si la ruta finalizó
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const EnOfRouteView(),
+              ),
+            );
+          } else {
+            /// Navega al detalle del cliente si la ruta NO ha finalizado
+            Navigator.push(
+              context,
+              MaterialPageRoute(
                 builder: (context) => DetailsCustomer2(
-                      indexHome: indexHome,
-                      customerCurrent: customerCurrent,
-                    ),)).whenComplete(()=>updateList()),
+                  indexHome: indexHome,
+                  customerCurrent: customerCurrent,
+                ),
+              ),
+            ).whenComplete(() => updateList());
+          }
+        },
         child: Container(
           margin:
               const EdgeInsets.only(left: 5, right: 5, top: 7, bottom: 7),

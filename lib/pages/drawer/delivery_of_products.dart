@@ -1,8 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:device_info/device_info.dart';
-import 'package:device_information/device_information.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -20,7 +19,6 @@ import 'package:junghanns/styles/text.dart';
 import 'package:junghanns/widgets/card/product_missing_card.dart';
 import 'package:junghanns/widgets/card/product_others_card.dart';
 import 'package:junghanns/widgets/card/product_returns_card.dart';
-import 'package:mac_address/mac_address.dart';
 import 'package:map_launcher/map_launcher.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -53,7 +51,7 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
   bool isDeliverySuccessful = false;
   bool isValidating = false;
   bool isButtonDisabled = false;
-  bool areFieldsEditable = true; // Nuevo estado para editar los campos
+  bool areFieldsEditable = true;
   List specialData = [];
   String? errorMessage;
   // Estado para mostrar el banner
@@ -61,7 +59,7 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
   //bool isExpanded = false;
   late List<ValueNotifier<bool>> isExpandedList;
   //Distancia
-  bool isDistanceValid = false; // Indica si la distancia está dentro del rango permitido
+  bool isDistanceValid = false;
   double? currentDistance;
   double? plantaLat;
   double? plantaLog;
@@ -358,26 +356,21 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
       int rotosRuta = int.tryParse(_rotosRutaDesmineralizadosController.text) ?? 0;
       int suciosRuta = int.tryParse(_suciosRutaDesmineralizadosController.text) ?? 0;
 
-      // Verificar si la suma de rotos y sucios excede los llenos disponibles
       if ((rotosRuta + suciosRuta) > llenos) {
-        // Determinar cuánto queda disponible después de asignar a uno de los campos
         int maxPermitido = llenos;
 
-        // Ajustar "rotos" primero si la suma excede los llenos
         if (rotosRuta > maxPermitido) {
           rotosRuta = maxPermitido;
           _rotosRutaDesmineralizadosController.text = rotosRuta.toString();
         }
         maxPermitido -= rotosRuta;
 
-        // Luego ajustar "sucios" con lo que queda disponible
         if (suciosRuta > maxPermitido) {
           suciosRuta = maxPermitido;
           _suciosRutaDesmineralizadosController.text = suciosRuta.toString();
         }
       }
 
-      // Actualizar el valor de llenos, restando los rotos y sucios
       int llenosRestantes = llenos - (rotosRuta + suciosRuta);
       _llenosDesmineralizadosController.text = llenosRestantes.toString();
     }
@@ -392,26 +385,21 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
       int rotosRuta = int.tryParse(_rotosRutaController.text) ?? 0;
       int suciosRuta = int.tryParse(_suciosRutaController.text) ?? 0;
 
-      // Verificar si la suma de rotos y sucios excede los llenos disponibles
       if ((rotosRuta + suciosRuta) > llenos) {
-        // Determinar cuánto queda disponible después de asignar a uno de los campos
         int maxPermitido = llenos;
 
-        // Ajustar "rotos" primero si la suma excede los llenos
         if (rotosRuta > maxPermitido) {
           rotosRuta = maxPermitido;
           _rotosRutaController.text = rotosRuta.toString();
         }
         maxPermitido -= rotosRuta;
 
-        // Luego ajustar "sucios" con lo que queda disponible
         if (suciosRuta > maxPermitido) {
           suciosRuta = maxPermitido;
           _suciosRutaController.text = suciosRuta.toString();
         }
       }
 
-      // Actualizar el valor de llenos, restando los rotos y sucios
       int llenosRestantes = llenos - (rotosRuta + suciosRuta);
       _llenosController.text = llenosRestantes.toString();
     }
@@ -444,26 +432,21 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
       int rotosRuta = int.tryParse(_rotosRuta11LController.text) ?? 0;
       int suciosRuta = int.tryParse(_suciosRuta11LController.text) ?? 0;
 
-      // Verificar si la suma de rotos y sucios excede los llenos disponibles
       if ((rotosRuta + suciosRuta) > llenos) {
-        // Determinar cuánto queda disponible después de asignar a uno de los campos
         int maxPermitido = llenos;
 
-        // Ajustar "rotos" primero si la suma excede los llenos
         if (rotosRuta > maxPermitido) {
           rotosRuta = maxPermitido;
           _rotosRuta11LController.text = rotosRuta.toString();
         }
         maxPermitido -= rotosRuta;
 
-        // Luego ajustar "sucios" con lo que queda disponible
         if (suciosRuta > maxPermitido) {
           suciosRuta = maxPermitido;
           _suciosRuta11LController.text = suciosRuta.toString();
         }
       }
 
-      // Actualizar el valor de llenos, restando los rotos y sucios
       int llenosRestantes = llenos - (rotosRuta + suciosRuta);
       _llenos11LController.text = llenosRestantes.toString();
     }
@@ -522,14 +505,12 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
     });
 
     _currentLocation = (await LocationJunny().getCurrentLocation())!;
-    String marca = await DeviceInformation.deviceManufacturer;
-    String modelo =await DeviceInformation.deviceModel;
-    DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
-    AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
-    String serial = await GetMac.macAddress;
-    if(serial.isEmpty||serial.length<2){
-      serial=androidInfo.id??"";
-    }
+    final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+    final AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+
+    String serial = androidInfo.id ?? "";
+    String modelo = androidInfo.model ?? "Desconocido";
+    String marca = androidInfo.manufacturer ?? "Desconocido";
 
     int vacios = int.tryParse(_vaciosController.text) ?? 0;
     int llenos = int.tryParse(_llenosController.text) ?? 0;
@@ -805,26 +786,31 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
     _updateControllersDesmineralido();
     _updateControllers11L();
 
-
     return GestureDetector(
-      onTap: () {
-        FocusScope.of(context).unfocus();
-      },
-      child: Stack(
-        children: [
-          Scaffold(
-            appBar: AppBar(
-              backgroundColor: ColorsJunghanns.whiteJ,
-              systemOverlayStyle: const SystemUiOverlayStyle(
-                statusBarColor: ColorsJunghanns.whiteJ,
-                statusBarIconBrightness: Brightness.dark,
-                statusBarBrightness: Brightness.dark,
-              ),
-              elevation: 0,
-              leading: isLoading
-                  ? null
-                  : Visibility(
-                visible: specialData == null || specialData.isEmpty,
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Consumer<ProviderJunghanns>(
+        builder: (context, processProvider, _) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (processProvider.tipo == 'CR' && processProvider.estatus != 'P') {
+              _validateAccessories(providerJunghanns);
+              providerJunghanns.clearProcess();
+            }
+          });
+          return Stack(
+            children: [
+              Scaffold(
+                appBar: AppBar(
+                  backgroundColor: ColorsJunghanns.whiteJ,
+                  systemOverlayStyle: const SystemUiOverlayStyle(
+                    statusBarColor: ColorsJunghanns.whiteJ,
+                    statusBarIconBrightness: Brightness.dark,
+                    statusBarBrightness: Brightness.dark,
+                  ),
+                  elevation: 0,
+                  leading: isLoading
+                      ? null
+                      : Visibility(
+                    visible: specialData == null || specialData.isEmpty,
                     child: IconButton(
                       onPressed: () {
                         if (Navigator.canPop(context)) {
@@ -836,157 +822,170 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
                           );
                         }
                       },
-                                  icon: const Icon(
-                    Icons.arrow_back_ios,
-                    color: ColorsJunghanns.blue,
-                                  ),
-                                ),
-                  ),
-            ),
-            body: isLoading
-                ? const Center(
-              child: LoadingJunghanns(),
-            )
-                : RefreshIndicator(
-              onRefresh: _refreshData,
-                  child: Column(
-                              children: [
-                                providerJunghanns.connectionStatus == 4? const WithoutInternet():providerJunghanns.isNeedAsync?const NeedAsync():Container(),
-                                header(),
-                  const SizedBox(height: 5),
-                                Visibility(
-                                    visible: prefs.lastRouteUpdate != "",
-                                    child: Padding(padding: const EdgeInsets.only(left: 15,top: 5,bottom: 5),
-                                        child:Align(
-                                          alignment: Alignment.centerLeft,
-                                          child: Text(
-                                            "Última actualización: ${DateFormat('hh:mm a').format(prefs.lastBitacoraUpdate != "" ? DateTime.parse(prefs.lastBitacoraUpdate) : DateTime.now())}",
-                                            style: TextStyles.blue13It,
-                                          ),
-                                        ))),
-                                if (showErrorBanner)
-                                  Container(
-                                    width: double.infinity,
-                                    color: ColorsJunghanns.red,
-                                    padding: EdgeInsets.all(8),
-                                    child: Center(
-                                      child: Text(
-                                        errorMessage ?? '',
-                                        style: TextStyle(color: Colors.white),
-                                      ),
-                                    ),
-                                  ),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 85),
-                      child:providerJunghanns.isNeedAsync
-                          ? synchronize(context)  // Llamamos a la función sincro(context) en vez de NeedAsync()
-                          : providerJunghanns.carboyAccesories.isEmpty ||
-                          providerJunghanns.carboyAccesories.every((carboy) =>
-                          carboy.carboys.empty == 0 &&
-                              carboy.carboys.full == 0 &&
-                              carboy.carboys.brokenCte == 0 &&
-                              carboy.carboys.dirtyCte == 0 &&
-                              carboy.carboys.brokenRoute == 0 &&
-                              carboy.carboys.dirtyRoute == 0 &&
-                              carboy.carboys.aLongWay == 0 &&
-                              carboy.carboys.loan == 0 &&
-                              carboy.carboys.pLoan == 0 &&
-                              carboy.carboys.badTaste == 0
-                          )
-                      ? empty(context)
-                      :ListView(
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        children: [
-                          _sectionWithPlus(
-                            "GARRAFÓN 20 LITROS",
-                            Icons.add,
-                            _inputFieldsForStock(),
-                                () {
-                              print("Añadir producto con stock");
-                            },
-                            showPlus: false, index: 1,
-                          ),
-                          _sectionWithPlus(
-                            "DESMINERALIZADOS",
-                            Icons.add,
-                            _inputFieldsForStockDesmineralizados(),
-                                () {
-                              print("Añadir productos desminalizados");
-                            },
-                            showPlus: false, index: 2,
-                          ),
-                          _sectionWithPlus(
-                            "GARRAFÓN 11 LITROS",
-                            Icons.add,
-                            _inputFieldsForStock11L(),
-                                () {
-                              print("Añadir productos 11 L");
-                            },
-                            showPlus: false, index: 3,
-                          ),
-                          _sectionWithPlus(
-                            "PRODUCTOS FALTANTES",
-                            Icons.add,
-                            _missingProducts(),
-                                () {
-                              _showAddMissingProductModal(context: context, controller: providerJunghanns);
-                                },
-                            showPlus: false, index: 4,
-                          ),
-                          _sectionWithPlus(
-                            "PRODUCTOS ADICIONALES",
-                            Icons.add,
-                            _additionalProducts(),
-                                () {
-                              _showAddAdditionalProductModal(context: context, controller: providerJunghanns);
-                            }, showPlus: false, index: 5,
-                          ),
-                          _sectionWithPlus(
-                            "PRESTAMOS Y COMODATOS",
-                            Icons.add,
-                            _returnsStock(),
-                                () {
-                              print("Prestamos");
-                            },
-                            showPlus: false, index: 6,
-                          ),
-                        ],
+                      icon: const Icon(
+                        Icons.arrow_back_ios,
+                        color: ColorsJunghanns.blue,
                       ),
                     ),
                   ),
-                              ],
-                            ),
                 ),
-          ),
-          // Lógica para decidir qué mostrar
-          if (providerJunghanns.carboyAccesories.isNotEmpty &&
-              providerJunghanns.carboyAccesories.any((carboy) =>
-              carboy.carboys.empty != 0 ||
-                  carboy.carboys.full != 0 ||
-                  carboy.carboys.brokenCte != 0 ||
-                  carboy.carboys.dirtyCte != 0 ||
-                  carboy.carboys.brokenRoute != 0 ||
-                  carboy.carboys.dirtyRoute != 0 ||
-                  carboy.carboys.aLongWay != 0 ||
-                  carboy.carboys.loan != 0 ||
-                  carboy.carboys.pLoan != 0 ||
-                  carboy.carboys.badTaste != 0))
-          // Segunda validación: Si la distancia es válida o no
-            if (isDistanceValid)
-              _buildActionButton(-15)
-            else
-              _buttonDistance(-15),
-          Visibility(
-            visible: isLoadingOne,
-            child: const Center(
-              child: LoadingJunghanns(),
-            ),
-          ),
-        ],
+                body: isLoading
+                    ? const Center(child: LoadingJunghanns())
+                    : RefreshIndicator(
+                  onRefresh: _refreshData,
+                  child: Column(
+                    children: [
+                      processProvider.connectionStatus == 4
+                          ? const WithoutInternet()
+                          : processProvider.isNeedAsync
+                          ? const NeedAsync()
+                          : Container(),
+                      header(),
+                      const SizedBox(height: 5),
+                      Visibility(
+                        visible: prefs.lastRouteUpdate != "",
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 15, top: 5, bottom: 5),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              "Última actualización: ${DateFormat('hh:mm a').format(prefs.lastBitacoraUpdate != "" ? DateTime.parse(prefs.lastBitacoraUpdate) : DateTime.now())}",
+                              style: TextStyles.blue13It,
+                            ),
+                          ),
+                        ),
+                      ),
+                      if (showErrorBanner)
+                        Container(
+                          width: double.infinity,
+                          color: ColorsJunghanns.red,
+                          padding: const EdgeInsets.all(8),
+                          child: Center(
+                            child: Text(
+                              errorMessage ?? '',
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                          ),
+                        ),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 85),
+                          child: processProvider.isNeedAsync
+                              ? synchronize(context)
+                              : processProvider.carboyAccesories.isEmpty ||
+                              processProvider.carboyAccesories.every((carboy) =>
+                              carboy.carboys.empty == 0 &&
+                                  carboy.carboys.full == 0 &&
+                                  carboy.carboys.brokenCte == 0 &&
+                                  carboy.carboys.dirtyCte == 0 &&
+                                  carboy.carboys.brokenRoute == 0 &&
+                                  carboy.carboys.dirtyRoute == 0 &&
+                                  carboy.carboys.aLongWay == 0 &&
+                                  carboy.carboys.loan == 0 &&
+                                  carboy.carboys.pLoan == 0 &&
+                                  carboy.carboys.badTaste == 0)
+                              ? empty(context)
+                              : ListView(
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                            children: [
+                              // Tus secciones aquí
+                              _sectionWithPlus(
+                                "GARRAFÓN 20 LITROS",
+                                Icons.add,
+                                _inputFieldsForStock(),
+                                    () {
+                                  print("Añadir producto con stock");
+                                },
+                                showPlus: false, index: 1,
+                              ),
+                              _sectionWithPlus(
+                                "DESMINERALIZADOS",
+                                Icons.add,
+                                _inputFieldsForStockDesmineralizados(),
+                                    () {
+                                  print("Añadir productos desminalizados");
+                                },
+                                showPlus: false, index: 2,
+                              ),
+                              _sectionWithPlus(
+                                "GARRAFÓN 11 LITROS",
+                                Icons.add,
+                                _inputFieldsForStock11L(),
+                                    () {
+                                  print("Añadir productos 11 L");
+                                },
+                                showPlus: false, index: 3,
+                              ),
+                              _sectionWithPlus(
+                                "PRODUCTOS FALTANTES",
+                                Icons.add,
+                                _missingProducts(),
+                                    () {
+                                  _showAddMissingProductModal(context: context, controller: providerJunghanns);
+                                },
+                                showPlus: false, index: 4,
+                              ),
+                              _sectionWithPlus(
+                                "PRODUCTOS ADICIONALES",
+                                Icons.add,
+                                _additionalProducts(),
+                                    () {
+                                  _showAddAdditionalProductModal(context: context, controller: providerJunghanns);
+                                }, showPlus: false, index: 5,
+                              ),
+                              _sectionWithPlus(
+                                "PRESTAMOS Y COMODATOS",
+                                Icons.add,
+                                _returnsStock(),
+                                    () {
+                                  print("Prestamos");
+                                },
+                                showPlus: false, index: 6,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              if (specialData != null && specialData!.isNotEmpty)
+                Container(
+                  color: Colors.black.withOpacity(0.3),
+                  width: double.infinity,
+                  height: double.infinity,
+                ),
+
+              if (processProvider.carboyAccesories.isNotEmpty &&
+                  processProvider.carboyAccesories.any((carboy) =>
+                  carboy.carboys.empty != 0 ||
+                      carboy.carboys.full != 0 ||
+                      carboy.carboys.brokenCte != 0 ||
+                      carboy.carboys.dirtyCte != 0 ||
+                      carboy.carboys.brokenRoute != 0 ||
+                      carboy.carboys.dirtyRoute != 0 ||
+                      carboy.carboys.aLongWay != 0 ||
+                      carboy.carboys.loan != 0 ||
+                      carboy.carboys.pLoan != 0 ||
+                      carboy.carboys.badTaste != 0))
+                if (isDistanceValid)
+                  _buildActionButton(-15)
+                else
+                  _buttonDistance(-15),
+              Visibility(
+                visible: isLoadingOne,
+                child: const Center(
+                  child: LoadingJunghanns(),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
+
   Widget _buttonDistance(double bottomPadding){
     final provider = Provider.of<ProviderJunghanns>(context, listen: false);
     return Positioned(
@@ -1115,7 +1114,6 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
   }
   Widget _buildActionButton(double bottomPadding) {
     final provider = Provider.of<ProviderJunghanns>(context, listen: false);
-/*provider.updateStock();*/
     // Verificar si 'isNeedAsync' es true para no mostrar el botón de envío
     if (provider.isNeedAsync) {
       return SizedBox.shrink(); // Esto hace que no se renderice el botón
@@ -1151,7 +1149,7 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
           }
               : null),
           validateText: specialData != null && specialData!.isNotEmpty ? 'VERIFICAR' : 'ENVIAR',
-          validateColor: specialData != null && specialData!.isNotEmpty ? ColorsJunghanns.blueJ : (hasData ? ColorsJunghanns.blueJ : ColorsJunghanns.grey),
+          validateColor: specialData != null && specialData!.isNotEmpty ? ColorsJunghanns.orange : (hasData ? ColorsJunghanns.blueJ : ColorsJunghanns.grey),
           icon: icon,
         ),
     );

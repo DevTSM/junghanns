@@ -189,9 +189,9 @@ Future<Answer> setComodato(AndroidDeviceInfo build, int id, double lat,
           "emisor": {
             "FingerPrint": build.fingerprint,
             "Modelo": build.model,
-            "Marca": build.brand,
+            "Marca": build.manufacturer,
             "VersionSO": build.version.securityPatch,
-            "SerialNumber": build.version.release,
+            "SerialNumber": build.id,
             "Imac": build.board
           }
         }));
@@ -1261,7 +1261,73 @@ Future<Answer> deleteValidated({required int idV, required double lat, required 
           "client_secret": prefs.clientSecret,
           "Authorization": "Bearer ${prefs.token}",
         },
-        // Verificar lso datos
+        body: jsonEncode(body) );
+    log("/StoreServices <postValidated>");
+    return Answer.fromService(response,201);
+  } catch (e) {
+    log("/StoreServices <postValidated> Catch");
+    return Answer(
+        body: e,
+        message: "Algo salio mal, revisa tu conexión a internet.",
+        status: 1002,
+        error: true);
+  }
+}
+Future<Answer> getMailbox({required String userR, required String serial, required String model}) async {
+  log("/StoreServices <getMailbox>");
+  try {
+    var response = await http.get(
+      //Verificar la URL del stock
+        Uri.parse("${prefs.urlBase}notificacionmovil?q=all&user=${userR}&serial=${serial}&model=${model}"),
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey,
+          "client_secret": prefs.clientSecret,
+          "Authorization": "Bearer ${prefs.token}",
+        }).timeout(Duration(seconds: timerDuration));
+    if (response.statusCode == 200) {
+      var decodedBody = jsonDecode(response.body);
+      log("/StoreServices <getMailbox> Successfull");
+      log("Response Body: $decodedBody");
+      return Answer(body: jsonDecode(response.body), message: "",status:response.statusCode, error: false);
+    } else {
+      var decodedBody = jsonDecode(response.body);
+      log("/StoreServices <getMailbox> Fail");
+      log("Response Body: $decodedBody");
+      return Answer(
+          body: response,
+          message: "No se pudieron obtener los datos actualizados de la planta. Revisa tu conexión a internet.",
+          status:response.statusCode,
+          error: true);
+    }
+  } catch (e) {
+    log("/StoreServices <getMailbox> Catch ${e.toString()}");
+    return Answer(
+        body: e,
+        message: "Conexión inestable con el back",
+        status: 1002,
+        error: true);
+  }
+}
+Future<Answer> putReadAndReceived({required String id, required String delivered, required String readed}) async {
+  log("/StoreServices <postValidated> ¡");
+  try {
+    Map<String, dynamic> body = {
+      "id": id,
+      "delivered": delivered,
+      "readed": readed,
+    };
+
+    // Imprimir el cuerpo antes de enviarlo
+    log("Body enviado: ${jsonEncode(body)}");
+
+    var response = await http.put(Uri.parse("${prefs.urlBase}notificacionmovil"),
+        headers: {
+          HttpHeaders.contentTypeHeader: 'application/json; charset=UTF-8',
+          "x-api-key": apiKey,
+          "client_secret": prefs.clientSecret,
+          "Authorization": "Bearer ${prefs.token}",
+        },
         body: jsonEncode(body) );
     log("/StoreServices <postValidated>");
     return Answer.fromService(response,201);

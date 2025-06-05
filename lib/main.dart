@@ -4,23 +4,19 @@ import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
 
-//import 'package:background_fetch/background_fetch.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter_background/flutter_background.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:junghanns/models/notification.dart';
 import 'package:junghanns/pages/socket/socket_service.dart';
 import 'package:junghanns/preferences/global_variables.dart';
-import 'package:junghanns/provider/chat_provider.dart';
 import 'package:junghanns/provider/provider.dart';
 import 'package:junghanns/routes/routes.dart';
 import 'package:junghanns/styles/color.dart';
 import 'package:junghanns/util/navigator.dart';
-import 'package:junghanns/util/push_notifications_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:workmanager/workmanager.dart';
 
 @pragma('vm:entry-point')
@@ -38,74 +34,28 @@ void callbackDispatcher() {
   });
 }
 
-
-/*void initWebSocket() {
-  var url = '${prefs.urlBase}:3002';
-  //var socket = IO.io('https://sandbox.junghanns.app:3002',
-  var socket = IO.io('https://sandbox.junghanns.app:3002',
-    <String, dynamic>{
-      'auth': {"token":"123456789"},
-      'transports': ['websocket'],
-      'autoConnect': true,
-    }
-  );
-  try{
-    if(true){
-    socket.connect();
-    
-    prefs.conectado = true;
-    }else{
-      log("con proceso =======================>");
-    }
-    socket.onConnect((data){
-      socket.emit('catch_mobile', 'Hola, servidor! Junny');
-      socket.emit('primerDato', 'Hola, servidor! Junny');
-      log("################# Conectado");
-      log("################# Conectado $data");
-    });
-    // Escucha eventos del servidor
-    socket.on('junny_notify', (data)async {
-      log('Mensaje desde el servidor: $data');
-      NotificationService _notificationService = NotificationService();
-      _notificationService.showNotifications("Notify", data.toString());
-    });
-    socket.on('respuesta', (data)async {
-      log('Mensaje desde el servidor: $data');
-      NotificationService _notificationService = NotificationService();
-      _notificationService.showNotifications("Notify", data.toString());
-    });
-
-    // Escuchar el evento de desconexión
-    socket.onDisconnect((_) {
-      print("Desconectado del servidor");
-      NotificationService _notificationService = NotificationService();
-      _notificationService.showNotifications("Conexión perdida", "No se pudo conectar al servidor.");
-    });
-
-    // Escuchar el error de conexión
-    socket.onConnectError((error) {
-      print("Error de conexión: $error");
-      NotificationService _notificationService = NotificationService();
-      _notificationService.showNotifications("Error de conexión", "Ocurrió un error al intentar conectar.");
-    });
-    Future.delayed(Duration(seconds: 10),(){
-      if(!socket.connected){
-        print("Terminando socket");
-        socket.close();
-      }
-    });
-    socket.onConnectError((data)=> log('===> Error de conexion $data'));
-  }catch(e){
-    log("ERORR: ${e.toString()}");
-  }
-}*/
-
 Future<void> main() async {
+  ///Mantener aplicación en segundo plano
   WidgetsFlutterBinding.ensureInitialized();
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-  ]);
+
+  const androidConfig = FlutterBackgroundAndroidConfig(
+    notificationTitle: "JUNGHANNS en segundo plano",
+    notificationText: "Conexión activa",
+    notificationImportance: AndroidNotificationImportance.High,
+    enableWifiLock: true,
+  );
+
+  try {
+    final backgroundInitialized = await FlutterBackground.initialize(androidConfig: androidConfig);
+    if (backgroundInitialized) {
+      await FlutterBackground.enableBackgroundExecution();
+    } else {
+      print("flutter_background no pudo inicializarse.");
+    }
+  } catch (e) {
+    print("Error al inicializar flutter_background: $e");
+  }
+
   await Firebase.initializeApp();
   FirebaseMessaging.onBackgroundMessage (messageHandler);
   FirebaseMessaging.onMessageOpenedApp.listen((message) {
@@ -115,12 +65,11 @@ Future<void> main() async {
   await handler.initializeDB();
   // Workmanager().initialize(
   //   callbackDispatcher,
-  //   isInDebugMode: false 
+  //   isInDebugMode: false
   // );
   // Workmanager().registerOneOffTask("task-identifier", "notification");
-  //initWebSocket();
   // Inicia el WebSocket global
-  //SocketService();
+  SocketService().connectIfLoggedIn();
 
   runApp(const JunnyApp());
 }
@@ -128,7 +77,7 @@ class MyHttpOverrides extends HttpOverrides {
   @override
   HttpClient createHttpClient(SecurityContext? context) {
     return super.createHttpClient(context)
-      ..badCertificateCallback = 
+      ..badCertificateCallback =
         (X509Certificate cert, String host, int port) => true;
   }
 }
@@ -140,7 +89,7 @@ class JunnyApp extends StatefulWidget {
 }
 
 class _JunnyAppState extends State<JunnyApp> with WidgetsBindingObserver{
-  
+
   final GlobalKey<ScaffoldMessengerState> _scaffoldKey = GlobalKey();
   final GlobalKey<NavigatorState> _navKey = GlobalKey();
   @override
@@ -157,7 +106,7 @@ class _JunnyAppState extends State<JunnyApp> with WidgetsBindingObserver{
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      Timer(const Duration(seconds: 2), () async { 
+      Timer(const Duration(seconds: 2), () async {
         log("####################");
         Provider.of<ProviderJunghanns>(navigatorKey.currentContext!,listen:false)
           .requestAllPermissionsResumed();

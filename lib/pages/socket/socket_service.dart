@@ -216,21 +216,27 @@ class SocketService {
       fontSize: 12.0,
     );
   }
+
   String obtenerSistemaOperativo() {
-    if (kIsWeb) {
-      return 'Web';
-    } else if (Platform.isAndroid) {
-      return 'Android';
-    } else if (Platform.isIOS) {
-      return 'iOS';
-    } else if (Platform.isWindows) {
-      return 'Windows';
-    } else if (Platform.isMacOS) {
-      return 'macOS';
-    } else if (Platform.isLinux) {
-      return 'Linux';
-    } else {
-      return 'Desconocido';
+    String plataforma = kIsWeb
+        ? 'Web'
+        : Platform.operatingSystem;
+
+    switch (plataforma) {
+      case 'Web':
+        return 'Web';
+      case 'android':
+        return 'Android';
+      case 'ios':
+        return 'iOS';
+      case 'windows':
+        return 'Windows';
+      case 'macos':
+        return 'macOS';
+      case 'linux':
+        return 'Linux';
+      default:
+        return 'Desconocido';
     }
   }
 

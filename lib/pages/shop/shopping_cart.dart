@@ -40,8 +40,9 @@ import 'package:provider/provider.dart';
 
 import '../../database/database_evidence.dart';
 import '../../models/method_payment.dart';
-import '../../util/location.dart';
+import '../../util/navigator.dart';
 import '../../widgets/modal/evidence.dart';
+import '../../widgets/modal/informative.dart';
 
 
 class SecondWayToPay {
@@ -308,6 +309,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
   showConfirmSale(MethodPayment methodCurrent) {
     showDialog(
         context: context,
+        barrierDismissible: false,
         builder: (BuildContext context) {
           return Center(
             child: Container(
@@ -377,6 +379,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
                       child: Text(formatMoney
                           .format(provider.basketCurrent.totalPrice))),
                   Material(
+                    color: Colors.white,
                       child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
@@ -475,114 +478,121 @@ class _ShoppingCartState extends State<ShoppingCart> {
           );
         });
   }
-
-  showComodatoVerifi(int id, MethodPayment methodCurrent) {
+  void showComodatoVerifi(int id, MethodPayment methodCurrent) {
     showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return Center(
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              width: size.width * .75,
-              decoration: Decorations.whiteS1Card,
-              child: Material(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Consumer<ProviderJunghanns>(
+          builder: (context, processProvider, _) {
+            /// Consumo de notificación
+            if (processProvider.tipo == 'CC' && processProvider.estatus == 'A') {
+              print('Folio${processProvider.folio}');
+              Future.delayed(Duration.zero, () async {
+                Navigator.pop(context);
+                CustomModal.show(
+                  context: navigatorKey.currentContext!,
+                  icon: Icons.check_circle,
+                  title: "COMODATO ACEPTADO",
+                  message: "La validación fue aceptada por el cliente.",
+                  iconColor: ColorsJunghanns.green,
+                );
+                provider.basketCurrent.folio = int.parse(processProvider.folio ?? "-1");
+                Fluttertoast.showToast(msg: "Autorización verificada");
+                await Future.delayed(const Duration(seconds: 3));
+                Navigator.pop(navigatorKey.currentContext!);
+                funSale(methodCurrent);
+                processProvider.clearProcess();
+              });
+            }
+
+            if (processProvider.tipo == 'CC' && processProvider.estatus == 'R') {
+              Future.delayed(Duration.zero, () {
+                Navigator.pop(context);
+                CustomModal.show(
+                  context: navigatorKey.currentContext!,
+                  icon: Icons.cancel,
+                  title: "COMODATO RECHAZADO",
+                  message: "La validación fue rechazada por el cliente.",
+                  iconColor: ColorsJunghanns.red,
+                );
+                processProvider.clearProcess();
+              });
+            }
+            return Center(
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                width: MediaQuery.of(context).size.width * .75,
+                decoration: Decorations.whiteS1Card,
+                child: Material(
                   child: Column(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  DefaultTextStyle(
-                      style: TextStyles.blueJ22Bold,
-                      child: const Text("Esperando Autorizacion")),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  const SpinKitCircle(
-                    color: ColorsJunghanns.blue,
-                  ),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      Expanded(
-                          child: ButtonJunghanns(
+                      Text("Esperando Autorización", style: TextStyles.blueJ22Bold),
+                      const SizedBox(height: 10),
+                      Text(
+                        "Esperando confirmación del cliente",
+                        style: TextStyles.blue13It,
+                        textAlign: TextAlign.center,
+                      ),
+                      const SpinKitCircle(color: ColorsJunghanns.blue),
+                      const SizedBox(height: 10),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          Expanded(
+                            child: ButtonJunghanns(
                               fun: provider.isProcessValidate
                                   ? () async {}
                                   : () async {
-                                      Fluttertoast.showToast(
-                                        msg: "Verificando autorización ......",
-                                        timeInSecForIosWeb: 2,
-                                        toastLength: Toast.LENGTH_LONG,
-                                        gravity: ToastGravity.TOP,
-                                        webShowClose: true,
-                                      );
-                                      await getStatusComodato(id)
-                                          .then((answer) {
-                                        if (answer.error) {
-                                          Fluttertoast.showToast(
-                                            msg: "No se pudo verificar",
-                                            timeInSecForIosWeb: 2,
-                                            toastLength: Toast.LENGTH_LONG,
-                                            gravity: ToastGravity.TOP,
-                                            webShowClose: true,
-                                          );
-                                        } else {
-                                          //preguntar por el provider
-                                          if (!provider.isProcessValidate) {
-                                            if (answer.body["estatus"] == "A") {
-                                              Fluttertoast.showToast(
-                                                msg: "Autorización verificada",
-                                                timeInSecForIosWeb: 2,
-                                                toastLength: Toast.LENGTH_LONG,
-                                                gravity: ToastGravity.TOP,
-                                                webShowClose: true,
-                                              );
-                                              Navigator.pop(context);
-                                              provider.basketCurrent.folio =
-                                                  int.parse(
-                                                      answer.body["folio"] ??
-                                                          "-1");
-                                              funSale(methodCurrent);
-                                            } else {
-                                              Fluttertoast.showToast(
-                                                msg: "Aun no se ha verificado.",
-                                                timeInSecForIosWeb: 2,
-                                                toastLength: Toast.LENGTH_LONG,
-                                                gravity: ToastGravity.TOP,
-                                                webShowClose: true,
-                                              );
-                                            }
-                                          }
-                                        }
-                                      });
-                                    },
+                                Fluttertoast.showToast(
+                                  msg: "Verificando autorización ......",
+                                  gravity: ToastGravity.TOP,
+                                  toastLength: Toast.LENGTH_LONG,
+                                );
+                                final answer = await getStatusComodato(id);
+                                if (answer.error) {
+                                  Fluttertoast.showToast(msg: "No se pudo verificar");
+                                } else if (answer.body["estatus"] == "A") {
+                                  provider.basketCurrent.folio = int.parse(answer.body["folio"] ?? "-1");
+                                  Fluttertoast.showToast(msg: "Autorización verificada");
+                                  Navigator.pop(context);
+                                  funSale(methodCurrent);
+                                } else {
+                                  Fluttertoast.showToast(msg: "Aún no se ha verificado.");
+                                }
+                              },
                               decoration: provider.isProcessValidate
                                   ? Decorations.blueOpacity(.6, 12)
                                   : Decorations.blueBorder12,
                               style: TextStyles.white18SemiBoldIt,
-                              label: provider.isProcessValidate
-                                  ? "Validando..."
-                                  : "Verificar")),
-                      // const SizedBox(
-                      //   width: 25,
-                      // ),
-                      // Expanded(
-                      //     child: ButtonJunghanns(
-                      //   fun: () {
-                      //     Navigator.pop(context);
-                      //   },
-                      //   decoration: Decorations.redCard,
-                      //   style: TextStyles.white18SemiBoldIt,
-                      //   label: "Cancelar",
-                      // )),
+                              label: provider.isProcessValidate ? "Validando..." : "Verificar",
+                            ),
+                          ),
+                          // const SizedBox(
+                          //   width: 25,
+                          // ),
+                          // Expanded(
+                          //     child: ButtonJunghanns(
+                          //   fun: () {
+                          //     Navigator.pop(context);
+                          //   },
+                          //   decoration: Decorations.redCard,
+                          //   style: TextStyles.white18SemiBoldIt,
+                          //   label: "Cancelar",
+                          // )),
+                        ],
+                      ),
                     ],
-                  )
-                ],
-              )),
-            ),
-          );
-        });
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   showComodato(MethodPayment methodCurrent) {
@@ -591,6 +601,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
         : "1234";
     showDialog(
         context: context,
+        barrierDismissible: false,
         builder: (BuildContext context) {
           return Center(
             child: Container(
@@ -598,6 +609,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
               width: size.width * .75,
               decoration: Decorations.whiteS1Card,
               child: Material(
+                  color: Colors.white,
                   child: Column(
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.spaceAround,

@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:junghanns/database/async.dart';
 import 'package:junghanns/pages/auth/get_branch.dart';
 import 'package:junghanns/pages/home/home_principal.dart';
+import 'package:junghanns/pages/socket/socket_service.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/provider/provider.dart';
 import 'package:junghanns/styles/color.dart';
@@ -137,6 +138,8 @@ class _OpeningState extends State<Opening> {
         }
       } else {
         prefs.statusRoute="";
+        ///Cerrar la conecxión con el socket si se caducan las credenciales
+        SocketService().disconnect();
         Navigator.pushReplacement<void, void>(
           context,
           MaterialPageRoute<void>(

@@ -49,51 +49,59 @@ Widget bottomBar(Function setIndexCurrent, int indexCurrent,BuildContext context
         label: 'Rutas',
       ),
       BottomNavigationBarItem(
-        icon: Stack(
-          alignment: Alignment.topRight,
-          children: [
-            Image.asset(
-              "assets/icons/menuOp5W.png",
-              width: 25,
-              height: 25,
-            ),
-            if (Provider.of<ProviderJunghanns>(context).hasUnreadNotifications)
-              ClipOval(
-                child: Container(
-                  width: 13,
-                  height: 13,
-                  alignment: Alignment.center,
-                  color: JunnyColor.red5c,
-                  child: Text(
-                    Provider.of<ProviderJunghanns>(context).unreadNotificationsCount.toString(),
-                    style: JunnyText.bluea4(FontWeight.w400, 10).copyWith(color: JunnyColor.white),
-                  ),
+        icon: Consumer<ProviderJunghanns>(
+          builder: (context, provider, child) {
+            return Stack(
+              alignment: Alignment.topRight,
+              children: [
+                Image.asset(
+                  "assets/icons/menuOp5W.png",
+                  width: 25,
+                  height: 25,
                 ),
-              ),
-          ],
+                if (provider.hasUnreadNotifications)
+                  ClipOval(
+                    child: Container(
+                      width: 13,
+                      height: 13,
+                      alignment: Alignment.center,
+                      color: JunnyColor.red5c,
+                      child: Text(
+                        provider.unreadNotificationsCount.toString(),
+                        style: JunnyText.bluea4(FontWeight.w400, 10).copyWith(color: JunnyColor.white),
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          },
         ),
-        activeIcon: Stack(
-          alignment: Alignment.topRight,
-          children: [
-            Image.asset(
-              "assets/icons/menuOp5B.png",
-              width: 25,
-              height: 25,
-            ),
-            if (Provider.of<ProviderJunghanns>(context).hasUnreadNotifications)
-              ClipOval(
-                child: Container(
-                  width: 13,
-                  height: 13,
-                  alignment: Alignment.center,
-                  color: JunnyColor.red5c,
-                  child: Text(
-                    Provider.of<ProviderJunghanns>(context).unreadNotificationsCount.toString(),
-                    style: JunnyText.bluea4(FontWeight.w400, 10).copyWith(color: JunnyColor.white),
-                  ),
+        activeIcon: Consumer<ProviderJunghanns>(
+          builder: (context, provider, child) {
+            return Stack(
+              alignment: Alignment.topRight,
+              children: [
+                Image.asset(
+                  "assets/icons/menuOp5B.png",
+                  width: 25,
+                  height: 25,
                 ),
-              ),
-          ],
+                if (provider.hasUnreadNotifications)
+                  ClipOval(
+                    child: Container(
+                      width: 13,
+                      height: 13,
+                      alignment: Alignment.center,
+                      color: JunnyColor.red5c,
+                      child: Text(
+                        provider.unreadNotificationsCount.toString(),
+                        style: JunnyText.bluea4(FontWeight.w400, 10).copyWith(color: JunnyColor.white),
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          },
         ),
         label: 'Notificaciones',
       ),

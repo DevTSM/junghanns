@@ -132,26 +132,27 @@ class _JunnyAppState extends State<JunnyApp> with WidgetsBindingObserver{
           GlobalCupertinoLocalizations.delegate,
         ],
         supportedLocales: const [
-          Locale('en', ''), // English, no country code
-          Locale('es'), // Spanish, no country code
+          Locale('en', ''),
+          Locale('es'),
         ],
         title: 'JUNGHANNS',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
-          primarySwatch: Colors.blue,
-          dialogBackgroundColor: JunnyColor.white,
+          scaffoldBackgroundColor: JunnyColor.bluefe,
           cardColor: JunnyColor.white,
-          colorScheme: ColorScheme.fromSwatch(
-            cardColor: JunnyColor.white,
-            backgroundColor: JunnyColor.bluefe,
+          colorScheme: const ColorScheme.light(
+            primary: JunnyColor.bluefe,
+            background: JunnyColor.bluefe,
           ),
+          dialogBackgroundColor: JunnyColor.white,
           dialogTheme: DialogTheme(
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8)
+              borderRadius: BorderRadius.circular(8),
             ),
-            backgroundColor: JunnyColor.white
-          )
+            backgroundColor: JunnyColor.white,
+          ),
         ),
+
         initialRoute: '/',
         routes: getApplicationRoutes(),
       )

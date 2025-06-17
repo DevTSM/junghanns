@@ -80,6 +80,7 @@ class _NotificactionsState extends State<Notificactions> {
       body: Stack(
         children: [
           RefreshIndicator(
+              color: JunnyColor.blueA1,
             onRefresh: ()=> getData(),
             child: SingleChildScrollView(
               child:_body()
@@ -265,6 +266,7 @@ class _NotificactionsState extends State<Notificactions> {
           if (filteredList.isEmpty) return empty(context);
 
           return RefreshIndicator(
+            color: JunnyColor.blueA1,
             onRefresh: () => getData(),
             child: ListView.builder(
               itemCount: filteredList.length,

@@ -47,6 +47,7 @@ class _InventoryState extends State<Inventory> {
   Widget build(BuildContext context) {
     size = MediaQuery.of(context).size;
     return RefreshIndicator(
+      color: JunnyColor.blueA1,
       onRefresh: () async{
         await _refreshInventory();
       },

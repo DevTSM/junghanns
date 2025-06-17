@@ -250,6 +250,7 @@ class _ReceptionOfProductsState extends State<ReceptionOfProducts> {
     validationList.isNotEmpty ? validationList.first.typeValidation : '';
 
     return RefreshIndicator(
+      color: JunnyColor.blueA1,
       onRefresh: () async {
         await _refreshInventory();
         await _fetchData();

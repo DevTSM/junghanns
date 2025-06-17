@@ -36,7 +36,9 @@ class _ShowNotificationBoxState extends State<ShowNotificationBox> {
         _read = true;
       });
     } else {
+      final provider = Provider.of<ProviderJunghanns>(context, listen: false);
       Navigator.pop(context);
+      await provider.getNotificationBox();
     }
   }
 

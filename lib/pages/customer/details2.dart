@@ -582,6 +582,7 @@ class _DetailsCustomer2State extends State<DetailsCustomer2> {
 
   Widget refreshScroll() {
     return RefreshIndicator(
+        color: JunnyColor.blueA1,
       child: SingleChildScrollView(
         child: Column(
           children: [

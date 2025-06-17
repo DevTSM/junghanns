@@ -832,6 +832,7 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
                 body: isLoading
                     ? const Center(child: LoadingJunghanns())
                     : RefreshIndicator(
+                  color: JunnyColor.blueA1,
                   onRefresh: _refreshData,
                   child: Column(
                     children: [

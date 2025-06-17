@@ -521,6 +521,7 @@ class _TransfersState extends State<Transfers> {
               child: LoadingJunghanns(),
             )
                 : RefreshIndicator(
+              color: JunnyColor.blueA1,
               onRefresh: _refreshData,
               child: Column(
                 children: [

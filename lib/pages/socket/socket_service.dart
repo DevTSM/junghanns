@@ -14,6 +14,7 @@ import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'dart:convert';
 import '../../models/notification/push_notification_model.dart';
 import '../../util/navigator.dart';
+import '../../widgets/modal/cancel_autorization.dart';
 
 class SocketService {
   static final SocketService _instance = SocketService._internal();
@@ -127,7 +128,28 @@ class SocketService {
         confirmedNotificationIds.add(id);
       });
     });
+     socket.on('solicitudBaja', (data) {
+      print("Notificación de cancelación: $data");
 
+      final String id = data['id'].toString();
+      final String idEmisor = data['id_emisor'].toString();
+
+      if (confirmedNotificationIds.contains(id)) {
+        print('Notificación $id ya confirmada, no se vuelve a confirmar.');
+        return;
+      }
+
+      showAuthorizationCancel(navigatorKey.currentContext!, id, idEmisor);
+
+      socket.emitWithAck('confirmNotification', {
+        'id': id,
+        'id_emisor': data['id_emisor'] ?? 'no-id_emisor',
+        'id_usuario': data['id_usuario'] ?? 'no-id_usuario',
+      }, ack: (response) {
+        print('Servidor confirmó recepción: $response');
+        confirmedNotificationIds.add(id);
+      });
+    });
     socket.on('confirmProcess', (data) {
       print("Proceso aceptado: $data");
       final processProvider = Provider.of<ProviderJunghanns>(navigatorKey.currentContext!!, listen: false);

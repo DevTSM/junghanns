@@ -89,6 +89,7 @@ class _DevolucionesState extends State<Devoluciones> {
             )
         ),
         body: RefreshIndicator(
+            color: JunnyColor.blueA1,
           onRefresh: ()=> getDevoluciones(),
             child: isLoading
                 ? const Center(

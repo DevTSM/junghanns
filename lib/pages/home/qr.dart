@@ -59,6 +59,7 @@ class _QRSellerState extends State<QRSeller> {
       icon: Icon(Icons.arrow_back_ios,color: ColorsJunghanns.blue,))
       ),
     body:RefreshIndicator(
+        color: JunnyColor.blueA1,
         onRefresh: () async {
           setState(() {
             isLoading = true;

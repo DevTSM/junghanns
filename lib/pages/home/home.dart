@@ -339,6 +339,7 @@ class _HomeState extends State<Home> {
       body: Stack(
         children: [
           RefreshIndicator(
+            color: JunnyColor.blueA1,
             onRefresh: () async {
               dashboardR = DashboardModel.fromPrefs();
               isLoading = false;

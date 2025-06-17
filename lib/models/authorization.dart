@@ -96,6 +96,9 @@ class AuthorizationModel {
 
     return map;
   }
+  bool isEmpty() {
+    return idAuth == 0;
+  }
 
 set setClient(CustomerModel client){
   this.client=client;

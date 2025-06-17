@@ -114,6 +114,7 @@ class _Cuentas extends State<Cuentas> {
 
   Widget body() {
     return RefreshIndicator(
+        color: JunnyColor.blueA1,
       onRefresh: ()=> getData(),
       child: SizedBox(
         height: size.height*.5,

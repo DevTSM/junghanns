@@ -263,6 +263,7 @@ class _TransferState extends State<Transfer> {
             Container(
               padding: const EdgeInsets.all(10),
               child: RefreshIndicator(
+                  color: JunnyColor.blueA1,
                     onRefresh: ()=>getDataTransfer(type: itemBar==2?"R":"E"),
                     child: 
               SingleChildScrollView(

@@ -193,6 +193,7 @@ class _SpecialsState extends State<Specials> {
     });
     return Stack(children: [
       RefreshIndicator(
+          color: JunnyColor.blueA1,
           onRefresh: () async {
             getCustomerListDB();
           },

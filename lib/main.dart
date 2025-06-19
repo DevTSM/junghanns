@@ -151,6 +151,11 @@ class _JunnyAppState extends State<JunnyApp> with WidgetsBindingObserver{
             ),
             backgroundColor: JunnyColor.white,
           ),
+          textSelectionTheme: const TextSelectionThemeData(
+            cursorColor: ColorsJunghanns.blueJ,
+            selectionColor: ColorsJunghanns.blueJ,
+            selectionHandleColor: ColorsJunghanns.blueJ,
+          ),
         ),
 
         initialRoute: '/',

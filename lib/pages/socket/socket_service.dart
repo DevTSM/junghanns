@@ -59,12 +59,12 @@ class SocketService {
     String token = _generateToken();
     String sistemaop = obtenerSistemaOperativo();
 
-    final String urlBase = prefs.urlBase.replaceAll(RegExp(r'\/$'), '');
-    final String puerto = urlBase.contains('sandbox') ? '4102' : '4002';
-    final String urlCompleta = '$urlBase:$puerto';
+    final Uri uri = Uri.parse(prefs.urlBase);
+    final String urlBaseLimpia = '${uri.scheme}://${uri.host}';
+    final String puerto = urlBaseLimpia.contains('sandbox') ? '4102' : '4002';
+    final String urlCompleta = '$urlBaseLimpia:$puerto';
 
     print('Conectando a: $urlCompleta');
-
 
     socket = IO.io(
       urlCompleta,

@@ -94,6 +94,12 @@ class TextStyles {
     color: ColorsJunghanns.blue,
     fontFamily: 'Roboto',
   );
+  static const TextStyle grey19_5 = TextStyle(
+    fontSize: 15,
+    fontWeight: FontWeight.w400,
+    color: ColorsJunghanns.grey,
+    fontFamily: 'Roboto',
+  );
   static const TextStyle blue23_7 = TextStyle(
     fontSize: 23,
     fontWeight: FontWeight.w700,
@@ -127,6 +133,12 @@ class TextStyles {
   static const TextStyle blue27_7 = TextStyle(
     fontSize: 27,
     fontWeight: FontWeight.w700,
+    color: ColorsJunghanns.blue,
+    fontFamily: 'Roboto',
+  );
+  static const TextStyle blue24_5 = TextStyle(
+    fontSize: 24,
+    fontWeight: FontWeight.w500,
     color: ColorsJunghanns.blue,
     fontFamily: 'Roboto',
   );

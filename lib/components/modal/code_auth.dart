@@ -85,11 +85,19 @@ class _ShowCodeAuth extends State<ShowCodeAuth> {
   }
 }
 
-showCodeAuth(BuildContext context,Function getValid,AuthorizationModel current) {
+showCodeAuth(BuildContext context, Function getValid, AuthorizationModel current) {
   showDialog(
     context: context,
-    builder: (_) => AlertDialog(
-      content: ShowCodeAuth(getValid:getValid,current:current),
+    builder: (_) => Theme(
+      data: Theme.of(context).copyWith(
+        dialogBackgroundColor: JunnyColor.white, // Fuerza el fondo blanco
+      ),
+      child: AlertDialog(
+        content: ShowCodeAuth(getValid: getValid, current: current),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
     ),
   );
 }

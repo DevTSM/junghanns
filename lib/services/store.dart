@@ -6,6 +6,8 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
@@ -189,9 +191,9 @@ Future<Answer> setComodato(AndroidDeviceInfo build, int id, double lat,
           "emisor": {
             "FingerPrint": build.fingerprint,
             "Modelo": build.model,
-            "Marca": build.brand,
+            "Marca": build.manufacturer,
             "VersionSO": build.version.securityPatch,
-            "SerialNumber": build.version.release,
+            "SerialNumber": build.id,
             "Imac": build.board
           }
         }));
@@ -1261,7 +1263,6 @@ Future<Answer> deleteValidated({required int idV, required double lat, required 
           "client_secret": prefs.clientSecret,
           "Authorization": "Bearer ${prefs.token}",
         },
-        // Verificar lso datos
         body: jsonEncode(body) );
     log("/StoreServices <postValidated>");
     return Answer.fromService(response,201);
@@ -1270,6 +1271,116 @@ Future<Answer> deleteValidated({required int idV, required double lat, required 
     return Answer(
         body: e,
         message: "Algo salio mal, revisa tu conexión a internet.",
+        status: 1002,
+        error: true);
+  }
+}
+Future<Answer> getMailbox({required String userR, required String serial, required String model}) async {
+  log("/StoreServices <getMailbox>");
+  try {
+    var response = await http.get(
+      Uri.parse("${prefs.urlBase}notificacionmovil?q=all&user=$userR&serial=$serial&model=$model"),
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+        "client_secret": prefs.clientSecret,
+        "Authorization": "Bearer ${prefs.token}",
+      },
+    ).timeout(Duration(seconds: timerDuration));
+
+    if (response.statusCode == 200) {
+      if (response.body.trim().isNotEmpty) {
+        var decodedBody = jsonDecode(response.body);
+        log("/StoreServices <getMailbox> Successfull");
+        log("Response Body: $decodedBody");
+        return Answer(body: decodedBody, message: "", status: response.statusCode, error: false);
+      } else {
+        log("/StoreServices <getMailbox> Respuesta vacía");
+        Fluttertoast.showToast(
+          msg: 'No se encontraron registros',
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          backgroundColor: Colors.black,
+          textColor: Colors.white,
+          fontSize: 12.0,
+        );
+        return Answer(
+          body: [],
+          message: "No se encontraron registros",
+          status: response.statusCode,
+          error: true,
+        );
+      }
+    } else {
+      log("/StoreServices <getMailbox> Error status: ${response.statusCode}");
+      String? bodyText = response.body.trim().isNotEmpty ? response.body : '{"error":"sin cuerpo"}';
+      var decodedBody = jsonDecode(bodyText);
+      log("Response Body: $decodedBody");
+      return Answer(
+        body: decodedBody,
+        message: "No se pudieron obtener los datos actualizados de la planta. Revisa tu conexión a internet.",
+        status: response.statusCode,
+        error: true,
+      );
+    }
+  } catch (e) {
+    log("/StoreServices <getMailbox> Catch ${e.toString()}");
+    return Answer(
+      body: e,
+      message: "Conexión inestable con el back",
+      status: 1002,
+      error: true,
+    );
+  }
+}
+
+Future<Answer> putReadAndReceived({required String id, required String delivered, required String readed}) async {
+  log("/StoreServices <postValidated> ¡");
+  try {
+    Map<String, dynamic> body = {
+      "id": id,
+      "delivered": delivered,
+      "readed": readed,
+    };
+
+    // Imprimir el cuerpo antes de enviarlo
+    log("Body enviado: ${jsonEncode(body)}");
+
+    var response = await http.put(Uri.parse("${prefs.urlBase}notificacionmovil"),
+        headers: {
+          HttpHeaders.contentTypeHeader: 'application/json; charset=UTF-8',
+          "x-api-key": apiKey,
+          "client_secret": prefs.clientSecret,
+          "Authorization": "Bearer ${prefs.token}",
+        },
+        body: jsonEncode(body) );
+    log("/StoreServices <postValidated>");
+    return Answer.fromService(response,201);
+  } catch (e) {
+    log("/StoreServices <postValidated> Catch");
+    return Answer(
+        body: e,
+        message: "Algo salio mal, revisa tu conexión a internet.",
+        status: 1002,
+        error: true);
+  }
+}
+Future<Answer> getCancelAuth2(Map<String, dynamic> data) async {
+  log("/StoreServices <getCancelAuth> $data");
+  try {
+    var response = await http.delete(Uri.parse("${prefs.urlBase}clienteautorizacion"),
+        headers: {
+          HttpHeaders.contentTypeHeader: 'application/json; charset=UTF-8',
+          "x-api-key": apiKey,
+          "client_secret": prefs.clientSecret,
+          "Authorization": "Bearer ${prefs.token}"
+        },
+        body: jsonEncode(data)).timeout(Duration(seconds: timerDuration+5));
+    return Answer.fromService(response, 201);
+  } catch (e) {
+    return Answer(
+        body: {"error": e},
+        message: "Conexión inestable con el back",
         status: 1002,
         error: true);
   }

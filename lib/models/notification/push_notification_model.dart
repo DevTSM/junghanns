@@ -3,14 +3,16 @@ import 'dart:convert';
 import '../../util/push_notifications_provider.dart';
 
 class PushNotificationModel {
+  String id;
   String title;
   String message;
-  String code; // Aquí guardaremos el código que llega del servidor
+  String code;
 
   PushNotificationModel({
+    required this.id,
     required this.title,
     required this.message,
-    required this.code, // Requerido para asegurarnos de que siempre viene un código
+    required this.code,
   });
 
   // Método para mostrar la notificación
@@ -18,35 +20,32 @@ class PushNotificationModel {
     NotificationService().showNotifications(title, message);
   }
 
-  // Método para mostrar el código y mensaje en la consola
   void logNotification() {
     print("Código: $code");
     print("Mensaje: $message");
   }
 
-  // Método para crear una instancia de la notificación a partir de un JSON
   static PushNotificationModel fromJson(dynamic data) {
     Map<String, dynamic> jsonData;
 
     if (data is String) {
       try {
-        jsonData = jsonDecode(data); // Intenta decodificar el string a JSON
+        jsonData = jsonDecode(data);
       } catch (e) {
-        // Si no es un JSON válido, configuramos un valor predeterminado
         jsonData = {
-          "code": "400", // Si hay error, asignamos código 400
+          "code": "400",
           "message": "Error al procesar los datos."
         };
       }
     } else {
-      jsonData = data as Map<String, dynamic>; // Si ya es un Map, lo usamos tal cual
+      jsonData = data as Map<String, dynamic>;
     }
 
-    // Extraer el 'message' y 'code' del JSON, asegurándonos de que el 'code' sea un String
-    String message = jsonData['message'] ?? "Mensaje desconocido."; // Valor por defecto
-    String title = jsonData['title'] ?? "Notificación"; // Valor por defecto para el título
-    String code = jsonData['code'].toString(); // Convertir 'code' a String si es un número
+    String id = jsonData['id'].toString();
+    String message = jsonData['message'] ?? "Mensaje desconocido.";
+    String title = jsonData['title'] ?? "Notificación";
+    String code = jsonData['code'].toString();
 
-    return PushNotificationModel(title: title, message: message, code: code);
+    return PushNotificationModel( id: id, title: title, message: message, code: code);
   }
 }

@@ -26,10 +26,5 @@ Widget empty(BuildContext context) {
               "ninguna información que mostrar.",
               style: JunnyText.grey_255(FontWeight.w400, 13),
             ),
-
-        /*Text(
-          "¡Upps! hay información que mostrar",
-          style: JunnyText.grey_255(FontWeight.w400, 16),
-        )*/
       ]);
 }

@@ -227,6 +227,7 @@ class _RoutesState extends State<Routes> {
     provider = Provider.of<ProviderJunghanns>(context);
     return Stack(children: [
       RefreshIndicator(
+          color: JunnyColor.blueA1,
           onRefresh: () async {
             getCustomerListDB();
           },

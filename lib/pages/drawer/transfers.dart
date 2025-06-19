@@ -1,8 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:device_info/device_info.dart';
-import 'package:device_information/device_information.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -18,7 +17,6 @@ import 'package:junghanns/styles/decoration.dart';
 import 'package:junghanns/styles/text.dart';
 import 'package:junghanns/widgets/card/product_missing_card.dart';
 import 'package:junghanns/widgets/modal/add_others_product.dart';
-import 'package:mac_address/mac_address.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -279,20 +277,15 @@ class _TransfersState extends State<Transfers> {
     });
 
     _currentLocation = (await LocationJunny().getCurrentLocation())!;
-    String marca = await DeviceInformation.deviceManufacturer;
-    String modelo =await DeviceInformation.deviceModel;
-    DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
-    AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
-    String serial = await GetMac.macAddress;
-    if(serial.isEmpty||serial.length<2){
-      serial=androidInfo.id??"";
-    }
+    final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+    final AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+
+    String serial = androidInfo.id ?? "";
+    String modelo = androidInfo.model ?? "Desconocido";
+    String marca = androidInfo.manufacturer ?? "Desconocido";
 
     final provider = context.read<ProviderJunghanns>();
     final transfersProducts = provider.transfersProductsList;
-
-    // IDs que deben ir a campos especiales
-    final Set<int> conocidos = {21, 22, 50, 125, 136};
 
     // Variables acumuladoras
     int vacios = 0;
@@ -528,6 +521,7 @@ class _TransfersState extends State<Transfers> {
               child: LoadingJunghanns(),
             )
                 : RefreshIndicator(
+              color: JunnyColor.blueA1,
               onRefresh: _refreshData,
               child: Column(
                 children: [

@@ -6,14 +6,15 @@ import 'package:junghanns/components/without_internet.dart';
 import 'package:junghanns/components/without_location.dart';
 import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/models/notification.dart';
+import 'package:junghanns/models/notification/notification_box.dart';
 import 'package:junghanns/provider/provider.dart';
 import 'package:junghanns/styles/color.dart';
 import 'package:junghanns/styles/decoration.dart';
 import 'package:junghanns/styles/text.dart';
-import 'package:junghanns/widgets/card/notifications.dart';
 import 'package:provider/provider.dart';
 
 import '../../preferences/global_variables.dart';
+import '../../widgets/card/notification_box_card.dart';
 import '../../widgets/modal/receipt_modal.dart';
 import '../../widgets/modal/validation_modal.dart';
 
@@ -36,32 +37,24 @@ class _NotificactionsState extends State<Notificactions> {
     super.initState();
     notifications=[];
     isLoading = false;
+    provider = Provider.of<ProviderJunghanns>(context, listen: false);
     getData();
     _refreshTimer();
   }
   Future<void> _refreshTimer() async {
     final provider = Provider.of<ProviderJunghanns>(context, listen: false);
-
-    // Ahora fetchStockValidation devuelve un objeto ValidationModel
     provider.fetchStockValidation();
 
-// Filtrar los datos según las condiciones especificadas
     final filteredData = provider.validationList.where((validation) {
       return validation.status == "P" && validation.valid == "Planta";
     }).toList();
 
-
-// Verificar si hay datos filtrados
     setState(() {
       if (filteredData.isNotEmpty) {
-        specialData = filteredData;  // Asigna los datos filtrados a specialData
-        // Imprimir el contenido de specialData para confirmarlo
-        print('Contenido de specialData (filtrado): $specialData');
-        print('Llama al modal');
+        specialData = filteredData;
         showValidationModal(context);
       } else {
-        specialData = [];  // Si no hay datos que cumplan las condiciones, asignar un arreglo vacío
-        print('No se encontraron datos que cumplan las condiciones');
+        specialData = [];
       }
     });
 
@@ -71,13 +64,14 @@ class _NotificactionsState extends State<Notificactions> {
   }
 
   getData() async {
+    provider.getNotificationBox();
     List<NotificationModel> notificationsGet = await handler.retrieveNotification();
-    //Provider.of<ProviderJunghanns>(context,listen: false).cleanPendingNotifications();
     setState(() {
       notifications.clear();
       notifications.addAll(notificationsGet);
     });
   }
+
   @override
   Widget build(BuildContext context) {
       size = MediaQuery.of(context).size;
@@ -86,6 +80,7 @@ class _NotificactionsState extends State<Notificactions> {
       body: Stack(
         children: [
           RefreshIndicator(
+              color: JunnyColor.blueA1,
             onRefresh: ()=> getData(),
             child: SingleChildScrollView(
               child:_body()
@@ -117,92 +112,173 @@ class _NotificactionsState extends State<Notificactions> {
             child: const WithoutLocation()
           ),
           header(),
-          const SizedBox(height: 15),
+          //const SizedBox(height: 10),
           Expanded(
-            child: notifications.isNotEmpty 
-              ? _listNototifications()
+            child: provider.notificationBokList.isNotEmpty
+              ? notificationScreen()/*_listNototifications()*/
               : empty(context)
-          )
+          ),
+          const SizedBox(height: 63),
         ],
       )
     );
   }
-  
   Widget header() {
     return Padding(
       padding: const EdgeInsets.all(15),
-      child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                "Ruta de trabajo",
-                style: TextStyles.blue27_7,
-              ),
-              const Text(
-                "  Notificaciones",
-                style: TextStyles.green15_4,
-              ),
-              const SizedBox(height: 10),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start, 
-                children: [
-                  Expanded(
-                    flex: 4,
-                    child: Text(
-                      checkDate(DateTime.now()),
-                      style: TextStyles.blue19_7,
-                    ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 4,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "Notificaciones",
+                  style: TextStyles.blue24_5,
+                ),
+                Text(
+                  checkDate(DateTime.now()).toUpperCase(),
+                  style: TextStyles.grey19_5.copyWith(height: 0.9), // ¡Clave!
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            flex: 2,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(height: 10),
+                Container(
+                  height: 36,
+                  alignment: Alignment.center,
+                  decoration: Decorations.greenBorder5,
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Text(
+                    prefs.nameRouteD,
+                    style: TextStyles.white17_5,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    flex: 2,
-                    child: Container(
-                      alignment: Alignment.center,
-                      decoration: Decorations.orangeBorder5,
-                      padding: const EdgeInsets.only(left: 5, right: 5, top: 5, bottom: 5),
-                      child: RichText(
-                        text: TextSpan(
-                          children: [
-                            TextSpan(
-                              text: prefs.nameRouteD,
-                              style: TextStyles.white17_5
-                            ),
-                          ]
-                        )
-                      )
-                    )
-                  ),
-                ]
-              )
-            ],
-          )
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
-  
-  Widget _listNototifications(){
+
+  Widget notificationScreen() {
+    return DefaultTabController(
+      length: 3,
+      child: Builder(
+        builder: (context) {
+          final TabController tabController = DefaultTabController.of(context);
+
+          return AnimatedBuilder(
+            animation: tabController.animation!,
+            builder: (context, _) {
+              final titles = ['Todos', 'No leídos', 'Leídos'];
+              final icons = [
+                Icons.notifications,
+                Icons.mark_email_unread,
+                Icons.mark_email_read
+              ];
+
+              return Column(
+                children: [
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(3, (index) {
+                      final isSelected = tabController.animation!.value.round() == index;
+
+                      return GestureDetector(
+                        onTap: () => tabController.animateTo(index),
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 1),
+                          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: isSelected ? ColorsJunghanns.blueJ : Colors.grey[300],
+                            borderRadius: BorderRadius.circular(5),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                icons[index],
+                                color: isSelected ? Colors.white : Colors.grey[700],
+                              ),
+                              const SizedBox(width: 3),
+                              Text(
+                                titles[index],
+                                style: TextStyle(
+                                  color: isSelected ? Colors.white : Colors.grey[800],
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                  const SizedBox(height: 10),
+                  Expanded(
+                    child: TabBarView(
+                      controller: tabController,
+                      children: [
+                        _listNotifications(filter: 'all'),
+                        _listNotifications(filter: 'unread'),
+                        _listNotifications(filter: 'read'),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _listNotifications({required String filter}) {
     return FutureBuilder(
       future: handler.retrieveNotification(),
-      builder: (
-        BuildContext context,
-        AsyncSnapshot<List<NotificationModel>> snapshot
-      ) {
+      builder: (BuildContext context, AsyncSnapshot<List<NotificationModel>> snapshot) {
+        final provider = Provider.of<ProviderJunghanns>(context);
+        final list = provider.notificationBokList;
+
+        List<NotificationBox> filteredList = [];
+
         if (snapshot.hasData) {
-          return  RefreshIndicator(
-            onRefresh: ()=> getData(),
+          final allList = [...list];
+
+          filteredList = switch (filter) {
+            'unread' => allList.where((n) => !n.read).toList(),
+            'read' => allList.where((n) => n.read).toList(),
+            _ => allList,
+          };
+
+          if (filteredList.isEmpty) return empty(context);
+
+          return RefreshIndicator(
+            color: JunnyColor.blueA1,
+            onRefresh: () => getData(),
             child: ListView.builder(
-              itemCount: snapshot.data?.length,
-              itemBuilder: (BuildContext context, int index) {
-                return NotificationCard(
-                  current: snapshot.data?[index]
-                    ?? NotificationModel.fromState()
-                );
-              }
-            )
+              itemCount: filteredList.length,
+              itemBuilder: (context, index) {
+                return NotificationBoxCard(current: filteredList[index]);
+              },
+            ),
           );
         } else {
-          return empty(context);
+          return const Center(child: CircularProgressIndicator());
         }
-      }
+      },
     );
   }
 }

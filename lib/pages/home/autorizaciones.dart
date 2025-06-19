@@ -165,6 +165,7 @@ class _AutorizacionesState extends State<Autorizaciones> {
                       color: ColorsJunghanns.blue,
                     ))),
         body: RefreshIndicator(
+            color: JunnyColor.blueA1,
             onRefresh: () async {
               Position? currentLocation =
                   await LocationJunny().getCurrentLocation();

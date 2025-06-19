@@ -137,6 +137,7 @@ getCustomerListDB() async {
       ),
     body:Stack(children: [
       RefreshIndicator(
+          color: JunnyColor.blueA1,
           onRefresh: () async {
             getCustomerListDB();
           },

@@ -59,6 +59,7 @@ class _QRSellerState extends State<QRSeller> {
       icon: Icon(Icons.arrow_back_ios,color: ColorsJunghanns.blue,))
       ),
     body:RefreshIndicator(
+        color: JunnyColor.blueA1,
         onRefresh: () async {
           setState(() {
             isLoading = true;
@@ -325,8 +326,8 @@ class _QRSellerState extends State<QRSeller> {
                         } else {
                           log('Error al guardar la imagen: ${result['errorMessage']}');
                         }
-                        await Share.shareFiles(
-                          [file.path],
+                        await Share.shareXFiles(
+                          [XFile(file.path)],
                         );
                       });
                     },

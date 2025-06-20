@@ -141,6 +141,9 @@ class ProviderJunghanns extends ChangeNotifier {
   String get tipo => _tipo;
   String get estatus => _estatus;
   String get folio => _folio;
+  bool _isConnected = false;
+  bool get isConnected => _isConnected;
+
 
   //SETS
   set isNotificationPending(bool current){
@@ -2073,5 +2076,12 @@ class ProviderJunghanns extends ChangeNotifier {
         print('Mensaje: ${answer.message}');
       }
     });
+  }
+
+  void updateConnectionStatus(bool value) {
+    if (_isConnected != value) {
+      _isConnected = value;
+      notifyListeners();
+    }
   }
 }

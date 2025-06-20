@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:junghanns/models/customer.dart';
 import 'package:junghanns/pages/customer/details2.dart';
@@ -6,29 +8,77 @@ import 'package:junghanns/styles/decoration.dart';
 import 'package:junghanns/styles/text.dart';
 
 import '../../components/endOfRoute/end_of_route.dart';
+import '../../models/authorization.dart';
 import '../../preferences/global_variables.dart';
+import '../../services/store.dart';
 
 class RoutesCard extends StatelessWidget {
   Function updateList;
   Widget icon;
   CustomerModel customerCurrent;
   int indexHome;
-  RoutesCard({Key? key, required this.updateList,required this.icon, required this.customerCurrent, this.indexHome=1})
+  final List<CustomerModel>? customers; // <-- Agregado
+  RoutesCard({Key? key, required this.updateList,required this.icon, required this.customerCurrent, this.indexHome=1, this.customers})
       : super(key: key);
 
+  late List<AuthorizationModel> authList = [];
+  getAuth() async {
+    authList.clear();
+    await getAuthorization(customerCurrent.idClient, prefs.idRouteD)
+        .then((answer) {
+      log(answer.body.toString());
+      if (!answer.error) {
+        answer.body
+            .map((e) => authList.add(AuthorizationModel.fromService(e)))
+            .toList();
+        customerCurrent.setAuth(authList);
+      } else {
+        authList.addAll(customerCurrent.auth);
+      }
+    });
+
+  }
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-        onTap: () {
+        onTap: () async {
           if (prefs.statusRoute == 'FNRT') {
-            /// Navega a Empty si la ruta finalizó
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const EnOfRouteView(),
-              ),
-            );
-          } else {
+            if (customers == null || customers!.isEmpty) {
+              /// Ruta FNRT y hay clientes no atendidos → mostrar detalle
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => DetailsCustomer2(
+                    indexHome: indexHome,
+                    customerCurrent: customerCurrent,
+                  ),
+                ),
+              ).whenComplete(() => updateList());
+            }
+            else {
+              /// Ruta FNRT y no hay clientes → mostrar fin de ruta
+              await getAuth();
+              if (authList.isNotEmpty) {
+                /// Si authList tiene datos, abrir DetailsCustomer2
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => DetailsCustomer2(
+                      indexHome: indexHome,
+                      customerCurrent: customerCurrent,
+                    ),
+                  ),
+                ).whenComplete(() => updateList());
+              } else {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const EnOfRouteView(),
+                  ),
+                );
+              }
+            }
+          }else {
             /// Navega al detalle del cliente si la ruta NO ha finalizado
             Navigator.push(
               context,

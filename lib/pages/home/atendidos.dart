@@ -69,6 +69,7 @@ getCustomerListDB() async {
 
   getListUpdate(List<CustomerModel> users) {
     Timer(const Duration(milliseconds: 800), () async {
+      if (!mounted) return;
       setState(() {
         isLoading = true;
       });
@@ -118,6 +119,7 @@ getCustomerListDB() async {
           }
         }
       });
+      if (!mounted) return;
       setState(() {
         isLoading = false;
       });
@@ -198,7 +200,7 @@ getCustomerListDB() async {
                                       child: Image.asset(
                                           "assets/icons/userIcon.png"),
                                     ),
-                                    customerCurrent: e),
+                                    customerCurrent: e, customers: customerList,),
                                 Row(children: [
                                   Container(
                                     margin: EdgeInsets.only(

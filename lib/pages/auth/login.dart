@@ -249,6 +249,10 @@ class _LoginState extends State<Login> {
             context,
             MaterialPageRoute(builder: (_) => Opening(isLogin: true)),
           );
+          /// Validación para asegurar que nameUserD tenga valor
+          if (prefs.nameUserD.isEmpty && (answer2.body["nombre_usuario"]?.toString().isNotEmpty ?? false)) {
+            prefs.nameUserD = answer2.body["nombre_usuario"];
+          }
           await SocketService().connectIfLoggedIn();
         } catch (e) {
           setState(() {

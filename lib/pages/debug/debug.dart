@@ -74,6 +74,16 @@ class _DebugState extends State<Debug> {
                 : provider.isNeedAsync
                     ? const NeedAsync()
                     : Container(),
+            prefs.nameUserD.isNotEmpty
+                ? Text(
+              'Usuario: ${prefs.nameUserD}',
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w400,
+                color: Colors.grey,
+              ),
+            )
+                : const SizedBox.shrink(), // No muestra nada si está vacío
             touchBar(),
             const SizedBox(
               height: 15,

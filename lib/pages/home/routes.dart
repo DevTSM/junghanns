@@ -108,12 +108,6 @@ class _RoutesState extends State<Routes> {
           customerList.add(e);
         }
       }).toList();
-      // Imprimir los clientes que quedaron en customerList
-      print('Clientes no atendidos encontrados: ${customerList.length}');
-      for (var cliente in customerList) {
-        print('Cliente id: ${cliente.idClient}, type: ${cliente.type}, orden: ${cliente.orden}');
-      }
-
       customerList.sort((a, b) => a.orden.compareTo(b.orden));
       searchList = customerList;
       getListUpdate(dataList, dataList.isEmpty ? 0 : dataList.last.id);

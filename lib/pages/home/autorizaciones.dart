@@ -60,11 +60,6 @@ class _AutorizacionesState extends State<Autorizaciones> {
               temporally.add(element);
             }
           }).toList();
-          // Imprimir las autorizaciones que se van a agregar
-          for (var auth in temporally) {
-            print('Autorización agregada → ID: ${auth.idAuth}, Cliente: ${auth.client?.idClient ?? "Desconocido"}');
-          }
-
           authList.addAll(temporally);
         });
       }).toList();

@@ -71,6 +71,7 @@ dependencies:
   accordion: ^2.6.0
   chewie: ^1.5.0
   flutter_background: ^1.0.8
+  platform_device_id_v2: ^1.0.4
 
 
 dev_dependencies:

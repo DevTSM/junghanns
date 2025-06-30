@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/provider/provider.dart';
 import 'package:junghanns/styles/color.dart';
+import 'package:platform_device_id_v2/platform_device_id_v2.dart';
 import 'package:provider/provider.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'dart:convert';
@@ -53,13 +54,14 @@ class SocketService {
 
     final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
     final AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+    final idMovil = await PlatformDeviceId.getDeviceId;
 
-    String serial = androidInfo.id ?? "";
     String modelo = androidInfo.model ?? "";
     String marca = androidInfo.manufacturer ?? "";
 
     String token = _generateToken();
     String sistemaop = obtenerSistemaOperativo();
+
 
     final Uri uri = Uri.parse(prefs.urlBase);
     final String urlBaseLimpia = '${uri.scheme}://${uri.host}';
@@ -77,7 +79,7 @@ class SocketService {
           .setAuth({
         'token': token,
         'user': user,
-        'serial': serial,
+        'serial': idMovil,
         'model': modelo,
         'marca': marca,
         'so': sistemaop,

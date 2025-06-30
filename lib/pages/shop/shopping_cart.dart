@@ -36,6 +36,7 @@ import 'package:junghanns/styles/decoration.dart';
 import 'package:junghanns/styles/text.dart';
 import 'package:junghanns/widgets/card/product.dart';
 import 'package:location/location.dart';
+import 'package:platform_device_id_v2/platform_device_id_v2.dart';
 import 'package:provider/provider.dart';
 
 import '../../database/database_evidence.dart';
@@ -1253,7 +1254,8 @@ class _ShoppingCartState extends State<ShoppingCart> {
     });
     final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
     final AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
-    String serial = androidInfo.id ?? "";
+    final idMovil = await PlatformDeviceId.getDeviceId;
+
     String modelo = androidInfo.model ?? "";
 
     //validacion de segundo metodo de pago
@@ -1321,7 +1323,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
     data["fecha_entrega"] =
         DateFormat('yyyy/MM/dd').format(provider.basketCurrent.datePrestamo);
     //Datos de dispositivo
-    data["serial"] = serial;
+    data["serial"] = idMovil;
     data["model"] = modelo;
     //se crea la data local
     Map<String, dynamic> dataLocal = {
@@ -1345,7 +1347,7 @@ class _ShoppingCartState extends State<ShoppingCart> {
           ? DateFormat('yyyy/MM/dd').format(provider.basketCurrent.datePrestamo)
           : null,
       "id_marca_garrafon": provider.basketCurrent.brandJug["id"],
-      "serial": serial,
+      "serial": idMovil,
       "model": modelo,
     };
     //se inserta la venta

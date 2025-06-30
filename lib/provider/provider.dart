@@ -30,6 +30,7 @@ import 'package:junghanns/styles/color.dart';
 import 'package:junghanns/util/navigator.dart';
 import 'package:junghanns/util/push_notifications_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:platform_device_id_v2/platform_device_id_v2.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -2049,11 +2050,11 @@ class ProviderJunghanns extends ChangeNotifier {
   getNotificationBox() async {
     final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
     final AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+    final idMovil = await PlatformDeviceId.getDeviceId;
 
-    String serial = androidInfo.id ?? "";
     String modelo = androidInfo.model ?? "";
 
-    await getMailbox(userR: prefs.nameUserD, serial: serial, model: modelo).then((
+    await getMailbox(userR: prefs.nameUserD, serial: idMovil.toString(), model: modelo).then((
         answer){
       if (answer.error) {
         print('Error al obtener buzón de notificaciones: ${answer.message}');

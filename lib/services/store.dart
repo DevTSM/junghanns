@@ -12,6 +12,7 @@ import 'package:http_parser/http_parser.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:junghanns/models/answer.dart';
+import 'package:platform_device_id_v2/platform_device_id_v2.dart';
 
 import '../preferences/global_variables.dart';
 Future<Answer> getDataQr() async {
@@ -171,6 +172,8 @@ Future<Answer> postResendCode(Map<String, dynamic> data) async {
 Future<Answer> setComodato(AndroidDeviceInfo build, int id, double lat,
     double lng, int idProduct,int cantidad,int idAuth,String phone) async {
   log("/StoreServices <setComodato> $cantidad");
+  final idMovil = await PlatformDeviceId.getDeviceId;
+
   try {
     var response = await http.post(Uri.parse("${prefs.urlBase}rutasolicitud"),
         headers: {
@@ -193,7 +196,7 @@ Future<Answer> setComodato(AndroidDeviceInfo build, int id, double lat,
             "Modelo": build.model,
             "Marca": build.manufacturer,
             "VersionSO": build.version.securityPatch,
-            "SerialNumber": build.id,
+            "SerialNumber": idMovil,
             "Imac": build.board
           }
         }));

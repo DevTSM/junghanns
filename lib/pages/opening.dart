@@ -54,12 +54,15 @@ class _OpeningState extends State<Opening> {
     //getAndroidID();
     
     if (prefs.version != version ) {
+      SocketService().disconnect();
       String urlBaseSafe=prefs.urlBase;
       String nameCEDIS=prefs.labelCedis;
+      String nameUSER = prefs.nameUserD;
       prefs.prefs!.clear();
       prefs.version = version;
       prefs.urlBase=urlBaseSafe;
       prefs.labelCedis=nameCEDIS;
+      prefs.nameUserD = nameUSER;
       log("limpiando cache =====> ${prefs.urlBase}");
       // if(version==validVersion){
       // handler.addColumn();

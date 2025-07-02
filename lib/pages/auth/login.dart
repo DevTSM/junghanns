@@ -14,6 +14,7 @@ import 'package:junghanns/provider/provider.dart';
 import 'package:junghanns/services/auth.dart';
 import 'package:junghanns/util/location.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:platform_device_id_v2/platform_device_id_v2.dart';
 import 'package:provider/provider.dart';
 
 import '../../components/loading.dart';
@@ -67,13 +68,9 @@ class _LoginState extends State<Login> {
       final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
       final AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
 
-      // Intentamos usar androidInfo.serialNumber si está disponible
-      String serial = androidInfo.id ?? "";
 
-      if (serial.isEmpty || serial.length < 2) {
-        // Usamos otro campo si es necesario
-        serial = androidInfo.fingerprint ?? "";
-      }
+      /// Usamos DeviceID como identificador unico en el serial
+      final idMovil = await PlatformDeviceId.getDeviceId;
 
       // Obtenemos la versión del SO, modelo y marca
       String versionSo = androidInfo.version.release ?? "Desconocido";
@@ -87,7 +84,7 @@ class _LoginState extends State<Login> {
           marca:${marca},
           modelo:${modelo},
           version_so:${versionSo},
-          serial:${serial.replaceAll(":", "")},
+          serial:${idMovil},
           lat:${_currentLocation.latitude},
           lon:${_currentLocation.longitude}
         ''');
@@ -97,7 +94,7 @@ class _LoginState extends State<Login> {
           "marca":marca,
           "modelo":modelo,
           "version_so":versionSo,
-          "serial":serial.replaceAll(":", ""),
+          "serial":idMovil,
           "lat":_currentLocation.latitude,
           "lon":_currentLocation.longitude
         };
@@ -249,6 +246,10 @@ class _LoginState extends State<Login> {
             context,
             MaterialPageRoute(builder: (_) => Opening(isLogin: true)),
           );
+          /// Validación para asegurar que nameUserD tenga valor
+          if (prefs.nameUserD.isEmpty && (answer2.body["nombre_usuario"]?.toString().isNotEmpty ?? false)) {
+            prefs.nameUserD = answer2.body["nombre_usuario"];
+          }
           await SocketService().connectIfLoggedIn();
         } catch (e) {
           setState(() {

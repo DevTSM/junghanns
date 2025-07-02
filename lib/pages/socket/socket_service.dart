@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 import 'package:junghanns/preferences/global_variables.dart';
 import 'package:junghanns/provider/provider.dart';
 import 'package:junghanns/styles/color.dart';
+import 'package:platform_device_id_v2/platform_device_id_v2.dart';
 import 'package:provider/provider.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'dart:convert';
@@ -23,6 +24,7 @@ class SocketService {
   bool _hasShownConnectionError = false;
   final Set<String> confirmedNotificationIds = {};
   String processMessage = '';
+
 
   factory SocketService() => _instance;
 
@@ -41,6 +43,7 @@ class SocketService {
     }
   }
   Future<void> _initWebSocket([BuildContext? context]) async {
+
     final user = prefs.nameUserD.trim();
     if (user.isEmpty) {
       log("Abortando conexión WebSocket: usuario vacío");
@@ -51,13 +54,14 @@ class SocketService {
 
     final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
     final AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+    final idMovil = await PlatformDeviceId.getDeviceId;
 
-    String serial = androidInfo.id ?? "";
     String modelo = androidInfo.model ?? "";
     String marca = androidInfo.manufacturer ?? "";
 
     String token = _generateToken();
     String sistemaop = obtenerSistemaOperativo();
+
 
     final Uri uri = Uri.parse(prefs.urlBase);
     final String urlBaseLimpia = '${uri.scheme}://${uri.host}';
@@ -74,8 +78,8 @@ class SocketService {
           .enableReconnection()
           .setAuth({
         'token': token,
-        'user': prefs.nameUserD,
-        'serial': serial,
+        'user': user,
+        'serial': idMovil,
         'model': modelo,
         'marca': marca,
         'so': sistemaop,
@@ -95,13 +99,29 @@ class SocketService {
 
     socket.onConnect((_) {
       final horaConexion = DateFormat('HH:mm:ss').format(DateTime.now());
+      if (prefs.nameUserD.trim().isEmpty) {
+        log("Usuario vacío tras conexión. Desconectando el socket...");
+        disconnect();
+        return;
+      }
       log("Conectado con éxito como: ${prefs.nameUserD}, Hora de conexión${horaConexion}");
+      final provider = Provider.of<ProviderJunghanns>(navigatorKey.currentContext!!, listen: false);
+      provider?.updateConnectionStatus(true);
       _showToast("Conexión exitosa al servidor de notificaciones", ColorsJunghanns.green);
       _isConnected = true;
       _hasShownConnectionError = false;
     });
 
     socket.on('connect', (_) {
+      final provider = Provider.of<ProviderJunghanns>(navigatorKey.currentContext!!, listen: false);
+
+      if (prefs.nameUserD.trim().isEmpty) {
+        log("Usuario vacío en 'connect'. Desconectando...");
+        provider?.updateConnectionStatus(false);
+        disconnect();
+        return;
+      }
+      provider?.updateConnectionStatus(true);
       print('Conexión exitosa al socket con ID: ${socket.id}');
       log('CLIENTE: Conexión exitosa al socket con ID: ${socket.id}');
     });
@@ -128,7 +148,8 @@ class SocketService {
         confirmedNotificationIds.add(id);
       });
     });
-     socket.on('solicitudBaja', (data) {
+
+    socket.on('solicitudBaja', (data) {
       print("Notificación de cancelación: $data");
 
       final String id = data['id'].toString();
@@ -150,15 +171,16 @@ class SocketService {
         confirmedNotificationIds.add(id);
       });
     });
+
     socket.on('confirmProcess', (data) {
       print("Proceso aceptado: $data");
-      final processProvider = Provider.of<ProviderJunghanns>(navigatorKey.currentContext!!, listen: false);
 
       final type = data['tipo'] ?? '';
       final status = data['estatus'] ?? '';
       final folio = data['folio']?.toString();
 
-      processProvider.updateProcess(type, status, folio);
+      final provider = Provider.of<ProviderJunghanns>(navigatorKey.currentContext!!, listen: false);
+      provider.updateProcess(type, status, folio);
 
       socket.emitWithAck('confirmAcceptProcess', {
         'id': data['id'] ?? 'no-id',
@@ -176,20 +198,8 @@ class SocketService {
     socket.on('connect_error', (error) {
       print('Error al conectar al socket: ${error.toString()}');
       log('Error al conectar al socket: ${error.toString()} <br>');
-    });
-
-    socket.on('disconnect', (reason) {
-      log('CLIENTE: El socket se desconectó: $reason');
-      final horaDesconexion = DateFormat('HH:mm:ss').format(DateTime.now());
-      log('CLIENTE: El socket se desconectó a las $horaDesconexion. Motivo: $reason');
-      _isConnected = false;
-
-      Future.delayed(Duration(seconds: 10), () {
-        if (!socket.connected) {
-          log("Reintentando conexión tras desconexión...");
-          socket.connect();
-        }
-      });
+      final provider = Provider.of<ProviderJunghanns>(navigatorKey.currentContext!!, listen: false);
+      provider?.updateConnectionStatus(false);
     });
 
     socket.on('respuesta', (data) {
@@ -197,8 +207,9 @@ class SocketService {
       _showToast("Respuesta: ${data['message']}", ColorsJunghanns.blue);
     });
 
-    socket.onConnectError((error) {
-      log("Error de conexión: $error");
+    socket.on('disconnect', (reason) {
+      log("Error de conexión: $reason");
+      final provider = Provider.of<ProviderJunghanns>(navigatorKey.currentContext!!, listen: false);
 
       if (!_hasShownConnectionError) {
         _hasShownConnectionError = true;
@@ -206,9 +217,16 @@ class SocketService {
       }
 
       Future.delayed(Duration(seconds: 10), () {
-        if (!socket.connected) {
+        if (!socket.connected && prefs.nameUserD.trim().isNotEmpty) {
           log("Reintentando conexión...");
           socket.connect();
+        } else if (!socket.connected && context != null) {
+          provider.updateConnectionStatus(false);
+          if (prefs.nameUserD.trim().isNotEmpty) {
+            log("No se reconectará: usuario vacío.");
+          }
+        } else {
+          log("Socket ya conectado. No se necesita reconexión.");
         }
       });
     });
@@ -226,6 +244,7 @@ class SocketService {
       _isConnected = false;
       log("WebSocket desconectado manualmente");
     }
+    log("Entra aca");
   }
 
   void _showToast(String message, Color color) {

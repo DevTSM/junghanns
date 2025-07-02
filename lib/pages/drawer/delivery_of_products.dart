@@ -20,6 +20,7 @@ import 'package:junghanns/widgets/card/product_missing_card.dart';
 import 'package:junghanns/widgets/card/product_others_card.dart';
 import 'package:junghanns/widgets/card/product_returns_card.dart';
 import 'package:map_launcher/map_launcher.dart';
+import 'package:platform_device_id_v2/platform_device_id_v2.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -507,8 +508,8 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
     _currentLocation = (await LocationJunny().getCurrentLocation())!;
     final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
     final AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+    final idMovil = await PlatformDeviceId.getDeviceId;
 
-    String serial = androidInfo.id ?? "";
     String modelo = androidInfo.model ?? "Desconocido";
     String marca = androidInfo.manufacturer ?? "Desconocido";
 
@@ -626,7 +627,7 @@ class _DeliveryOfProductsState extends State<DeliveryOfProducts> {
       idRuta: prefs.idRouteD,
       lat: _currentLocation.latitude,
       lng: _currentLocation.longitude,
-      team: serial,
+      team: idMovil.toString(),
       brand: marca,
       model: modelo,
       delivery: deliveryData, provider: providerJunghanns,
